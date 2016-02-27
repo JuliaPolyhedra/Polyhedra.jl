@@ -7,14 +7,14 @@ julia:
   - release
   - nightly
 addons:
-  sources:
-    - kubuntu-backports
-    - george-edison55-precise-backports
-  apt_packages:
-    - xorg-dev
-    - libglu1-mesa-dev
-    - cmake
-    - libxxf86vm-dev
+  apt:
+    sources:
+      - kubuntu-backports
+    packages:
+      - xorg-dev
+      - libglu1-mesa-dev
+      - cmake
+      - libxxf86vm-dev
 notifications:
   email: false
 # uncomment the following lines to override the default test script
