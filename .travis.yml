@@ -6,6 +6,10 @@ os:
 julia:
   - release
   - nightly
+addons:
+  apt_packages:
+    - xorg-dev
+    - libglu1-mesa-dev
 notifications:
   email: false
 # uncomment the following lines to override the default test script
