@@ -1,6 +1,5 @@
 using GeometryTypes
 using GLVisualize
-using CDD
 using FixedSizeArrays
 using GLAbstraction
 using DataStructures
@@ -14,9 +13,9 @@ end
 
 # TODO need to be full dimensional (We restrict to 3D, proj...)
 function GeometryTypes.GLNormalMesh(poly::Polyhedron, color=GeometryTypes.DefaultColor, proj=nothing)
-  ine = CDD.getinequalitydescription(poly)
+  ine = getinequalities(poly)
   # TODO check dim is 3
-  ext = CDD.getgeneratordescription(poly)
+  ext = getgenerators(poly)
   splitvertexrays!(ext)
 
   A = (proj == nothing ? ine.A : ine.A * proj * inv(proj' * proj))
