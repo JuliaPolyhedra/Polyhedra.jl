@@ -1,5 +1,7 @@
-import Base.round
+import Base.round, Base.eltype
 abstract Description{T <: Real}
+
+Base.eltype{T <: Real}(desc::Description{T}) = T
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
 
