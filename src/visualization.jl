@@ -11,6 +11,8 @@ function visualize(poly::Polyhedron)
   visualize(GeometryTypes.GLNormalMesh(poly))
 end
 
+const threshold = 1e-8
+
 # TODO need to be full dimensional (We restrict to 3D, proj...)
 function GeometryTypes.GLNormalMesh(poly::Polyhedron, color=GeometryTypes.DefaultColor, proj=nothing)
   ine = getinequalities(poly)
@@ -20,9 +22,9 @@ function GeometryTypes.GLNormalMesh(poly::Polyhedron, color=GeometryTypes.Defaul
 
   A = (proj == nothing ? ine.A : ine.A * proj * inv(proj' * proj))
   myeqzero{T<:Real}(x::T) = x == zero(T)
-  myeqzero{T<:AbstractFloat}(x::T) = -1024*eps(T) < x < 1024*eps(T)
+  myeqzero{T<:AbstractFloat}(x::T) = -threshold < x < threshold
   myeq{T<:Real}(x::T, y::T) = x == y
-  myeq{T<:AbstractFloat}(x::T, y::T) = y < x+1024*eps(T) && x < y+1024*eps(T)
+  myeq{T<:AbstractFloat}(x::T, y::T) = y < x+threshold && x < y+threshold
   rayinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(sum(abs(r)))
   vertinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(sum(abs(r)))
   # If proj's columns are not normalized the axis are scaled...
@@ -36,7 +38,7 @@ function GeometryTypes.GLNormalMesh(poly::Polyhedron, color=GeometryTypes.Defaul
   (zmin, zmax) = extrema(map((j)->V[j,3], 1:size(V,1)))
   width = max(xmax-xmin, ymax-ymin, zmax-zmin)
   if width == 0#zero(T)
-    width = 1#one(T)
+    width = 2#one(T)
   end
   scene = HyperRectangle{3,Float64}([(xmin+xmax)/2-width, (ymin+ymax)/2-width, (zmin+zmax)/2-width], 2*width*ones(Float64,3))
   function exit_point(start, ray)
@@ -71,80 +73,131 @@ function GeometryTypes.GLNormalMesh(poly::Polyhedron, color=GeometryTypes.Defaul
     if !newface
       continue
     end
+
+    # Checking rays
     counterclockwise(a, b) = dot(cross(a, b), zray)
-    for j in 1:size(R, 1)
-      if myeqzero(dot(R[j,:], zray)) && !myeqzero(sum(abs(R[j,:])))
-        if xray == nothing || counterclockwise(R[j,:], xray) > 0
-          xray = vec(R[j,:])
+    line = nothing
+    lineleft = false
+    lineright = false
+    function checkleftright(r::Vector, lin::Bool)
+      cc = counterclockwise(r, line)
+      if !myeqzero(cc)
+        if cc < 0 || lin
+          lineleft = true
         end
-        if yray == nothing || counterclockwise(R[j,:], yray)  < 0
-          yray = vec(R[j,:])
+        if cc > 0 || lin
+          lineright = true
         end
       end
     end
+    for j in 1:size(R, 1)
+      if myeqzero(dot(R[j,:], zray)) && !myeqzero(sum(abs(R[j,:])))
+        if line != nothing
+          checkleftright(R[j,:], j in ext.Rlinset)
+        else
+          if j in ext.Rlinset
+            line = vec(R[j,:])
+            if xray != nothing
+              checkleftright(xray, false) # false otherwise line wouldn't be nothing
+            end
+            if yray != nothing
+              checkleftright(yray, false)
+            end
+          end
+          if xray == nothing || counterclockwise(R[j,:], xray) > 0
+            xray = vec(R[j,:])
+          end
+          if yray == nothing || counterclockwise(R[j,:], yray)  < 0
+            yray = vec(R[j,:])
+          end
+        end
+      end
+    end
+
+    # Checking vertices
     face_vert = IntSet([])
     for j in 1:size(V, 1)
       if myeq(dot(V[j,:], zray), ine.b[i])
         push!(face_vert, j)
       end
     end
-    #if length(face_vert) < 3 # Wrong, they are also the rays
-    #  error("Not enough vertices and rays to form a face, it may be because of numerical rounding. Otherwise, please report this bug.")
-    #end
-    if length(face_vert) < 3 && (xray == nothing || (length(face_vert) < 2 && (yray == xray || length(face_vert) < 1)))
-      continue
-    end
-    face_verts = Vector{Int}(length(face_vert))
-    idx = 1
-    for v in face_vert
-      face_verts[idx] = v
-      idx += 1
-    end
-    if xray == nothing
-      sweep_norm = cross(zray, [1,0,0])
-      if sum(abs(sweep_norm)) == 0
-        sweep_norm = cross(zray, [0,1,0])
+
+    if line != nothing
+      if isempty(face_vert)
+        center = zeros(typeof(V), size(V, 2))
+      else
+        center = vec(V[first(face_vert), :])
       end
+      hull = Stack(Any)
+      push!(hull, exit_point(center, line))
+      if lineleft
+        push!(hull, exit_point(center, cross(zray, line)))
+      end
+      push!(hull, exit_point(center, -line))
+      if lineright
+        push!(hull, exit_point(center, cross(line, zray)))
+      end
+      hulls = (hull,)
     else
-      sweep_norm = cross(zray, xray)
-    end
-    sort!(face_verts, by = j -> dot(V[j,:], sweep_norm))
-    function getsemihull(sign_sense)
-      hull = Stack(Int)
-      prev = sign_sense == 1 ? face_verts[1] : face_verts[length(face_verts)]
-      cur = prev
-      for j in (sign_sense == 1 ? (2:length(face_verts)) : ((length(face_verts)-1):-1:1))
-        while prev != cur && counterclockwise(V[cur,:] - V[prev,:], V[face_verts[j],:] - V[prev,:]) >= 0
-          cur = prev
-          pop!(hull)
-          if !isempty(hull)
-            prev = top(hull)
+      #if length(face_vert) < 3 # Wrong, they are also the rays
+      #  error("Not enough vertices and rays to form a face, it may be because of numerical rounding. Otherwise, please report this bug.")
+      #end
+      if length(face_vert) < 3 && (xray == nothing || (length(face_vert) < 2 && (yray == xray || length(face_vert) < 1)))
+        continue
+      end
+      face_verts = Vector{Int}(length(face_vert))
+      idx = 1
+      for v in face_vert
+        face_verts[idx] = v
+        idx += 1
+      end
+      if xray == nothing
+        sweep_norm = cross(zray, [1,0,0])
+        if sum(abs(sweep_norm)) == 0
+          sweep_norm = cross(zray, [0,1,0])
+        end
+      else
+        sweep_norm = cross(zray, xray)
+      end
+      sort!(face_verts, by = j -> dot(V[j,:], sweep_norm))
+      function getsemihull(sign_sense)
+        hull = Stack(Int)
+        prev = sign_sense == 1 ? face_verts[1] : face_verts[length(face_verts)]
+        cur = prev
+        for j in (sign_sense == 1 ? (2:length(face_verts)) : ((length(face_verts)-1):-1:1))
+          while prev != cur && counterclockwise(V[cur,:] - V[prev,:], V[face_verts[j],:] - V[prev,:]) >= 0
+            cur = prev
+            pop!(hull)
+            if !isempty(hull)
+              prev = top(hull)
+            end
+          end
+          if yray != nothing && counterclockwise(V[cur,:] - V[top(prev),:], yray) >= 0
+            break
+          else
+            push!(hull, cur)
+            prev = cur
+            cur = face_verts[j]
           end
         end
-        if yray != nothing && counterclockwise(V[cur,:] - V[top(prev),:], yray) >= 0
-          break
-        else
-          push!(hull, cur)
-          prev = cur
-          cur = face_verts[j]
+        push!(hull, cur)
+        hull
+      end
+      xtoy_hull = getsemihull(1)
+      if yray == nothing
+        ytox_hull = getsemihull(-1)
+      else
+        ytox_hull = Stack(Any)
+        push!(ytox_hull, face_verts[1])
+        if top(xtoy_hull) != face_verts[1]
+          push!(ytox_hull, top(xtoy_hull))
         end
+        push!(ytox_hull, exit_point(V[top(xtoy_hull),:], yray))
+        push!(ytox_hull, exit_point(V[face_verts[1],:], xray))
       end
-      push!(hull, cur)
-      hull
+      hulls = (xtoy_hull, ytox_hull)
     end
-    xtoy_hull = getsemihull(1)
-    if yray == nothing
-      ytox_hull = getsemihull(-1)
-    else
-      ytox_hull = Stack(Any)
-      push!(ytox_hull, face_verts[1])
-      if top(xtoy_hull) != face_verts[1]
-        push!(ytox_hull, top(xtoy_hull))
-      end
-      push!(ytox_hull, exit_point(V[top(xtoy_hull),:], yray))
-      push!(ytox_hull, exit_point(V[face_verts[1],:], xray))
-    end
-    for hull in (xtoy_hull, ytox_hull)
+    for hull in hulls
       if length(hull) >= 3
         a = pop!(hull)
         if isa(a, Int)
@@ -193,7 +246,6 @@ function GeometryTypes.GLNormalMesh(poly::Polyhedron, color=GeometryTypes.Defaul
   # I could drop the last argument since GeometryTypes can compute it itself but since
   # I have the normals so simply using the lines of ine.A, it would be sad not to use them :)
   # FIXME the color is ignored :(
-  println(color)
   GeometryTypes.GLNormalMesh(vertices=points, faces=faces, normals=ns, color=color)
 end
 

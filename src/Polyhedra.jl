@@ -1,7 +1,8 @@
 module Polyhedra
 
+abstract PolyhedraLibrary
 abstract Polyhedron
-export Polyhedron
+export PolyhedraLibrary, Polyhedron
 
 include("description.jl")
 include("visualization.jl")

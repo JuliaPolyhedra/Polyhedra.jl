@@ -1,4 +1,4 @@
-function boardtest{Poly<:Polyhedron}(::Type{Poly}, args...)
+function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
   A1 = -eye(Int, 9) # x >= 0
   b1 = zeros(Int, 9)
   A2 = eye(Int, 9) # x <= 1
@@ -26,7 +26,7 @@ function boardtest{Poly<:Polyhedron}(::Type{Poly}, args...)
   A = [A1; A2; A3]
   b = [b1; b2; b3]
   ine = InequalityDescription(A, b)
-  poly = Poly(ine, args...)
+  poly = polyhedron(ine, lib)
   @test !isempty(poly)
   ext  = getgenerators(poly)
   target = ones(Int, 9) * (3 // 4)
@@ -45,7 +45,7 @@ function boardtest{Poly<:Polyhedron}(::Type{Poly}, args...)
   Acut = [cutA; A]
   bcut = [cutb; b]
   inecut = InequalityDescription(Acut, bcut)
-  polycut = Poly(inecut, args...)
+  polycut = polyhedron(inecut, lib)
   @test !isempty(polycut)
   (isredundant, certificate) = isredundantinequality(polycut, 1)
   @test !isredundant

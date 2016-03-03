@@ -12,7 +12,15 @@ myeq{S<:Real,T<:Real}(x::Vector{S}, y::Vector{T}) = myeq(promote(x, y)...)
 myeq{T<:Real}(x::Vector{T}, y::Vector{T}) = x == y
 myeq{T<:AbstractFloat}(x::Vector{T}, y::Vector{T}) = myeq(norm(x - y), zero(T))
 
+tomatrix(M::Matrix) = M
+function tomatrix(v::Vector)
+  M = Matrix{eltype(v)}(length(v), 1)
+  M[:,1] = v
+  M
+end
+
 function inequality_fulltest(p::Polyhedron, A, b, linset)
+  A = tomatrix(A)
   removeredundantinequalities!(p)
   ine = getinequalities(p)
   @test size(ine.A) == size(A)
@@ -42,6 +50,8 @@ function inequality_fulltest(p::Polyhedron, A, b, linset)
   end
 end
 function generator_fulltest(p::Polyhedron, V, R)
+  V = tomatrix(V)
+  R = tomatrix(R)
   removeredundantgenerators!(p)
   ext = getgenerators(p)
   Polyhedra.splitvertexrays!(ext)
@@ -70,8 +80,8 @@ function generator_fulltest(p::Polyhedron, V, R)
 end
 generator_fulltest(p::Polyhedron, V) = generator_fulltest(p, V, Matrix{eltype(V)}(0, size(V, 2)))
 
-function alltests{Poly<:Polyhedron}(::Type{Poly}, args...)
-  simplextest(Poly, args...)
-  permutahedrontest(Poly, args...)
-  boardtest(Poly, args...)
+function alltests{Lib<:PolyhedraLibrary}(lib::Lib)
+  simplextest(lib)
+  permutahedrontest(lib)
+  boardtest(lib)
 end

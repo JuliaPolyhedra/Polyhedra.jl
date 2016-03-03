@@ -1,23 +1,23 @@
-function simplextest{Poly<:Polyhedron}(::Type{Poly}, args...)
+function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
   A = [1 1; -1 0; 0 -1]
   b = [1, 0, 0]
   linset = IntSet([1])
   V = [0 1; 1 0]
 
   ine = InequalityDescription(A, b, linset)
-  poly1 = Poly(ine, args...)
+  poly1 = polyhedron(ine, lib)
   @test !isempty(poly1)
   inequality_fulltest(poly1, A, b, linset)
   generator_fulltest(poly1, V)
 
   ext = GeneratorDescription(V)
-  poly2 = Poly(ext, args...)
+  poly2 = polyhedron(ext, lib)
   @test !isempty(poly2)
   inequality_fulltest(poly2, A, b, linset)
   generator_fulltest(poly2, V)
 
   # x_1 cannot be 2
-  @test isempty(Poly(Polyhedra.InequalityDescription([A; 1 0], [b; 2], union(linset, IntSet([4]))), args...))
+  @test isempty(polyhedron(Polyhedra.InequalityDescription([A; 1 0], [b; 2], union(linset, IntSet([4]))), lib))
 
   # We now add the vertex (0, 0)
   V0 = [0 0]
@@ -35,7 +35,7 @@ function simplextest{Poly<:Polyhedron}(::Type{Poly}, args...)
   Vray = [1 0; 0 1]
   vertexray = IntSet([])
   extray = GeneratorDescription(Vray, vertexray)
-  poly3 = Poly(extray, args...)
+  poly3 = polyhedron(extray, lib)
   Acut = [1 1]
   bcut = [1]
   linsetcut = IntSet([1])
@@ -43,4 +43,8 @@ function simplextest{Poly<:Polyhedron}(::Type{Poly}, args...)
   push!(poly3, inecut)
   inequality_fulltest(poly3, A, b, linset)
   generator_fulltest(poly3, V)
+
+  poly4 = project(poly1, [1; 0])
+  inequality_fulltest(poly4, [-1; 1], [0, 1], IntSet([]))
+  generator_fulltest(poly4, [0; 1], [])
 end

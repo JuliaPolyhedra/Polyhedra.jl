@@ -1,7 +1,9 @@
 # Mandatory
 import Base.copy, Base.push!
-export getinequalities, getgenerators, eliminate!, detectlinearities!, removeredundantinequalities!, removeredundantgenerators!, isredundantinequality, isredundantgenerator, isstronglyredundantinequality, isstronglyredundantgenerator
+export polyhedron, getlibrary, getinequalities, getgenerators, eliminate!, detectlinearities!, removeredundantinequalities!, removeredundantgenerators!, isredundantinequality, isredundantgenerator, isstronglyredundantinequality, isstronglyredundantgenerator
 
+polyhedron(desc::Description)                            = error("please specify a library")
+getlibrary(p::Polyhedron)                                = error("not implemented")
 Base.copy(p::Polyhedron)                                 = error("not implemented")
 Base.push!(p::Polyhedron, ine::InequalityDescription)    = error("not implemented")
 Base.push!(p::Polyhedron, ext::GeneratorDescription)     = error("not implemented")
@@ -20,7 +22,7 @@ isstronglyredundantgenerator(p::Polyhedron, i::Integer)  = error("not implemente
 
 # These can optionally be reimplemented for speed by a library
 import Base.isempty
-export numberofinequalities, numberofgenerators, eliminate, fulldim, dim, affinehull, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators
+export numberofinequalities, numberofgenerators, eliminate, fulldim, dim, affinehull, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators, transform, project
 
 function numberofinequalities(p::Polyhedron)
   size(getinequalities(p).A, 1)
@@ -41,6 +43,52 @@ end
 # eliminate the last dimension by default
 eliminate!(p::Polyhedron) = eliminate!(p::Polyhedron, IntSet([fulldim(p)]))
 eliminate(p::Polyhedron)  = eliminate(p::Polyhedron, IntSet([fulldim(p)]))
+
+function transform(p::Polyhedron, P::Array)
+  # The new axis are the column of P.
+  # Let y be the coordinates of a point x in these new axis.
+  # We have x = P * y so y = P \ x.
+  # We have
+  # b = Ax = A * P * (P \ x) = (A * P) * y
+  ine = getinequalities(p)
+  newine = InequalityDescription(ine.A * P, ine.b, ine.linset)
+  polyhedron(newine, getlibrary(p))
+end
+
+function project(p::Polyhedron, P::Array)
+  # Function to make x orthogonal to an orthonormal basis in Q
+  # We first make the columns of P orthonormal
+  n = size(P, 1)
+  m = size(P, 2)
+  if m > n
+    error("P should have more columns than rows")
+  end
+  Q = Array{Float64}(P) # normalize will make it nonrational
+  Proj = zeros(eltype(P), n, n)
+  for i = 1:m
+    Q[:,i] = normalize(Q[:,i] - Proj * Q[:,i])
+    Proj += Q[:,i] * Q[:,i]'
+  end
+  if m == n
+    basis = Q
+  else
+    # For the rest, we take the canonical basis and we look at
+    # I - Proj * I
+    I = eye(Float64, n)
+    R = I - Proj
+    # We take the n-m that have highest norm
+    order = sortperm([dot(R[:,i], R[:,i]) for i in 1:n])
+    R = I[:,order[m+1:n]]
+    for i in 1:n-m
+      R[:,i] = normalize(R[:,i] - Proj * R[:,i])
+      Proj += R[:,i] * R[:,i]'
+    end
+    basis = [Q R]
+  end
+  p2 = transform(p, basis)
+  eliminate!(p2, IntSet(m+1:n))
+  p2
+end
 
 function fulldim(p::Polyhedron)
   size(getinequalities(p).A, 2)
