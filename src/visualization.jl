@@ -15,8 +15,10 @@ const threshold = 1e-8
 
 # TODO need to be full dimensional (We restrict to 3D, proj...)
 function GeometryTypes.GLNormalMesh(poly::Polyhedron, color=GeometryTypes.DefaultColor, proj=nothing)
+  if fulldim(poly) > 3
+    error("The dimension of the polyhedron cannot exceed 3, please project it")
+  end
   ine = getinequalities(poly)
-  # TODO check dim is 3
   ext = getgenerators(poly)
   splitvertexrays!(ext)
 
