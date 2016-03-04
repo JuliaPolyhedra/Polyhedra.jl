@@ -6,19 +6,9 @@ os:
 julia:
   - release
   - nightly
-addons:
-  apt:
-    sources:
-      - kubuntu-backports
-    packages:
-      - xvfb
-      - xorg-dev
-      - libglu1-mesa-dev
-      - cmake
-      - libxxf86vm-dev
 notifications:
   email: false
 # uncomment the following lines to override the default test script
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - xvfb-run julia -e 'Pkg.clone(pwd()); Pkg.build("Polyhedra"); Pkg.test("Polyhedra"; coverage=true)'
+#script:
+#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#  - julia -e 'Pkg.clone(pwd()); Pkg.build("Polyhedra"); Pkg.test("Polyhedra"; coverage=true)'

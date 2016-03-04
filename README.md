@@ -6,6 +6,6 @@ These manipulation notably include the transformation from (resp. to) an inequal
 It defines the abstract type `Polyhedron` and splits the operations on this type in two categories:
 
 * Mandatory: Operations that needs to be implemented by the Polyhedra Manipulation Libraries: e.g. Transformation between the two representations described above and variable elimination.
-* Optional: Operations that can be implemented using the other operations and hence have a default implementation: e.g. 3D visualization of the polyhedron using [GLVisualize.jl](https://github.com/JuliaGL/GLVisualize.jl), intersection of polyhedra, [Minkowski addition](https://en.wikipedia.org/wiki/Minkowski_addition) of polyhedra, ...
+* Optional: Operations that can be implemented using the other operations and hence have a default implementation: e.g. intersection of polyhedra, [Minkowski addition](https://en.wikipedia.org/wiki/Minkowski_addition) of polyhedra, ... You can also visualize the polyhedron using [PolyhedraVisualize](https://github.com/blegat/PolyhedraVisualize.jl).
 
 [![Build Status](https://travis-ci.org/blegat/Polyhedra.jl.svg?branch=master)](https://travis-ci.org/blegat/Polyhedra.jl)
