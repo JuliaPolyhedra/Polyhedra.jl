@@ -1,5 +1,4 @@
 using Polyhedra
-using GLVisualize
 
 include("simplex.jl")
 include("permutahedron.jl")
