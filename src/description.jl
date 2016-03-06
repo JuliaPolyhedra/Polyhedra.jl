@@ -36,8 +36,6 @@ function InequalityDescription{S <: Real, T <: Real}(A::Matrix{S}, b::Vector{T},
 end
 InequalityDescription{T <: Real}(A::Array{T, 2}, b::Array{T, 1}, linset::IntSet=IntSet([])) = InequalityDescription{T}(A, b, linset)
 
-InequalityDescription{T <: Real}(A::Array{T, 2}, b::Array{T, 1}) = InequalityDescription(A, b, IntSet([]))
-
 Base.round{T<:AbstractFloat}(ine::InequalityDescription{T}) = InequalityDescription{T}(Base.round(ine.A), Base.round(ine.b), ine.linset)
 
 type GeneratorDescription{T <: Real} <: Description{T}
