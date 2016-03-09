@@ -1,7 +1,9 @@
 module Polyhedra
 
+using GeometryTypes
+
 abstract PolyhedraLibrary
-abstract Polyhedron
+abstract Polyhedron <: GeometryPrimitive
 export PolyhedraLibrary, Polyhedron
 
 include("description.jl")
