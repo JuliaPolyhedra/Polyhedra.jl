@@ -1,4 +1,7 @@
 import Base.round, Base.eltype
+
+export Description, InequalityDescription, GeneratorDescription, splitvertexrays!, fulldim
+
 abstract Description{T <: Real}
 
 Base.eltype{T <: Real}(desc::Description{T}) = T
@@ -36,6 +39,8 @@ function InequalityDescription{S <: Real, T <: Real}(A::Matrix{S}, b::Vector{T},
 end
 InequalityDescription{T <: Real}(A::Array{T, 2}, b::Array{T, 1}, linset::IntSet=IntSet([])) = InequalityDescription{T}(A, b, linset)
 
+fulldim(ine::InequalityDescription) = size(ine.A, 2)
+
 Base.round{T<:AbstractFloat}(ine::InequalityDescription{T}) = InequalityDescription{T}(Base.round(ine.A), Base.round(ine.b), ine.linset)
 
 type GeneratorDescription{T <: Real} <: Description{T}
@@ -70,9 +75,11 @@ end
 
 GeneratorDescription{T}(V::Array{T, 2}, R::Array{T, 2}, vertex::IntSet, Vlinset::IntSet, Rlinset::IntSet) = GeneratorDescription{T}(V, R, vertex, Vlinset, Rlinset)
 
-GeneratorDescription{T <: Real}(V::Array{T, 2}, vertex::IntSet, linset::IntSet) = GeneratorDescription(V, Array{T, 2}(0, size(V, 2)), vertex, linset, IntSet([]))
+GeneratorDescription{T <: Real}(V::Array{T, 2}, vertex::IntSet, linset::IntSet) = GeneratorDescription(V, Matrix{T}(0, size(V, 2)), vertex, linset, IntSet([]))
 GeneratorDescription{T <: Real}(V::Array{T, 2}, vertex::IntSet) = GeneratorDescription(V, vertex, IntSet([]))
 GeneratorDescription{T <: Real}(V::Array{T, 2}) = GeneratorDescription(V, IntSet(1:size(V,1)))
+
+fulldim(ext::GeneratorDescription) = size(ext.V, 2)
 
 Base.round{T<:AbstractFloat}(ext::GeneratorDescription{T}) = GeneratorDescription{T}(Base.round(ext.V), Base.round(ext.R), ext.vertex, ext.Vlinset, ext.Rlinset)
 
@@ -116,5 +123,3 @@ Base.convert{T, S}(::Type{Description{T}}, ext::GeneratorDescription{S}) = Base.
 Base.convert{T, S}(::Type{InequalityDescription{T}}, ine::InequalityDescription{S}) = InequalityDescription{T}(Array{T}(ine.A), Array{T}(ine.b), ine.linset)
 
 Base.convert{T, S}(::Type{GeneratorDescription{T}}, ext::GeneratorDescription{S}) = GeneratorDescription{T}(Array{T}(ext.V), Array{T}(ext.R), ext.vertex, ext.Vlinset, ext.Rlinset)
-
-export Description, InequalityDescription, GeneratorDescription, splitvertexrays!

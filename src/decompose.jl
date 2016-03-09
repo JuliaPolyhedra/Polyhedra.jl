@@ -240,13 +240,13 @@ function get_faces_points(poly)
 end
 
 function decompose{N, T1, T2}(
-        PT::Type{Point{N, T1}}, poly::Polyhedron#{N, T2}
+        PT::Type{Point{N, T1}}, poly::Polyhedron{N, T2}
     )
     points = get_faces_points(poly)[1]
     decompose(PT, points)
 end
 function decompose{N, T, O, T2}(
-        FT::Type{Face{N, T, O}}, poly::Polyhedron#{3, T2}
+        FT::Type{Face{N, T, O}}, poly::Polyhedron{3, T2}
     )
     faces = get_faces_points(poly)[2]
     decompose(FT, faces)
