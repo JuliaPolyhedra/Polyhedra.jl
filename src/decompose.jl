@@ -1,37 +1,36 @@
 using FixedSizeArrays
-import GeometryTypes.decompose
+using DataStructures
+import GeometryTypes.decompose, GeometryTypes.isdecomposable
 
 const threshold = 1e-8
 
-function get_faces_points(poly)
-  if fulldim(poly) > 3
-    error("The dimension of the polyhedron cannot exceed 3, please project it")
-  end
+function fulldecompose{T}(poly::Polyhedron{3,T})
   ine = getinequalities(poly)
   ext = getgenerators(poly)
   splitvertexrays!(ext)
 
-  A = (proj == nothing ? ine.A : ine.A * proj * inv(proj' * proj))
+  # I need to do division so if T is e.g. Integer, I need to use another type
+  RT = typeof(one(T)/2)
+
+  A = ine.A
   myeqzero{T<:Real}(x::T) = x == zero(T)
   myeqzero{T<:AbstractFloat}(x::T) = -threshold < x < threshold
   myeq{T<:Real}(x::T, y::T) = x == y
   myeq{T<:AbstractFloat}(x::T, y::T) = y < x+threshold && x < y+threshold
   rayinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(sum(abs(r)))
   vertinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(sum(abs(r)))
-  # If proj's columns are not normalized the axis are scaled...
-  # but I don't want to normalize so that it stays integer if it is integer
-  R = (proj == nothing ? ext.R : ext.R * proj)
-  V = isempty(ext.V) ? [0 0 0] : (proj == nothing ? ext.V : ext.V * proj)
+  R = ext.R
+  V = isempty(ext.V) ? [0 0 0] : ext.V
 
   # Intersection of rays with the limits of the scene
   (xmin, xmax) = extrema(map((j)->V[j,1], 1:size(V,1)))
   (ymin, ymax) = extrema(map((j)->V[j,2], 1:size(V,1)))
   (zmin, zmax) = extrema(map((j)->V[j,3], 1:size(V,1)))
   width = max(xmax-xmin, ymax-ymin, zmax-zmin)
-  if width == 0#zero(T)
-    width = 2#one(T)
+  if width == zero(T)
+    width = 2
   end
-  scene = HyperRectangle{3,Float64}([(xmin+xmax)/2-width, (ymin+ymax)/2-width, (zmin+zmax)/2-width], 2*width*ones(Float64,3))
+  scene = HyperRectangle{3,RT}([(xmin+xmax)/2-width, (ymin+ymax)/2-width, (zmin+zmax)/2-width], 2*width*ones(RT,3))
   function exit_point(start, ray)
     times = max((Vector(minimum(scene))-start) ./ ray, (Vector(maximum(scene))-start) ./ ray)
     times[ray .== 0] = Inf # To avoid -Inf with .../(-0)
@@ -211,9 +210,9 @@ function get_faces_points(poly)
 
   end
   ntri = length(triangles)
-  points  = Vector{Point3f0}(3*ntri)
-  faces   = Vector{GeometryTypes.Face{3,UInt32,-1}}(ntri)
-  ns = Vector{GeometryTypes.Normal{3,Float32}}(3*ntri)
+  points  = Vector{FixedSizeArrays.Point{3,RT}}(3*ntri)
+  faces   = Vector{GeometryTypes.Face{3,Int,0}}(ntri)
+  ns = Vector{GeometryTypes.Normal{3,RT}}(3*ntri)
   for i in 1:ntri
     tri = pop!(triangles)
     normal = vec(A[tri[2],:])
@@ -221,7 +220,7 @@ function get_faces_points(poly)
       idx = 3*(i-1)+j
       ns[idx] = -normal
     end
-    faces[i] = Array(3*(i-1)+(1:3)-1)
+    faces[i] = Array(3*(i-1)+(1:3))
     k = 1
     for k = 1:3
       # reverse order of the 3 vertices so that if I compute the
@@ -233,21 +232,25 @@ function get_faces_points(poly)
       points[3*i-k+1] = tri[1][k]
     end
   end
+  # If the type of ns is Rational, it also works.
+  # The normalized array in in float but then it it recast into Rational
   map!(normalize, ns)
-  # I could drop the last argument since GeometryTypes can compute it itself but since
-  # I have the normals so simply using the lines of ine.A, it would be sad not to use them :)
-  (points, faces, normals)
+  (points, faces, ns)
 end
 
-function decompose{N, T1, T2}(
-        PT::Type{Point{N, T1}}, poly::Polyhedron{N, T2}
-    )
-    points = get_faces_points(poly)[1]
-    decompose(PT, points)
+
+isdecomposable{T<:Point, S<:Polyhedron}(::Type{T}, ::Type{S}) = true
+isdecomposable{T<:Face, S<:Polyhedron}(::Type{T}, ::Type{S}) = true
+isdecomposable{T<:Normal, S<:Polyhedron}(::Type{T}, ::Type{S}) = true
+function decompose{N, T1, T2}(PT::Type{Point{N, T1}}, poly::Polyhedron{N, T2})
+  points = fulldecompose(poly)[1]
+  map(PT, points)
 end
-function decompose{N, T, O, T2}(
-        FT::Type{Face{N, T, O}}, poly::Polyhedron{3, T2}
-    )
-    faces = get_faces_points(poly)[2]
-    decompose(FT, faces)
+function decompose{N, T, O, T2}(FT::Type{Face{N, T, O}}, poly::Polyhedron{3, T2})
+  faces = fulldecompose(poly)[2]
+  decompose(FT, faces)
+end
+function decompose{NT<:Normal, T}(::Type{NT}, poly::Polyhedron{3,T})
+  ns = fulldecompose(poly)[3]
+  map(NT, ns)
 end

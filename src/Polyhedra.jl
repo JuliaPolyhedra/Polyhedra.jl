@@ -16,5 +16,6 @@ getlibrary(p::Polyhedron) = getlibraryfor(p, eltype(p))
 
 include("description.jl")
 include("operations.jl")
+include("decompose.jl")
 
 end # module
