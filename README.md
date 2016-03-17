@@ -8,4 +8,13 @@ It defines the abstract type `Polyhedron` and splits the operations on this type
 * Mandatory: Operations that needs to be implemented by the Polyhedra Manipulation Libraries: e.g. Transformation between the two representations described above and variable elimination.
 * Optional: Operations that can be implemented using the other operations and hence have a default implementation: e.g. linear transformation, intersection, [Minkowski addition](https://en.wikipedia.org/wiki/Minkowski_addition), decomposition into points and faces for e.g. 3D visualization using [GLVisualize.jl](https://github.com/JuliaGL/GLVisualize.jl)...
 
+Here is a list of the Polyhedra Manipulation Libraries implementing the interface of `Polyhedra.jl`
+
+* [CDDLib.jl](https://github.com/blegat/CDDLib.jl): fully working, supports doing all the computations in `Float64` or `Rational{BigInt}`.
+* [LRSLib.jl](https://github.com/blegat/LRSLib.jl): work in progress, will support doing all the computations in `Rational{BigInt}`.
+
+Please let me know if you plan to write a new wrapper (or an implementation in pure Julia).
+Since libraries (`cdd`, `lrs`, `pd`, `porta`, `qhull`, ...) use different algorithms, there is no better library for every problem; [here](http://cgm.cs.mcgill.ca/~avis/doc/avis/ABS96a.ps) is a comparison.
+This is why I created `Polyhedra.jl`, it will help people to try every library for their specific problem and pick the one that is the best suited.
+
 [![Build Status](https://travis-ci.org/blegat/Polyhedra.jl.svg?branch=master)](https://travis-ci.org/blegat/Polyhedra.jl)
