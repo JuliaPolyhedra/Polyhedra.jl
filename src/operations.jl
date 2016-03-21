@@ -26,7 +26,7 @@ isstronglyredundantgenerator(p::Polyhedron, i::Integer)  = error("not implemente
 
 # These can optionally be reimplemented for speed by a library
 import Base.isempty
-export numberofinequalities, numberofgenerators, dim, affinehull, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators, transform, project
+export numberofinequalities, numberofgenerators, dim, affinehull, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators, transforminequalities, transformgenerators, project
 
 function numberofinequalities(p::Polyhedron)
   size(getinequalities(p).A, 1)
@@ -41,7 +41,15 @@ Base.isempty(p::Polyhedron) = numberofgenerators(p) == 0
 # eliminate the last dimension by default
 eliminate{N,T}(p::Polyhedron{N,T})  = eliminate(p::Polyhedron, IntSet([N]))
 
-function transform(p::Polyhedron, P::Array)
+function transformgenerators(p::Polyhedron, P::Matrix)
+  # Each generator x is transformed to P * x
+  # If P is orthogonal, the new axis are the rows of P.
+  ext = getgenerators(p)
+  newext = GeneratorDescription(ext.V * P', ext.R * P', ext.vertex, ext.Vlinset, ext.Rlinset)
+  polyhedron(newext, getlibraryfor(p, eltype(P)))
+end
+
+function transforminequalities(p::Polyhedron, P::Matrix)
   # The new axis are the column of P.
   # Let y be the coordinates of a point x in these new axis.
   # We have x = P * y so y = P \ x.
@@ -84,7 +92,7 @@ function project{N,T}(p::Polyhedron{N,T}, P::Array)
     end
     basis = [Q R]
   end
-  eliminate(transform(p, basis), IntSet(m+1:N))
+  eliminate(transforminequalities(p, basis), IntSet(m+1:N))
 end
 
 function fulldim{N,T}(p::Polyhedron{N,T})
