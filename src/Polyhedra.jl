@@ -22,7 +22,7 @@ myeq{T<:AbstractFloat}(x::T, y::T) = y < x+threshold && x < y+threshold
 myeq{T<:Real, S<:Real}(x::T, y::S) = myeq(promote(x, y)...)
 myeqzero{T<:Real}(x::Vector{T}) = myeqzero(sum(abs(x)))
 
-include("description.jl")
+include("representation.jl")
 include("operations.jl")
 include("decompose.jl")
 
