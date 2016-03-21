@@ -56,5 +56,5 @@ The following table provides a list of the Polyhedra Manipulation Libraries impl
 +----------------------------------------------------------------+----------------------------------------------------+--------------+---------+----------------+----------------+
 
 Please let me know if you plan to write a new wrapper (or an implementation in pure Julia).
-Since libraries use different algorithms, there is no better library for every problem; [here](http://cgm.cs.mcgill.ca/~avis/doc/avis/ABS96a.ps) is a comparison.
+Since libraries use different algorithms, there is no better library for every problem; `here <http://cgm.cs.mcgill.ca/~avis/doc/avis/ABS96a.ps>`_ is a comparison.
 This is why I created `Polyhedra.jl`, it will help people to try every library for their specific problem and pick the one that is the best suited.

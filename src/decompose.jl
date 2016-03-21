@@ -156,7 +156,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
               prev = top(hull)
             end
           end
-          if yray != nothing && counterclockwise(V[cur,:] - V[top(prev),:], yray) >= 0
+          if yray != nothing && counterclockwise(V[face_verts[j],:] - V[cur,:], yray) >= 0
             break
           else
             push!(hull, cur)
