@@ -1,22 +1,22 @@
 import Base.round, Base.eltype
 
-export Description, InequalityDescription, GeneratorDescription, splitvertexrays!, fulldim
+export Representation, HRepresentation, VRepresentation, splitvertexrays!, fulldim
 
-abstract Description{T <: Real}
+abstract Representation{T <: Real}
 
-Base.eltype{T <: Real}(desc::Description{T}) = T
+Base.eltype{T <: Real}(desc::Representation{T}) = T
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
 
-# myfree is for wrapper such as CDoubleDescription which use GMPRational
+# myfree is for wrapper such as CDoubleRepresentation which use GMPRational
 
-type InequalityDescription{T <: Real} <: Description{T}
+type HRepresentation{T <: Real} <: Representation{T}
   # Ax <= b
   A::Array{T, 2}
   b::Array{T, 1}
   linset::IntSet
 
-  function InequalityDescription(A::Array{T, 2}, b::Array{T, 1}, linset::IntSet)
+  function HRepresentation(A::Array{T, 2}, b::Array{T, 1}, linset::IntSet)
     if size(A, 1) != length(b)
       error("The length of b must be equal to the number of rows of A")
     end
@@ -29,28 +29,28 @@ type InequalityDescription{T <: Real} <: Description{T}
   end
 end
 
-function myfree{T<:Real}(ine::InequalityDescription{T})
+function myfree{T<:Real}(ine::HRepresentation{T})
   # Nothing to free
 end
 
-function InequalityDescription{S <: Real, T <: Real}(A::Matrix{S}, b::Vector{T}, linset::IntSet=IntSet([]))
+function HRepresentation{S <: Real, T <: Real}(A::Matrix{S}, b::Vector{T}, linset::IntSet=IntSet([]))
   U = promote_type(S, T)
-  InequalityDescription{U}(Matrix{U}(A), Vector{U}(b), linset)
+  HRepresentation{U}(Matrix{U}(A), Vector{U}(b), linset)
 end
-InequalityDescription{T <: Real}(A::Array{T, 2}, b::Array{T, 1}, linset::IntSet=IntSet([])) = InequalityDescription{T}(A, b, linset)
+HRepresentation{T <: Real}(A::Array{T, 2}, b::Array{T, 1}, linset::IntSet=IntSet([])) = HRepresentation{T}(A, b, linset)
 
-fulldim(ine::InequalityDescription) = size(ine.A, 2)
+fulldim(ine::HRepresentation) = size(ine.A, 2)
 
-Base.round{T<:AbstractFloat}(ine::InequalityDescription{T}) = InequalityDescription{T}(Base.round(ine.A), Base.round(ine.b), ine.linset)
+Base.round{T<:AbstractFloat}(ine::HRepresentation{T}) = HRepresentation{T}(Base.round(ine.A), Base.round(ine.b), ine.linset)
 
-type GeneratorDescription{T <: Real} <: Description{T}
+type VRepresentation{T <: Real} <: Representation{T}
   V::Array{T, 2} # each row is a vertex/ray
   R::Array{T, 2} # rays
   vertex::IntSet # vertex or ray in V
   Vlinset::IntSet # linear or not
   Rlinset::IntSet # linear or not
 
-  function GeneratorDescription(V::Array{T, 2}, R::Array{T, 2}, vertex::IntSet, Vlinset::IntSet, Rlinset::IntSet)
+  function VRepresentation(V::Array{T, 2}, R::Array{T, 2}, vertex::IntSet, Vlinset::IntSet, Rlinset::IntSet)
     if length(R) > 0 && length(V) > 0 && size(V, 2) != size(R, 2)
       error("The dimension of the vertices and rays should be the same")
     end
@@ -69,19 +69,19 @@ type GeneratorDescription{T <: Real} <: Description{T}
   end
 end
 
-function myfree{T<:Real}(desc::GeneratorDescription{T})
+function myfree{T<:Real}(desc::VRepresentation{T})
   # Nothing to free
 end
 
-GeneratorDescription{T}(V::Array{T, 2}, R::Array{T, 2}, vertex::IntSet=IntSet(1:size(V,1)), Vlinset::IntSet=IntSet([]), Rlinset::IntSet=IntSet([])) = GeneratorDescription{T}(V, R, vertex, Vlinset, Rlinset)
+VRepresentation{T}(V::Array{T, 2}, R::Array{T, 2}, vertex::IntSet=IntSet(1:size(V,1)), Vlinset::IntSet=IntSet([]), Rlinset::IntSet=IntSet([])) = VRepresentation{T}(V, R, vertex, Vlinset, Rlinset)
 
-GeneratorDescription{T <: Real}(V::Array{T, 2}, vertex::IntSet=IntSet(1:size(V,1)), linset::IntSet=IntSet([])) = GeneratorDescription(V, Matrix{T}(0, size(V, 2)), vertex, linset, IntSet([]))
+VRepresentation{T <: Real}(V::Array{T, 2}, vertex::IntSet=IntSet(1:size(V,1)), linset::IntSet=IntSet([])) = VRepresentation(V, Matrix{T}(0, size(V, 2)), vertex, linset, IntSet([]))
 
-fulldim(ext::GeneratorDescription) = size(ext.V, 2)
+fulldim(ext::VRepresentation) = size(ext.V, 2)
 
-Base.round{T<:AbstractFloat}(ext::GeneratorDescription{T}) = GeneratorDescription{T}(Base.round(ext.V), Base.round(ext.R), ext.vertex, ext.Vlinset, ext.Rlinset)
+Base.round{T<:AbstractFloat}(ext::VRepresentation{T}) = VRepresentation{T}(Base.round(ext.V), Base.round(ext.R), ext.vertex, ext.Vlinset, ext.Rlinset)
 
-function splitvertexrays!{T<:Real}(ext::GeneratorDescription{T})
+function splitvertexrays!{T<:Real}(ext::VRepresentation{T})
   nV = length(ext.vertex)
   if nV != size(ext.V, 1)
     nR = size(ext.R, 1) + size(ext.V, 1) - nV
@@ -113,11 +113,11 @@ function splitvertexrays!{T<:Real}(ext::GeneratorDescription{T})
   end
 end
 
-# Description -> Description
+# Representation -> Representation
 
-Base.convert{T, S}(::Type{Description{T}}, ine::InequalityDescription{S}) = Base.convert(InequalityDescription{T}, ine)
-Base.convert{T, S}(::Type{Description{T}}, ext::GeneratorDescription{S}) = Base.convert(GeneratorDescription{T}, ext)
+Base.convert{T, S}(::Type{Representation{T}}, ine::HRepresentation{S}) = Base.convert(HRepresentation{T}, ine)
+Base.convert{T, S}(::Type{Representation{T}}, ext::VRepresentation{S}) = Base.convert(VRepresentation{T}, ext)
 
-Base.convert{T, S}(::Type{InequalityDescription{T}}, ine::InequalityDescription{S}) = InequalityDescription{T}(Array{T}(ine.A), Array{T}(ine.b), ine.linset)
+Base.convert{T, S}(::Type{HRepresentation{T}}, ine::HRepresentation{S}) = HRepresentation{T}(Array{T}(ine.A), Array{T}(ine.b), ine.linset)
 
-Base.convert{T, S}(::Type{GeneratorDescription{T}}, ext::GeneratorDescription{S}) = GeneratorDescription{T}(Array{T}(ext.V), Array{T}(ext.R), ext.vertex, ext.Vlinset, ext.Rlinset)
+Base.convert{T, S}(::Type{VRepresentation{T}}, ext::VRepresentation{S}) = VRepresentation{T}(Array{T}(ext.V), Array{T}(ext.R), ext.vertex, ext.Vlinset, ext.Rlinset)

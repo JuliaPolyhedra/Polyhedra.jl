@@ -7,15 +7,15 @@ if VERSION < v"0.5-"
   normalize(v,p=2) = v / norm(v,p)
 end
 
-polyhedron(desc::Description) = polyhedron(desc, getlibraryfor(eltype(desc)))
+polyhedron(desc::Representation) = polyhedron(desc, getlibraryfor(eltype(desc)))
 Base.copy(p::Polyhedron)                                 = error("not implemented")
-Base.push!(p::Polyhedron, ine::InequalityDescription)    = error("not implemented")
-Base.push!(p::Polyhedron, ext::GeneratorDescription)     = error("not implemented")
+Base.push!(p::Polyhedron, ine::HRepresentation)          = error("not implemented")
+Base.push!(p::Polyhedron, ext::VRepresentation)          = error("not implemented")
 inequalitiesarecomputed(p::Polyhedron)                   = error("not implemented")
 getinequalities(p::Polyhedron)                           = error("not implemented")
 generatorsarecomputed(p::Polyhedron)                     = error("not implemented")
 getgenerators(p::Polyhedron)                             = error("not implemented")
-eliminate(p::Polyhedron, delset::IntSet)                = error("not implemented")
+eliminate(p::Polyhedron, delset::IntSet)                 = error("not implemented")
 detectlinearities!(p::Polyhedron)                        = error("not implemented")
 removeredundantinequalities!(p::Polyhedron)              = error("not implemented")
 removeredundantgenerators!(p::Polyhedron)                = error("not implemented")
@@ -45,7 +45,7 @@ function transformgenerators(p::Polyhedron, P::Matrix)
   # Each generator x is transformed to P * x
   # If P is orthogonal, the new axis are the rows of P.
   ext = getgenerators(p)
-  newext = GeneratorDescription(ext.V * P', ext.R * P', ext.vertex, ext.Vlinset, ext.Rlinset)
+  newext = VRepresentation(ext.V * P', ext.R * P', ext.vertex, ext.Vlinset, ext.Rlinset)
   polyhedron(newext, getlibraryfor(p, eltype(P)))
 end
 
@@ -56,7 +56,7 @@ function transforminequalities(p::Polyhedron, P::Matrix)
   # We have
   # b = Ax = A * P * (P \ x) = (A * P) * y
   ine = getinequalities(p)
-  newine = InequalityDescription(ine.A * P, ine.b, ine.linset)
+  newine = HRepresentation(ine.A * P, ine.b, ine.linset)
   polyhedron(newine, getlibraryfor(p, eltype(P)))
 end
 
@@ -129,7 +129,7 @@ function radialprojectoncut{N}(p::Polyhedron{N}, cut::Vector, at)
     end
   end
   # no more rays nor linearity since at != 0
-  ext2 = GeneratorDescription(V, R)
+  ext2 = VRepresentation(V, R)
   polyhedron(ext2, getlibraryfor(p, eltype(ext2)))
 end
 
@@ -157,7 +157,7 @@ function affinehull(p::Polyhedron)
       cur += 1
     end
   end
-  typeof(p)(InequalityDescription(A, b, IntSet(1:neqs)))
+  typeof(p)(HRepresentation(A, b, IntSet(1:neqs)))
 end
 
 function getredundantinequalities(p::Polyhedron)
