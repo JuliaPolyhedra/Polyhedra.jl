@@ -34,10 +34,27 @@ Getting Libraries
 
 .. _polyhedra-librarytable:
 
-+-------------------------------------------------------------+----------------------------------------------------+--------------+---------+----------------+----------------+
-| Solver                                                      | Julia Package                                      | Library      | License | Exact Rational | Floating point |
-+=============================================================+====================================================+==============+=========+================+================+
-| `cdd <https://www.inf.ethz.ch/personal/fukudak/cdd_home/>`_ | `CDDLib.jl <https://github.com/blegat/CDDLib.jl>`_ | ``CDDLib()`` |  GPL    |  X  |  X  |
-+-------------------------------------------------------------+----------------------------------------------------+--------------+---------+----------------+----------------+
-| `lrs <http://cgm.cs.mcgill.ca/~avis/C/lrs.html>`_           | `LRSLib.jl <https://github.com/blegat/LRSLib.jl>`_ | ``LRSLib()`` |  GPL    |  X  |  X  |
-+-------------------------------------------------------------+----------------------------------------------------+--------------+---------+----------------+----------------+
+Many C libraries are are available for manipulating Polyhedra.
+Some of them works with floating point arithmetic and some of them can do the computation exactly using rational arithmetic and multiple precision libraries such as `GMP <https://gmplib.org/>`_.
+Julia also natively support Rational arithmetic using multiple precision libraries and of course floating point arithmetic.
+That makes the use of both arithmetic very easy and transparent.
+
+The following table provides a list of the Polyhedra Manipulation Libraries implementing the interface of `Polyhedra.jl`.
+
++----------------------------------------------------------------+----------------------------------------------------+--------------+---------+----------------+----------------+
+| Solver                                                         | Julia Package                                      | Library      | License | Exact Rational | Floating point |
++================================================================+====================================================+==============+=========+================+================+
+| `cdd <https://www.inf.ethz.ch/personal/fukudak/cdd_home/>`_    | `CDDLib.jl <https://github.com/blegat/CDDLib.jl>`_ | ``CDDLib()`` |  GPL    |        X       |        X       |
++----------------------------------------------------------------+----------------------------------------------------+--------------+---------+----------------+----------------+
+| `lrs <http://cgm.cs.mcgill.ca/~avis/C/lrs.html>`_              | `LRSLib.jl <https://github.com/blegat/LRSLib.jl>`_ | ``LRSLib()`` |  GPL    |        X       |                |
++----------------------------------------------------------------+----------------------------------------------------+--------------+---------+----------------+----------------+
+| `pd <http://www.cs.unb.ca/~bremner/pd/>`_                      | None                                               |              |  GPL    |        X       |                |
++----------------------------------------------------------------+----------------------------------------------------+--------------+---------+----------------+----------------+
+| `porta <http://comopt.ifi.uni-heidelberg.de/software/PORTA/>`_ | None                                               |              |  GPL    |        X       |                |
++----------------------------------------------------------------+----------------------------------------------------+--------------+---------+----------------+----------------+
+| `qhull <http://www.qhull.org/>`_                               | None                                               |              |         |                |        X       |
++----------------------------------------------------------------+----------------------------------------------------+--------------+---------+----------------+----------------+
+
+Please let me know if you plan to write a new wrapper (or an implementation in pure Julia).
+Since libraries use different algorithms, there is no better library for every problem; [here](http://cgm.cs.mcgill.ca/~avis/doc/avis/ABS96a.ps) is a comparison.
+This is why I created `Polyhedra.jl`, it will help people to try every library for their specific problem and pick the one that is the best suited.
