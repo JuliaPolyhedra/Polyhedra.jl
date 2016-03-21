@@ -26,7 +26,7 @@ isstronglyredundantgenerator(p::Polyhedron, i::Integer)  = error("not implemente
 
 # These can optionally be reimplemented for speed by a library
 import Base.isempty
-export numberofinequalities, numberofgenerators, dim, affinehull, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators, transforminequalities, transformgenerators, project
+export numberofinequalities, numberofgenerators, dim, affinehull, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators, transforminequalities, transformgenerators, project, radialprojectoncut
 
 function numberofinequalities(p::Polyhedron)
   size(getinequalities(p).A, 1)
@@ -93,6 +93,44 @@ function project{N,T}(p::Polyhedron{N,T}, P::Array)
     basis = [Q R]
   end
   eliminate(transforminequalities(p, basis), IntSet(m+1:N))
+end
+
+function radialprojectoncut{N}(p::Polyhedron{N}, cut::Vector, at)
+  if myeqzero(at)
+    error("at is zero")
+  end
+  if length(cut) != N
+    error("The dimensions of the cut and of the polyhedron do not match")
+  end
+  ext = getgenerators(p)
+  V = copy(ext.V)
+  R = copy(ext.R)
+  for i in 1:(size(V, 1)+size(R, 1))
+    v = vec((i <= size(V, 1)) ? ext.V[i,:] : ext.R[i-size(V, 1),:])
+    if i in ext.vertex
+      if !myeq(dot(cut, v), at)
+        error("The nonhomogeneous part should be in the cut")
+      end
+    else
+      if myeqzero(v)
+        # It can happen since I do not have remove redundancy
+        v = zeros(eltype(v), length(v))
+      elseif !myeq(dot(cut, v), at)
+        if myeqzero(dot(cut, v))
+          error("A ray is parallel to the cut")
+        end
+        v = v * at / dot(cut, v)
+      end
+    end
+    if i <= size(V, 1)
+      V[i,:] = v
+    else
+      R[i-size(V, 1),:] = v
+    end
+  end
+  # no more rays nor linearity since at != 0
+  ext2 = GeneratorDescription(V, R)
+  polyhedron(ext2, getlibraryfor(p, eltype(ext2)))
 end
 
 function fulldim{N,T}(p::Polyhedron{N,T})

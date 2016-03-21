@@ -2,8 +2,6 @@ using FixedSizeArrays
 using DataStructures
 import GeometryTypes.decompose, GeometryTypes.isdecomposable
 
-const threshold = 1e-8
-
 function fulldecompose{T}(poly::Polyhedron{3,T})
   ine = getinequalities(poly)
   ext = getgenerators(poly)
@@ -13,10 +11,6 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
   RT = typeof(one(T)/2)
 
   A = ine.A
-  myeqzero{T<:Real}(x::T) = x == zero(T)
-  myeqzero{T<:AbstractFloat}(x::T) = -threshold < x < threshold
-  myeq{T<:Real}(x::T, y::T) = x == y
-  myeq{T<:AbstractFloat}(x::T, y::T) = y < x+threshold && x < y+threshold
   rayinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(sum(abs(r)))
   vertinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(sum(abs(r)))
   R = ext.R

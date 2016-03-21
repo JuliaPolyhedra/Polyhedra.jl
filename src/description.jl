@@ -73,11 +73,9 @@ function myfree{T<:Real}(desc::GeneratorDescription{T})
   # Nothing to free
 end
 
-GeneratorDescription{T}(V::Array{T, 2}, R::Array{T, 2}, vertex::IntSet, Vlinset::IntSet, Rlinset::IntSet) = GeneratorDescription{T}(V, R, vertex, Vlinset, Rlinset)
+GeneratorDescription{T}(V::Array{T, 2}, R::Array{T, 2}, vertex::IntSet=IntSet(1:size(V,1)), Vlinset::IntSet=IntSet([]), Rlinset::IntSet=IntSet([])) = GeneratorDescription{T}(V, R, vertex, Vlinset, Rlinset)
 
-GeneratorDescription{T <: Real}(V::Array{T, 2}, vertex::IntSet, linset::IntSet) = GeneratorDescription(V, Matrix{T}(0, size(V, 2)), vertex, linset, IntSet([]))
-GeneratorDescription{T <: Real}(V::Array{T, 2}, vertex::IntSet) = GeneratorDescription(V, vertex, IntSet([]))
-GeneratorDescription{T <: Real}(V::Array{T, 2}) = GeneratorDescription(V, IntSet(1:size(V,1)))
+GeneratorDescription{T <: Real}(V::Array{T, 2}, vertex::IntSet=IntSet(1:size(V,1)), linset::IntSet=IntSet([])) = GeneratorDescription(V, Matrix{T}(0, size(V, 2)), vertex, linset, IntSet([]))
 
 fulldim(ext::GeneratorDescription) = size(ext.V, 2)
 
