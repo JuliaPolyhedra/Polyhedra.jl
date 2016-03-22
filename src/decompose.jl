@@ -33,7 +33,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
     start + time * ray
   end
 
-  triangles = Stack(Tuple{Tuple{Vector{Float64},Vector{Float64},Vector{Float64}},Int64})
+  triangles = DataStructures.Stack(Tuple{Tuple{Vector{Float64},Vector{Float64},Vector{Float64}},Int64})
   for i in 1:size(A, 1)
     xray = nothing
     yray = nothing
@@ -113,7 +113,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
       else
         center = vec(V[first(face_vert), :])
       end
-      hull = Stack(Any)
+      hull = DataStructures.Stack(Any)
       push!(hull, exit_point(center, line))
       if lineleft
         push!(hull, exit_point(center, cross(zray, line)))
@@ -146,7 +146,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
       end
       sort!(face_verts, by = j -> dot(V[j,:], sweep_norm))
       function getsemihull(sign_sense)
-        hull = Stack(Int)
+        hull = DataStructures.Stack(Int)
         prev = sign_sense == 1 ? face_verts[1] : face_verts[length(face_verts)]
         cur = prev
         for j in (sign_sense == 1 ? (2:length(face_verts)) : ((length(face_verts)-1):-1:1))
@@ -154,7 +154,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
             cur = prev
             pop!(hull)
             if !isempty(hull)
-              prev = top(hull)
+              prev = DataStructures.top(hull)
             end
           end
           if yray != nothing && counterclockwise(V[face_verts[j],:] - V[cur,:], yray) >= 0
@@ -172,12 +172,12 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
       if yray == nothing
         ytox_hull = getsemihull(-1)
       else
-        ytox_hull = Stack(Any)
+        ytox_hull = DataStructures.Stack(Any)
         push!(ytox_hull, face_verts[1])
-        if top(xtoy_hull) != face_verts[1]
-          push!(ytox_hull, top(xtoy_hull))
+        if DataStructures.top(xtoy_hull) != face_verts[1]
+          push!(ytox_hull, DataStructures.top(xtoy_hull))
         end
-        push!(ytox_hull, exit_point(V[top(xtoy_hull),:], yray))
+        push!(ytox_hull, exit_point(V[DataStructures.top(xtoy_hull),:], yray))
         push!(ytox_hull, exit_point(V[face_verts[1],:], xray))
       end
       hulls = (xtoy_hull, ytox_hull)
