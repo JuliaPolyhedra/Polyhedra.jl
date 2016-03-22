@@ -373,7 +373,7 @@ function isredundantinequality(p::Polyhedron, a::Vector, b, eq::Bool)
     if !sol[1]
       sol
     else
-      sredundantinequalityaux(p, -a, -b)
+      isredundantinequalityaux(p, -a, -b)
     end
   else
     isredundantinequalityaux(p, a, b)
