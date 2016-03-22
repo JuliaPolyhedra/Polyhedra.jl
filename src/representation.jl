@@ -43,6 +43,18 @@ fulldim(ine::HRepresentation) = size(ine.A, 2)
 
 Base.round{T<:AbstractFloat}(ine::HRepresentation{T}) = HRepresentation{T}(Base.round(ine.A), Base.round(ine.b), ine.linset)
 
+function Base.intersect{T}(ine1::HRepresentation{T}, ine2::HRepresentation{T})
+  A = [ine1.A; ine2.A]
+  b = [ine1.b; ine2.b]
+  linset = copy(ine1.linset)
+  for i in 1:size(ine2.A, 1)
+    if i in ine2.linset
+      push!(linset, size(ine1.A, 1) + i)
+    end
+  end
+  HRepresentation{T}(A, b, linset)
+end
+
 type VRepresentation{T <: Real} <: Representation{T}
   V::Array{T, 2} # each row is a vertex/ray
   R::Array{T, 2} # rays
@@ -80,6 +92,28 @@ VRepresentation{T <: Real}(V::Array{T, 2}, vertex::IntSet=IntSet(1:size(V,1)), l
 fulldim(ext::VRepresentation) = size(ext.V, 2)
 
 Base.round{T<:AbstractFloat}(ext::VRepresentation{T}) = VRepresentation{T}(Base.round(ext.V), Base.round(ext.R), ext.vertex, ext.Vlinset, ext.Rlinset)
+
+function (+){T<:Real}(ext1::VRepresentation{T}, ext2::VRepresentation{T})
+  V = [ext1.V; ext2.V]
+  R = [ext1.R; ext2.R]
+  vertex = copy(ext1.vertex)
+  Vlinset = copy(ext1.Vlinset)
+  for i in 1:size(ext2.V, 1)
+    if i in ext2.vertex
+      push!(vertex, size(ine1.V, 1) + i)
+    end
+    if i in ext2.Vlinset
+      push!(Vlinset, size(ine1.V, 1) + i)
+    end
+  end
+  Rlinset = copy(ext1.Rlinset)
+  for i in 1:size(ext2.R, 1)
+    if i in ext2.Rlinset
+      push!(Rlinset, size(ine1.R, 1) + i)
+    end
+  end
+  VRepresentation{T}(V, R, vertex, Vlinset, Rlinset)
+end
 
 function splitvertexrays!{T<:Real}(ext::VRepresentation{T})
   nV = length(ext.vertex)

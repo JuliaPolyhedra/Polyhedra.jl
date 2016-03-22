@@ -1,5 +1,6 @@
 using FixedSizeArrays
-using DataStructures
+# I only import it and do not use "using" so that Datastructures.status does not conflict with MathProgBase.status
+import DataStructures
 import GeometryTypes.decompose, GeometryTypes.isdecomposable
 
 function fulldecompose{T}(poly::Polyhedron{3,T})
