@@ -39,7 +39,7 @@ Some of them works with floating point arithmetic and some of them can do the co
 Julia also natively support Rational arithmetic using multiple precision libraries and of course floating point arithmetic.
 That makes the use of both arithmetic very easy and transparent.
 
-The following table provides a list of the Polyhedra Manipulation Libraries implementing the interface of `Polyhedra.jl`.
+The following table provides a list of the Polyhedra Manipulation Libraries implementing the interface of ``Polyhedra.jl``.
 
 +----------------------------------------------------------------+----------------------------------------------------+--------------+---------+----------------+----------------+
 | Solver                                                         | Julia Package                                      | Library      | License | Exact Rational | Floating point |
@@ -57,4 +57,3 @@ The following table provides a list of the Polyhedra Manipulation Libraries impl
 
 Please let me know if you plan to write a new wrapper (or an implementation in pure Julia).
 Since libraries use different algorithms, there is no better library for every problem; `here <http://cgm.cs.mcgill.ca/~avis/doc/avis/ABS96a.ps>`_ is a comparison.
-This is why I created `Polyhedra.jl`, it will help people to try every library for their specific problem and pick the one that is the best suited.

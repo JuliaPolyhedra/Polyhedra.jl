@@ -17,6 +17,5 @@ Here is a list of the Polyhedra Manipulation Libraries implementing the interfac
 
 Please let me know if you plan to write a new wrapper (or an implementation in pure Julia).
 Since libraries (`cdd`, `lrs`, `pd`, `porta`, `qhull`, ...) use different algorithms, there is no better library for every problem; [here](http://cgm.cs.mcgill.ca/~avis/doc/avis/ABS96a.ps) is a comparison.
-This is why I created `Polyhedra.jl`, it will help people to try every library for their specific problem and pick the one that is the best suited.
 
 [![Build Status](https://travis-ci.org/blegat/Polyhedra.jl.svg?branch=master)](https://travis-ci.org/blegat/Polyhedra.jl)
