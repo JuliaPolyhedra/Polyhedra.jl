@@ -35,7 +35,7 @@ myeq{T<:AbstractFloat}(x::T, y::T) = y < x+threshold && x < y+threshold
 myeq{T<:Real, S<:Real}(x::T, y::S) = myeq(promote(x, y)...)
 myeqzero{T<:Real}(x::Vector{T}) = myeqzero(sum(abs(x)))
 
-import Base.intersect, Base.+, Base.isempty, Base.copy, Base.push!
+import Base.intersect, Base.+, Base.*, Base.isempty, Base.copy, Base.push!
 
 include("representation.jl")
 include("operations.jl")

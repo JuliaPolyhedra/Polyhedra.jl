@@ -1,5 +1,5 @@
 # Mandatory
-export polyhedron, getinequalities, getgenerators, eliminate, detectlinearities!, removeredundantinequalities!, removeredundantgenerators!, isredundantinequality, isredundantgenerator, isstronglyredundantinequality, isstronglyredundantgenerator
+export polyhedron, getinequalities, getgenerators, eliminate, detectlinearities!, removeredundantinequalities!, removeredundantgenerators!, isredundantinequality, isredundantgenerator, isstronglyredundantinequality, isstronglyredundantgenerator, inequalitiesarecomputed, generatorsarecomputed
 
 if VERSION < v"0.5-"
   export normalize
@@ -25,6 +25,15 @@ isstronglyredundantgenerator(p::Polyhedron, i::Integer)      = error("not implem
 
 # These can optionally be reimplemented for speed by a library
 export numberofinequalities, numberofgenerators, dim, affinehull, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators, transforminequalities, transformgenerators, project, radialprojectoncut
+
+function call{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
+  if !inequalitiesarecomputed(p) && generatorsarecomputed(p)
+    repr = VRepresentation{S}(getgenerators(p))
+  else
+    repr = HRepresentation{S}(getinequalities(p))
+  end
+  polyhedron(repr, getlibraryfor(p, S))
+end
 
 function numberofinequalities(p::Polyhedron)
   size(getinequalities(p).A, 1)
@@ -223,6 +232,19 @@ function (+)(p::Polyhedron, ext::VRepresentation)
 end
 (+)(ext::VRepresentation, p::Polyhedron) = Base.intersect(p, ext)
 (+)(p1::Polyhedron, p2::Polyhedron) = Base.intersect(p1, getgenerators(p2))
+
+function (*)(p1::Polyhedron, p2::Polyhedron)
+  # iac1 = inequalitiesarecomputed(p1) ? 1 : 0
+  # iac2 = inequalitiesarecomputed(p2) ? 1 : 0
+  # gac1 = genratorsarecomputed(p1) ? 1 : 0
+  # gac2 = genratorsarecomputed(p2) ? 1 : 0
+  # if iac1 + iac2 >= gac1 + gac2
+  repr = getinequalities(p1) * getinequalities(p2)
+  # else
+  #   repr = getgenerators(p1) * getgenerators(p2)
+  # end
+  polyhedron(repr, getlibraryfor(p1, eltype(repr)))
+end
 
 using MathProgBase
 

@@ -55,6 +55,16 @@ function Base.intersect{T}(ine1::HRepresentation{T}, ine2::HRepresentation{T})
   HRepresentation{T}(A, b, linset)
 end
 
+function (*){S, T}(ine1::HRepresentation{S}, ine2::HRepresentation{T})
+  U = promote_type(S, T)
+  A = [ine1.A zeros(U, size(ine1.A, 1), size(ine2.A, 2)); zeros(U, size(ine2.A, 1), size(ine1.A, 2)) ine2.A]
+  linset = copy(ine1.linset)
+  for lin in ine2.linset
+    push!(linset, size(ine1.A, 1) + lin)
+  end
+  HRepresentation{U}(A, [ine1.b; ine2.b], linset)
+end
+
 type VRepresentation{T <: Real} <: Representation{T}
   V::Array{T, 2} # each row is a vertex/ray
   R::Array{T, 2} # rays

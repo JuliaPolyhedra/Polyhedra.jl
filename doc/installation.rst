@@ -11,8 +11,8 @@ Getting Julia
 ^^^^^^^^^^^^^
 
 The first step is to install Julia.
-At the time of writing, the latest release of Julia is version ``0.4`` adn the version ``0.5`` is in development.
-Polyhedra can be used with either Julia 0.4 and 0.5.
+At the time of writing, the latest release of Julia is version ``0.4`` and the version ``0.5`` is in development.
+Polyhedra can be used with either Julia ``0.4`` and ``0.5``.
 Download links and more detailed instructions are available on the `Julia website <http://julialang.org>`_.
 
 Getting Polyhedra
