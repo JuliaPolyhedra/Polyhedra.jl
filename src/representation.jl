@@ -4,7 +4,7 @@ export Representation, HRepresentation, VRepresentation, splitvertexrays!, fulld
 
 abstract Representation{T <: Real}
 
-Base.eltype{T <: Real}(desc::Representation{T}) = T
+Base.eltype{T <: Real}(repr::Representation{T}) = T
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
 
@@ -85,13 +85,13 @@ type VRepresentation{T <: Real} <: Representation{T}
     if ~isempty(Rlinset) && last(Rlinset) > size(R, 1)
       error("The elements of Rlinset should be between 1 and the number of rows of R")
     end
-    desc = new(V, R, vertex, Vlinset, Rlinset)
-    finalizer(desc, myfree)
-    desc
+    repr = new(V, R, vertex, Vlinset, Rlinset)
+    finalizer(repr, myfree)
+    repr
   end
 end
 
-function myfree{T<:Real}(desc::VRepresentation{T})
+function myfree{T<:Real}(repr::VRepresentation{T})
   # Nothing to free
 end
 

@@ -6,7 +6,7 @@ if VERSION < v"0.5-"
   normalize(v,p=2) = v / norm(v,p)
 end
 
-polyhedron(desc::Representation) = polyhedron(desc, getlibraryfor(eltype(desc)))
+polyhedron(repr::Representation) = polyhedron(repr, getlibraryfor(eltype(repr)))
 Base.copy(p::Polyhedron)                                     = error("not implemented")
 Base.push!(p::Polyhedron, ine::HRepresentation)              = error("not implemented")
 Base.push!(p::Polyhedron, ext::VRepresentation)              = error("not implemented")
