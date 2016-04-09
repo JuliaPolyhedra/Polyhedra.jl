@@ -3,7 +3,7 @@ function permutahedrontest{Lib<:PolyhedraLibrary}(lib::Lib)
   b = [6, 3, 3, 3, -1, -1, -1]
   linset = IntSet([1])
   V = [2 3 1; 1 3 2; 3 1 2; 3 2 1; 2 1 3; 1 2 3]
-  ine = HRepresentation(A, b, linset)
+  ine = SimpleHRepresentation(A, b, linset)
   poly = polyhedron(ine, lib)
   @test !isempty(poly)
   inequality_fulltest(poly, A, b, linset)
@@ -31,7 +31,7 @@ function permutahedrontest{Lib<:PolyhedraLibrary}(lib::Lib)
             0  0  0  1  0  1]
   blift = [0; 0; 0; 0; 0; 0; -3; 3; -1; -1; -(1+2); (1+2)]
   linsetlift = IntSet([])
-  inelift = HRepresentation(Alift, blift, linsetlift)
+  inelift = SimpleHRepresentation(Alift, blift, linsetlift)
   polylift2 = polyhedron(inelift, lib)
   polylift1 = eliminate(polylift2, IntSet([5,6]))
   polylift0 = eliminate(polylift1)

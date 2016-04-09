@@ -25,10 +25,10 @@ function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
   end
   A = [A1; A2; A3]
   b = [b1; b2; b3]
-  ine = HRepresentation(A, b)
+  ine = SimpleHRepresentation(A, b)
   poly = polyhedron(ine, lib)
   @test !isempty(poly)
-  ext  = getgenerators(poly)
+  ext  = SimpleVRepresentation(getgenerators(poly))
   target = ones(Int, 9) * (3 // 4)
   ok = false
   for i = 1:size(ext.V, 1)
@@ -44,7 +44,7 @@ function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
   cutb = 6
   Acut = [cutA; A]
   bcut = [cutb; b]
-  inecut = HRepresentation(Acut, bcut)
+  inecut = SimpleHRepresentation(Acut, bcut)
   polycut = polyhedron(inecut, lib)
   @test !isempty(polycut)
   (isredundant, certificate) = isredundantinequality(polycut, 1)

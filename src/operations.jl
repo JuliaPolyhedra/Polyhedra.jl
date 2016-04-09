@@ -8,8 +8,8 @@ end
 
 polyhedron(repr::Representation) = polyhedron(repr, getlibraryfor(eltype(repr)))
 Base.copy(p::Polyhedron)                                     = error("not implemented")
-Base.push!(p::Polyhedron, ine::HRepresentation)              = error("not implemented")
-Base.push!(p::Polyhedron, ext::VRepresentation)              = error("not implemented")
+Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})              = error("not implemented")
+Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})              = error("not implemented")
 inequalitiesarecomputed(p::Polyhedron)                       = error("not implemented")
 getinequalities(p::Polyhedron)                               = error("not implemented")
 generatorsarecomputed(p::Polyhedron)                         = error("not implemented")
@@ -28,9 +28,9 @@ export numberofinequalities, numberofgenerators, dim, affinehull, getredundantin
 
 function call{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
   if !inequalitiesarecomputed(p) && generatorsarecomputed(p)
-    repr = VRepresentation{S}(getgenerators(p))
+    repr = VRepresentation{N,S}(getgenerators(p))
   else
-    repr = HRepresentation{S}(getinequalities(p))
+    repr = HRepresentation{N,S}(getinequalities(p))
   end
   polyhedron(repr, getlibraryfor(p, S))
 end
@@ -47,12 +47,14 @@ end
 # eliminate the last dimension by default
 eliminate{N,T}(p::Polyhedron{N,T})  = eliminate(p::Polyhedron, IntSet([N]))
 
-function transformgenerators(p::Polyhedron, P::Matrix)
+function transformgenerators{N}(p::Polyhedron{N}, P::Matrix)
   # Each generator x is transformed to P * x
   # If P is orthogonal, the new axis are the rows of P.
-  ext = getgenerators(p)
-  newext = VRepresentation(ext.V * P', ext.R * P', ext.vertex, ext.Vlinset, ext.Rlinset)
-  polyhedron(newext, getlibraryfor(p, eltype(P)))
+  if size(P, 2) != N
+    error("The number of columns of P must match the dimension of the polyhedron")
+  end
+  ext = P * getgenerators(p)
+  polyhedron(ext, getlibraryfor(p, eltype(ext)))
 end
 
 function transforminequalities(p::Polyhedron, P::Matrix)
@@ -61,9 +63,8 @@ function transforminequalities(p::Polyhedron, P::Matrix)
   # We have x = P * y so y = P \ x.
   # We have
   # b = Ax = A * P * (P \ x) = (A * P) * y
-  ine = getinequalities(p)
-  newine = HRepresentation(ine.A * P, ine.b, ine.linset)
-  polyhedron(newine, getlibraryfor(p, eltype(P)))
+  ine = getinequalities(p) * P
+  polyhedron(ine, getlibraryfor(p, eltype(ine)))
 end
 
 function project{N,T}(p::Polyhedron{N,T}, P::Array)
@@ -111,31 +112,27 @@ function radialprojectoncut{N}(p::Polyhedron{N}, cut::Vector, at)
   ext = getgenerators(p)
   V = copy(ext.V)
   R = copy(ext.R)
-  for i in 1:(size(V, 1)+size(R, 1))
-    v = vec((i <= size(V, 1)) ? ext.V[i,:] : ext.R[i-size(V, 1),:])
-    if i in ext.vertex
-      if !myeq(dot(cut, v), at)
-        error("The nonhomogeneous part should be in the cut")
-      end
-    else
-      if myeqzero(v)
-        # It can happen since I do not have remove redundancy
-        v = zeros(eltype(v), length(v))
-      elseif !myeq(dot(cut, v), at)
-        if myeqzero(dot(cut, v))
-          error("A ray is parallel to the cut")
-        end
-        v = v * at / dot(cut, v)
-      end
-    end
-    if i <= size(V, 1)
-      V[i,:] = v
-    else
-      R[i-size(V, 1),:] = v
+  for i in 1:size(V, 1)
+    v = vec(ext.V[i,:])
+    if !myeq(dot(cut, v), at)
+      error("The nonhomogeneous part should be in the cut")
     end
   end
+  for i in 1:size(R, 1)
+    v = vec(ext.R[i,:])
+    if myeqzero(v)
+      # It can happen since I do not necessarily have removed redundancy
+      v = zeros(eltype(v), length(v))
+    elseif !myeq(dot(cut, v), at)
+      if myeqzero(dot(cut, v))
+        error("A ray is parallel to the cut") # FIXME is ok if some vertices are on the cut ? (i.e. at == 0, cut is not needed)
+      end
+      v = v * at / dot(cut, v)
+    end
+    R[i,:] = v
+  end
   # no more rays nor linearity since at != 0
-  ext2 = VRepresentation(V, R)
+  ext2 = SimpleVRepresentation(V, R)
   polyhedron(ext2, getlibraryfor(p, eltype(ext2)))
 end
 
@@ -151,19 +148,7 @@ end
 
 function affinehull(p::Polyhedron)
   detectlinearities!(p)
-  ine = getinequalities(p)
-  neqs = length(ine.linset)
-  A = Matrix{eltype(ine)}(neqs, size(ine.A, 2))
-  b = Vector{eltype(ine)}(neqs)
-  cur = 1
-  for i in 1:size(ine.A, 1)
-    if i in ine.linset
-      A[cur, :] = ine.A[i, :]
-      b[cur] = ine.b[i]
-      cur += 1
-    end
-  end
-  typeof(p)(HRepresentation(A, b, IntSet(1:neqs)))
+  typeof(p)(affinehull(getinequalities(p)))
 end
 
 function getredundantinequalities(p::Polyhedron)
@@ -219,19 +204,19 @@ function isredundantgenerator(p::Polyhedron, x::Vector, vertex::Bool)
   return (true, Nullable{Vector{eltype(ine)}}(nothing))
 end
 
-function Base.intersect(p::Polyhedron, ine::HRepresentation)
+function Base.intersect{N}(p::Polyhedron{N}, ine::HRepresentation{N})
   inter = Base.intersect(getinequalities(p), ine)
   polyhedron(inter, getlibraryfor(p, eltype(inter)))
 end
-Base.intersect(ine::HRepresentation, p::Polyhedron) = Base.intersect(p, ine)
-Base.intersect(p1::Polyhedron, p2::Polyhedron) = Base.intersect(p1, getinequalities(p2))
+Base.intersect{N}(ine::HRepresentation{N}, p::Polyhedron{N}) = Base.intersect(p, ine)
+Base.intersect{N}(p1::Polyhedron{N}, p2::Polyhedron{N}) = Base.intersect(p1, getinequalities(p2))
 
-function (+)(p::Polyhedron, ext::VRepresentation)
+function (+){N}(p::Polyhedron{N}, ext::VRepresentation{N})
   sum = getgenerators(p) + ine
   polyhedron(sum, getlibraryfor(p, eltype(sum)))
 end
-(+)(ext::VRepresentation, p::Polyhedron) = Base.intersect(p, ext)
-(+)(p1::Polyhedron, p2::Polyhedron) = Base.intersect(p1, getgenerators(p2))
+(+){N}(ext::VRepresentation{N}, p::Polyhedron{N}) = Base.intersect(p, ext)
+(+){N}(p1::Polyhedron{N}, p2::Polyhedron{N}) = Base.intersect(p1, getgenerators(p2))
 
 function (*)(p1::Polyhedron, p2::Polyhedron)
   # iac1 = inequalitiesarecomputed(p1) ? 1 : 0
@@ -255,7 +240,7 @@ export LPPolyhedron, SimpleLPPolyhedron
 abstract LPPolyhedron{N, T}
 
 type SimpleLPPolyhedron{N, T} <: LPPolyhedron{N, T}
-  ext::VRepresentation{T}
+  ext::SimpleVRepresentation{T}
   obj::Vector{T}
   sense::Symbol
 
