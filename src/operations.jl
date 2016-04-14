@@ -1,5 +1,5 @@
 # Mandatory
-export polyhedron, getinequalities, getgenerators, eliminate, detectlinearities!, removeredundantinequalities!, removeredundantgenerators!, isredundantinequality, isredundantgenerator, isstronglyredundantinequality, isstronglyredundantgenerator, inequalitiesarecomputed, generatorsarecomputed
+export polyhedron, getinequalities, getgenerators, eliminate, detecthlinearities!, detectvlinearities!, removeredundantinequalities!, removeredundantgenerators!, isredundantinequality, isredundantgenerator, isstronglyredundantinequality, isstronglyredundantgenerator, inequalitiesarecomputed, generatorsarecomputed
 
 if VERSION < v"0.5-"
   export normalize
@@ -8,14 +8,15 @@ end
 
 polyhedron(repr::Representation) = polyhedron(repr, getlibraryfor(eltype(repr)))
 Base.copy(p::Polyhedron)                                     = error("not implemented")
-Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})              = error("not implemented")
-Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})              = error("not implemented")
+Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})     = error("not implemented")
+Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})     = error("not implemented")
 inequalitiesarecomputed(p::Polyhedron)                       = error("not implemented")
 getinequalities(p::Polyhedron)                               = error("not implemented")
 generatorsarecomputed(p::Polyhedron)                         = error("not implemented")
 getgenerators(p::Polyhedron)                                 = error("not implemented")
 eliminate(p::Polyhedron, delset::IntSet)                     = error("not implemented")
-detectlinearities!(p::Polyhedron)                            = error("not implemented")
+detecthlinearities!(p::Polyhedron)                           = error("not implemented")
+detectvlinearities!(p::Polyhedron)                           = error("not implemented")
 removeredundantinequalities!(p::Polyhedron)                  = error("not implemented")
 removeredundantgenerators!(p::Polyhedron)                    = error("not implemented")
 isredundantinequality(p::Polyhedron, i::Integer)             = error("not implemented")
@@ -141,13 +142,13 @@ function fulldim{N,T}(p::Polyhedron{N,T})
 end
 
 function dim(p::Polyhedron)
-  detectlinearities!(p)
+  detecthlinearities!(p)
   ine = getinequalities(p)
   d = size(ine.A, 2) - length(ine.linset)
 end
 
 function affinehull(p::Polyhedron)
-  detectlinearities!(p)
+  detecthlinearities!(p)
   typeof(p)(affinehull(getinequalities(p)))
 end
 
@@ -240,7 +241,7 @@ export LPPolyhedron, SimpleLPPolyhedron
 abstract LPPolyhedron{N, T}
 
 type SimpleLPPolyhedron{N, T} <: LPPolyhedron{N, T}
-  ext::SimpleVRepresentation{T}
+  ext::SimpleVRepresentation{N, T}
   obj::Vector{T}
   sense::Symbol
 
@@ -274,19 +275,22 @@ function optimize!{N, T}(lpm::SimpleLPPolyhedron{N, T})
         mybetter(a, b) = mylt(a, b)
       end
       lpm.status = :Infeasible
-      for i in 1:(size(lpm.ext.V, 1)+size(lpm.ext.R, 1))
-        v = vec((i <= size(lpm.ext.V, 1)) ? lpm.ext.V[i,:] : lpm.ext.R[i-size(lpm.ext.V,1),:])
+      for i in 1:size(lpm.ext.R, 1)
+        v = vec(lpm.ext.R[i,:])
         objval = dot(lpm.obj, v)
-        if i <= size(lpm.ext.V, 1) && i in lpm.ext.vertex
+        if lpm.status != :Unbounded && mybetter(objval, zero(T))
+          lpm.status = :Unbounded
+          lpm.objval = lpm.sense == :Max ? typemax(T) : typemin(T)
+          lpm.solution = v
+        end
+      end
+      if status != :Unbounded
+        for i in 1:size(lpm.ext.V, 1)
+          v = vec(lpm.ext.V[i,:])
+          objval = dot(lpm.obj, v)
           if lpm.status == :Undecided || (lpm.status == :Optimal && better(objval, get(lpm.objval)))
             lpm.status = :Optimal
             lpm.objval = objval
-            lpm.solution = v
-          end
-        else
-          if lpm.status != :Unbounded && mybetter(objval, zero(T))
-            lpm.status = :Unbounded
-            lpm.objval = lpm.sense == :Max ? typemax(T) : typemin(T)
             lpm.solution = v
           end
         end
@@ -294,6 +298,7 @@ function optimize!{N, T}(lpm::SimpleLPPolyhedron{N, T})
     else
       lpm.status = :Optimal
       lpm.objval = zero(T)
+      lpm.solution = zeros(T,N)
     end
   end
 end

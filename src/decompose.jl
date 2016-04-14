@@ -4,9 +4,8 @@ import DataStructures
 import GeometryTypes.decompose, GeometryTypes.isdecomposable
 
 function fulldecompose{T}(poly::Polyhedron{3,T})
-  ine = getinequalities(poly)
-  ext = getgenerators(poly)
-  splitvertexrays!(ext)
+  ine = SimpleHRepresentation(getinequalities(poly))
+  ext = SimpleVRepresentation(getgenerators(poly))
 
   # I need to do division so if T is e.g. Integer, I need to use another type
   RT = typeof(one(T)/2)

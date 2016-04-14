@@ -44,6 +44,8 @@ function SimpleHRepresentation{S <: Real, T <: Real}(A::Matrix{S}, b::Vector{T},
 end
 SimpleHRepresentation{T <: Real}(A::Array{T, 2}, b::Array{T, 1}, linset::IntSet=IntSet()) = SimpleHRepresentation{size(A,2),T}(A, b, linset)
 
+Base.copy{N,T}(ine::SimpleHRepresentation{N,T}) = SimpleHRepresentation{N,T}(copy(ine.A), copy(ine.b), copy(ine.linset))
+
 Base.round{N,T<:AbstractFloat}(ine::SimpleHRepresentation{N,T}) = SimpleHRepresentation{N,T}(Base.round(ine.A), Base.round(ine.b), copy(ine.linset))
 
 function affinehull{N,T}(ine::SimpleHRepresentation{N,T})
@@ -108,6 +110,7 @@ type LiftedHRepresentation{N, T} <: HRepresentation{N, T}
 end
 
 LiftedHRepresentation{T <: Real}(A::Array{T, 2}, linset::IntSet=IntSet()) = LiftedHRepresentation{size(A,2)-1,T}(A, linset)
+Base.copy{N,T}(ine::LiftedHRepresentation{N,T}) = LiftedHRepresentation{N,T}(copy(ine.A), copy(ine.linset))
 
 Base.round{N,T<:AbstractFloat}(ine::LiftedHRepresentation{N,T}) = LiftedHRepresentation{N,T}(Base.round(ine.A), copy(ine.linset))
 
@@ -154,6 +157,16 @@ function (*){N}(ine::LiftedHRepresentation{N}, P::Matrix)
   LiftedHRepresentation([ine.A[:,1] ine.A[:,2:end] * P], copy(ine.linset))
 end
 
+function Base.intersect{N,S,T}(ine1::HRepresentation{N,S}, ine2::HRepresentation{N,T})
+  U = promote_type(S, T)
+  intersect(Representation{N,U}(ine1), Representation{N,U}(ine2))
+end
+
+function Base.intersect{N}(ine1::LiftedHRepresentation{N}, ine2::SimpleHRepresentation{N})
+  intersect(ine1, LiftedHRepresentation(ine2))
+end
+Base.intersect{N}(ine1::SimpleHRepresentation{N}, ine2::LiftedHRepresentation{N}) = intersect(ine2, ine1)
+
 
 function Base.convert{N,T}(::Type{LiftedHRepresentation{N,T}}, ine::SimpleHRepresentation)
   LiftedHRepresentation{N,T}([ine.b -ine.A], copy(ine.linset))
@@ -192,6 +205,8 @@ end
 SimpleVRepresentation{T <: Real}(V::Array{T, 2}, R::Array{T, 2}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) = SimpleVRepresentation{size(V,2),T}(V, R, Vlinset, Rlinset)
 
 SimpleVRepresentation{T <: Real}(V::Array{T, 2}, linset::IntSet=IntSet()) = SimpleVRepresentation{size(V, 2),T}(V, Matrix{T}(0, size(V, 2)), linset, IntSet())
+
+Base.copy{N,T}(ext::SimpleVRepresentation{N,T}) = SimpleVRepresentation{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
 
 Base.round{N,T<:AbstractFloat}(ext::SimpleVRepresentation{N,T}) = SimpleVRepresentation{N,T}(Base.round(ext.V), Base.round(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
 
@@ -235,6 +250,8 @@ end
 
 LiftedVRepresentation{T <: Real}(R::Array{T, 2}, linset::IntSet=IntSet()) = LiftedVRepresentation{size(R,2)-1,T}(R, linset)
 
+Base.copy{N,T}(ext::LiftedVRepresentation{N,T}) = LiftedVRepresentation{N,T}(copy(ext.R), copy(ext.linset))
+
 Base.round{N,T<:AbstractFloat}(ext::LiftedVRepresentation{N,T}) = LiftedVRepresentation{N,T}(Base.round(ext.R), copy(ext.linset))
 
 function (+){N,T<:Real}(ext1::LiftedVRepresentation{N,T}, ext2::LiftedVRepresentation{N,T})
@@ -252,6 +269,16 @@ function (*){N}(P::Matrix, ext::LiftedVRepresentation{N})
   end
   LiftedVRepresentation([ext.R[:,1] ext.R[:,2:end] * P'], copy(ext.linset))
 end
+
+function (+){N,S,T}(ext1::VRepresentation{N,S}, ext2::VRepresentation{N,T})
+  U = promote_type(S, T)
+  Representation{N,U}(ext1) + Representation{N,U}(ext2)
+end
+
+function (+){N}(ext1::LiftedVRepresentation{N}, ext2::SimpleVRepresentation{N})
+  ext1 + LiftedVRepresentation(ext2)
+end
+(+){N}(ext1::SimpleVRepresentation{N}, ext2::LiftedVRepresentation{N}) = ext2 + ext1
 
 function Base.convert{N,T}(::Type{LiftedVRepresentation{N,T}}, ext::SimpleVRepresentation{N,T})
   R = [ones(T, size(ext.V, 1)) ext.V; zeros(T, size(ext.R, 1)) ext.R]
