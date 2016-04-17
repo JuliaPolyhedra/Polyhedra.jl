@@ -1,5 +1,5 @@
 # Mandatory
-export polyhedron, getinequalities, getgenerators, eliminate, detecthlinearities!, detectvlinearities!, removeredundantinequalities!, removeredundantgenerators!, isredundantinequality, isredundantgenerator, isstronglyredundantinequality, isstronglyredundantgenerator, inequalitiesarecomputed, generatorsarecomputed
+export polyhedron, getinequalities, getgenerators, eliminate, detecthlinearities!, detectvlinearities!, removeredundantinequalities!, removeredundantgenerators!, isredundantinequality, isredundantgenerator, isstronglyredundantinequality, isstronglyredundantgenerator, inequalitiesarecomputed, generatorsarecomputed, loadpolyhedron!
 
 if VERSION < v"0.5-"
   export normalize
@@ -7,25 +7,73 @@ if VERSION < v"0.5-"
 end
 
 polyhedron(repr::Representation) = polyhedron(repr, getlibraryfor(eltype(repr)))
-Base.copy(p::Polyhedron)                                     = error("not implemented")
-Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})     = error("not implemented")
-Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})     = error("not implemented")
-inequalitiesarecomputed(p::Polyhedron)                       = error("not implemented")
-getinequalities(p::Polyhedron)                               = error("not implemented")
-generatorsarecomputed(p::Polyhedron)                         = error("not implemented")
-getgenerators(p::Polyhedron)                                 = error("not implemented")
-eliminate(p::Polyhedron, delset::IntSet)                     = error("not implemented")
-detecthlinearities!(p::Polyhedron)                           = error("not implemented")
-detectvlinearities!(p::Polyhedron)                           = error("not implemented")
-removeredundantinequalities!(p::Polyhedron)                  = error("not implemented")
-removeredundantgenerators!(p::Polyhedron)                    = error("not implemented")
-isredundantinequality(p::Polyhedron, i::Integer)             = error("not implemented")
-isredundantgenerator(p::Polyhedron, i::Integer)              = error("not implemented")
-isstronglyredundantinequality(p::Polyhedron, i::Integer)     = error("not implemented")
-isstronglyredundantgenerator(p::Polyhedron, i::Integer)      = error("not implemented")
+Base.copy(p::Polyhedron)                                                             = error("not implemented")
+Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})                             = error("not implemented")
+Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})                             = error("not implemented")
+inequalitiesarecomputed(p::Polyhedron)                                               = error("not implemented")
+getinequalities(p::Polyhedron)                                                       = error("not implemented")
+generatorsarecomputed(p::Polyhedron)                                                 = error("not implemented")
+getgenerators(p::Polyhedron)                                                         = error("not implemented")
+implementseliminationmethod(p::Polyhedron, ::Type{Val{:FourierMotzkin}})             = false
+eliminate(p::Polyhedron, delset::IntSet, ::Type{Val{:FourierMotzkin}})               = error("not implemented")
+implementseliminationmethod(p::Polyhedron, ::Type{Val{:BlockElimination}})           = false
+eliminate(p::Polyhedron, delset::IntSet, ::Type{Val{:BlockElimination}})             = error("not implemented")
+detecthlinearities!(p::Polyhedron)                                                   = error("not implemented")
+detectvlinearities!(p::Polyhedron)                                                   = error("not implemented")
+removeredundantinequalities!(p::Polyhedron)                                          = error("not implemented")
+removeredundantgenerators!(p::Polyhedron)                                            = error("not implemented")
+isredundantinequality(p::Polyhedron, i::Integer)                                     = error("not implemented")
+isredundantgenerator(p::Polyhedron, i::Integer)                                      = error("not implemented")
+isstronglyredundantinequality(p::Polyhedron, i::Integer)                             = error("not implemented")
+isstronglyredundantgenerator(p::Polyhedron, i::Integer)                              = error("not implemented")
+loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ine}}) = error("not implemented")
+loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("not implemented")
 
 # These can optionally be reimplemented for speed by a library
 export numberofinequalities, numberofgenerators, dim, affinehull, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators, transforminequalities, transformgenerators, project, radialprojectoncut
+
+loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Symbol) = loadpolyhedron!(p, filename, Val{extension})
+
+function loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::AbstractString)
+  s = findfirst(["ext", "ine"], filename)
+  if s == 0
+    error("Invalid extension $extension, please give 'ext' for V-representation or 'ine' for H-representation")
+  end
+  loadpolyhedron!(p, filename, [:ext, :ine][s])
+end
+
+eliminate(p::Polyhedron, method::Symbol) = eliminate(p, Val{method})
+eliminate(p::Polyhedron, delset::IntSet, method::Symbol) = eliminate(p, delset::IntSet, Val{method})
+
+eliminate{N}(p::Polyhedron{N}, method::Type{Val{:ProjectGenerators}}) = eliminate(p, IntSet(N), method)
+
+function eliminate{N}(p::Polyhedron{N}, delset::IntSet=IntSet(N))
+  fm = implementseliminationmethod(p, Val{:FourierMotzkin})
+  be = implementseliminationmethod(p, Val{:BlockElimination})
+  if (!fm && !be) || generatorsarecomputed(p)
+    method = :ProjectGenerators
+  elseif fm && (!be || delset == IntSet(N))
+    method = :FourierMotzkin
+  else
+    method = :BlockElimination
+  end
+  eliminate(p, delset, Val{method})
+end
+
+function eliminate{N}(p::Polyhedron{N}, delset::IntSet, ::Type{Val{:ProjectGenerators}})
+  ext = getgenerators(p)
+  I = eye(Int, N)
+  polyhedron(I[setdiff(IntSet(1:N), collect(delset)),:] * ext, getlibrary(p))
+end
+
+function loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::AbstractString)
+  s = findfirst(["ext", "ine"], filename)
+  if s == 0
+    error("Invalid extension $extension, please give 'ext' for V-representation or 'ine' for H-representation")
+  end
+  loadpolyhedron!(p, filename, [:ext, :ine][s])
+end
+
 
 function call{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
   if !inequalitiesarecomputed(p) && generatorsarecomputed(p)

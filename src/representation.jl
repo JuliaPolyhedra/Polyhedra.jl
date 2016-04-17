@@ -172,8 +172,19 @@ function Base.convert{N,T}(::Type{LiftedHRepresentation{N,T}}, ine::SimpleHRepre
   LiftedHRepresentation{N,T}([ine.b -ine.A], copy(ine.linset))
 end
 LiftedHRepresentation{N,T}(ext::SimpleHRepresentation{N,T}) = LiftedHRepresentation{N,T}(ext)
-function Base.convert{N,T}(::Type{SimpleHRepresentation{N,T}}, ine::LiftedHRepresentation)
-  SimpleHRepresentation{N,T}(-ine.A[:,2:end], ine.A[:,1], copy(ine.linset))
+function Base.convert{N,T}(::Type{SimpleHRepresentation{N,T}}, ine::LiftedHRepresentation{N,T})
+  # The Lifted H-representation is the cone
+  # [b -A] [z; x] >= 0
+  # To get the Simple H-representation Ax <= 0, we add the equality z = 1
+  # and then eliminate the variable z.
+  # If we look at this elimination using the Block Elimination method,
+  # we see that using z = 1, from the inequality
+  # b_i z >= sum A_ij x_j
+  # we get
+  # b_i >= sum A_ij x_j
+  # Note that if A_ij = 0 for all j then we should not keep this inequality:
+  filter = map(i -> !myeqzero(maximum(abs(ine.A[i,2:end]))), 1:size(ine.A, 1))
+  SimpleHRepresentation{N,T}(-ine.A[filter,2:end], ine.A[filter,1], copy(ine.linset))
 end
 SimpleHRepresentation{N,T}(ine::LiftedHRepresentation{N,T}) = SimpleHRepresentation{N,T}(ine)
 

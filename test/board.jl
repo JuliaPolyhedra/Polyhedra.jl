@@ -47,12 +47,13 @@ function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
   inecut = SimpleHRepresentation(Acut, bcut)
   polycut = polyhedron(inecut, lib)
   @test !isempty(polycut)
-  (isredundant, certificate) = isredundantinequality(polycut, 1)
-  @test !isredundant
-  @test certificate == target
+  #(isredundant, certificate) = isredundantinequality(polycut, 1)
+  #@test !isredundant
+  #@test certificate == target
+  @test !isredundantinequality(polycut, 1)
   @test IntSet([]) == getredundantinequalities(polycut)
-  (issredundant, scertificate) = isstronglyredundantinequality(polycut, 1)
-  @test !issredundant
-  @test scertificate == target
-  @test IntSet([]) == getstronglyredundantinequalities(polycut)
+ #(issredundant, scertificate) = isstronglyredundantinequality(polycut, 1)
+ #@test !issredundant
+ #@test scertificate == target
+ #@test IntSet([]) == getstronglyredundantinequalities(polycut)
 end

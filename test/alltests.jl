@@ -10,6 +10,7 @@ myeq{T<:AbstractFloat}(x::T, y::T) = y < x+1024*eps(T) && x < y+1024*eps(T)
 myeq{S<:Real,T<:Real}(x::Vector{S}, y::Vector{T}) = myeq(promote(x, y)...)
 myeq{T<:Real}(x::Vector{T}, y::Vector{T}) = x == y
 myeq{T<:AbstractFloat}(x::Vector{T}, y::Vector{T}) = myeq(norm(x - y), zero(T))
+myeqzero{T<:Real}(x::T) = myeq(x, zero(T))
 
 tomatrix(M::Matrix) = M
 function tomatrix(v::Vector)
@@ -18,8 +19,18 @@ function tomatrix(v::Vector)
   M
 end
 
+function inlinspace(x, L)
+  for i in 1:size(L, 1)
+    y = vec(L)
+    # remove component
+    x = x * dot(y, y) - y * dot(y, x)
+  end
+  myeqzero(norm(x))
+end
+
 function inequality_fulltest(p::Polyhedron, A, b, linset)
   A = tomatrix(A)
+  detecthlinearities!(p)
   removeredundantinequalities!(p)
   ine = SimpleHRepresentation(getinequalities(p))
   @test size(ine.A) == size(A)
@@ -27,14 +38,7 @@ function inequality_fulltest(p::Polyhedron, A, b, linset)
 
   aff = SimpleHRepresentation(getinequalities(affinehull(p)))
   affAb = [aff.b aff.A]
-  function inaff(x)
-    for i in 1:size(affAb, 1)
-      y = vec(affAb[i,:])
-      # remove component
-      x = x * dot(y, y) - y * dot(y, x)
-    end
-    myeq(norm(x), zero(eltype(x)))
-  end
+  inaff(x) = inlinspace(x, affAb)
 
   for i in 1:size(A, 1)
     found = false
@@ -48,13 +52,16 @@ function inequality_fulltest(p::Polyhedron, A, b, linset)
     @test found
   end
 end
-function generator_fulltest(p::Polyhedron, V, R)
+function generator_fulltest(p::Polyhedron, V, R=Matrix{eltype(V)}(0, size(V, 2)), Vlinset = IntSet(), Rlinset = IntSet())
   V = tomatrix(V)
   R = tomatrix(R)
+  detectvlinearities!(p)
   removeredundantgenerators!(p)
   ext = SimpleVRepresentation(getgenerators(p))
   @test size(ext.V) == size(V)
   @test size(ext.R) == size(R)
+  @test length(ext.Vlinset) == length(Vlinset)
+  @test length(ext.Rlinset) == length(Rlinset)
   for i in 1:size(V, 1)
     found = false
     for j in 1:size(ext.V, 1)
@@ -65,10 +72,13 @@ function generator_fulltest(p::Polyhedron, V, R)
     end
     @test found
   end
+  linspace = ext.R[collect(ext.Rlinset),:]
+  inlin(x) = inlinspace(x, linspace)
   for i in 1:size(R, 1)
     found = false
     for j in 1:size(ext.R, 1)
-      if myeq(vec(R[i, :]), vec(ext.R[j, :]))
+      if !((i in Rlinset) $ (j in ext.Rlinset)) && inlin(R[i,:]-ext.R[j,:])
+      #if parallel(vec(R[i, :]), vec(ext.R[j, :]), (i in Rlinset) || (j in ext.Rlinset))
         found = true
         break
       end
@@ -76,7 +86,7 @@ function generator_fulltest(p::Polyhedron, V, R)
     @test found
   end
 end
-generator_fulltest(p::Polyhedron, V) = generator_fulltest(p, V, Matrix{eltype(V)}(0, size(V, 2)))
+#generator_fulltest(p::Polyhedron, V) = generator_fulltest(p, V, Matrix{eltype(V)}(0, size(V, 2)))
 
 function alltests{Lib<:PolyhedraLibrary}(lib::Lib)
   simplextest(lib)

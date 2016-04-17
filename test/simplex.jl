@@ -43,6 +43,31 @@ function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
   generator_fulltest(poly3, V)
 
   poly4 = project(poly1, [1; 0])
-  inequality_fulltest(poly4, [-1; 1], [0, 1], IntSet([]))
+  inequality_fulltest(poly4, [-1; 1], [0, 1], IntSet())
   generator_fulltest(poly4, [0; 1], [])
+
+  #\
+  # \
+  # |\
+  # |_\
+  #    \
+  Alin = [1 1]
+  blin = [1]
+  linsetlin = IntSet(1)
+  Vlin = [1 0]
+  Rlin = [1 -1]
+  inelin = SimpleHRepresentation([1 1; -1 -1], [1, -1], IntSet())
+  plin = polyhedron(inelin, lib)
+  inequality_fulltest(plin, Alin, blin, linsetlin)
+  generator_fulltest(plin, Vlin, Rlin, IntSet(), IntSet(1))
+  ineout = getinequalities(plin)
+  @test ineout.linset == IntSet(1)
+  Vlin = [1 0]
+  Rlin = [1 -1]
+  extlin = SimpleVRepresentation(Vlin, [1 -1; -1 1])
+  plin = polyhedron(extlin, lib)
+  inequality_fulltest(plin, Alin, blin, linsetlin)
+  generator_fulltest(plin, Vlin, Rlin, IntSet(), IntSet(1))
+  extout = SimpleVRepresentation(getgenerators(plin))
+  @test extout.Rlinset == IntSet(1)
 end
