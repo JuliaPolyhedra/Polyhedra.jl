@@ -1,4 +1,4 @@
-===============================================
+================================================
 Polyhedra --- Manipulation of Polyhedra in Julia
 ================================================
 
@@ -14,15 +14,15 @@ and in the second case they are the points that can be expressed as a convex com
 The manipulations that `Polyhedra` can perform include
 
 * Projection: Projection of a polyhedron on a lower dimensional space, e.g. Fourier-Motzkin elimination.
-
 * Changing the Representation
 
   * Vertex enumeration problem:: Computing the extremal vertices and rays from an inequality representation
   * Convex hull problem:: Computing a set of linear inequalities describing the polyhedron from a vertex/ray representation
 
 * Removal of redundant inequalities or redundant vertices/rays.
-
-* Decomposition of 3D/2D polyhedra into a points and triangular faces, enabling easy visualization of 3D/2D polyhedra using `GLVisualize <https://github.com/JuliaGL/GLVisualize.jl>`_.
+* Decomposition of 3D/2D polyhedra into a points and triangular faces,
+  enabling easy visualization of 3D/2D polyhedra using
+  `GLVisualize <https://github.com/JuliaGL/GLVisualize.jl>`_.
 
 Depending on the library, those manipulation can either be in floating point or exact rational arithmetic.
 
