@@ -24,7 +24,6 @@ mygt{S<:Real, T<:Real}(x::S, y::T) = mylt(y, x)
 myleq{T<:Real}(x::T, y::T) = x <= y
 myleq{T<:AbstractFloat}(x::T, y::T) = x < y+threshold
 myleq{S<:Real,T<:Real}(x::S, y::T) = myleq(promote(x, y)...)
-mygt{S<:Real,T<:Real}(x::S, y::T) = mylt(y, x)
 mygeq{T<:Real}(x::T, y::T) = myleq(y, x)
 mypos{T<:Real}(x::T) = mygt(x, zero(T))
 myneg{T<:Real}(x::T) = mylt(x, zero(T))
