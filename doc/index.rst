@@ -1,4 +1,4 @@
-================================================
+===============================================
 Polyhedra --- Manipulation of Polyhedra in Julia
 ================================================
 
@@ -48,3 +48,4 @@ Contents
     :maxdepth: 2
 
     installation.rst
+    representation.rst
