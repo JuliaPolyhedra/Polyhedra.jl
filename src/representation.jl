@@ -75,14 +75,14 @@ function Base.intersect{N,T}(ine1::SimpleHRepresentation{N,T}, ine2::SimpleHRepr
   SimpleHRepresentation{N,T}(A, b, linset)
 end
 
-function (*){N, S, T}(ine1::SimpleHRepresentation{N,S}, ine2::SimpleHRepresentation{N,T})
+function (*){N1, N2, S, T}(ine1::SimpleHRepresentation{N1,S}, ine2::SimpleHRepresentation{N2,T})
   U = promote_type(S, T)
   A = [ine1.A zeros(U, size(ine1.A, 1), size(ine2.A, 2)); zeros(U, size(ine2.A, 1), size(ine1.A, 2)) ine2.A]
   linset = copy(ine1.linset)
   for lin in ine2.linset
     push!(linset, size(ine1.A, 1) + lin)
   end
-  HRepresentation{N,U}(A, [ine1.b; ine2.b], linset)
+  SimpleHRepresentation{N1+N2,U}(A, [ine1.b; ine2.b], linset)
 end
 function (*){N}(ext::SimpleHRepresentation{N}, P::Matrix)
   if size(P, 1) != N
@@ -138,7 +138,7 @@ function Base.intersect{N,T}(ine1::LiftedHRepresentation{N,T}, ine2::LiftedHRepr
   LiftedHRepresentation{N,T}(A, linset)
 end
 
-function (*){N, S, T}(ine1::LiftedHRepresentation{N,S}, ine2::LiftedHRepresentation{N,T})
+function (*){N1, N2, S, T}(ine1::LiftedHRepresentation{N1,S}, ine2::LiftedHRepresentation{N2,T})
   U = promote_type(S, T)
   A1 = ine1.A[:,2:end]
   A2 = ine2.A[:,2:end]
@@ -148,7 +148,7 @@ function (*){N, S, T}(ine1::LiftedHRepresentation{N,S}, ine2::LiftedHRepresentat
   for lin in ine2.linset
     push!(linset, size(ine1.A, 1) + lin)
   end
-  HRepresentation{N,U}(A, linset)
+  LiftedHRepresentation{N1+N2,U}(A, linset)
 end
 function (*){N}(ine::LiftedHRepresentation{N}, P::Matrix)
   if size(P, 1) != N
