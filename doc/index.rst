@@ -49,3 +49,4 @@ Contents
 
     installation.rst
     representation.rst
+    polyhedron.rst

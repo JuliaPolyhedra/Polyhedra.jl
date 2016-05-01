@@ -66,15 +66,6 @@ function eliminate{N}(p::Polyhedron{N}, delset::IntSet, ::Type{Val{:ProjectGener
   polyhedron(I[setdiff(IntSet(1:N), collect(delset)),:] * ext, getlibrary(p))
 end
 
-function loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::AbstractString)
-  s = findfirst(["ext", "ine"], filename)
-  if s == 0
-    error("Invalid extension $extension, please give 'ext' for V-representation or 'ine' for H-representation")
-  end
-  loadpolyhedron!(p, filename, [:ext, :ine][s])
-end
-
-
 function call{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
   if !inequalitiesarecomputed(p) && generatorsarecomputed(p)
     repr = VRepresentation{N,S}(getgenerators(p))
