@@ -183,7 +183,9 @@ function Base.convert{N,T}(::Type{SimpleHRepresentation{N,T}}, ine::LiftedHRepre
   # we get
   # b_i >= sum A_ij x_j
   # Note that if A_ij = 0 for all j then we should not keep this inequality:
-  filter = map(i -> !myeqzero(maximum(abs(ine.A[i,2:end]))), 1:size(ine.A, 1))
+
+  # if there is no rows, it returns a Vector{Union{}}
+  filter = Vector{Bool}(map(i -> !myeqzero(maximum(abs(ine.A[i,2:end]))), 1:size(ine.A, 1)))
   SimpleHRepresentation{N,T}(-ine.A[filter,2:end], ine.A[filter,1], copy(ine.linset))
 end
 SimpleHRepresentation{N,T}(ine::LiftedHRepresentation{N,T}) = SimpleHRepresentation{N,T}(ine)

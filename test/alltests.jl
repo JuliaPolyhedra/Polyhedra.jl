@@ -21,7 +21,7 @@ end
 
 function inlinspace(x, L)
   for i in 1:size(L, 1)
-    y = vec(L)
+    y = vec(L[i,:])
     # remove component
     x = x * dot(y, y) - y * dot(y, x)
   end
