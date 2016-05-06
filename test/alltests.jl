@@ -73,7 +73,7 @@ function generator_fulltest(p::Polyhedron, V, R=Matrix{eltype(V)}(0, size(V, 2))
     @test found
   end
   linspace = ext.R[collect(ext.Rlinset),:]
-  inlin(x) = inlinspace(x, linspace)
+  inlin(x) = inlinspace(vec(x), linspace)
   for i in 1:size(R, 1)
     found = false
     for j in 1:size(ext.R, 1)
