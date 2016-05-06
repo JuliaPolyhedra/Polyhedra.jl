@@ -369,7 +369,6 @@ function MathProgBase.linprog{N}(c::Vector, p::Polyhedron{N})
   m = LinearQuadraticModel(p)
   loadproblem!(m, c, :Min)
   optimize!(m)
-  Lin
   stat = status(m)
   if stat == :Optimal
     return LinprogSolution(stat, getobjval(m), getsolution(m), Dict())
