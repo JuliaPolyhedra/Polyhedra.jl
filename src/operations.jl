@@ -87,7 +87,7 @@ end
 # eliminate the last dimension by default
 eliminate{N,T}(p::Polyhedron{N,T})  = eliminate(p::Polyhedron, IntSet([N]))
 
-function transformgenerators{N}(p::Polyhedron{N}, P::Matrix)
+function transformgenerators{N}(p::Polyhedron{N}, P::AbstractMatrix)
   # Each generator x is transformed to P * x
   # If P is orthogonal, the new axis are the rows of P.
   if size(P, 2) != N
@@ -97,7 +97,7 @@ function transformgenerators{N}(p::Polyhedron{N}, P::Matrix)
   polyhedron(ext, getlibraryfor(p, eltype(ext)))
 end
 
-function transforminequalities(p::Polyhedron, P::Matrix)
+function transforminequalities(p::Polyhedron, P::AbstractMatrix)
   # The new axis are the column of P.
   # Let y be the coordinates of a point x in these new axis.
   # We have x = P * y so y = P \ x.

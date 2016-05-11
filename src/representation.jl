@@ -1,5 +1,7 @@
 import Base.round, Base.eltype
 
+# TODO affinehull and sparse
+
 export Representation, HRepresentation, VRepresentation, SimpleHRepresentation, LiftedHRepresentation, SimpleVRepresentation, LiftedVRepresentation, fulldim
 
 abstract Representation{N, T <: Real}
@@ -18,11 +20,11 @@ end
 
 type SimpleHRepresentation{N, T} <: HRepresentation{N, T}
   # Ax <= b
-  A::Array{T, 2}
-  b::Array{T, 1}
+  A::AbstractMatrix{T}
+  b::AbstractVector{T}
   linset::IntSet
 
-  function SimpleHRepresentation(A::Array{T, 2}, b::Array{T, 1}, linset::IntSet=IntSet())
+  function SimpleHRepresentation(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet())
     if size(A, 1) != length(b)
       error("The length of b must be equal to the number of rows of A")
     end
@@ -38,11 +40,11 @@ type SimpleHRepresentation{N, T} <: HRepresentation{N, T}
   end
 end
 
-function SimpleHRepresentation{S <: Real, T <: Real}(A::Matrix{S}, b::Vector{T}, linset::IntSet=IntSet())
+function SimpleHRepresentation{S <: Real, T <: Real}(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet=IntSet())
   U = promote_type(S, T)
-  SimpleHRepresentation{size(A,2),U}(Matrix{U}(A), Vector{U}(b), linset)
+  SimpleHRepresentation{size(A,2),U}(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
 end
-SimpleHRepresentation{T <: Real}(A::Array{T, 2}, b::Array{T, 1}, linset::IntSet=IntSet()) = SimpleHRepresentation{size(A,2),T}(A, b, linset)
+SimpleHRepresentation{T <: Real}(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet()) = SimpleHRepresentation{size(A,2),T}(A, b, linset)
 
 Base.copy{N,T}(ine::SimpleHRepresentation{N,T}) = SimpleHRepresentation{N,T}(copy(ine.A), copy(ine.b), copy(ine.linset))
 
@@ -77,14 +79,14 @@ end
 
 function (*){N1, N2, S, T}(ine1::SimpleHRepresentation{N1,S}, ine2::SimpleHRepresentation{N2,T})
   U = promote_type(S, T)
-  A = [ine1.A zeros(U, size(ine1.A, 1), size(ine2.A, 2)); zeros(U, size(ine2.A, 1), size(ine1.A, 2)) ine2.A]
+  A = [ine1.A spzeros(U, size(ine1.A, 1), size(ine2.A, 2)); spzeros(U, size(ine2.A, 1), size(ine1.A, 2)) ine2.A]
   linset = copy(ine1.linset)
   for lin in ine2.linset
     push!(linset, size(ine1.A, 1) + lin)
   end
   SimpleHRepresentation{N1+N2,U}(A, [ine1.b; ine2.b], linset)
 end
-function (*){N}(ext::SimpleHRepresentation{N}, P::Matrix)
+function (*){N}(ext::SimpleHRepresentation{N}, P::AbstractMatrix)
   if size(P, 1) != N
     error("The number of rows of P must match the dimension of the H-representation")
   end
@@ -93,10 +95,10 @@ end
 
 type LiftedHRepresentation{N, T} <: HRepresentation{N, T}
   # Ax >= 0, it is [b -A] * [z; x] where z = 1
-  A::Array{T, 2}
+  A::AbstractMatrix{T}
   linset::IntSet
 
-  function LiftedHRepresentation(A::Array{T, 2}, linset::IntSet=IntSet())
+  function LiftedHRepresentation(A::AbstractMatrix{T}, linset::IntSet=IntSet())
     if ~isempty(linset) && last(linset) > size(A, 1)
       error("The elements of linset should be between 1 and the number of rows of A")
     end
@@ -109,7 +111,7 @@ type LiftedHRepresentation{N, T} <: HRepresentation{N, T}
   end
 end
 
-LiftedHRepresentation{T <: Real}(A::Array{T, 2}, linset::IntSet=IntSet()) = LiftedHRepresentation{size(A,2)-1,T}(A, linset)
+LiftedHRepresentation{T <: Real}(A::AbstractMatrix{T}, linset::IntSet=IntSet()) = LiftedHRepresentation{size(A,2)-1,T}(A, linset)
 Base.copy{N,T}(ine::LiftedHRepresentation{N,T}) = LiftedHRepresentation{N,T}(copy(ine.A), copy(ine.linset))
 
 Base.round{N,T<:AbstractFloat}(ine::LiftedHRepresentation{N,T}) = LiftedHRepresentation{N,T}(Base.round(ine.A), copy(ine.linset))
@@ -143,14 +145,14 @@ function (*){N1, N2, S, T}(ine1::LiftedHRepresentation{N1,S}, ine2::LiftedHRepre
   A1 = ine1.A[:,2:end]
   A2 = ine2.A[:,2:end]
   b2 = ine2.A[:,1]
-  A = [ine1.A zeros(U, size(A1, 1), size(A2, 2)); b2 zeros(U, size(A2, 1), size(A1, 2)) A2]
+  A = [ine1.A spzeros(U, size(A1, 1), size(A2, 2)); b2 spzeros(U, size(A2, 1), size(A1, 2)) A2]
   linset = copy(ine1.linset)
   for lin in ine2.linset
     push!(linset, size(ine1.A, 1) + lin)
   end
   LiftedHRepresentation{N1+N2,U}(A, linset)
 end
-function (*){N}(ine::LiftedHRepresentation{N}, P::Matrix)
+function (*){N}(ine::LiftedHRepresentation{N}, P::AbstractMatrix)
   if size(P, 1) != N
     error("The number of rows of P must match the dimension of the H-representation")
   end
@@ -186,17 +188,27 @@ function Base.convert{N,T}(::Type{SimpleHRepresentation{N,T}}, ine::LiftedHRepre
 
   # if there is no rows, it returns a Vector{Union{}}
   filter = Vector{Bool}(map(i -> !myeqzero(maximum(abs(ine.A[i,2:end]))), 1:size(ine.A, 1)))
-  SimpleHRepresentation{N,T}(-ine.A[filter,2:end], ine.A[filter,1], copy(ine.linset))
+  newlinset = IntSet()
+  cur = 0
+  for i in 1:size(ine.A, 1)
+    if filter[i]
+      cur += 1
+      if i in ine.linset
+        push!(newlinset, cur)
+      end
+    end
+  end
+  SimpleHRepresentation{N,T}(-ine.A[filter,2:end], ine.A[filter,1], newlinset)
 end
 SimpleHRepresentation{N,T}(ine::LiftedHRepresentation{N,T}) = SimpleHRepresentation{N,T}(ine)
 
 type SimpleVRepresentation{N,T} <: VRepresentation{N,T}
-  V::Array{T, 2} # each row is a vertex
-  R::Array{T, 2} # each row is a ray
+  V::AbstractMatrix{T} # each row is a vertex
+  R::AbstractMatrix{T} # each row is a ray
   Vlinset::IntSet
   Rlinset::IntSet
 
-  function SimpleVRepresentation(V::Array{T, 2}, R::Array{T, 2}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet())
+  function SimpleVRepresentation(V::AbstractMatrix{T}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet())
     if length(R) > 0 && size(R, 2) != N
       error("dimension does not match")
     end
@@ -215,9 +227,9 @@ type SimpleVRepresentation{N,T} <: VRepresentation{N,T}
   end
 end
 
-SimpleVRepresentation{T <: Real}(V::Array{T, 2}, R::Array{T, 2}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) = SimpleVRepresentation{size(V,2),T}(V, R, Vlinset, Rlinset)
+SimpleVRepresentation{T <: Real}(V::AbstractMatrix{T}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) = SimpleVRepresentation{size(V,2),T}(V, R, Vlinset, Rlinset)
 
-SimpleVRepresentation{T <: Real}(V::Array{T, 2}, linset::IntSet=IntSet()) = SimpleVRepresentation{size(V, 2),T}(V, Matrix{T}(0, size(V, 2)), linset, IntSet())
+SimpleVRepresentation{T <: Real}(V::AbstractMatrix{T}, linset::IntSet=IntSet()) = SimpleVRepresentation{size(V, 2),T}(V, Matrix{T}(0, size(V, 2)), linset, IntSet()) # TODO fix sparse
 
 Base.copy{N,T}(ext::SimpleVRepresentation{N,T}) = SimpleVRepresentation{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
 
@@ -237,7 +249,7 @@ function (+){N,T<:Real}(ext1::SimpleVRepresentation{N,T}, ext2::SimpleVRepresent
   SimpleVRepresentation{N,T}(V, R, Vlinset, Rlinset)
 end
 
-function (*){N}(P::Matrix, ext::SimpleVRepresentation{N})
+function (*){N}(P::AbstractMatrix, ext::SimpleVRepresentation{N})
   if size(P, 2) != N
     error("The number of columns of P must match the dimension of the V-representation")
   end
@@ -245,10 +257,10 @@ function (*){N}(P::Matrix, ext::SimpleVRepresentation{N})
 end
 
 type LiftedVRepresentation{N,T} <: VRepresentation{N,T}
-  R::Array{T,2} # each row is a vertex if the first element is 1 and a ray otherwise
+  R::AbstractMatrix{T} # each row is a vertex if the first element is 1 and a ray otherwise
   linset::IntSet
 
-  function LiftedVRepresentation(R::Array{T, 2}, linset::IntSet=IntSet([]))
+  function LiftedVRepresentation(R::AbstractMatrix{T}, linset::IntSet=IntSet([]))
     if length(R) > 0 && size(R, 2) != N+1
       error("dimension does not match")
     end
@@ -261,7 +273,7 @@ type LiftedVRepresentation{N,T} <: VRepresentation{N,T}
   end
 end
 
-LiftedVRepresentation{T <: Real}(R::Array{T, 2}, linset::IntSet=IntSet()) = LiftedVRepresentation{size(R,2)-1,T}(R, linset)
+LiftedVRepresentation{T <: Real}(R::AbstractMatrix{T}, linset::IntSet=IntSet()) = LiftedVRepresentation{size(R,2)-1,T}(R, linset)
 
 Base.copy{N,T}(ext::LiftedVRepresentation{N,T}) = LiftedVRepresentation{N,T}(copy(ext.R), copy(ext.linset))
 
@@ -276,7 +288,7 @@ function (+){N,T<:Real}(ext1::LiftedVRepresentation{N,T}, ext2::LiftedVRepresent
   LiftedVRepresentation{N,T}(R, linset)
 end
 
-function (*){N}(P::Matrix, ext::LiftedVRepresentation{N})
+function (*){N}(P::AbstractMatrix, ext::LiftedVRepresentation{N})
   if size(P, 2) != N
     error("The number of columns of P must match the dimension of the V-representation")
   end
@@ -294,7 +306,7 @@ end
 (+){N}(ext1::SimpleVRepresentation{N}, ext2::LiftedVRepresentation{N}) = ext2 + ext1
 
 function Base.convert{N,T}(::Type{LiftedVRepresentation{N,T}}, ext::SimpleVRepresentation{N,T})
-  R = [ones(T, size(ext.V, 1)) ext.V; zeros(T, size(ext.R, 1)) ext.R]
+  R = [ones(T, size(ext.V, 1)) ext.V; spzeros(T, size(ext.R, 1)) ext.R]
   linset = copy(ext.Vlinset)
   for i in ext.Rlinset
     push!(linset, size(ext.V, 1) + i)
@@ -347,8 +359,8 @@ Base.convert{N, T, S}(::Type{Representation{N, T}}, ext::LiftedHRepresentation{N
 Base.convert{N, T, S}(::Type{Representation{N, T}}, ext::SimpleVRepresentation{N, S}) = Base.convert(SimpleVRepresentation{N, T}, ext)
 Base.convert{N, T, S}(::Type{Representation{N, T}}, ext::LiftedVRepresentation{N, S}) = Base.convert(LiftedVRepresentation{N, T}, ext)
 
-Base.convert{N, T, S}(::Type{SimpleHRepresentation{N, T}}, ine::SimpleHRepresentation{N, S}) = SimpleHRepresentation{N, T}(Array{T}(ine.A), Array{T}(ine.b), ine.linset)
-Base.convert{N, T, S}(::Type{LiftedHRepresentation{N, T}}, ine::LiftedHRepresentation{N, S}) = LiftedHRepresentation{N, T}(Array{T}(ine.A), ine.linset)
+Base.convert{N, T, S}(::Type{SimpleHRepresentation{N, T}}, ine::SimpleHRepresentation{N, S}) = SimpleHRepresentation{N, T}(AbstractMatrix{T}(ine.A), AbstractVector{T}(ine.b), ine.linset)
+Base.convert{N, T, S}(::Type{LiftedHRepresentation{N, T}}, ine::LiftedHRepresentation{N, S}) = LiftedHRepresentation{N, T}(AbstractMatrix{T}(ine.A), ine.linset)
 
-Base.convert{N, T, S}(::Type{LiftedVRepresentation{N, T}}, ext::LiftedVRepresentation{N, S}) = LiftedVRepresentation{N, T}(Array{T}(ext.R), ext.linset)
-Base.convert{N, T, S}(::Type{SimpleVRepresentation{N, T}}, ext::SimpleVRepresentation{N, S}) = SimpleVRepresentation{N, T}(Array{T}(ext.V), Array{T}(ext.R), ext.Vlinset, ext.Rlinset)
+Base.convert{N, T, S}(::Type{LiftedVRepresentation{N, T}}, ext::LiftedVRepresentation{N, S}) = LiftedVRepresentation{N, T}(AbstractMatrix{T}(ext.R), ext.linset)
+Base.convert{N, T, S}(::Type{SimpleVRepresentation{N, T}}, ext::SimpleVRepresentation{N, S}) = SimpleVRepresentation{N, T}(AbstractMatrix{T}(ext.V), AbstractMatrix{T}(ext.R), ext.Vlinset, ext.Rlinset)

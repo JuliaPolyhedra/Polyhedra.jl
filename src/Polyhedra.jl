@@ -40,6 +40,7 @@ import Base.intersect, Base.+, Base.*, Base.isempty, Base.copy, Base.push!
 
 include("representation.jl")
 include("operations.jl")
+include("simplepolyhedron.jl")
 include("decompose.jl")
 
 end # module
