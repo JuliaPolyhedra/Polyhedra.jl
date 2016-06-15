@@ -11,8 +11,8 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
   RT = typeof(one(T)/2)
 
   A = ine.A
-  rayinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(sum(abs(r)))
-  vertinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(sum(abs(r)))
+  #rayinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(r)
+  #vertinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(r)
   R = ext.R
   V = isempty(ext.V) ? [0 0 0] : ext.V
 
@@ -37,12 +37,12 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
     xray = nothing
     yray = nothing
     zray = A[i,:]
-    if myeqzero(sum(abs(zray)))
+    if myeqzero(zray)
       continue
     end
     newface = true
     for j in 1:i-1
-      if myeqzero(sum(abs(cross(zray, A[j,:])))) && (i in ine.linset || dot(zray, A[j,:]) > 0)
+      if myeqzero(cross(zray, A[j,:])) && (i in ine.linset || dot(zray, A[j,:]) > 0) # If A[j,:] is almost 0, it is always true...
         # parallel and equality or inequality and same sense
         # TODO is it possible that A[i,:] is stronger than A[j,:] ?
         newface = false
@@ -52,9 +52,6 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
       continue
     end
     if i > 1 && A[i,:] == A[i-1,:] # Same row, only need to check i-1 since the rows are sorted
-      continue
-    end
-    if !newface
       continue
     end
 
@@ -75,7 +72,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
       end
     end
     for j in 1:size(R, 1)
-      if myeqzero(dot(R[j,:], zray)) && !myeqzero(sum(abs(R[j,:])))
+      if myeqzero(dot(R[j,:], zray)) && !myeqzero(R[j,:])
         if line != nothing
           checkleftright(R[j,:], j in ext.Rlinset)
         else

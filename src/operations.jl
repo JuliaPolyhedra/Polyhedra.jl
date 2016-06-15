@@ -306,13 +306,8 @@ function optimize!{N, T}(lpm::SimpleLPPolyhedron{N, T})
     lpm.status = :Infeasible
   else
     if lpm.sense in [:Max, :Min]
-      if lpm.sense == :Max
-        better(a, b) = a > b
-        mybetter(a, b) = mygt(a, b)
-      else
-        better(a, b) = a < b
-        mybetter(a, b) = mylt(a, b)
-      end
+      better(a, b) = (lpm.sense == :Max ? a > b : a < b)
+      mybetter(a, b) = (lpm.sense == :Max ? mygt(a, b) : mylt(a, b))
       lpm.status = :Infeasible
       for i in 1:size(lpm.ext.R, 1)
         v = vec(lpm.ext.R[i,:])
