@@ -16,11 +16,14 @@ abstract Polyhedron{N,T} <: GeometryPrimitive{N,T}
 getlibraryfor{T}(p::Polyhedron, ::Type{T}) = getlibraryfor(T)
 getlibrary(p::Polyhedron) = getlibraryfor(p, eltype(p))
 
-import Base.intersect, Base.+, Base.*, Base.isempty, Base.copy, Base.push!
+import Base.intersect, Base.+, Base.*, Base.isempty, Base.copy, Base.push!, Base.length, Base.eltype, Base.start, Base.done, Base.next
 
 include("mycomp.jl")
 include("representation.jl")
+include("repop.jl")
 include("operations.jl")
+include("opt.jl")
+include("simplerep.jl")
 include("simplepolyhedron.jl")
 include("decompose.jl")
 

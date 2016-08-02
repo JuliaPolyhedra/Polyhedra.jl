@@ -7,7 +7,7 @@ myeqzero{T<:Real}(x::Vector{T}) = myeqzero(sum(abs(x)))
 myeq{T<:Real}(x::T, y::T) = x == y
 # I check with zero because isapprox(0, 1e-100) is false...
 # but isapprox(1e-100, 2e-100) should be false
-myeq{T<:AbstractFloat}(x::T, y::T) = (x == zero(T) ? myeqzero(y) : (y == zero(T) ? myeqzero(x) : isapprox(x, y, rtol=rtol)))
+myeq{T<:AbstractFloat}(x::T, y::T) = (x == zero(T) ? myeqzero(y) : (y == zero(T) ? myeqzero(x) : isapprox(x, y)))
 myeq{T<:Real, S<:Real}(x::T, y::S) = myeq(promote(x, y)...)
 
 mylt{T<:Real}(x::T, y::T) = x < y
@@ -23,3 +23,10 @@ myneg{T<:Real}(x::T) = mylt(x, zero(T))
 mynonneg{T<:Real}(x::T) = mygeq(x, zero(T))
 mynonpos{T<:Real}(x::T) = myleq(x, zero(T))
 
+function mypromote_type{T1,T2}(::Type{T1}, ::Type{T2})
+  if T1 <: AbstractFloat || T2 <: AbstractFloat
+    Float64
+  else
+    Rational{BigInt}
+  end
+end

@@ -10,24 +10,16 @@ polyhedron(repr::Representation) = polyhedron(repr, getlibraryfor(eltype(repr)))
 Base.copy(p::Polyhedron)                                                             = error("not implemented")
 Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})                             = error("not implemented")
 Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})                             = error("not implemented")
-inequalitiesarecomputed(p::Polyhedron)                                               = error("not implemented")
-getinequalities(p::Polyhedron)                                                       = error("not implemented")
-generatorsarecomputed(p::Polyhedron)                                                 = error("not implemented")
-getgenerators(p::Polyhedron)                                                         = error("not implemented")
+hrepiscomputed(p::Polyhedron)                                                        = error("not implemented")
+gethrep(p::Polyhedron)                                                               = error("not implemented")
+vrepiscomputed(p::Polyhedron)                                                        = error("not implemented")
+getvrep(p::Polyhedron)                                                               = error("not implemented")
 implementseliminationmethod(p::Polyhedron, ::Type{Val{:FourierMotzkin}})             = false
 eliminate(p::Polyhedron, delset::IntSet, ::Type{Val{:FourierMotzkin}})               = error("not implemented")
 implementseliminationmethod(p::Polyhedron, ::Type{Val{:BlockElimination}})           = false
 eliminate(p::Polyhedron, delset::IntSet, ::Type{Val{:BlockElimination}})             = error("not implemented")
-detecthlinearities!(p::Polyhedron)                                                   = error("not implemented")
-detectvlinearities!(p::Polyhedron)                                                   = error("not implemented")
-removeredundantinequalities!(p::Polyhedron)                                          = error("not implemented")
-removeredundantgenerators!(p::Polyhedron)                                            = error("not implemented")
-isredundantinequality(p::Polyhedron, i::Integer)                                     = error("not implemented")
-isredundantgenerator(p::Polyhedron, i::Integer)                                      = error("not implemented")
-isstronglyredundantinequality(p::Polyhedron, i::Integer)                             = error("not implemented")
-isstronglyredundantgenerator(p::Polyhedron, i::Integer)                              = error("not implemented")
-loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ine}}) = error("not implemented")
-loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("not implemented")
+#loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ine}}) = error("not implemented")
+#loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("not implemented") # FIXME ExtFileVRepresentation or just ExtFile
 
 # These can optionally be reimplemented for speed by a library
 export numberofinequalities, numberofgenerators, dim, affinehull, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators, transforminequalities, transformgenerators, project, radialprojectoncut
@@ -68,44 +60,73 @@ end
 
 function call{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
   if !inequalitiesarecomputed(p) && generatorsarecomputed(p)
-    repr = VRepresentation{N,S}(getgenerators(p))
+    if decomposedvfast(p)
+      f2 = (i,x) -> (AbstractVector{eltype(Tout)}(x[1]), x[2])
+      polyhedron(PointIterator(p, f2), RayIterator(p, f2), getlibraryfor(p, S))
+    else
+      f3 = (i,x) -> (AbstractVector{eltype(Tout)}(x[1]), x[2], x[3])
+      polyhedron(VRepIterator(p, f3), getlibraryfor(p, S))
+    end
   else
-    repr = HRepresentation{N,S}(getinequalities(p))
+    if decomposedvfast(p)
+      f2 = (i,x) -> (AbstractVector{eltype(Tout)}(x[1]), S(x[2]))
+      polyhedron(IneqIterator(p, f2), EqIterator(p, f2), getlibraryfor(p, S))
+    else
+      f3 = (i,x) -> (AbstractVector{eltype(Tout)}(x[1]), S(x[2]), x[3])
+      polyhedron(HRepIterator(p, f3), getlibraryfor(p, S))
+    end
   end
-  polyhedron(repr, getlibraryfor(p, S))
-end
-
-function numberofinequalities(p::Polyhedron)
-  size(getinequalities(p).A, 1)
-end
-
-function numberofgenerators(p::Polyhedron)
-  ext = getgenerators(p)
-  size(ext.V, 1) + size(ext.R, 1)
 end
 
 # eliminate the last dimension by default
 eliminate{N,T}(p::Polyhedron{N,T})  = eliminate(p::Polyhedron, IntSet([N]))
 
-function transformgenerators{N}(p::Polyhedron{N}, P::AbstractMatrix)
-  # Each generator x is transformed to P * x
-  # If P is orthogonal, the new axis are the rows of P.
-  if size(P, 2) != N
-    error("The number of columns of P must match the dimension of the polyhedron")
-  end
-  ext = P * getgenerators(p)
-  polyhedron(ext, getlibraryfor(p, eltype(ext)))
-end
+# function transformgenerators{N}(p::Polyhedron{N}, P::AbstractMatrix)
+#   # Each generator x is transformed to P * x
+#   # If P is orthogonal, the new axis are the rows of P.
+#   if size(P, 2) != N
+#     error("The number of columns of P must match the dimension of the polyhedron")
+#   end
+#   ext = P * getgenerators(p)
+#   polyhedron(ext, getlibraryfor(p, eltype(ext)))
+# end
+#
+# function transforminequalities(p::Polyhedron, P::AbstractMatrix)
+#   # The new axis are the column of P.
+#   # Let y be the coordinates of a point x in these new axis.
+#   # We have x = P * y so y = P \ x.
+#   # We have
+#   # b = Ax = A * P * (P \ x) = (A * P) * y
+#   ine = getinequalities(p) * P
+#   polyhedron(ine, getlibraryfor(p, eltype(ine)))
+# end
 
-function transforminequalities(p::Polyhedron, P::AbstractMatrix)
-  # The new axis are the column of P.
-  # Let y be the coordinates of a point x in these new axis.
-  # We have x = P * y so y = P \ x.
-  # We have
-  # b = Ax = A * P * (P \ x) = (A * P) * y
-  ine = getinequalities(p) * P
-  polyhedron(ine, getlibraryfor(p, eltype(ine)))
-end
+# function (*){N,S}(A::AbstractMatrix{S}, p::Polyhedron{N})
+#   if size(A, 2) != N
+#     error("Incompatible dimension")
+#   end
+#   if generatorsarecomputed(p)
+#     transformgenerators(p, A)
+#   else # FIXME not wokring
+#     ine = SimpleHRepresentation(getinequalities(p))
+#     nnew = size(A, 1)
+#     if false
+#       # CDD works with delset not at the end ?
+#       newA = [ine.A spzeros(S, size(ine.A, 1), nnew);
+#                   A  -speye(S, nnew, nnew)]
+#       delset = IntSet(nnew+(1:N))
+#     else
+#       newA = [spzeros(S, size(ine.A, 1), nnew) ine.A;
+#                -speye(S, nnew, nnew) A]
+#       delset = IntSet(1:N)
+#     end
+#     newb = [ine.b; spzeros(S, nnew)]
+#     newlinset = ine.linset ∪ IntSet(N+(1:nnew))
+#     newine = SimpleHRepresentation(newA, newb, newlinset)
+#     newpoly = polyhedron(newine, getlibraryfor(p, eltype(newine)))
+#     eliminate(newpoly, IntSet(nnew+(1:N)))
+#   end
+# end
 
 function project{N,T}(p::Polyhedron{N,T}, P::Array)
   # Function to make x orthogonal to an orthonormal basis in Q
@@ -139,266 +160,68 @@ function project{N,T}(p::Polyhedron{N,T}, P::Array)
     end
     basis = [Q R]
   end
-  eliminate(transforminequalities(p, basis), IntSet(m+1:N))
+  eliminate(p * basis, IntSet(m+1:N))
 end
 
-function radialprojectoncut{N}(p::Polyhedron{N}, cut::Vector, at)
-  if myeqzero(at)
-    error("at is zero")
-  end
-  if length(cut) != N
-    error("The dimensions of the cut and of the polyhedron do not match")
-  end
-  ext = SimpleVRepresentation(getgenerators(p))
-  V = copy(ext.V)
-  R = copy(ext.R)
-  for i in 1:size(V, 1)
-    v = vec(ext.V[i,:])
-    if !myeq(dot(cut, v), at)
-      error("The nonhomogeneous part should be in the cut")
-    end
-  end
-  for i in 1:size(R, 1)
-    v = vec(ext.R[i,:])
-    if myeqzero(v)
-      # It can happen since I do not necessarily have removed redundancy
-      v = zeros(eltype(v), length(v))
-    elseif !myeq(dot(cut, v), at)
-      if myeqzero(dot(cut, v))
-        error("A ray is parallel to the cut") # FIXME is ok if some vertices are on the cut ? (i.e. at == 0, cut is not needed)
-      end
-      v = v * at / dot(cut, v)
-    end
-    R[i,:] = v
-  end
-  # no more rays nor linearity since at != 0
-  ext2 = SimpleVRepresentation([V; R])
-  polyhedron(ext2, getlibraryfor(p, eltype(ext2)))
-end
+# TODO rewrite, it is just cutting a cone with a half-space, nothing more
+# function radialprojectoncut{N}(p::Polyhedron{N}, cut::Vector, at)
+#   if myeqzero(at)
+#     error("at is zero")
+#   end
+#   if length(cut) != N
+#     error("The dimensions of the cut and of the polyhedron do not match")
+#   end
+#   ext = SimpleVRepresentation(getgenerators(p))
+#   V = copy(ext.V)
+#   R = copy(ext.R)
+#   for i in 1:size(V, 1)
+#     v = vec(ext.V[i,:])
+#     if !myeq(dot(cut, v), at)
+#       error("The nonhomogeneous part should be in the cut")
+#     end
+#   end
+#   for i in 1:size(R, 1)
+#     v = vec(ext.R[i,:])
+#     if myeqzero(v)
+#       # It can happen since I do not necessarily have removed redundancy
+#       v = zeros(eltype(v), length(v))
+#     elseif !myeq(dot(cut, v), at)
+#       if myeqzero(dot(cut, v))
+#         error("A ray is parallel to the cut") # FIXME is ok if some vertices are on the cut ? (i.e. at == 0, cut is not needed)
+#       end
+#       v = v * at / dot(cut, v)
+#     end
+#     R[i,:] = v
+#   end
+#   # no more rays nor linearity since at != 0
+#   ext2 = SimpleVRepresentation([V; R])
+#   polyhedron(ext2, getlibraryfor(p, eltype(ext2)))
+# end
 
-function fulldim{N,T}(p::Polyhedron{N,T})
-  N
-end
+#function fulldim{N,T}(p::Polyhedron{N,T})
+#  N
+#end
 
 function dim(p::Polyhedron)
   detecthlinearities!(p)
-  ine = getinequalities(p)
-  d = size(ine.A, 2) - length(ine.linset)
+  fulldim(p) - neqs(p)
 end
 
-function affinehull(p::Polyhedron)
-  detecthlinearities!(p)
-  typeof(p)(affinehull(getinequalities(p)))
-end
+# function affinehull(p::Polyhedron)
+#   detecthlinearities!(p)
+#   typeof(p)(affinehull(getinequalities(p)))
+# end
 
-function getredundantinequalities(p::Polyhedron)
-  red = IntSet([])
-  for i in 1:numberofinequalities(p)
-    if isredundantinequality(p, i)[1]
-      push!(red, i)
+function isredundantgenerator(p::Polyhedron, x::Vector, vertex::Bool, cert=false)
+  for (a, β) in eqs(p)
+    if !myeq(dot(a, x), vertex ? β : 0)
+      return cert ? (false, Nullable{Vector{eltype(p)}}(a)) : false
     end
   end
-  red
-end
-function getstronglyredundantinequalities(p::Polyhedron)
-  red = IntSet([])
-  for i in 1:numberofinequalities(p)
-    if isstronglyredundantinequality(p, i)[1]
-      push!(red, i)
+  for (a, β) in ineqs(p)
+    if mygt(dot(a, x), vertex ? β : 0)
+      return cert ? (false, Nullable{Vector{eltype(p)}}(a)) : false
     end
   end
-  red
-end
-
-function getredundantgenerators(p::Polyhedron)
-  red = IntSet([])
-  for i in 1:numberofgenerators(p)
-    if isredundantgenerator(p, i)[1]
-      push!(red, i)
-    end
-  end
-  red
-end
-function getstronglyredundantgenerators(p::Polyhedron)
-  red = IntSet([])
-  for i in 1:numberofgenerators(p)
-    if isstronglyredundantgenerator(p, i)[1]
-      push!(red, i)
-    end
-  end
-  red
-end
-function isredundantgenerator(p::Polyhedron, x::Vector, vertex::Bool)
-  ine = getinequalities(p)
-  for i in 1:size(ine.A, 1)
-    if i in ine.linset
-      if !myeq(dot(ine.A[i, :], x), vertex ? ine.b[i] : 0)
-        return (false, Nullable{Vector{eltype(ine)}}(ine.A[i,:]))
-      end
-    else
-      if mygt(dot(ine.A[i, :], x), vertex ? ine.b[i] : 0)
-        return (false, Nullable{Vector{eltype(ine)}}(ine.A[i,:]))
-      end
-    end
-  end
-  return (true, Nullable{Vector{eltype(ine)}}(nothing))
-end
-
-function Base.intersect{N}(p::Polyhedron{N}, ine::HRepresentation{N})
-  inter = Base.intersect(getinequalities(p), ine)
-  polyhedron(inter, getlibraryfor(p, eltype(inter)))
-end
-Base.intersect{N}(ine::HRepresentation{N}, p::Polyhedron{N}) = Base.intersect(p, ine)
-Base.intersect{N}(p1::Polyhedron{N}, p2::Polyhedron{N}) = Base.intersect(p1, getinequalities(p2))
-
-function (+){N}(p::Polyhedron{N}, ext::VRepresentation{N})
-  sum = getgenerators(p) + ine
-  polyhedron(sum, getlibraryfor(p, eltype(sum)))
-end
-(+){N}(ext::VRepresentation{N}, p::Polyhedron{N}) = Base.intersect(p, ext)
-(+){N}(p1::Polyhedron{N}, p2::Polyhedron{N}) = Base.intersect(p1, getgenerators(p2))
-
-function (*)(p1::Polyhedron, p2::Polyhedron)
-  # iac1 = inequalitiesarecomputed(p1) ? 1 : 0
-  # iac2 = inequalitiesarecomputed(p2) ? 1 : 0
-  # gac1 = genratorsarecomputed(p1) ? 1 : 0
-  # gac2 = genratorsarecomputed(p2) ? 1 : 0
-  # if iac1 + iac2 >= gac1 + gac2
-  repr = getinequalities(p1) * getinequalities(p2)
-  # else
-  #   repr = getgenerators(p1) * getgenerators(p2)
-  # end
-  polyhedron(repr, getlibraryfor(p1, eltype(repr)))
-end
-
-using MathProgBase
-
-import MathProgBase.LinearQuadraticModel, MathProgBase.loadproblem!, MathProgBase.optimize!, MathProgBase.status, MathProgBase.getobjval, MathProgBase.getsolution, MathProgBase.getunboundedray, MathProgBase.linprog
-
-export LPPolyhedron, SimpleLPPolyhedron
-
-abstract LPPolyhedron{N, T}
-
-type SimpleLPPolyhedron{N, T} <: LPPolyhedron{N, T}
-  ext::SimpleVRepresentation{N, T}
-  obj::Vector{T}
-  sense::Symbol
-
-  objval::Nullable{T}
-  solution::Nullable{Vector{T}}
-  status::Symbol
-end
-
-function LinearQuadraticModel{N, T}(p::Polyhedron{N, T})
-  SimpleLPPolyhedron{N, T}(getgenerators(p), zeros(T, N), :None, nothing, nothing, :Undecided)
-end
-function loadproblem!(lpm::SimpleLPPolyhedron, obj, sense)
-  if !(sense in [:Max, :Min])
-    error("sense should be :Max or :Min")
-  end
-  if sum(abs(obj)) != 0
-    lpm.obj = copy(obj)
-    lpm.sense = sense
-  end
-end
-function optimize!{N, T}(lpm::SimpleLPPolyhedron{N, T})
-  if size(lpm.ext.V, 1) + size(lpm.ext.R, 1) == 0
-    lpm.status = :Infeasible
-  else
-    if lpm.sense in [:Max, :Min]
-      better(a, b) = (lpm.sense == :Max ? a > b : a < b)
-      mybetter(a, b) = (lpm.sense == :Max ? mygt(a, b) : mylt(a, b))
-      lpm.status = :Infeasible
-      for i in 1:size(lpm.ext.R, 1)
-        v = vec(lpm.ext.R[i,:])
-        objval = dot(lpm.obj, v)
-        if lpm.status != :Unbounded && mybetter(objval, zero(T))
-          lpm.status = :Unbounded
-          lpm.objval = lpm.sense == :Max ? typemax(T) : typemin(T)
-          lpm.solution = v
-        end
-      end
-      if status != :Unbounded
-        for i in 1:size(lpm.ext.V, 1)
-          v = vec(lpm.ext.V[i,:])
-          objval = dot(lpm.obj, v)
-          if lpm.status == :Undecided || (lpm.status == :Optimal && better(objval, get(lpm.objval)))
-            lpm.status = :Optimal
-            lpm.objval = objval
-            lpm.solution = v
-          end
-        end
-      end
-    else
-      lpm.status = :Optimal
-      lpm.objval = zero(T)
-      lpm.solution = zeros(T,N)
-    end
-  end
-end
-
-function MathProgBase.status(lpm::SimpleLPPolyhedron)
-  lpm.status
-end
-function MathProgBase.getobjval(lpm::SimpleLPPolyhedron)
-  get(lpm.objval)
-end
-function MathProgBase.getsolution(lpm::SimpleLPPolyhedron)
-  copy(get(lpm.solution))
-end
-function MathProgBase.getunboundedray(lpm::SimpleLPPolyhedron)
-  copy(get(lpm.solution))
-end
-
-type LinprogSolution
-    status
-    objval
-    sol
-    attrs
-end
-
-function MathProgBase.linprog{N}(c::Vector, p::Polyhedron{N})
-  if N != length(c)
-    println("length of objective does not match dimension of polyhedron")
-  end
-  m = LinearQuadraticModel(p)
-  loadproblem!(m, c, :Min)
-  optimize!(m)
-  stat = status(m)
-  if stat == :Optimal
-    return LinprogSolution(stat, getobjval(m), getsolution(m), Dict())
-  elseif stat == :Unbounded
-    attrs = Dict()
-    attrs[:unboundedray] = getunboundedray(m)
-    return LinprogSolution(stat, nothing, [], attrs)
-  else
-    return LinprogSolution(stat, nothing, [], Dict())
-  end
-end
-
-function Base.isempty{N,T}(p::Polyhedron{N,T})
-  linprog(zeros(T, N), p).status == :Infeasible
-end
-
-function isredundantinequalityaux(p::Polyhedron, a::Vector, b)
-  sol = linprog(-a, p)
-  if sol.status == :Unbounded
-    (false, sol.attrs[:unboundedray], false)
-  elseif sol.status == :Optimal && mygt(sol.objval, b)
-    (false, sol.sol, true)
-  else
-    (true, nothing, false)
-  end
-end
-function isredundantinequality(p::Polyhedron, a::Vector, b, eq::Bool)
-  if eq
-    sol = isredundantinequalityaux(p, a, b)
-    if !sol[1]
-      sol
-    else
-      isredundantinequalityaux(p, -a, -b)
-    end
-  else
-    isredundantinequalityaux(p, a, b)
-  end
+  cert ? (true, Nullable{Vector{eltype(ine)}}(nothing)) : true
 end

@@ -209,7 +209,8 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
     normal = vec(A[tri[2],:])
     for j = 1:3
       idx = 3*(i-1)+j
-      ns[idx] = -normal
+      #ns[idx] = -normal
+      ns[idx] = normal
     end
     faces[i] = Array(3*(i-1)+(1:3))
     k = 1
