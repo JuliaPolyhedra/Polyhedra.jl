@@ -2,7 +2,7 @@ __precompile__()
 
 module Polyhedra
 
-using GeometryTypes
+using FixedSizeArrays, GeometryTypes
 
 export PolyhedraLibrary, Polyhedron, getlibrary, getlibraryfor
 
@@ -19,6 +19,7 @@ getlibrary(p::Polyhedron) = getlibraryfor(p, eltype(p))
 import Base.intersect, Base.+, Base.*, Base.isempty, Base.copy, Base.push!, Base.length, Base.eltype, Base.start, Base.done, Base.next
 
 include("mycomp.jl")
+include("elements.jl")
 include("representation.jl")
 include("repop.jl")
 include("operations.jl")

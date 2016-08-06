@@ -150,12 +150,41 @@ function nextvrep(vrep::VRep, state)
   (item, newstate)
 end
 
+# Linearity Set
+function linset(rep::HRepresentation)
+  s = IntSet()
+  for (i,h) in enumerate(hrep(rep))
+    if islin(h)
+      push!(s, i)
+    end
+  end
+  s
+end
+function linset(rep::VRepresentation)
+  s = IntSet()
+  for (i,v) in enumerate(vrep(rep))
+    if islin(v)
+      push!(s, i)
+    end
+  end
+  s
+end
+
 # Modify type
 changeeltype{RepT<:Rep,T}(::Type{RepT}, ::Type{T})  = error("not implemented")
-changeeltype{RepT<:Rep}(::Type{RepT}, N)            = error("not implemented")
+changefulldim{RepT<:Rep}(::Type{RepT}, N)            = error("not implemented")
 changeboth{RepT<:Rep,T}(::Type{RepT}, N, ::Type{T}) = error("not implemented")
 
 # Conversion
+changeeltype{S,N}(::Type{S}, x::HalfSpace{N}) = HalfSpace{N,S}(changeeltype(S, x.a), S(β))
+changeeltype{S,N}(::Type{S}, x::HyperPlane{N}) = HyperPlane{N,S}(changeeltype(S, x.a), S(β))
+
+changeeltype{S,N}(::Type{S}, x::Vec{N}) = Vec{N,S}(x)
+changeeltype{S,N}(::Type{S}, x::Ray{N}) = Ray{N,S}(changeeltype(S, x.r))
+changeeltype{S,N}(::Type{S}, x::Line{N}) = Line{N,S}(changeeltype(S, x.r))
+changeeltype{S,N}(::Type{S}, x::Point{N}) = Point{N,S}(x)
+changeeltype{S,N}(::Type{S}, x::SymPoint{N}) = SymPoint{N,S}(changeeltype(S, x))
+changeeltype{S}(::Type{S}, x::AbstractVector) = AbstractVector{S}(x)
 function Base.convert{Tout<:HRep, Tin<:HRepresentation}(::Type{Tout}, p::Tin)
   if fulldim(Tout) != fulldim(Tin)
     error("Different dimension")
@@ -163,14 +192,12 @@ function Base.convert{Tout<:HRep, Tin<:HRepresentation}(::Type{Tout}, p::Tin)
   if eltype(Tout) == eltype(Tin)
     f = nothing
   else
-    S = eltype(Tout)
-    f2 = (i,x) -> (AbstractVector{S}(x[1]), S(x[2]))
-    f3 = (i,x) -> (AbstractVector{S}(x[1]), S(x[2]), x[3])
+    f = (i,x) -> changeeltype(typeof(x), eltype(Tout))(x)
   end
   if decomposedfast(p)
-    Tout(eqs=EqIterator(p, f2), ineqs=IneqIterator(p, f2))
+    Tout(eqs=EqIterator(p, f), ineqs=IneqIterator(p, f))
   else
-    Tout(HRepIterator(p, f3))
+    Tout(HRepIterator(p, f))
   end
 end
 function Base.convert{Tout<:VRep, Tin<:VRepresentation}(::Type{Tout}, p::Tin)
@@ -180,13 +207,12 @@ function Base.convert{Tout<:VRep, Tin<:VRepresentation}(::Type{Tout}, p::Tin)
   if eltype(Tout) == eltype(Tin)
     f = nothing
   else
-    f2 = (i,x) -> (AbstractVector{eltype(Tout)}(x[1]), x[2])
-    f3 = (i,x) -> (AbstractVector{eltype(Tout)}(x[1]), x[2], x[3])
+    f = (i,x) -> changeeltype(typeof(x), eltype(Tout))(x)
   end
   if decomposedfast(p)
-    Tout(points=PointIterator(p, f2), rays=RayIterator(p, f2))
+    Tout(points=PointIterator(p, f), rays=RayIterator(p, f))
   else
-    Tout(VRepIterator(p, f3))
+    Tout(VRepIterator(p, f))
   end
 end
 
@@ -207,4 +233,50 @@ function Base.convert{N, T, RepT<:VRepresentation}(::Type{VRepresentation{N, T}}
     error("Cannot convert representations of the same dimension")
   end
   Base.convert(changeeltype(RepT, T), rep)
+end
+
+# Show
+function Base.show{N,T}(io::IO, rep::Representation{N,T})
+  if typeof(rep) <: HRepresentation
+    print(io, "H")
+  else
+    print(io, "V")
+  end
+  println(io, "-representation")
+
+  if haseqs(rep)
+    print(io, "linearity $(neqs(rep))");
+    for i in linset(rep)
+      print(io, " $i")
+    end
+    println(io)
+  end
+
+  println(io, "begin")
+  if T <: AbstractFloat
+    typename = "real"
+  elseif T <: Integer
+    typename = "integer"
+  else
+    typename = "rational"
+  end
+  println(io, " $(length(rep)) $(N+1) $typename")
+  if rep <: HRepresentation
+    for h in hrep(rep)
+      print(io, " $(h.β)")
+      for j = 1:N
+        print(io, " $(h.a[j])")
+      end
+      println(io)
+    end
+  else
+    for v in vrep(rep)
+      print(io, " $(Int(isray(v)))")
+      for j = 1:N
+        print(io, " $(v[j])")
+      end
+      println(io)
+    end
+  end
+  print(io, "end")
 end

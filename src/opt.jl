@@ -47,6 +47,19 @@ function loadproblem!{N,T}(lpm::SimpleVRepPolyhedraModel{N,T}, vrep::VRep{N,T}, 
 end
 loadproblem!{N,T}(lpm::SimpleVRepPolyhedraModel{N,T}, vrep::VRep{N,T}, obj::Vector, sense) = loadproblem!(lpm, vrep, Vector{T}(obj), sense)
 loadproblem!{N,T}(lpm::SimpleVRepPolyhedraModel{N,T}, vrep::VRep{N}, obj::Vector, sense) = loadproblem!(lpm, VRepresentation{N,T}(vrep), Vector{T}(obj), sense)
+
+function myobjval(obj, v::VRepElement)
+  if islin(r)
+    if lpm.sense == :Min
+      objval = min(mydot(lpm.obj, coord(r)), -mydot(lpm.obj, coord(r)))
+    else
+      objval = max(mydot(lpm.obj, coord(r)), -mydot(lpm.obj, coord(r)))
+    end
+  else
+    objval = mydot(lpm.obj, coord(r))
+  end
+end
+
 function optimize!{N, T}(lpm::SimpleVRepPolyhedraModel{N, T})
   if !hasvreps(lpm.vrep)
     lpm.status = :Infeasible
@@ -55,8 +68,8 @@ function optimize!{N, T}(lpm::SimpleVRepPolyhedraModel{N, T})
       better(a, b) = (lpm.sense == :Max ? a > b : a < b)
       mybetter(a, b) = (lpm.sense == :Max ? mygt(a, b) : mylt(a, b))
       lpm.status = :Infeasible
-      for (r,lin) in rays(lpm.vrep)
-        objval = dot(lpm.obj, r)
+      for r in rays(lpm.vrep)
+        objval = myobjval(lpm.obj, r)
         if lpm.status != :Unbounded && mybetter(objval, zero(T))
           lpm.status = :Unbounded
           lpm.objval = lpm.sense == :Max ? typemax(T) : typemin(T)
@@ -64,8 +77,8 @@ function optimize!{N, T}(lpm::SimpleVRepPolyhedraModel{N, T})
         end
       end
       if status != :Unbounded
-        for (p,lin) in points(lpm.vrep)
-          objval = dot(lpm.obj, p)
+        for p in points(lpm.vrep)
+          objval = myobjval(lpm.obj, p)
           if lpm.status == :Undecided || (lpm.status == :Optimal && better(objval, get(lpm.objval)))
             lpm.status = :Optimal
             lpm.objval = objval
@@ -76,7 +89,7 @@ function optimize!{N, T}(lpm::SimpleVRepPolyhedraModel{N, T})
     else
       lpm.status = :Optimal
       lpm.objval = zero(T)
-      lpm.solution = zeros(T,N)
+      lpm.solution = spzeros(T,N)
     end
   end
 end
@@ -127,7 +140,7 @@ function Base.isempty{N,T}(p::Polyhedron{N,T})
   linprog(zeros(T, N), p).status == :Infeasible
 end
 
-function ishredundantaux(p::Polyhedron, a::Vector, b, strict, cert, solver)
+function ishredundantaux(p::Polyhedron, a, b, strict, cert, solver)
   sol = linprog(-a, p, solver)
   if sol.status == :Unbounded
     cert ?  (false, sol.attrs[:unboundedray], :UnboundedRay) : false
@@ -145,15 +158,15 @@ function ishredundantaux(p::Polyhedron, a::Vector, b, strict, cert, solver)
     end
   end
 end
-function ishredundant(p::Rep, a::Vector, b, eq::Bool; strict=false, cert=false, solver = defaultLPsolverfor(p))
-  if eq
-    sol = ishredundantaux(p, a, b, strict, cert, solver)
+function ishredundant(p::Rep, h::HRepElement; strict=false, cert=false, solver = defaultLPsolverfor(p))
+  if islin(h)
+    sol = ishredundantaux(p, h.a, h.β, strict, cert, solver)
     if !sol[1]
       sol
     else
-      ishredundantaux(p, -a, -b, strict, cert, solver)
+      ishredundantaux(p, -h.a, -h.β, strict, cert, solver)
     end
   else
-    ishredundantaux(p, a, b, strict, cert, solver)
+    ishredundantaux(p, h.a, h.β, strict, cert, solver)
   end
 end

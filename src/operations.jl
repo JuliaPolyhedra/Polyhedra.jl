@@ -60,20 +60,17 @@ end
 
 function call{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
   if !inequalitiesarecomputed(p) && generatorsarecomputed(p)
+    f = (i, x) -> changeeltype(typeof(x), S)(x)
     if decomposedvfast(p)
-      f2 = (i,x) -> (AbstractVector{eltype(Tout)}(x[1]), x[2])
-      polyhedron(PointIterator(p, f2), RayIterator(p, f2), getlibraryfor(p, S))
+      polyhedron(PointIterator(p, f), RayIterator(p, f), getlibraryfor(p, S))
     else
-      f3 = (i,x) -> (AbstractVector{eltype(Tout)}(x[1]), x[2], x[3])
-      polyhedron(VRepIterator(p, f3), getlibraryfor(p, S))
+      polyhedron(VRepIterator(p, f), getlibraryfor(p, S))
     end
   else
     if decomposedvfast(p)
-      f2 = (i,x) -> (AbstractVector{eltype(Tout)}(x[1]), S(x[2]))
-      polyhedron(IneqIterator(p, f2), EqIterator(p, f2), getlibraryfor(p, S))
+      polyhedron(IneqIterator(p, f), EqIterator(p, f), getlibraryfor(p, S))
     else
-      f3 = (i,x) -> (AbstractVector{eltype(Tout)}(x[1]), S(x[2]), x[3])
-      polyhedron(HRepIterator(p, f3), getlibraryfor(p, S))
+      polyhedron(HRepIterator(p, f), getlibraryfor(p, S))
     end
   end
 end
@@ -212,16 +209,11 @@ end
 #   typeof(p)(affinehull(getinequalities(p)))
 # end
 
-function isredundantgenerator(p::Polyhedron, x::Vector, vertex::Bool, cert=false)
-  for (a, β) in eqs(p)
-    if !myeq(dot(a, x), vertex ? β : 0)
-      return cert ? (false, Nullable{Vector{eltype(p)}}(a)) : false
+function isvredundant{N,T}(p::Polyhedron{N,T}, v::VRepElement)
+  for h in hrep(p)
+    if vertex in h
+      return cert ? (false, Nullable{HRepElement{N,T}}(h)) : false
     end
   end
-  for (a, β) in ineqs(p)
-    if mygt(dot(a, x), vertex ? β : 0)
-      return cert ? (false, Nullable{Vector{eltype(p)}}(a)) : false
-    end
-  end
-  cert ? (true, Nullable{Vector{eltype(ine)}}(nothing)) : true
+  cert ? (true, Nullable{HRepElement{N,T}}(nothing)) : true
 end

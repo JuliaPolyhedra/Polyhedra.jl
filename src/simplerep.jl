@@ -33,10 +33,10 @@ function SimpleHRepresentation{N, T}(it::HRepIterator{N, T})
   A = Matrix{T}(length(it), N)
   b = Vector{T}(length(it))
   linset = IntSet()
-  for (i, hrep) in enumerate(it)
-    A[i,:] = hrep[1]
-    b[i] = hrep[2]
-    if hrep[3]
+  for (i, h) in enumerate(it)
+    A[i,:] = h.a
+    b[i] = h.β
+    if islin(h)
       push!(linset, i)
     end
   end
@@ -50,15 +50,15 @@ function SimpleHRepresentation{N, T}(;eqs::Nullable{EqIterator{N, T}}=nothing, i
   b = Vector{T}(nhrep)
   linset = IntSet(1:neq)
   if !(eqs === nothing)
-    for (i, eq) in enumerate(get(eqs))
-      A[i,:] = eq[1]
-      b[i] = eq[2]
+    for (i, h) in enumerate(get(eqs))
+      A[i,:] = h.a
+      b[i] = h.β
     end
   end
   if !(ineqs === nothing)
-    for (i, ineq) in enumerate(get(ineqs))
-      A[neq+i,:] = ineq[1]
-      b[neq+i] = ineq[2]
+    for (i, h) in enumerate(get(ineqs))
+      A[neq+i,:] = h.a
+      b[neq+i] = h.β
     end
   end
   new(A, b, linset)
@@ -70,14 +70,14 @@ Base.copy{N,T}(ine::SimpleHRepresentation{N,T}) = SimpleHRepresentation{N,T}(cop
 
 starthrep(ine::SimpleHRepresentation) = 1
 donehrep(ine::SimpleHRepresentation, state) = state > length(ine)
-nexthrep(ine::SimpleHRepresentation, state) = ((ine.A[state,:], ine.b[state], state in ine.linset), state+1)
+nexthrep(ine::SimpleHRepresentation, state) = (state in ine.linset ? HyperPlane(ine.A[state,:], ine.b[state]) : HalfSpace(ine.A[state,:], ine.b[state]), state+1)
 
 neqs(ine::SimpleHRepresentation) = length(ine.linset)
 starteq(ine::SimpleHRepresentation) = start(ine.linset)
 doneeq(ine::SimpleHRepresentation, state) = done(ine.linset)
 function nexteq(ine::SimpleHRepresentation, state)
   (i, nextstate) = next(ine.linset)
-  ((ine.A[i,:], ine.b[i]), nextstate)
+  (HyperPlane(ine.A[i,:], ine.b[i]), nextstate)
 end
 
 function nextz(is::IntSet, i)
@@ -89,7 +89,7 @@ end
 nineqs(ine::SimpleHRepresentation) = length(ine) - neqs(ine)
 startineq(ine::SimpleHRepresentation) = nextz(ine.linset, 1)
 doneineq(ine::SimpleHRepresentation, state) = state > length(ine)
-nextineq(ine::SimpleHRepresentation, state) = ((ine.A[state,:], ine.b[state]), nextz(state+1))
+nextineq(ine::SimpleHRepresentation, state) = (HalfSpace(ine.A[state,:], ine.b[state]), nextz(state+1))
 
 # V-Representation
 

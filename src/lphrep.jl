@@ -68,10 +68,10 @@ function LPHRepresentation{N, T}(it::HRepIterator{N, T})
   MathProgBase.warn_no_inf(T)
   l = fill(typemin(T), N)
   u = fill(typemax(T), N)
-  for (i, hrep) in enumerate(it)
-    A[i,:] = hrep[1]
-    ub[i] = hrep[2]
-    if hrep[3]
+  for (i, h) in enumerate(it)
+    A[i,:] = h.a
+    ub[i] = h.β
+    if islin(h)
       lb[i] = ub[i]
     else
       lb[i] = typemin(T)
@@ -90,17 +90,17 @@ function LPHRepresentation{N, T}(;eqs::Nullable{EqIterator{N, T}}=nothing, ineq:
   l = fill(typemin(T), N)
   u = fill(typemax(T), N)
   if !(eqs === nothing)
-    for (i, eq) in enumerate(get(eqs))
-      A[i,:] = eq[1]
-      lb[i] = eq[2]
-      ub[i] = eq[2]
+    for (i, h) in enumerate(get(eqs))
+      A[i,:] = h.a
+      lb[i] = h.β
+      ub[i] = h.β
     end
   end
   if !(ineqs === nothing)
-    for (i, ineq) in enumerate(get(ineqs))
-      A[neq+i,:] = ineq[1]
+    for (i, h) in enumerate(get(ineqs))
+      A[neq+i,:] = h.a
       lb[neq+i] = typemin(T)
-      ub[neq+i] = ineq[2]
+      ub[neq+i] = h.β
     end
   end
   new(A, l, u, lb, ub)
@@ -156,7 +156,7 @@ function nexthrep{N,T}(lp::LPHRepresentation{N,T}, state)
   else
     error("The iterator is done")
   end
-  ((a, β, lgeq == 3), checknext(colrow, i, lgeq, (i) -> true))
+  (lgeq == 3 ? HyperPlane(a, β) : HalfSpace(a, β), checknext(colrow, i, lgeq, (i) -> true))
 end
 
 starteq(lp::LPHRepresentation) = checknext(1, 0, 3, (i) -> i == 3)
@@ -173,7 +173,7 @@ function nexteq{N,T}(lp::LPHRepresentation{N,T}, state)
   else
     error("The iterator is done")
   end
-  ((a, β, lgeq == 3), checknext(colrow, i, lgeq, (i) -> i == 3))
+  (HyperPlane(a, β), checknext(colrow, i, lgeq, (i) -> i == 3))
 end
 
 startineq(lp::LPHRepresentation) = checknext(1, 0, 3, (i) -> i <= 2)
@@ -190,5 +190,5 @@ function nextineq{N,T}(lp::LPHRepresentation{N,T}, state)
   else
     error("The iterator is done")
   end
-  ((a, β, lgeq == 3), checknext(colrow, i, lgeq, (i) -> i <= 2))
+  (HalfSpace(a, β), checknext(colrow, i, lgeq, (i) -> i <= 2))
 end

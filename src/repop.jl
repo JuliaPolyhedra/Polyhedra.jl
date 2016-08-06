@@ -40,14 +40,15 @@ end
   hashrep = T1 <: HRepresentation || T2 <: HRepresentation
   hasvrep = T1 <: VRepresentation || T2 <: VRepresentation
   Tout = changefulldim(T1, fulldim(T1)+fulldim(T2))
+  f = (i, x) -> zeropad(x, i == 1 ? N2 : -N1)
   if hashrep && hasvrep
     error("Cannot take the cartesian product between a H-Representation and a V-Representation")
   elseif hashrep || (!hasvrep && usehrep(p1, p2))
     # TODO fastdecompose
-    :(Tout(HRepIterator([p1, p2], (i, (a, β, lin)) -> (i == 1 ? [a; spzeros(T, N2)] : [spzeros(T, N1); a], β, lin))))
+    :(Tout(HRepIterator([p1, p2], f)))
   else
     # TODO fastdecompose
-    :(Tout(VRepIterator([p1, p2], (i, (x, point, lin)) -> (i == 1 ? [x; spzeros(T, N2)] : [spzeros(T, N1); x], point, lin))))
+    :(Tout(VRepIterator([p1, p2], f)))
   end
 end
 
@@ -57,8 +58,8 @@ function (*){RepT<:HRep}(hrep::RepT, P::AbstractMatrix)
   end
   Tout = mypromote_type(eltype(RepT), eltype(P))
   RepTout = changeboth(RepT, size(P, 2), Tout)
+  f = (i, h) -> h * P
   if decomposedhfast(hrep)
-    f = (i,x) -> (Vector{Tout}(x[1] * P), Tout(x[2]))
     eqs = EqIterator(hrep, f)
     ineqs = IneqIterator(hrep, f)
     if RepT <: HRepresentation
@@ -67,7 +68,6 @@ function (*){RepT<:HRep}(hrep::RepT, P::AbstractMatrix)
       polyhedron(ineqs, eqs, getlibraryfor(p, Tout))
     end
   else
-    f = (i,x) -> (Vector{Tout}(x[1] * P), Tout(x[2]), x[3])
     hreps = HRepIterator(hrep, f)
     if RepT <: HRepresentation
       Tout(hreps)
@@ -82,8 +82,8 @@ function (*){RepT<:VRep}(P::AbstractMatrix, vrep::RepT)
   end
   Tout = mypromote_type(eltype(RepT), eltype(P))
   RepTout = changeboth(RepT, size(P, 1), Tout)
+  f = (i, v) -> P * v
   if decomposedvfast(vrep)
-    f = (i,x) -> (Vector{Tout}(P * x[1]), x[2])
     points = PointIterator(vrep, f)
     rays = RayIterator(vrep, f)
     if RepT <: VRepresentation
@@ -92,7 +92,6 @@ function (*){RepT<:VRep}(P::AbstractMatrix, vrep::RepT)
       polyhedron(points, rays, getlibraryfor(p, Tout))
     end
   else
-    f = (i,x) -> (Vector{Tout}(P * x[1]), x[2], x[3])
     vreps = VRepIterator(vrep, f)
     if RepT <: VRepresentation
       Tout(vreps)
@@ -103,21 +102,19 @@ function (*){RepT<:VRep}(P::AbstractMatrix, vrep::RepT)
 end
 
 function Base.round{N,T<:AbstractFloat}(rep::HRepresentation{N,T})
-  f2round = (i,x) -> (round(x[1]), round(x[2]))
-  f3round = (i,x) -> (round(x[1]), round(x[2]), x[3])
+  f = (i, h) -> round(h)
   if decomposedfast(rep)
-    typeof(rep)(eqs=EqIterator(rep, f2round), ineqs=IneqIterator(rep, f2round))
+    typeof(rep)(eqs=EqIterator(rep, f), ineqs=IneqIterator(rep, f))
   else
-    typeof(rep)(HRepIterator(rep, f3round))
+    typeof(rep)(HRepIterator(rep, f))
   end
 end
 function Base.round{N,T<:AbstractFloat}(rep::VRepresentation{N,T})
-  f2round = (i,x) -> (round(x[1]), x[2])
-  f3round = (i,x) -> (round(x[1]), x[2], x[3])
+  f = (i, v) -> round(v)
   if decomposedfast(rep)
-    typeof(rep)(eqs=EqIterator(rep, f2round), ineqs=IneqIterator(rep, f2round))
+    typeof(rep)(eqs=EqIterator(rep, f), ineqs=IneqIterator(rep, f))
   else
-    typeof(rep)(VRepIterator(rep, f3round))
+    typeof(rep)(VRepIterator(rep, f))
   end
 end
 
