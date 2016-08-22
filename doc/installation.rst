@@ -4,7 +4,7 @@
 Installation
 ------------
 
-This section show how to install Julia, Polyhedra
+This section shows how to install Julia, Polyhedra
 and a Polyhedra Manipulation Library of your choice.
 
 Getting Julia
@@ -21,7 +21,7 @@ Getting Polyhedra
 Julia has a package manager that makes the installation of new packages ridiculously simple.
 Open a Julia console (e.g. enter ``julia`` at the command line) and write::
 
-    julia> Pkg.add("JuMP")
+    julia> Pkg.add("Polyhedra")
 
 To start using Polyhedra, you can now just write::
 
