@@ -7,17 +7,16 @@ if VERSION < v"0.5-"
 end
 
 polyhedron(repr::Representation) = polyhedron(repr, getlibraryfor(eltype(repr)))
-Base.copy(p::Polyhedron)                                                             = error("not implemented")
-Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})                             = error("not implemented")
-Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})                             = error("not implemented")
-hrepiscomputed(p::Polyhedron)                                                        = error("not implemented")
-gethrep(p::Polyhedron)                                                               = error("not implemented")
-vrepiscomputed(p::Polyhedron)                                                        = error("not implemented")
-getvrep(p::Polyhedron)                                                               = error("not implemented")
+Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})                             = error("push! not implemented for $(typeof(p)) for HRepresentation")
+Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})                             = error("push! not implemented for $(typeof(p)) for VRepresentation")
+hrepiscomputed(p::Polyhedron)                                                        = error("hrepiscomputed not implemented for $(typeof(p))")
+gethrep(p::Polyhedron)                                                               = error("gethrep not implemented for $(typeof(p))")
+vrepiscomputed(p::Polyhedron)                                                        = error("vrepiscomputed not implemented for $(typeof(p))")
+getvrep(p::Polyhedron)                                                               = error("getvrep not implemented for $(typeof(p))")
 implementseliminationmethod(p::Polyhedron, ::Type{Val{:FourierMotzkin}})             = false
-eliminate(p::Polyhedron, delset::IntSet, ::Type{Val{:FourierMotzkin}})               = error("not implemented")
+eliminate(p::Polyhedron, delset::IntSet, ::Type{Val{:FourierMotzkin}})               = error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
 implementseliminationmethod(p::Polyhedron, ::Type{Val{:BlockElimination}})           = false
-eliminate(p::Polyhedron, delset::IntSet, ::Type{Val{:BlockElimination}})             = error("not implemented")
+eliminate(p::Polyhedron, delset::IntSet, ::Type{Val{:BlockElimination}})             = error("Block elimination not implemented for $(typeof(p))")
 #loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ine}}) = error("not implemented")
 #loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("not implemented") # FIXME ExtFileVRepresentation or just ExtFile
 
@@ -58,7 +57,7 @@ function eliminate{N}(p::Polyhedron{N}, delset::IntSet, ::Type{Val{:ProjectGener
   polyhedron(I[setdiff(IntSet(1:N), collect(delset)),:] * ext, getlibrary(p))
 end
 
-function call{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
+function Base.convert{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
   if !inequalitiesarecomputed(p) && generatorsarecomputed(p)
     f = (i, x) -> changeeltype(typeof(x), S)(x)
     if decomposedvfast(p)

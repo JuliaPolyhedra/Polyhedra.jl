@@ -60,15 +60,15 @@ function (*){RepT<:HRep}(hrep::RepT, P::AbstractMatrix)
   RepTout = changeboth(RepT, size(P, 2), Tout)
   f = (i, h) -> h * P
   if decomposedhfast(hrep)
-    eqs = EqIterator(hrep, f)
-    ineqs = IneqIterator(hrep, f)
+    eqs = eqs(hrep, f)
+    ineqs = ineqs(hrep, f)
     if RepT <: HRepresentation
       Tout(ineqs=ineqs, eqs=eqs)
     else
       polyhedron(ineqs, eqs, getlibraryfor(p, Tout))
     end
   else
-    hreps = HRepIterator(hrep, f)
+    hreps = hrep(hrep, f)
     if RepT <: HRepresentation
       Tout(hreps)
     else
@@ -84,15 +84,15 @@ function (*){RepT<:VRep}(P::AbstractMatrix, vrep::RepT)
   RepTout = changeboth(RepT, size(P, 1), Tout)
   f = (i, v) -> P * v
   if decomposedvfast(vrep)
-    points = PointIterator(vrep, f)
-    rays = RayIterator(vrep, f)
+    points = points(vrep, f)
+    rays = rays(vrep, f)
     if RepT <: VRepresentation
       Tout(points=points, rays=rays)
     else
       polyhedron(points, rays, getlibraryfor(p, Tout))
     end
   else
-    vreps = VRepIterator(vrep, f)
+    vreps = vrep(vrep, f)
     if RepT <: VRepresentation
       Tout(vreps)
     else
@@ -104,17 +104,17 @@ end
 function Base.round{N,T<:AbstractFloat}(rep::HRepresentation{N,T})
   f = (i, h) -> round(h)
   if decomposedfast(rep)
-    typeof(rep)(eqs=EqIterator(rep, f), ineqs=IneqIterator(rep, f))
+    typeof(rep)(eqs=eqs(rep, f), ineqs=ineqs(rep, f))
   else
-    typeof(rep)(HRepIterator(rep, f))
+    typeof(rep)(hrep(rep, f))
   end
 end
 function Base.round{N,T<:AbstractFloat}(rep::VRepresentation{N,T})
   f = (i, v) -> round(v)
   if decomposedfast(rep)
-    typeof(rep)(eqs=EqIterator(rep, f), ineqs=IneqIterator(rep, f))
+    typeof(rep)(eqs=eqs(rep, f), ineqs=ineqs(rep, f))
   else
-    typeof(rep)(VRepIterator(rep, f))
+    typeof(rep)(vrep(rep, f))
   end
 end
 

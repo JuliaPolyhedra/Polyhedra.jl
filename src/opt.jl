@@ -4,7 +4,7 @@ import MathProgBase.LinearQuadraticModel, MathProgBase.loadproblem!, MathProgBas
 
 abstract AbstractPolyhedraModel{N, T} <: MathProgBase.AbstractLinearQuadraticModel
 
-loadproblem!(m::AbstractPolyhedraModel, hrep::HRep, c, sense) = error("not implemented")
+loadproblem!(m::AbstractPolyhedraModel, hrep::HRep, c, sense) = error("loadproblem! not implemented")
 
 include("lphrep.jl")
 
@@ -140,7 +140,7 @@ function Base.isempty{N,T}(p::Polyhedron{N,T})
   linprog(zeros(T, N), p).status == :Infeasible
 end
 
-function ishredundantaux(p::Polyhedron, a, b, strict, cert, solver)
+function ishredundantaux(p::Polyhedron, a, b, strongly, cert, solver)
   sol = linprog(-a, p, solver)
   if sol.status == :Unbounded
     cert ?  (false, sol.attrs[:unboundedray], :UnboundedRay) : false
@@ -148,7 +148,7 @@ function ishredundantaux(p::Polyhedron, a, b, strict, cert, solver)
     if mygt(sol.objval, b)
       cert ? (false, sol.sol, :ExteriorPoint) : false
     elseif mygeq(sol.objval, b)
-      if strict
+      if strongly
         cert ? (false, sol.sol, :BoundaryPoint) : false
       else
         cert ? (true, sol.sol, :BoundaryPoint) : true
@@ -158,15 +158,15 @@ function ishredundantaux(p::Polyhedron, a, b, strict, cert, solver)
     end
   end
 end
-function ishredundant(p::Rep, h::HRepElement; strict=false, cert=false, solver = defaultLPsolverfor(p))
+function ishredundant(p::Rep, h::HRepElement; strongly=false, cert=false, solver = defaultLPsolverfor(p))
   if islin(h)
-    sol = ishredundantaux(p, h.a, h.β, strict, cert, solver)
+    sol = ishredundantaux(p, h.a, h.β, strongly, cert, solver)
     if !sol[1]
       sol
     else
-      ishredundantaux(p, -h.a, -h.β, strict, cert, solver)
+      ishredundantaux(p, -h.a, -h.β, strongly, cert, solver)
     end
   else
-    ishredundantaux(p, h.a, h.β, strict, cert, solver)
+    ishredundantaux(p, h.a, h.β, strongly, cert, solver)
   end
 end

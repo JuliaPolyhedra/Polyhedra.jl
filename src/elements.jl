@@ -1,9 +1,14 @@
+export islin, coord, lift
+
 mydot(a, b) = sum(map(*, a, b))
 mydot(a::AbstractVector, b::AbstractVector) = dot(f, v)
 mydot(f::FixedVector, v::FixedVector) = dot(f, v)
 #mydot{T<:Union{Ray,Line}}(a::T, b::T) = mydot(a.r, b.r)
 #mydot{T<:Union{Ray,Line}}(a, b::T) = mydot(a, b.r)
 #mydot{T<:Union{Ray,Line}}(a::T, b) = mydot(a.r, b)
+
+vecconv{T}(::Type{T}, a::AbstractVector) = AbstractVector{T}(a)
+vecconv{T}(::Type{T}, a::FixedVector) = FixedVector{T}(a)
 
 abstract HRepElement{N,T}
 
@@ -17,6 +22,11 @@ type HyperPlane{N,T} <: HRepElement{N,T}
   a
   β
 end
+HalfSpace(a, β) = HalfSpace{fulldim(a), eltype(a)}(a, eltype(a)(β))
+HyperPlane(a, β) = HyperPlane{fulldim(a), eltype(a)}(a, eltype(a)(β))
+
+Base.convert{N,Tin,Tout}(::Type{HalfSpace{N,Tout}}, h::HalfSpace{N,Tin}) = HalfSpace{N,Tout}(vecconv(Tout, h.a), Tout(h.β))
+Base.convert{N,Tin,Tout}(::Type{HyperPlane{N,Tout}}, h::HyperPlane{N,Tin}) = HyperPlane{N,Tout}(vecconv(Tout, h.a), Tout(h.β))
 
 islin(v::HalfSpace) = false
 islin(v::HyperPlane) = true
@@ -72,16 +82,19 @@ typealias FixedRepElement{N,T} Union{HRepElement{N,T}, FixedVRepElement{N,T}}
 
 fulldim{N}(e::FixedRepElement{N}) = N
 eltype{N,T}(e::FixedRepElement{N, T}) = T
+fulldim{T<:FixedRepElement}(::Type{T}) = T.parameters[1]
+eltype{T<:FixedRepElement}(::Type{T}) = T.parameters[2]
+
 fulldim(v::AbstractVector) = length(v)
-eltype{T}(v::AbstractVector{T}) = T
+fulldim{T<:AbstractVector}(::Type{T}) = T.parameters[1]
 
 islin{T<:Union{Point,AbstractVector,Vec,Ray}}(v::T) = false
 islin{T<:Union{SymPoint,Line}}(v::T) = true
 isray{T<:Union{Point,AbstractVector,SymPoint}}(v::T) = false
 isray{T<:Union{Vec,Ray,Line}}(v::T) = true
 
-#coord{ElemT<:Union{Point,AbstractVector,Vec}}(v::ElemT) = v
-#coord{ElemT<:Union{SymPoint,Ray,Line}}(v::ElemT) = v.a
+coord{ElemT<:Union{Point,AbstractVector,Vec}}(v::ElemT) = v
+coord{ElemT<:Union{HRepElement,SymPoint,Ray,Line}}(v::ElemT) = v.a
 
 typealias VRepElementContainer Union{SymPoint, Ray, Line}
 
@@ -145,9 +158,9 @@ function Base.vec{N,T}(x::FixedVector{N,T})
 end
 #Base.vec{ElemT::VRepElementContainer}(x::ElemT) = ElemT(vec(x.a))
 
-pushbefore(a::AbstractVector, β) = [β, a]
+pushbefore(a::AbstractVector, β) = [β; a]
 function pushbefore{ElemT<:FixedVector}(a::ElemT, β, ElemTout = changefulldim(ElemT, fulldim(ElemT)+1))
-  ElemTout([β, vec(a)])
+  ElemTout([β; vec(a)])
 end
 
 function lift{ElemT <: HRepElement}(h::ElemT)

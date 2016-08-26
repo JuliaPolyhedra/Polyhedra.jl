@@ -23,6 +23,8 @@ type SimpleHRepresentation{N, T} <: HRepresentation{N, T}
   end
 end
 
+decomposedfast(rep::SimpleHRepresentation) = false
+
 function SimpleHRepresentation{S <: Real, T <: Real}(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet=IntSet())
   U = promote_type(S, T)
   SimpleHRepresentation{size(A,2),U}(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
@@ -42,7 +44,7 @@ function SimpleHRepresentation{N, T}(it::HRepIterator{N, T})
   end
   new(A, b, linset)
 end
-function SimpleHRepresentation{N, T}(;eqs::Nullable{EqIterator{N, T}}=nothing, ineq::Nullable{IneqIterator{N, T}}=nothing)
+function SimpleHRepresentation{N, T}(;eqs::Nullable{EqIterator{N, T}}=nothing, ineqs::Nullable{IneqIterator{N, T}}=nothing)
   neq = isnull(eqs) ? 0 : length(eqs)
   nineq = isnull(ineqs) ? 0 : length(ineqs)
   nhrep = neq + nineq
