@@ -3,7 +3,15 @@ export SymPoint, Ray, Line
 export islin, coord, lift
 
 typealias MyPoint{N,T} Union{Point{N,T},AbstractArray{T}}
+mypoint{T}(::Type{T}, a::AbstractArray) = AbstractArray{T}(a)
+mypoint{T}(::Type{T}, a::AbstractArray{T}) = a
+mypoint{N,T}(::Type{T}, a::Point{N}) = Point{N,T}(a)
+mypoint{N,T}(::Type{T}, a::Point{N,T}) = a
 typealias MyVec{N,T} Union{Vec{N,T},AbstractArray{T}}
+myvec{T}(::Type{T}, a::AbstractArray) = AbstractArray{T}(a)
+myvec{T}(::Type{T}, a::AbstractArray{T}) = a
+myvec{N,T}(::Type{T}, a::Vec{N}) = Vec{N,T}(a)
+myvec{N,T}(::Type{T}, a::Vec{N,T}) = a
 
 mydot(a, b) = sum(map(*, a, b))
 mydot(a::AbstractVector, b::AbstractVector) = dot(f, v)
@@ -21,12 +29,23 @@ abstract HRepElement{N,T}
 type HalfSpace{N,T} <: HRepElement{N,T}
   a::MyVec{N,T}
   β::T
+  function HalfSpace(a::MyVec{N,T}, β::T)
+    new(a, β)
+  end
 end
+
+(::Type{HalfSpace{N,T}}){N,T}(a::MyVec, β) = HalfSpace{N,T}(myvec(T, a), T(β))
 
 type HyperPlane{N,T} <: HRepElement{N,T}
   a::MyVec{N,T}
   β::T
+  function HyperPlane(a::MyVec{N,T}, β::T)
+    new(a, β)
+  end
 end
+
+(::Type{HyperPlane{N,T}}){N,T}(a::MyVec, β) = HalfSpace{N,T}(myvec(T, a), T(β))
+
 # FIXME should promote between a and β
 HalfSpace(a, β) = HalfSpace{fulldim(a), eltype(a)}(a, eltype(a)(β))
 HyperPlane(a, β) = HyperPlane{fulldim(a), eltype(a)}(a, eltype(a)(β))
@@ -42,7 +61,7 @@ islin(v::HyperPlane) = true
 function (*){ElemT<:HRepElement}(h::ElemT, P::Matrix)
   Tout = mypromote_type(eltype(ElemT), eltype(P))
   ElemTout = changeboth(ElemT, size(P, 2), Tout)
-  ElemTout(h.a' * P, h.β)
+  ElemTout(P' * h.a, h.β)
 end
 function zeropad{ElemT<:HRepElement}(h::ElemT, n::Integer)
   if n == 0
@@ -78,6 +97,8 @@ type SymPoint{N, T}
   end
 end
 
+(::Type{SymPoint{N,T}}){N,T}(a::MyPoint) = SymPoint{N,T}(mypoint(T, a))
+
 type Ray{N, T}
   a::MyVec{N, T}
   function Ray(a::MyVec{N, T})
@@ -85,12 +106,16 @@ type Ray{N, T}
   end
 end
 
+(::Type{Ray{N,T}}){N,T}(a::MyVec) = Ray{N,T}(myvec(T, a))
+
 type Line{N,T}
   a::MyVec{N, T}
   function Line(a::MyVec{N, T})
     new(a)
   end
 end
+
+(::Type{Line{N,T}}){N,T}(a::MyVec) = Line{N,T}(myvec(T, a))
 
 SymPoint(a::Union{Point,AbstractVector}) = SymPoint{fulldim(a), eltype(a)}(a)
 Ray(a::Union{Vec,AbstractVector}) = Ray{fulldim(a), eltype(a)}(a)
@@ -126,7 +151,7 @@ coord{ElemT<:Union{HRepElement,SymPoint,Ray,Line}}(v::ElemT) = v.a
 
 typealias VRepElementContainer Union{SymPoint, Ray, Line}
 
-@generated function (*){ElemT<:VRepElement}(P::Matrix, v::ElemT)
+@generated function (*){ElemT<:FixedVRepElement}(P::Matrix, v::ElemT)
   if ElemT <: VRepElementContainer
     Tout = mypromote_type(eltype(ElemT), eltype(P))
     ElemTout = changeboth(ElemT, size(P, 1), Tout)

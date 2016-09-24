@@ -2,31 +2,32 @@ using MathProgBase
 
 import MathProgBase.LinearQuadraticModel, MathProgBase.loadproblem!, MathProgBase.optimize!, MathProgBase.status, MathProgBase.getobjval, MathProgBase.getsolution, MathProgBase.getunboundedray, MathProgBase.linprog
 
-abstract AbstractPolyhedraModel{N, T} <: MathProgBase.AbstractLinearQuadraticModel
+export AbstractPolyhedraModel
+
+abstract AbstractPolyhedraModel <: MathProgBase.AbstractLinearQuadraticModel
 
 loadproblem!(m::AbstractPolyhedraModel, hrep::HRep, c, sense) = error("loadproblem! not implemented")
 
 include("lphrep.jl")
 
 function loadproblem!(m::AbstractPolyhedraModel, A, l, u, c, lb, ub, sense)
+  @show A, l, u, c, lb, ub
   loadproblem!(m, LPHRepresentation(A, l, u, lb, ub), c, sense)
 end
-function loadproblem!(m::MathProgBase.AbstractLinearQuadraticModel, lp::LPHRepresentation, c, sense)
-  loadproblem!(p, lp.A, lp.l, lp.u, c, lp.lb, lp.ub, sense)
-end
 function loadproblem!(m::MathProgBase.AbstractLinearQuadraticModel, hrep::HRep, c, sense)
-  loadproblem!(p, LPHRepresentation(hrep), c, sense)
+  lp = LPHRepresentation(hrep)
+  loadproblem!(p, lp.A, lp.l, lp.u, c, lp.lb, lp.ub, sense)
 end
 
 export SimpleVRepPolyhedraModel
 
-type SimpleVRepPolyhedraModel{N, T} <: AbstractPolyhedraModel{N, T}
-  vrep::Nullable{VRep{N, T}}
-  obj::Nullable{Vector{T}}
+type SimpleVRepPolyhedraModel <: AbstractPolyhedraModel
+  vrep::Nullable{VRep}
+  obj::Nullable{Vector}
   sense::Nullable{Symbol}
 
-  objval::Nullable{T}
-  solution::Nullable{Vector{T}}
+  objval::Nullable
+  solution::Nullable{Vector}
   status::Symbol
 
   function SimpleVRepPolyhedraModel()
@@ -34,7 +35,7 @@ type SimpleVRepPolyhedraModel{N, T} <: AbstractPolyhedraModel{N, T}
   end
 end
 
-function loadproblem!{N,T}(lpm::SimpleVRepPolyhedraModel{N,T}, vrep::VRep{N,T}, obj::Vector{T}, sense)
+function loadproblem!(lpm::SimpleVRepPolyhedraModel, vrep::VRep, obj, sense)
   if !(sense in [:Max, :Min])
     error("sense should be :Max or :Min")
   end
@@ -43,8 +44,6 @@ function loadproblem!{N,T}(lpm::SimpleVRepPolyhedraModel{N,T}, vrep::VRep{N,T}, 
     lpm.sense = sense
   end
 end
-loadproblem!{N,T}(lpm::SimpleVRepPolyhedraModel{N,T}, vrep::VRep{N,T}, obj::Vector, sense) = loadproblem!(lpm, vrep, Vector{T}(obj), sense)
-loadproblem!{N,T}(lpm::SimpleVRepPolyhedraModel{N,T}, vrep::VRep{N}, obj::Vector, sense) = loadproblem!(lpm, VRepresentation{N,T}(vrep), Vector{T}(obj), sense)
 
 function myobjval(obj, v::VRepElement)
   if islin(r)
@@ -58,15 +57,21 @@ function myobjval(obj, v::VRepElement)
   end
 end
 
-function optimize!{N, T}(lpm::SimpleVRepPolyhedraModel{N, T})
-  if !hasvreps(lpm.vrep)
+function optimize!(lpm::SimpleVRepPolyhedraModel)
+  if isnull(lpm.vrep)
+    error("Not problem loaded")
+  end
+  prob = get(lpm.vrep)
+  N = fulldim(prob)
+  T = eltype(prob)
+  if !hasvreps(prob)
     lpm.status = :Infeasible
   else
     if lpm.sense in [:Max, :Min]
       better(a, b) = (lpm.sense == :Max ? a > b : a < b)
       mybetter(a, b) = (lpm.sense == :Max ? mygt(a, b) : mylt(a, b))
       lpm.status = :Infeasible
-      for r in rays(lpm.vrep)
+      for r in rays(prob)
         objval = myobjval(lpm.obj, r)
         if lpm.status != :Unbounded && mybetter(objval, zero(T))
           lpm.status = :Unbounded
@@ -75,7 +80,7 @@ function optimize!{N, T}(lpm::SimpleVRepPolyhedraModel{N, T})
         end
       end
       if status != :Unbounded
-        for p in points(lpm.vrep)
+        for p in points(prob)
           objval = myobjval(lpm.obj, p)
           if lpm.status == :Undecided || (lpm.status == :Optimal && better(objval, get(lpm.objval)))
             lpm.status = :Optimal

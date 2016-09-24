@@ -28,6 +28,7 @@ changeelfulldim{N,T}(::Type{SimpleHRepresentation{N,T}}, M)  = SimpleHRepresenta
 changeboth{N,T,S}(::Type{SimpleHRepresentation{N,T}}, M, ::Type{S}) = SimpleHRepresentation{M,S}
 
 decomposedfast(rep::SimpleHRepresentation) = false
+linset(rep::SimpleHRepresentation) = copy(rep.linset)
 
 function SimpleHRepresentation{S <: Real, T <: Real}(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet=IntSet())
   U = promote_type(S, T)
@@ -130,6 +131,14 @@ changeelfulldim{N,T}(::Type{SimpleVRepresentation{N,T}}, M)  = SimpleVRepresenta
 changeboth{N,T,S}(::Type{SimpleVRepresentation{N,T}}, M, ::Type{S}) = SimpleVRepresentation{M,S}
 
 decomposedfast(rep::SimpleVRepresentation) = true
+function linset(rep::SimpleVRepresentation)
+  ls = copy(rep.Rlinset)
+  nr = nrays(rep)
+  for i in rep.Vlinset
+    push!(ls, nr + i)
+  end
+  ls
+end
 
 function SimpleVRepresentation{S <: Real, T <: Real}(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet())
   U = promote_type(S, T)

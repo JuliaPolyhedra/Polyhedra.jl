@@ -11,6 +11,8 @@ abstract Representation{N, T <: Real}
 abstract HRepresentation{N,T} <: Representation{N,T}
 abstract VRepresentation{N,T} <: Representation{N,T}
 
+export Rep, HRep, VRep
+
 typealias  Rep{N,T} Union{ Representation{N,T}, Polyhedron{N,T}}
 typealias HRep{N,T} Union{HRepresentation{N,T}, Polyhedron{N,T}}
 typealias VRep{N,T} Union{VRepresentation{N,T}, Polyhedron{N,T}}
@@ -162,6 +164,7 @@ function nextvrep(vrep::VRep, state)
 end
 
 # Linearity Set
+export linset
 function linset(rep::HRepresentation)
   s = IntSet()
   for (i,h) in enumerate(hrep(rep))

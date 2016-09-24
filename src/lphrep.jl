@@ -14,10 +14,10 @@ type LPHRepresentation{N, T} <: HRepresentation{N, T}
   roweqs::IntSet
 
   function LPHRepresentation(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T})
-    if length(l) != length(u) || size(A, 1) != length(l)
+    if length(l) != length(u) || size(A, 2) != length(l)
       error("The length of l and u must be equal to the number of rows of A")
     end
-    if length(lb) != length(ub) || size(A, 2) != length(lb)
+    if length(lb) != length(ub) || size(A, 1) != length(lb)
       error("The length of lb and ub must be equal to the number of columns of A")
     end
     if size(A, 2) != N
@@ -55,11 +55,16 @@ type LPHRepresentation{N, T} <: HRepresentation{N, T}
   end
 end
 
+decomposedfast(lp::LPHRepresentation) = false
+
 LPHRepresentation{T <: Real}(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) = LPHRepresentation{size(A,2),T}(A, l, u, lb, ub)
 function LPHRepresentation(A::AbstractMatrix, l::AbstractVector, u::AbstractVector, lb::AbstractVector, ub::AbstractVector)
   T = promote_type(eltype(A), eltype(l), eltype(u), eltype(lb), eltype(ub))
   LPHRepresentation{size(A,2),T}(AbstractMatrix{T}(A), AbstractVector{T}(l), AbstractVector{T}(u), AbstractVector{T}(lb), AbstractVector{T}(ub))
 end
+
+LPHRepresentation(rep::LPHRepresentation) = rep
+LPHRepresentation{N,T}(rep::HRep{N,T}) = LPHRepresentation{N,T}(rep)
 
 function LPHRepresentation{N, T}(it::HRepIterator{N, T})
   A = Matrix{T}(length(it), N)
@@ -119,7 +124,7 @@ function checknext(lp::LPHRepresentation, colrow, i, lgeq, allowed)
     end
     while i <= (colrow == 1 ? size(lp.A, 2) : size(lp.A, 1)) && !ok
       while lgeq <= 3 && !ok
-        if allowed(i) && i in lgeqs[lgeq]
+        if allowed(lgeq) && i in lgeqs[lgeq]
           ok = true
         else
           lgeq += 1
@@ -142,53 +147,53 @@ end
 neqs(lp::LPHRepresentation) = length(lp.coleqs) + length(lp.roweqs)
 nineqs(lp::LPHRepresentation) = length(lp.colleqs) + length(lp.colgeqs) + length(lp.rowleqs) + length(lp.rowgeqs)
 
-starthrep(lp::LPHRepresentation) = checknext(1, 0, 3, (i) -> true)
+starthrep(lp::LPHRepresentation) = checknext(lp, 1, 0, 3, (i) -> true)
 donehrep(lp::LPHRepresentation, state) = state[1] > 2
 function nexthrep{N,T}(lp::LPHRepresentation{N,T}, state)
   colrow, i, lgeq = state[1], state[2], state[3]
-  if state[1] == 1
+  if colrow == 1
     a = spzeros(T, N)
-    a[i] = lgeq == 1 ? -one(T) : one(T)
-    β = lgeq == 1 ? -lp.lb[i,:] : lp.ub[i,:]
-  elseif state[1] == 1
-    a = lgeq == 1 ? -lp.A[i,:] : lp.A[i,:]
-    β = lgeq == 1 ? -lp.lb[i,:] : lp.ub[i,:]
+    a[i] = lgeq == 1 ? one(T) : -one(T)
+    β = lgeq == 1 ? lp.u[i] : lp.l[i]
+  elseif colrow == 2
+    a = lgeq == 1 ? lp.A[i,:] : -lp.A[i,:]
+    β = lgeq == 1 ? lp.ub[i] : -lp.lb[i]
   else
     error("The iterator is done")
   end
-  (lgeq == 3 ? HyperPlane(a, β) : HalfSpace(a, β), checknext(colrow, i, lgeq, (i) -> true))
+  (lgeq == 3 ? HyperPlane(a, β) : HalfSpace(a, β), checknext(lp, colrow, i, lgeq, (i) -> true))
 end
 
-starteq(lp::LPHRepresentation) = checknext(1, 0, 3, (i) -> i == 3)
+starteq(lp::LPHRepresentation) = checknext(lp, 1, 0, 3, (i) -> i == 3)
 doneeq(lp::LPHRepresentation, state) = state[1] > 2
 function nexteq{N,T}(lp::LPHRepresentation{N,T}, state)
   colrow, i, lgeq = state[1], state[2], state[3]
-  if state[1] == 1
+  if colrow == 1
     a = spzeros(T, N)
     a[i] = lgeq == 1 ? -one(T) : one(T)
-    β = lgeq == 1 ? -lp.lb[i,:] : lp.ub[i,:]
-  elseif state[1] == 1
+    β = lgeq == 1 ? -lp.l[i] : lp.u[i]
+  elseif colrow == 2
     a = lgeq == 1 ? -lp.A[i,:] : lp.A[i,:]
-    β = lgeq == 1 ? -lp.lb[i,:] : lp.ub[i,:]
+    β = lgeq == 1 ? -lp.lb[i] : lp.ub[i]
   else
     error("The iterator is done")
   end
-  (HyperPlane(a, β), checknext(colrow, i, lgeq, (i) -> i == 3))
+  (HyperPlane(a, β), checknext(lp, colrow, i, lgeq, (i) -> i == 3))
 end
 
-startineq(lp::LPHRepresentation) = checknext(1, 0, 3, (i) -> i <= 2)
+startineq(lp::LPHRepresentation) = checknext(lp, 1, 0, 3, (i) -> i <= 2)
 doneineq(lp::LPHRepresentation, state) = state[1] > 2
 function nextineq{N,T}(lp::LPHRepresentation{N,T}, state)
   colrow, i, lgeq = state[1], state[2], state[3]
-  if state[1] == 1
+  if colrow == 1
     a = spzeros(T, N)
     a[i] = lgeq == 1 ? -one(T) : one(T)
-    β = lgeq == 1 ? -lp.lb[i,:] : lp.ub[i,:]
-  elseif state[1] == 1
+    β = lgeq == 1 ? -lp.l[i] : lp.u[i]
+  elseif colrow == 2
     a = lgeq == 1 ? -lp.A[i,:] : lp.A[i,:]
-    β = lgeq == 1 ? -lp.lb[i,:] : lp.ub[i,:]
+    β = lgeq == 1 ? -lp.lb[i] : lp.ub[i]
   else
     error("The iterator is done")
   end
-  (HalfSpace(a, β), checknext(colrow, i, lgeq, (i) -> i <= 2))
+  (HalfSpace(a, β), checknext(lp, colrow, i, lgeq, (i) -> i <= 2))
 end

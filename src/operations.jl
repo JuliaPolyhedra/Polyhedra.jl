@@ -21,7 +21,7 @@ eliminate(p::Polyhedron, delset::IntSet, ::Type{Val{:BlockElimination}})        
 #loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("not implemented") # FIXME ExtFileVRepresentation or just ExtFile
 
 # These can optionally be reimplemented for speed by a library
-export numberofinequalities, numberofgenerators, dim, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators, transforminequalities, transformgenerators, project, radialprojectoncut
+export numberofinequalities, numberofgenerators, dim, transforminequalities, transformgenerators, project, radialprojectoncut
 
 loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Symbol) = loadpolyhedron!(p, filename, Val{extension})
 
@@ -124,7 +124,7 @@ eliminate{N,T}(p::Polyhedron{N,T})  = eliminate(p::Polyhedron, IntSet([N]))
 #   end
 # end
 
-function project{N,T}(p::Polyhedron{N,T}, P::Array)
+function project{N,T}(p::Polyhedron{N,T}, P::AbstractArray)
   # Function to make x orthogonal to an orthonormal basis in Q
   # We first make the columns of P orthonormal
   if size(P, 1) != N

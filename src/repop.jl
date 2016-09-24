@@ -54,51 +54,57 @@ end
   end
 end
 
-function (*){RepT<:HRep}(hrep::RepT, P::AbstractMatrix)
-  if size(P, 1) != fulldim(T)
+function (*){RepT<:HRep}(rep::RepT, P::AbstractMatrix)
+  Nin = fulldim(rep)
+  Tin = eltype(rep)
+  if size(P, 1) != Nin
     error("The number of rows of P must match the dimension of the H-representation")
   end
+  Nout = size(P, 2)
   Tout = mypromote_type(eltype(RepT), eltype(P))
-  RepTout = changeboth(RepT, size(P, 2), Tout)
+  RepTout = changeboth(RepT, Nout, Tout)
   f = (i, h) -> h * P
-  if decomposedhfast(hrep)
-    eqs = eqs(hrep, f)
-    ineqs = ineqs(hrep, f)
+  if decomposedhfast(rep)
+    eqs = EqIterator{Nout,Tout,Nin,Tin}([rep], f)
+    ineqs = IneqIterator{Nout,Tout,Nin,Tin}([rep], f)
     if RepT <: HRepresentation
-      Tout(ineqs=ineqs, eqs=eqs)
+      RepTout(ineqs=ineqs, eqs=eqs)
     else
-      polyhedron(ineqs, eqs, getlibraryfor(p, Tout))
+      polyhedron(ineqs, eqs, getlibraryfor(rep, Tout))
     end
   else
-    hreps = hrep(hrep, f)
+    hreps = HRepIterator{Nout,Tout,Nin,Tin}([rep], f)
     if RepT <: HRepresentation
-      Tout(hreps)
+      RepTout(hreps)
     else
-      polyhedron(hreps, getlibraryfor(p, Tout))
+      polyhedron(hreps, getlibraryfor(rep, Tout))
     end
   end
 end
-function (*){RepT<:VRep}(P::AbstractMatrix, vrep::RepT)
-  if size(P, 2) != fulldim(T)
+function (*){RepT<:VRep}(P::AbstractMatrix, rep::RepT)
+  Nin = fulldim(rep)
+  Tin = eltype(rep)
+  if size(P, 2) != Nin
     error("The number of rows of P must match the dimension of the H-representation")
   end
+  Nout = size(P, 1)
   Tout = mypromote_type(eltype(RepT), eltype(P))
-  RepTout = changeboth(RepT, size(P, 1), Tout)
+  RepTout = changeboth(RepT, Nout, Tout)
   f = (i, v) -> P * v
-  if decomposedvfast(vrep)
-    points = points(vrep, f)
-    rays = rays(vrep, f)
+  if decomposedvfast(rep)
+    points = PointIterator{Nout,Tout,Nin,Tin}([rep], f)
+    rays = RayIterator{Nout,Tout,Nin,Tin}([rep], f)
     if RepT <: VRepresentation
-      Tout(points=points, rays=rays)
+      RepTout(points=points, rays=rays)
     else
-      polyhedron(points, rays, getlibraryfor(p, Tout))
+      polyhedron(points, rays, getlibraryfor(rep, Tout))
     end
   else
-    vreps = vrep(vrep, f)
+    vreps = VRepIterator{Nout,Tout,Nin,Tin}([rep], f)
     if RepT <: VRepresentation
-      Tout(vreps)
+      RepTout(vreps)
     else
-      polyhedron(vreps, getlibraryfor(p, Tout))
+      polyhedron(vreps, getlibraryfor(rep, Tout))
     end
   end
 end
@@ -120,37 +126,21 @@ function Base.round{N,T<:AbstractFloat}(rep::VRepresentation{N,T})
   end
 end
 
-function gethredundantindices(hrep::HRep)
+export gethredundantindices, getvredundantindices
+
+function gethredundantindices(hrep::HRep; strongly=false, solver = defaultLPsolverfor(p))
   red = IntSet([])
   for i in 1:nhreps(hrep)
-    if ishredundant(hrep, i)
+    if ishredundant(hrep, i; strongly, solver)
       push!(red, i)
     end
   end
   red
 end
-function gethstronglyredundantindices(hrep::HRep)
-  red = IntSet([])
-  for i in 1:nhreps(hrep)
-    if ishstronglyredundant(p, i)[1]
-      push!(red, i)
-    end
-  end
-  red
-end
-function getvredundantindices(vrep::VRep)
+function getvredundantindices(vrep::VRep; strongly=false, solver = defaultLPsolverfor(p))
   red = IntSet([])
   for i in 1:nvreps(vrep)
-    if isvredundant(p, i)
-      push!(red, i)
-    end
-  end
-  red
-end
-function getvstronglyredundantindices(hrep::HRep)
-  red = IntSet([])
-  for i in 1:nvreps(p)
-    if isvstronglyredundant(p, i)
+    if isvredundant(p, i; strongly, solver)
       push!(red, i)
     end
   end

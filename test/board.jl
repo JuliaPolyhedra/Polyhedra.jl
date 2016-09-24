@@ -50,8 +50,8 @@ function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
   #(isredundant, certificate) = isredundantinequality(polycut, 1)
   #@test !isredundant
   #@test certificate == target
-  @test !isredundantinequality(polycut, 1)
-  @test IntSet([]) == getredundantinequalities(polycut)
+  @test !ishredundant(polycut, 1)
+  @test IntSet([]) == gethredundantindices(polycut)
  #(issredundant, scertificate) = isstronglyredundantinequality(polycut, 1)
  #@test !issredundant
  #@test scertificate == target
