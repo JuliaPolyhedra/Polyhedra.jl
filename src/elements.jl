@@ -78,7 +78,7 @@ function zeropad{ElemT<:HRepElement}(h::ElemT, n::Integer)
   end
 end
 function Base.round{ElemT<:HRepElement}(h::ElemT, P::Matrix)
-  ElemT(round(h.a), round(h.β))
+  ElemT(round.(h.a), round(h.β))
 end
 
 # Point:
