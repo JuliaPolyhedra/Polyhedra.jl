@@ -28,7 +28,7 @@ function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
   ine = SimpleHRepresentation(A, b)
   poly = polyhedron(ine, lib)
   @test !isempty(poly)
-  ext  = SimpleVRepresentation(getgenerators(poly))
+  ext  = SimpleVRepresentation(getvrep(poly))
   target = ones(Int, 9) * (3 // 4)
   ok = false
   for i = 1:size(ext.V, 1)

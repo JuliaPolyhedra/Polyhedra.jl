@@ -23,6 +23,10 @@ type SimpleHRepresentation{N, T} <: HRepresentation{N, T}
   end
 end
 
+changeeltype{N,T,S}(::Type{SimpleHRepresentation{N,T}}, ::Type{S})  = SimpleHRepresentation{N,S}
+changeelfulldim{N,T}(::Type{SimpleHRepresentation{N,T}}, M)  = SimpleHRepresentation{M,T}
+changeboth{N,T,S}(::Type{SimpleHRepresentation{N,T}}, M, ::Type{S}) = SimpleHRepresentation{M,S}
+
 decomposedfast(rep::SimpleHRepresentation) = false
 
 function SimpleHRepresentation{S <: Real, T <: Real}(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet=IntSet())
@@ -31,7 +35,9 @@ function SimpleHRepresentation{S <: Real, T <: Real}(A::AbstractMatrix{S}, b::Ab
 end
 SimpleHRepresentation{T <: Real}(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet()) = SimpleHRepresentation{size(A,2),T}(A, b, linset)
 
-function SimpleHRepresentation{N, T}(it::HRepIterator{N, T})
+SimpleHRepresentation{N,T}(h::HRepresentation{N,T}) = SimpleHRepresentation{N,T}(h)
+
+function (::Type{SimpleHRepresentation{N, T}}){N, T}(it::HRepIterator{N, T})
   A = Matrix{T}(length(it), N)
   b = Vector{T}(length(it))
   linset = IntSet()
@@ -42,9 +48,10 @@ function SimpleHRepresentation{N, T}(it::HRepIterator{N, T})
       push!(linset, i)
     end
   end
-  new(A, b, linset)
+  SimpleHRepresentation{N, T}(A, b, linset)
 end
-function SimpleHRepresentation{N, T}(;eqs::Nullable{EqIterator{N, T}}=nothing, ineqs::Nullable{IneqIterator{N, T}}=nothing)
+
+function (::Type{SimpleHRepresentation{N, T}}){N, T}(;eqs::Nullable{EqIterator{N, T}}=nothing, ineqs::Nullable{IneqIterator{N, T}}=nothing)
   neq = isnull(eqs) ? 0 : length(eqs)
   nineq = isnull(ineqs) ? 0 : length(ineqs)
   nhrep = neq + nineq
@@ -63,12 +70,12 @@ function SimpleHRepresentation{N, T}(;eqs::Nullable{EqIterator{N, T}}=nothing, i
       b[neq+i] = h.β
     end
   end
-  new(A, b, linset)
+  SimpleHRepresentation{N, T}(A, b, linset)
 end
 
-Base.length(ine::SimpleHRepresentation) = size(ine.A, 1)
-
 Base.copy{N,T}(ine::SimpleHRepresentation{N,T}) = SimpleHRepresentation{N,T}(copy(ine.A), copy(ine.b), copy(ine.linset))
+
+Base.length(ine::SimpleHRepresentation) = size(ine.A, 1)
 
 starthrep(ine::SimpleHRepresentation) = 1
 donehrep(ine::SimpleHRepresentation, state) = state > length(ine)
@@ -118,8 +125,86 @@ type SimpleVRepresentation{N,T} <: VRepresentation{N,T}
   end
 end
 
-SimpleVRepresentation{T <: Real}(V::AbstractMatrix{T}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) = SimpleVRepresentation{size(V,2),T}(V, R, Vlinset, Rlinset)
+changeeltype{N,T,S}(::Type{SimpleVRepresentation{N,T}}, ::Type{S})  = SimpleVRepresentation{N,S}
+changeelfulldim{N,T}(::Type{SimpleVRepresentation{N,T}}, M)  = SimpleVRepresentation{M,T}
+changeboth{N,T,S}(::Type{SimpleVRepresentation{N,T}}, M, ::Type{S}) = SimpleVRepresentation{M,S}
 
+decomposedfast(rep::SimpleVRepresentation) = true
+
+function SimpleVRepresentation{S <: Real, T <: Real}(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet())
+  U = promote_type(S, T)
+  SimpleVRepresentation{size(V,2),U}(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Vlinset, Rlinset)
+end
 SimpleVRepresentation{T <: Real}(V::AbstractMatrix{T}, linset::IntSet=IntSet()) = SimpleVRepresentation{size(V, 2),T}(V, similar(V, 0, size(V, 2)), linset, IntSet())
 
+SimpleVRepresentation{N,T}(v::VRepresentation{N,T}) = SimpleVRepresentation{N,T}(v)
+
+function (::Type{SimpleVRepresentation{N, T}}){N, T}(it::VRepIterator{N, T})
+  A = Matrix{T}(length(it), N)
+  Rlinset = IntSet()
+  Vlinset = IntSet()
+  points = Int[]
+  rays = Int[]
+  for (i, v) in enumerate(it)
+    A[i,:] = coord(v)
+    if isray(v)
+      push!(rays, i)
+      if islin(v)
+        push!(Rlinset, length(rays))
+      end
+    else
+      push!(points, i)
+      if islin(v)
+        push!(Vlinset, length(points))
+      end
+    end
+  end
+  V = A[points, :]
+  R = A[rays, :]
+  SimpleVRepresentation{N, T}(V, R, Vlinset, Rlinset)
+end
+
+function (::Type{SimpleVRepresentation{N, T}}){N, T}(;points::Nullable{PointIterator{N, T}}=nothing, rays::Nullable{RayIterator{N, T}}=nothing)
+  npoint = isnull(points) ? 0 : length(points)
+  nray = isnull(rays) ? 0 : length(rays)
+  nvrep = npoint + nrays
+  V = Matrix{T}(length(points), N)
+  R = Matrix{T}(length(rays), N)
+  Vlinset = IntSet()
+  Rlinset = IntSet()
+  if !(points === nothing)
+    for (i, p) in enumerate(get(points))
+      V[i,:] = coord(p)
+      if islin(p)
+        push!(Vlinset, p)
+      end
+    end
+  end
+  if !(rays === nothing)
+    for (i, r) in enumerate(get(rays))
+      R[i,:] = coord(r)
+      if islin(r)
+        push!(Rlinset, r)
+      end
+    end
+  end
+  SimpleVRepresentation{N, T}(V, R, Vlinset, Rlinset)
+end
+
 Base.copy{N,T}(ext::SimpleVRepresentation{N,T}) = SimpleVRepresentation{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
+
+nrays(ext::SimpleVRepresentation) = size(ext.R, 1)
+startray(ext::SimpleVRepresentation) = 1
+doneray(ext::SimpleVRepresentation, state) = state > size(ext.R, 1)
+function nextray(ext::SimpleVRepresentation, state)
+  r = ext.R[state,:]
+  (state in ext.Rlinset ? Line(r) : Ray(r), state+1)
+end
+
+npoints(ext::SimpleVRepresentation) = size(ext.V, 1)
+startpoint(ext::SimpleVRepresentation) = 1
+donepoint(ext::SimpleVRepresentation, state) = state > size(ext.V, 1)
+function nextpoint(ext::SimpleVRepresentation, state)
+  p = ext.V[state,:]
+  (state in ext.Vlinset ? SymPoint(p) : p, state+1)
+end

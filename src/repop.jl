@@ -1,5 +1,7 @@
+export affinehull
+
 function affinehull{T<:HRep}(p::T)
-  T(eqs(p))
+  T(eqs=eqs(p))
 end
 
 # Always type of first arg

@@ -1,4 +1,9 @@
+export HalfSpace, HyperPlane
+export SymPoint, Ray, Line
 export islin, coord, lift
+
+typealias MyPoint{N,T} Union{Point{N,T},AbstractArray{T}}
+typealias MyVec{N,T} Union{Vec{N,T},AbstractArray{T}}
 
 mydot(a, b) = sum(map(*, a, b))
 mydot(a::AbstractVector, b::AbstractVector) = dot(f, v)
@@ -14,19 +19,22 @@ abstract HRepElement{N,T}
 
 # <a, x> <= β
 type HalfSpace{N,T} <: HRepElement{N,T}
-  a
-  β
+  a::MyVec{N,T}
+  β::T
 end
 
 type HyperPlane{N,T} <: HRepElement{N,T}
-  a
-  β
+  a::MyVec{N,T}
+  β::T
 end
+# FIXME should promote between a and β
 HalfSpace(a, β) = HalfSpace{fulldim(a), eltype(a)}(a, eltype(a)(β))
 HyperPlane(a, β) = HyperPlane{fulldim(a), eltype(a)}(a, eltype(a)(β))
 
 Base.convert{N,Tin,Tout}(::Type{HalfSpace{N,Tout}}, h::HalfSpace{N,Tin}) = HalfSpace{N,Tout}(vecconv(Tout, h.a), Tout(h.β))
 Base.convert{N,Tin,Tout}(::Type{HyperPlane{N,Tout}}, h::HyperPlane{N,Tin}) = HyperPlane{N,Tout}(vecconv(Tout, h.a), Tout(h.β))
+Base.convert{N,T}(::Type{HalfSpace{N,T}}, h::HalfSpace{N,T}) = h
+Base.convert{N,T}(::Type{HyperPlane{N,T}}, h::HyperPlane{N,T}) = h
 
 islin(v::HalfSpace) = false
 islin(v::HyperPlane) = true
@@ -64,16 +72,36 @@ end
 # Line{N, T}
 
 type SymPoint{N, T}
-  a
+  a::MyPoint{N, T}
+  function SymPoint(a::MyPoint{N, T})
+    new(a)
+  end
 end
 
 type Ray{N, T}
-  a
+  a::MyVec{N, T}
+  function Ray(a::MyVec{N, T})
+    new(a)
+  end
 end
 
 type Line{N,T}
-  a
+  a::MyVec{N, T}
+  function Line(a::MyVec{N, T})
+    new(a)
+  end
 end
+
+SymPoint(a::Union{Point,AbstractVector}) = SymPoint{fulldim(a), eltype(a)}(a)
+Ray(a::Union{Vec,AbstractVector}) = Ray{fulldim(a), eltype(a)}(a)
+Line(a::Union{Vec,AbstractVector}) = Line{fulldim(a), eltype(a)}(a)
+
+Base.convert{N,Tin,Tout}(::Type{SymPoint{N,Tout}}, v::SymPoint{N,Tin}) = SymPoint{N,Tout}(vecconv(Tout, v.a))
+Base.convert{N,Tin,Tout}(::Type{Ray{N,Tout}}, v::Ray{N,Tin}) = Ray{N,Tout}(vecconv(Tout, v.a))
+Base.convert{N,Tin,Tout}(::Type{Line{N,Tout}}, v::Line{N,Tin}) = Line{N,Tout}(vecconv(Tout, v.a))
+Base.convert{N,T}(::Type{SymPoint{N,T}}, v::SymPoint{N,T}) = v
+Base.convert{N,T}(::Type{Ray{N,T}}, v::Ray{N,T}) = v
+Base.convert{N,T}(::Type{Line{N,T}}, v::Line{N,T}) = v
 
 typealias FixedVRepElement{N,T} Union{Point{N,T},Vec{N,T},Ray{N,T},Line{N,T},SymPoint{N,T}}
 typealias VRepElement{N,T} Union{FixedVRepElement{N,T},AbstractVector{T}}
@@ -164,11 +192,11 @@ function pushbefore{ElemT<:FixedVector}(a::ElemT, β, ElemTout = changefulldim(E
 end
 
 function lift{ElemT <: HRepElement}(h::ElemT)
-  ElemT(pushbefore(h.a, h.β), zero(eltype(ElemT)))
+  ElemT(pushbefore(h.a, -h.β), zero(eltype(ElemT)))
 end
 lift{N,T}(h::Vec{N,T}) = pushbefore(h, zero(T))
 lift{N,T}(h::Ray{N,T}) = Ray{N+1,T}(pushbefore(h.a, zero(T)))
 lift{N,T}(h::Line{N,T}) = Line{N+1,T}(pushbefore(h.a, zero(T)))
 lift{N,T}(h::Point{N,T}) = pushbefore(h, one(T)), Vec{N+1,T}
-lift{T}(h::AbstractVector{T}) = Ray{length(h)+1,T}(pushbefore(h.a, one(T)))
+lift{T}(h::AbstractVector{T}) = Ray{length(h)+1,T}(pushbefore(h, one(T)))
 lift{N,T}(h::SymPoint{N,T}) = Line{N+1,T}(pushbefore(h.a, one(T)))

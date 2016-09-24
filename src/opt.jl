@@ -18,9 +18,7 @@ function loadproblem!(m::MathProgBase.AbstractLinearQuadraticModel, hrep::HRep, 
   loadproblem!(p, LPHRepresentation(hrep), c, sense)
 end
 
-export LPPolyhedron, SimpleVRepPolyhedraModel
-
-abstract LPPolyhedron{N, T}
+export SimpleVRepPolyhedraModel
 
 type SimpleVRepPolyhedraModel{N, T} <: AbstractPolyhedraModel{N, T}
   vrep::Nullable{VRep{N, T}}

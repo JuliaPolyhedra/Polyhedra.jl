@@ -5,7 +5,7 @@ import Base.round, Base.eltype
 export Representation, HRepresentation, VRepresentation, fulldim
 export HRepIterator, EqIterator, IneqIterator, VRepIterator, RayIterator, PointIterator
 export Rep
-export changeeltype, changefulldim, changeboth, decomposedhfast, decomposedvfast, decomposedfast
+export changeeltype, changefulldim, changeboth
 
 abstract Representation{N, T <: Real}
 abstract HRepresentation{N,T} <: Representation{N,T}
@@ -17,6 +17,8 @@ typealias VRep{N,T} Union{VRepresentation{N,T}, Polyhedron{N,T}}
 
 Base.copy(rep::Rep)            = error("copy not implemented for $(typeof(rep))")
 
+export decomposedhfast, decomposedvfast, decomposedfast
+
 decomposedhfast(p::Polyhedron)          = error("decomposedhfast not implemented for $(typeof(p))")
 decomposedvfast(p::Polyhedron)          = error("decomposedvfast not implemented for $(typeof(p))")
 decomposedfast(rep::HRepresentation)      = error("decomposedfast not implemented for $(typeof(rep))")
@@ -24,9 +26,11 @@ decomposedfast(rep::VRepresentation)      = error("decomposedfast not implemente
 decomposedhfast(rep::HRepresentation)     = decomposedfast(rep)
 decomposedvfast(rep::VRepresentation)     = decomposedfast(rep)
 
+export removevredundancy!, removehredundancy!, detecthlinearities!, detectvlinearities!, isvredundant, ishredundant
+
 removevredundancy!(p::VRep)               = error("removevredundancy! not implemented for $(typeof(p))")
 isvredundant(p::VRep, i::Integer; strongly=false, cert=false, solver = defaultLPsolverfor(p))         = error("not implemented for $(typeof(p))")
-detectvlinearies!(p::VRep)                = error("detectvlinearities! not implemented for $(typeof(p))")
+detectvlinearities!(p::VRep)                = error("detectvlinearities! not implemented for $(typeof(p))")
 
 removehredundancy!(p::HRep)               = error("removehredundancy! not implemented for $(typeof(p))")
 ishredundant(p::HRep, i::Integer; strongly=false, cert=false, solver = defaultLPsolverfor(p))         = error("ishredundant not implemented for $(typeof(p))")
@@ -74,19 +78,23 @@ for (rep, HorVRep, low) in [(true, :VRep, "vrep"), (false, :VRep, "point"), (fal
   lenp = Symbol("n" * low * "s")
 
   @eval begin
+    export $shortcut, $lenp, $startp, $donep, $nextp
     if !$rep
-      $lenp(p::$HorVRep)   = error("$lenp not implemented")
-      $startp(p::$HorVRep) = error("$startp not implemented")
-      $donep(p::$HorVRep)  = error("$donep not implemented")
-      $nextp(p::$HorVRep)  = error("$nextp not implemented")
+      $lenp(p::$HorVRep)   = error("$($lenp) not implemented for $(typeof(p))")
+      $startp(p::$HorVRep) = error("$($startp) not implemented for $(typeof(p))")
+      $donep(p::$HorVRep)  = error("$($donep) not implemented for $(typeof(p))")
+      $nextp(p::$HorVRep)  = error("$($nextp) not implemented for $(typeof(p))")
     end
 
     type $typename{Nout, Tout, Nin, Tin}
-      ps::Vector{$HorVRep{Nin, Tin}}
+      ps::Vector
       f::Nullable{Function}
+      function $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f)
+        new(ps, f)
+      end
     end
-    $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f::Function=nothing) = $typename{fulldim(RepT),eltype(RepT),fulldim(RepT),eltype(RepT)}(ps, f)
-    $shortcut{N,T}(p::$HorVRep{N,T}, f::Function=nothing) = $typename([p], f)
+    $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f=nothing) = $typename{fulldim(RepT),eltype(RepT),fulldim(RepT),eltype(RepT)}(ps, f)
+    $shortcut{N,T}(p::$HorVRep{N,T}, f=nothing) = $typename([p], f)
 
     Base.length(it::$typename) = sum([$lenp(p) for p in it.ps])
     Base.isempty(it::$typename) = reduce(&, true, [$isemp(p) for p in it.ps])
@@ -212,19 +220,23 @@ function Base.convert{RepTout<:HRep, RepTin<:HRepresentation}(::Type{RepTout}, p
     RepTout(HRepIterator{Nout,Tout,Nin,Tin}([p], f))
   end
 end
-function Base.convert{Tout<:VRep, Tin<:VRepresentation}(::Type{Tout}, p::Tin)
-  if fulldim(Tout) != fulldim(Tin)
+function Base.convert{RepTout<:VRep, RepTin<:VRepresentation}(::Type{RepTout}, p::RepTin)
+  Nin  = fulldim(RepTin)
+  Nout = fulldim(RepTout)
+  if Nin != Nout
     error("Different dimension")
   end
-  if eltype(Tout) == eltype(Tin)
+  Tin  = eltype(RepTin)
+  Tout = eltype(RepTout)
+  if Tin == Tout
     f = nothing
   else
-    f = (i,x) -> changeeltype(typeof(x), eltype(Tout))(x)
+    f = (i,x) -> changeeltype(typeof(x), Tout)(x)
   end
   if decomposedfast(p)
-    Tout(points=points(p, f), rays=rays(p, f))
+    RepTout(points=PointIterator{Nout,Tout,Nin,Tin}([p], f), rays=RayIterator{Nout,Tout,Nin,Tin}([p], f))
   else
-    Tout(vrep(p, f))
+    RepTout(VRepIterator{Nout,Tout,Nin,Tin}([p], f))
   end
 end
 
@@ -256,9 +268,10 @@ function Base.show{N,T}(io::IO, rep::Representation{N,T})
   end
   println(io, "-representation")
 
-  if haseqs(rep)
+  ls = linset(rep)
+  if !isempty(ls)
     print(io, "linearity $(neqs(rep))");
-    for i in linset(rep)
+    for i in ls
       print(io, " $i")
     end
     println(io)
@@ -273,11 +286,11 @@ function Base.show{N,T}(io::IO, rep::Representation{N,T})
     typename = "rational"
   end
   println(io, " $(length(rep)) $(N+1) $typename")
-  if rep <: HRepresentation
+  if typeof(rep) <: HRepresentation
     for h in hrep(rep)
       print(io, " $(h.β)")
       for j = 1:N
-        print(io, " $(h.a[j])")
+        print(io, " $(-h.a[j])")
       end
       println(io)
     end

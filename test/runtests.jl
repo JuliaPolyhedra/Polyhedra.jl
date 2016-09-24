@@ -12,9 +12,9 @@ ine = SimpleHRepresentation(A, b, linset)
 @test eltype(ine) == Int
 
 V = [0 1; 1 0]
-@test_throws ErrorException SimpleVRepresentation(V, [1 0 0], IntSet([]), IntSet([]))
-@test_throws ErrorException SimpleVRepresentation(V, [1 1], IntSet([]), IntSet([2]))
-@test_throws ErrorException SimpleVRepresentation(V, [1 1], IntSet([4]), IntSet([]))
+@test_throws ErrorException SimpleVRepresentation(V, [1 0 0], IntSet(), IntSet())
+@test_throws ErrorException SimpleVRepresentation(V, [1 1], IntSet(), IntSet([2]))
+@test_throws ErrorException SimpleVRepresentation(V, [1 1], IntSet([4]), IntSet())
 @test_throws ErrorException SimpleVRepresentation(V, IntSet([4]))
 ext = SimpleVRepresentation(V)
 @test fulldim(ext) == 2

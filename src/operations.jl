@@ -1,5 +1,5 @@
 # Mandatory
-export polyhedron, getinequalities, getgenerators, eliminate, detecthlinearities!, detectvlinearities!, removeredundantinequalities!, removeredundantgenerators!, isredundantinequality, isredundantgenerator, isstronglyredundantinequality, isstronglyredundantgenerator, inequalitiesarecomputed, generatorsarecomputed, loadpolyhedron!
+export polyhedron, gethrep, getvrep, eliminate, hrepiscomputed, vrepiscomputed, loadpolyhedron!
 
 if VERSION < v"0.5-"
   export normalize
@@ -21,7 +21,7 @@ eliminate(p::Polyhedron, delset::IntSet, ::Type{Val{:BlockElimination}})        
 #loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("not implemented") # FIXME ExtFileVRepresentation or just ExtFile
 
 # These can optionally be reimplemented for speed by a library
-export numberofinequalities, numberofgenerators, dim, affinehull, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators, transforminequalities, transformgenerators, project, radialprojectoncut
+export numberofinequalities, numberofgenerators, dim, getredundantinequalities, getstronglyredundantinequalities, getredundantgenerators, getstronglyredundantgenerators, transforminequalities, transformgenerators, project, radialprojectoncut
 
 loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Symbol) = loadpolyhedron!(p, filename, Val{extension})
 
