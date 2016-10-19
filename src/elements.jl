@@ -1,6 +1,7 @@
+import Base.getindex, Base.vec, Base.dot, Base.cross, Base.-, Base.+
 export HalfSpace, HyperPlane
 export SymPoint, Ray, Line
-export islin, coord, lift
+export islin, isray, coord, lift
 
 typealias MyPoint{N,T} Union{Point{N,T},AbstractArray{T}}
 mypoint{T}(::Type{T}, a::AbstractArray) = AbstractArray{T}(a)
@@ -114,6 +115,19 @@ type Line{N,T}
     new(a)
   end
 end
+
+getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
+vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
+
+for op in [:dot, :cross, (:-), (:+)]
+  @eval begin
+    $op(x::Union{SymPoint,Ray,Line}, y) = $op(x.a, y)
+    $op(x, y::Union{SymPoint,Ray,Line}) = $op(x, y.a)
+    $op(x::Union{SymPoint,Ray,Line}, y::Union{SymPoint,Ray,Line}) = $op(x.a, y.a)
+  end
+end
+
+Base.convert{T}(::Type{Vector{T}}, x::Union{SymPoint,Ray,Line}) = convert(Vector{T}, x.a)
 
 (::Type{Line{N,T}}){N,T}(a::MyVec) = Line{N,T}(myvec(T, a))
 

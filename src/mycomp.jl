@@ -2,7 +2,8 @@ const threshold = 1e-8
 
 myeqzero{T<:Real}(x::T) = x == zero(T)
 myeqzero{T<:AbstractFloat}(x::T) = -threshold < x < threshold
-myeqzero{T<:Real}(x::Vector{T}) = myeqzero(sum(abs(x)))
+myeqzero{T<:Real}(x::AbstractVector{T}) = myeqzero(sum(abs(x)))
+myeqzero(x::Union{SymPoint, Ray, Line}) = myeqzero(x.a)
 
 myeq{T<:Real}(x::T, y::T) = x == y
 # I check with zero because isapprox(0, 1e-100) is false...
