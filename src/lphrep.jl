@@ -1,3 +1,5 @@
+export LPHRepresentation
+
 # No copy since I do not modify anything and a copy is done when building a polyhedron
 type LPHRepresentation{N, T} <: HRepresentation{N, T}
   # Ax <= b
@@ -66,11 +68,11 @@ end
 LPHRepresentation(rep::LPHRepresentation) = rep
 LPHRepresentation{N,T}(rep::HRep{N,T}) = LPHRepresentation{N,T}(rep)
 
-function LPHRepresentation{N, T}(it::HRepIterator{N, T})
+function (::Type{LPHRepresentation{N, T}}){N,T}(it::HRepIterator{N, T})
   A = Matrix{T}(length(it), N)
   lb = Vector{T}(length(it))
   ub = Vector{T}(length(it))
-  MathProgBase.warn_no_inf(T)
+  MathProgBase.HighLevelInterface.warn_no_inf(T)
   l = fill(typemin(T), N)
   u = fill(typemax(T), N)
   for (i, h) in enumerate(it)
@@ -84,14 +86,14 @@ function LPHRepresentation{N, T}(it::HRepIterator{N, T})
   end
   LPHRepresentation{N, T}(A, l, u, lb, ub)
 end
-function LPHRepresentation{N, T}(;eqs::Nullable{EqIterator{N, T}}=nothing, ineq::Nullable{IneqIterator{N, T}}=nothing)
+function (::Type{LPHRepresentation{N, T}}){N,T}(;eqs::Nullable{EqIterator{N, T}}=nothing, ineq::Nullable{IneqIterator{N, T}}=nothing)
   neq = isnull(eqs) ? 0 : length(eqs)
   nineq = isnull(ineqs) ? 0 : length(ineqs)
   nhrep = neq + nineq
   A = Matrix{T}(nhrep, N)
   lb = Vector{T}(nhrep)
   ub = Vector{T}(nhrep)
-  MathProgBase.warn_no_inf(T)
+  MathProgBase.HighLevelInterface.warn_no_inf(T)
   l = fill(typemin(T), N)
   u = fill(typemax(T), N)
   if !(eqs === nothing)

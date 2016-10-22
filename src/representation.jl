@@ -204,7 +204,8 @@ changeeltype{S}(::Type{S}, x::AbstractVector) = AbstractVector{S}(x)
 # Base.convert{T}(::Type{T}, p::T) = p
 Base.convert{T<:HRepresentation}(::Type{T}, p::T) = p
 Base.convert{T<:VRepresentation}(::Type{T}, p::T) = p
-function Base.convert{RepTout<:HRep, RepTin<:HRepresentation}(::Type{RepTout}, p::RepTin)
+
+function hconvert{RepTout<:HRep, RepTin<:HRep}(::Type{RepTout}, p::RepTin)
   Nin  = fulldim(RepTin)
   Nout = fulldim(RepTout)
   if Nin != Nout
@@ -217,13 +218,19 @@ function Base.convert{RepTout<:HRep, RepTin<:HRepresentation}(::Type{RepTout}, p
   else
     f = (i,x) -> changeeltype(typeof(x), Tout)(x)
   end
-  if decomposedfast(p)
+  if decomposedhfast(p)
     RepTout(eqs=EqIterator{Nout,Tout,Nin,Tin}([p], f), ineqs=IneqIterator{Nout,Tout,Nin,Tin}([p], f))
   else
     RepTout(HRepIterator{Nout,Tout,Nin,Tin}([p], f))
   end
 end
-function Base.convert{RepTout<:VRep, RepTin<:VRepresentation}(::Type{RepTout}, p::RepTin)
+
+Base.convert{RepTout<:HRep, RepTin<:HRepresentation}(::Type{RepTout}, p::RepTin) = hconvert(RepTout, p)
+Base.convert{RepTout<:HRepresentation, RepTin<:HRep}(::Type{RepTout}, p::RepTin) = hconvert(RepTout, p)
+# avoid ambiguity
+Base.convert{RepTout<:HRepresentation, RepTin<:HRepresentation}(::Type{RepTout}, p::RepTin) = hconvert(RepTout, p)
+
+function vconvert{RepTout<:VRep, RepTin<:VRepresentation}(::Type{RepTout}, p::RepTin)
   Nin  = fulldim(RepTin)
   Nout = fulldim(RepTout)
   if Nin != Nout
@@ -236,12 +243,17 @@ function Base.convert{RepTout<:VRep, RepTin<:VRepresentation}(::Type{RepTout}, p
   else
     f = (i,x) -> changeeltype(typeof(x), Tout)(x)
   end
-  if decomposedfast(p)
+  if decomposedvfast(p)
     RepTout(points=PointIterator{Nout,Tout,Nin,Tin}([p], f), rays=RayIterator{Nout,Tout,Nin,Tin}([p], f))
   else
     RepTout(VRepIterator{Nout,Tout,Nin,Tin}([p], f))
   end
 end
+
+Base.convert{RepTout<:VRep, RepTin<:VRepresentation}(::Type{RepTout}, p::RepTin) = vconvert(RepTout, p)
+Base.convert{RepTout<:VRepresentation, RepTin<:VRep}(::Type{RepTout}, p::RepTin) = vconvert(RepTout, p)
+# avoid ambiguity
+Base.convert{RepTout<:VRepresentation, RepTin<:VRepresentation}(::Type{RepTout}, p::RepTin) = vconvert(RepTout, p)
 
 function Base.convert{N, T, RepT<:Representation}(::Type{Representation{N, T}}, rep::RepT)
   if fulldim(RepT) != N

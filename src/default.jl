@@ -1,6 +1,6 @@
 function defaultLPsolverfor{N,T}(p::Rep{N,T})
   if vrepiscomputed(p)
-    SimpleVRepPolyhedraModel{N,T}()
+    SimpleVRepSolver()
   else
     MathProgBase.defaultLPsolver
   end
