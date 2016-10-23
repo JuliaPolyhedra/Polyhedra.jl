@@ -6,12 +6,15 @@ os:
 julia:
   - 0.5
   - nightly
+addons:
+  apt_packages:
+    - libgmp-dev # For CDDLib and LRSLib
 notifications:
   email: false
 # uncomment the following lines to override the default test script
-#script:
-#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#  - julia -e 'Pkg.clone(pwd()); Pkg.build("Polyhedra"); Pkg.test("Polyhedra"; coverage=true)'
+script:
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia -e 'Pkg.clone(pwd()); Pkg.clone("https://github.com/blegat/LRSLib.jl.git"); Pkg.build("Polyhedra"); Pkg.test("Polyhedra"; coverage=true)'
 after_success:
   # push coverage results to Coveralls
   - julia -e 'cd(Pkg.dir("Polyhedra")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'

@@ -22,4 +22,21 @@ facts("Simple Representation with bad arguments") do
     @fact eltype(ext) --> Int
 end
 
+include("alltests.jl")
+
+include("libraries.jl")
+
+for test in [("Simplex", simplextest), ("Permutahedron", permutahedrontest), ("Board", boardtest)]
+    testname, testfun = test
+    for arith in [("floating point", float_libraries), ("exact", exact_libraries)]
+        arithname, arith_libraries = arith
+        facts("$testname tests in $arithname arithmetic") do
+        for library in arith_libraries
+        context("With library $(typeof(library))") do
+            testfun(library)
+        end; end; end
+        length(arith_libraries) == 0 && warn("$testname tests in $arithname arithmetics test not run!")
+    end
+end
+
 FactCheck.exitstatus()
