@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/blegat/Polyhedra.jl.svg?branch=master)](https://travis-ci.org/blegat/Polyhedra.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/q8shfbgt5jcv2g20/branch/master?svg=true)](https://ci.appveyor.com/project/blegat/polyhedra-jl/branch/master)
+[![Coverage Status](https://coveralls.io/repos/github/blegat/Polyhedra.jl/badge.svg?branch=master)](https://coveralls.io/github/blegat/Polyhedra.jl?branch=master)
+[![codecov.io](http://codecov.io/github/blegat/Polyhedra.jl/coverage.svg?branch=master)](http://codecov.io/github/blegat/Polyhedra.jl?branch=master)
 
 Polyhedra provides an unified interface for Polyhedra Manipulation Libraries such as [CDDLib.jl](https://github.com/blegat/CDDLib.jl).
 These manipulation notably include the transformation from (resp. to) an inequality representation of a polyhedron to (resp. from) its generator representation (convex hull of points + conic hull of rays) and projection/elimination of a variable with e.g. [Fourier-Motzkin](https://en.wikipedia.org/wiki/Fourier%E2%80%93Motzkin_elimination).
