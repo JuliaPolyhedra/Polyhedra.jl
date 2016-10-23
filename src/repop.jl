@@ -18,10 +18,10 @@ end
 # Always type of first arg
 function (+){T1<:VRep, T2<:VRep}(p1::T1, p2::T2)
   if eltype(T1) != eltype(T2)
-    error("Cannot take the intersection of polyhedra of different element type")
+    error("Cannot take the Minkowski sum of polyhedra of different element type")
   end
   if fulldim(T1) != fulldim(T2)
-    error("Cannot take the intersection of polyhedra of different dimension")
+    error("Cannot take the Minkowski sum of polyhedra of different dimension")
   end
   T1(VRepIterator([p1, p2]))
 end
@@ -62,7 +62,7 @@ function (*){RepT<:HRep}(rep::RepT, P::AbstractMatrix)
   end
   Nout = size(P, 2)
   Tout = mypromote_type(eltype(RepT), eltype(P))
-  RepTout = changeboth(RepT, Nout, Tout)
+  RepTout = lazychangeboth(RepT, Nout, Tout)
   f = (i, h) -> h * P
   if decomposedhfast(rep)
     eqs = EqIterator{Nout,Tout,Nin,Tin}([rep], f)
@@ -128,8 +128,8 @@ end
 
 export gethredundantindices, getvredundantindices
 
-function gethredundantindices(hrep::HRep; strongly=false, solver = defaultLPsolverfor(p))
-  red = IntSet([])
+function gethredundantindices(hrep::HRep; strongly=false, solver = defaultLPsolverfor(hrep))
+  red = IntSet()
   for i in 1:nhreps(hrep)
     if ishredundant(hrep, i; strongly, solver)
       push!(red, i)
@@ -137,8 +137,8 @@ function gethredundantindices(hrep::HRep; strongly=false, solver = defaultLPsolv
   end
   red
 end
-function getvredundantindices(vrep::VRep; strongly=false, solver = defaultLPsolverfor(p))
-  red = IntSet([])
+function getvredundantindices(vrep::VRep; strongly=false, solver = defaultLPsolverfor(vrep))
+  red = IntSet()
   for i in 1:nvreps(vrep)
     if isvredundant(p, i; strongly, solver)
       push!(red, i)

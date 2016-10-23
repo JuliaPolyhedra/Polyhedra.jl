@@ -188,6 +188,17 @@ end
 changeeltype{RepT<:Rep,T}(::Type{RepT}, ::Type{T})  = error("changeeltype not implemented for $(RepT)")
 changefulldim{RepT<:Rep}(::Type{RepT}, N)           = error("changefulldim not implemented for $(RepT)")
 changeboth{RepT<:Rep,T}(::Type{RepT}, N, ::Type{T}) = error("changeboth not implemented for $(RepT)")
+lazychangeeltype{RepT<:Rep,T}(::Type{RepT}, ::Type{T}) = eltype(RepT) == T ? RepT : changeleltype(RepT, T)
+lazychangefulldim{RepT<:Rep}(::Type{RepT}, N)          = fulldim(RepT) == N ? RepT : changelfulldim(RepT, N)
+function lazychangeboth{RepT<:Rep,T}(::Type{RepT}, N, ::Type{T})
+    if eltype(RepT) == T
+        lazychangefulldim(RepT, N)
+    elseif fulldim(RepT) == N
+        changeeltype(RepT, T)
+    else
+        changeboth(RepT, N, T)
+    end
+end
 
 # Conversion
 changeeltype{S,N}(::Type{S}, x::HalfSpace{N}) = HalfSpace{N,S}(changeeltype(S, x.a), S(β))
@@ -255,68 +266,28 @@ Base.convert{RepTout<:VRepresentation, RepTin<:VRep}(::Type{RepTout}, p::RepTin)
 # avoid ambiguity
 Base.convert{RepTout<:VRepresentation, RepTin<:VRepresentation}(::Type{RepTout}, p::RepTin) = vconvert(RepTout, p)
 
-function Base.convert{N, T, RepT<:Representation}(::Type{Representation{N, T}}, rep::RepT)
-  if fulldim(RepT) != N
-    error("Cannot convert representations of the same dimension")
-  end
-  Base.convert(changeeltype(RepT, T), rep)
-end
-function Base.convert{N, T, RepT<:HRepresentation}(::Type{HRepresentation{N, T}}, rep::RepT)
-  if fulldim(RepT) != N
-    error("Cannot convert representations of the same dimension")
-  end
-  Base.convert(changeeltype(RepT, T), rep)
-end
-function Base.convert{N, T, RepT<:VRepresentation}(::Type{VRepresentation{N, T}}, rep::RepT)
-  if fulldim(RepT) != N
-    error("Cannot convert representations of the same dimension")
-  end
-  Base.convert(changeeltype(RepT, T), rep)
+changeeltype{N,T}(p::Rep{N,T}, ::Type{T}) = p
+function changeeltype{RepTin<:Rep, Tout}(p::RepTin, ::Type{Tout})
+    RepTout = changeeltype(RepTin, Tout)
+    RepTout(p)
 end
 
-# Show
-function Base.show{N,T}(io::IO, rep::Representation{N,T})
-  if typeof(rep) <: HRepresentation
-    print(io, "H")
-  else
-    print(io, "V")
-  end
-  println(io, "-representation")
-
-  ls = linset(rep)
-  if !isempty(ls)
-    print(io, "linearity $(neqs(rep))");
-    for i in ls
-      print(io, " $i")
-    end
-    println(io)
-  end
-
-  println(io, "begin")
-  if T <: AbstractFloat
-    typename = "real"
-  elseif T <: Integer
-    typename = "integer"
-  else
-    typename = "rational"
-  end
-  println(io, " $(length(rep)) $(N+1) $typename")
-  if typeof(rep) <: HRepresentation
-    for h in hrep(rep)
-      print(io, " $(h.β)")
-      for j = 1:N
-        print(io, " $(-h.a[j])")
-      end
-      println(io)
-    end
-  else
-    for v in vrep(rep)
-      print(io, " $(Int(isray(v)))")
-      for j = 1:N
-        print(io, " $(v[j])")
-      end
-      println(io)
-    end
-  end
-  print(io, "end")
-end
+# FIXME it does not get called. The calls always go throug vconvert and hconvert. Use changeeltype instead
+#function Base.convert{N, T, RepT<:Representation}(::Type{Representation{N, T}}, rep::RepT)
+#  if fulldim(RepT) != N
+#    error("Cannot convert representations of the same dimension")
+#  end
+#  Base.convert(changeeltype(RepT, T), rep)
+#end
+#function Base.convert{N, T, RepT<:HRepresentation}(::Type{HRepresentation{N, T}}, rep::RepT)
+#  if fulldim(RepT) != N
+#    error("Cannot convert representations of the same dimension")
+#  end
+#  Base.convert(changeeltype(RepT, T), rep)
+#end
+#function Base.convert{M, S, RepT<:VRepresentation}(::Type{VRepresentation{M, S}}, rep::RepT)
+#  if fulldim(RepT) != M
+#    error("Cannot convert representations of the same dimension")
+#  end
+#  Base.convert(changeeltype(RepT, S), rep)
+#end

@@ -11,7 +11,8 @@ abstract AbstractPolyhedraModel <: MathProgBase.AbstractLinearQuadraticModel
 #  error("PolyhedraModel not implemented for solver $solver")
 #end
 
-loadproblem!(m::AbstractPolyhedraModel, hrep::HRep, c, sense) = error("loadproblem! not implemented")
+#creates ambiguity with (::SimpleVRepMode, ::Vrep) when a polyhedron is given
+#loadproblem!(m::AbstractPolyhedraModel, hrep::HRep, c, sense) = error("loadproblem! not implemented")
 
 type LinprogSolution
     status

@@ -52,7 +52,7 @@ function (::Type{SimpleHRepresentation{N, T}}){N, T}(it::HRepIterator{N, T})
   SimpleHRepresentation{N, T}(A, b, linset)
 end
 
-function (::Type{SimpleHRepresentation{N, T}}){N, T}(;eqs::Nullable{EqIterator{N, T}}=nothing, ineqs::Nullable{IneqIterator{N, T}}=nothing)
+function (::Type{SimpleHRepresentation{N, T}}){N, T}(; eqs=nothing, ineqs=nothing)
   neq = isnull(eqs) ? 0 : length(eqs)
   nineq = isnull(ineqs) ? 0 : length(ineqs)
   nhrep = neq + nineq
@@ -60,13 +60,13 @@ function (::Type{SimpleHRepresentation{N, T}}){N, T}(;eqs::Nullable{EqIterator{N
   b = Vector{T}(nhrep)
   linset = IntSet(1:neq)
   if !(eqs === nothing)
-    for (i, h) in enumerate(get(eqs))
+    for (i, h) in enumerate(eqs)
       A[i,:] = h.a
       b[i] = h.β
     end
   end
   if !(ineqs === nothing)
-    for (i, h) in enumerate(get(ineqs))
+    for (i, h) in enumerate(ineqs)
       A[neq+i,:] = h.a
       b[neq+i] = h.β
     end
@@ -84,9 +84,9 @@ nexthrep(ine::SimpleHRepresentation, state) = (state in ine.linset ? HyperPlane(
 
 neqs(ine::SimpleHRepresentation) = length(ine.linset)
 starteq(ine::SimpleHRepresentation) = start(ine.linset)
-doneeq(ine::SimpleHRepresentation, state) = done(ine.linset)
+doneeq(ine::SimpleHRepresentation, state) = done(ine.linset, state)
 function nexteq(ine::SimpleHRepresentation, state)
-  (i, nextstate) = next(ine.linset)
+  (i, nextstate) = next(ine.linset, state)
   (HyperPlane(ine.A[i,:], ine.b[i]), nextstate)
 end
 
@@ -173,27 +173,27 @@ function (::Type{SimpleVRepresentation{N, T}}){N, T}(it::VRepIterator{N, T})
   SimpleVRepresentation{N, T}(V, R, Vlinset, Rlinset)
 end
 
-function (::Type{SimpleVRepresentation{N, T}}){N, T}(;points::Nullable{PointIterator{N, T}}=nothing, rays::Nullable{RayIterator{N, T}}=nothing)
+function (::Type{SimpleVRepresentation{N, T}}){N, T}(; points=nothing, rays=nothing)
   npoint = isnull(points) ? 0 : length(points)
   nray = isnull(rays) ? 0 : length(rays)
-  nvrep = npoint + nrays
-  V = Matrix{T}(length(points), N)
-  R = Matrix{T}(length(rays), N)
+  nvrep = npoint + nray
+  V = Matrix{T}(npoint, N)
+  R = Matrix{T}(nray, N)
   Vlinset = IntSet()
   Rlinset = IntSet()
   if !(points === nothing)
-    for (i, p) in enumerate(get(points))
+    for (i, p) in enumerate(points)
       V[i,:] = coord(p)
       if islin(p)
-        push!(Vlinset, p)
+        push!(Vlinset, i)
       end
     end
   end
   if !(rays === nothing)
-    for (i, r) in enumerate(get(rays))
+    for (i, r) in enumerate(rays)
       R[i,:] = coord(r)
       if islin(r)
-        push!(Rlinset, r)
+        push!(Rlinset, i)
       end
     end
   end

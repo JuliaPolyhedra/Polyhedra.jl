@@ -24,6 +24,7 @@ function loadproblem!(lpm::SimpleVRepPolyhedraModel, vrep::VRep, obj, sense)
   if !(sense in [:Max, :Min])
     error("sense should be :Max or :Min")
   end
+  lpm.vrep = vrep
   if !myeqzero(obj)
     lpm.obj = copy(obj)
     lpm.sense = sense
@@ -44,7 +45,7 @@ end
 
 function optimize!(lpm::SimpleVRepPolyhedraModel)
   if isnull(lpm.vrep)
-    error("Not problem loaded")
+    error("No problem loaded")
   end
   prob = get(lpm.vrep)
   N = fulldim(prob)

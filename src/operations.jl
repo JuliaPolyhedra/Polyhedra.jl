@@ -52,13 +52,13 @@ function eliminate{N}(p::Polyhedron{N}, delset::IntSet=IntSet(N))
 end
 
 function eliminate{N}(p::Polyhedron{N}, delset::IntSet, ::Type{Val{:ProjectGenerators}})
-  ext = getgenerators(p)
+  ext = getvrep(p)
   I = eye(Int, N)
   polyhedron(I[setdiff(IntSet(1:N), collect(delset)),:] * ext, getlibrary(p))
 end
 
 function Base.convert{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
-  if !inequalitiesarecomputed(p) && generatorsarecomputed(p)
+  if !hrepiscomputed(p) && vrepiscomputed(p)
     f = (i, x) -> changeeltype(typeof(x), S)(x)
     if decomposedvfast(p)
       polyhedron(PointIterator(p, f), RayIterator(p, f), getlibraryfor(p, S))
