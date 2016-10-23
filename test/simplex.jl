@@ -6,18 +6,18 @@ function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
 
   ine = SimpleHRepresentation(A, b, ls)
   poly1 = polyhedron(ine, lib)
-  @test !isempty(poly1)
+  @fact isempty(poly1) --> false
   inequality_fulltest(poly1, A, b, ls)
   generator_fulltest(poly1, V)
 
   ext = SimpleVRepresentation(V)
   poly2 = polyhedron(ext, lib)
-  @test !isempty(poly2)
+  @fact isempty(poly2) --> false
   inequality_fulltest(poly2, A, b, ls)
   generator_fulltest(poly2, V)
 
   # x_1 cannot be 2
-  @test isempty(polyhedron(SimpleHRepresentation([A; 1 0], [b; 2], union(ls, IntSet([4]))), lib))
+  @fact isempty(polyhedron(SimpleHRepresentation([A; 1 0], [b; 2], union(ls, IntSet([4]))), lib)) --> true
 
   # We now add the vertex (0, 0)
   V0 = [0 0]
@@ -62,7 +62,7 @@ function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
   inequality_fulltest(plin, Alin, blin, linsetlin)
   generator_fulltest(plin, Vlin, Rlin, IntSet(), IntSet(1))
   ineout = gethrep(plin)
-  @test linset(ineout) == IntSet(1)
+  @fact linset(ineout) --> IntSet(1)
   Vlin = [1 0]
   Rlin = [1 -1]
   extlin = SimpleVRepresentation(Vlin, [1 -1; -1 1])
@@ -70,5 +70,5 @@ function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
   inequality_fulltest(plin, Alin, blin, linsetlin)
   generator_fulltest(plin, Vlin, Rlin, IntSet(), IntSet(1))
   extout = SimpleVRepresentation(getvrep(plin))
-  @test linset(extout) == IntSet(1)
+  @fact linset(extout) --> IntSet(1)
 end

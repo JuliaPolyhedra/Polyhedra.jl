@@ -33,8 +33,8 @@ function inequality_fulltest(p::Polyhedron, A, b, linset)
   detecthlinearities!(p)
   removehredundancy!(p)
   ine = SimpleHRepresentation(gethrep(p))
-  @test size(ine.A) == size(A)
-  @test length(ine.linset) == length(linset)
+  @fact size(ine.A) --> size(A)
+  @fact length(ine.linset) --> length(linset)
 
   aff = SimpleHRepresentation(gethrep(affinehull(p)))
   affAb = [aff.b aff.A]
@@ -49,7 +49,7 @@ function inequality_fulltest(p::Polyhedron, A, b, linset)
         break
       end
     end
-    @test found
+    @fact found --> true
   end
 end
 function generator_fulltest(p::Polyhedron, V, R=Matrix{eltype(V)}(0, size(V, 2)), Vlinset = IntSet(), Rlinset = IntSet())
@@ -58,10 +58,10 @@ function generator_fulltest(p::Polyhedron, V, R=Matrix{eltype(V)}(0, size(V, 2))
   detectvlinearities!(p)
   removevredundancy!(p)
   ext = SimpleVRepresentation(getvrep(p))
-  @test size(ext.V) == size(V)
-  @test size(ext.R) == size(R)
-  @test length(ext.Vlinset) == length(Vlinset)
-  @test length(ext.Rlinset) == length(Rlinset)
+  @fact size(ext.V) --> size(V)
+  @fact size(ext.R) --> size(R)
+  @fact length(ext.Vlinset) --> length(Vlinset)
+  @fact length(ext.Rlinset) --> length(Rlinset)
   for i in 1:size(V, 1)
     found = false
     for j in 1:size(ext.V, 1)
@@ -70,7 +70,7 @@ function generator_fulltest(p::Polyhedron, V, R=Matrix{eltype(V)}(0, size(V, 2))
         break
       end
     end
-    @test found
+    @fact found --> true
   end
   linspace = ext.R[collect(ext.Rlinset),:]
   inlin(x) = inlinspace(vec(x), linspace)
@@ -83,13 +83,19 @@ function generator_fulltest(p::Polyhedron, V, R=Matrix{eltype(V)}(0, size(V, 2))
         break
       end
     end
-    @test found
+    @fact found --> true
   end
 end
 #generator_fulltest(p::Polyhedron, V) = generator_fulltest(p, V, Matrix{eltype(V)}(0, size(V, 2)))
 
 function alltests{Lib<:PolyhedraLibrary}(lib::Lib)
-  simplextest(lib)
-  permutahedrontest(lib)
-  boardtest(lib)
+    facts("Simplex tests") do
+        simplextest(lib)
+    end
+    facts("Permutahedron tests") do
+        permutahedrontest(lib)
+    end
+    facts("Board tests") do
+        boardtest(lib)
+    end
 end
