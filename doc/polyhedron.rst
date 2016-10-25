@@ -47,7 +47,7 @@ and ``poly`` using either of those lines::
     julia> poly = polyhedron(vrepf, CDDLibrary(:exact))
     julia> poly = polyhedron(vrep , CDDLibrary(:exact))
 
-of course, creating combining a representation in floating points with exact arithmetic works here because we have ``0.5`` with is ``0.1`` in binary but in general, is not a good idea.::
+of course, creating a representation in floating points with exact arithmetic works here because we have ``0.5`` which is ``0.1`` in binary but in general, is not a good idea.::
 
     julia> Rational{BigInt}(1/2)
     1//2
@@ -59,11 +59,11 @@ of course, creating combining a representation in floating points with exact ari
 Retrieving a representation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-One can retrieve an H-representation (resp. V-representation) from a polyhedron using ``getinequalities`` (resp. ``getgenerators``).
+One can retrieve an H-representation (resp. V-representation) from a polyhedron using ``gethrep`` (resp. ``getvrep``).
 The concrete subtype of ``HRepresentation`` (resp. ``VRepresentation``) returned is not necessarily the same that the one used to create the polyhedron.
 As a rule of thumb, it is the representation the closest to the internal representation used by the library.::
 
-    julia> hrep = getinequalities(poly)
+    julia> hrep = gethrep(poly)
     julia> typeof(hrep)
     Polyhedra.LiftedHRepresentation{2,Rational{BigInt}}
     julia> hrep = SimpleHRepresentation(hrep)
@@ -79,7 +79,7 @@ As a rule of thumb, it is the representation the closest to the internal represe
      1//1
      0//1
      0//1
-    julia> vrep = getgenerators(poly)
+    julia> vrep = getvrep(poly)
     julia> typeof(vrep)
     Polyhedra.LiftedVRepresentation{2,Rational{BigInt}}
     julia> vrep = SimpleVRepresentation(vrep)
