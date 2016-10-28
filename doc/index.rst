@@ -22,6 +22,7 @@ The manipulations that `Polyhedra` can perform include
 * Removal of redundant inequalities or redundant vertices/rays.
 * Decomposition of 3D/2D polyhedra into a points and triangular faces,
   enabling easy visualization of 3D/2D polyhedra using
+  `DrakeVisualizer <https://github.com/rdeits/DrakeVisualizer.jl>`_ or
   `GLVisualize <https://github.com/JuliaGL/GLVisualize.jl>`_.
 
 Depending on the library, those manipulation can either be in floating point or exact rational arithmetic.
