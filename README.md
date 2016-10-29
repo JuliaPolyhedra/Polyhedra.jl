@@ -5,7 +5,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/blegat/Polyhedra.jl/badge.svg?branch=master)](https://coveralls.io/github/blegat/Polyhedra.jl?branch=master)
 [![codecov.io](http://codecov.io/github/blegat/Polyhedra.jl/coverage.svg?branch=master)](http://codecov.io/github/blegat/Polyhedra.jl?branch=master)
 
-[<img src="permutahedron.png" width="420">](https://github.com/blegat/Polyhedra.jl/tree/master/examples/drakeperm.jl)
+[<img src="examples/drakeperm.png" height="240">](https://github.com/blegat/Polyhedra.jl/tree/master/examples/drakeperm.jl)
+[<img src="examples/glvizperm.png" height="240">](https://github.com/blegat/Polyhedra.jl/tree/master/examples/glvizperm.jl)
 
 Polyhedra provides an unified interface for Polyhedra Manipulation Libraries such as [CDDLib.jl](https://github.com/blegat/CDDLib.jl).
 These manipulation notably include the transformation from (resp. to) an inequality representation of a polyhedron to (resp. from) its generator representation (convex hull of points + conic hull of rays) and projection/elimination of a variable with e.g. [Fourier-Motzkin](https://en.wikipedia.org/wiki/Fourier%E2%80%93Motzkin_elimination).
