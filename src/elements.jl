@@ -45,7 +45,7 @@ type HyperPlane{N,T} <: HRepElement{N,T}
   end
 end
 
-(::Type{HyperPlane{N,T}}){N,T}(a::MyVec, β) = HalfSpace{N,T}(myvec(T, a), T(β))
+(::Type{HyperPlane{N,T}}){N,T}(a::MyVec, β) = HyperPlane{N,T}(myvec(T, a), T(β))
 
 # FIXME should promote between a and β
 HalfSpace(a, β) = HalfSpace{fulldim(a), eltype(a)}(a, eltype(a)(β))
@@ -78,7 +78,7 @@ function zeropad{ElemT<:HRepElement}(h::ElemT, n::Integer)
     ElemTout(aout, h.β)
   end
 end
-function Base.round{ElemT<:HRepElement}(h::ElemT, P::Matrix)
+function Base.round{ElemT<:HRepElement}(h::ElemT)
   ElemT(round.(h.a), round(h.β))
 end
 
