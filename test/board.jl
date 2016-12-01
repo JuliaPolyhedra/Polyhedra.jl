@@ -27,6 +27,8 @@ function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
   b = [b1; b2; b3]
   ine = SimpleHRepresentation(A, b)
   poly = polyhedron(ine, lib)
+  @fact nrays(poly) --> 0
+  @fact npoints(poly) --> 614
   @fact isempty(poly) --> false
   ext  = SimpleVRepresentation(getvrep(poly))
   target = ones(Int, 9) * (3 // 4)
