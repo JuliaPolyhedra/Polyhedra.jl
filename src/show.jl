@@ -36,7 +36,7 @@ function Base.show{N,T}(io::IO, rep::Representation{N,T})
     end
   else
     for v in vreps(rep)
-      print(io, " $(Int(isray(v)))")
+      print(io, " $(Int(ispoint(v)))")
       for j = 1:N
         print(io, " $(v[j])")
       end

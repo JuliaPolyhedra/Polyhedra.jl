@@ -23,5 +23,6 @@ function ex1test(lib::PolyhedraLibrary)
 
     R = [1 2;
          2 1]
+
     generator_fulltest(poly, V, R)
 end

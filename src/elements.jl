@@ -1,7 +1,7 @@
 import Base.getindex, Base.vec, Base.dot, Base.cross, Base.-, Base.+
 export HalfSpace, HyperPlane
 export SymPoint, Ray, Line
-export islin, isray, coord, lift
+export islin, isray, ispoint, ispoint, coord, lift
 
 typealias MyPoint{N,T} Union{Point{N,T},AbstractArray{T}}
 mypoint{T}(::Type{T}, a::AbstractArray) = AbstractArray{T}(a)
@@ -159,6 +159,8 @@ islin{T<:Union{Point,AbstractVector,Vec,Ray}}(v::T) = false
 islin{T<:Union{SymPoint,Line}}(v::T) = true
 isray{T<:Union{Point,AbstractVector,SymPoint}}(v::T) = false
 isray{T<:Union{Vec,Ray,Line}}(v::T) = true
+ispoint{T<:Union{Point,AbstractVector,SymPoint}}(v::T) = true
+ispoint{T<:Union{Vec,Ray,Line}}(v::T) = false
 
 coord{ElemT<:Union{Point,AbstractVector,Vec}}(v::ElemT) = v
 coord{ElemT<:Union{HRepElement,SymPoint,Ray,Line}}(v::ElemT) = v.a
