@@ -8,17 +8,17 @@ function infeasibletest(lib::PolyhedraLibrary, n)
 
     poly = polyhedron(m, lib)
 
-    @fact hasrays(poly) --> false
-    @fact haspoints(poly) --> false
-    @fact hasvreps(poly) --> false
+    @test !hasrays(poly)
+    @test !haspoints(poly)
+    @test !hasvreps(poly)
 
-    @fact haseqs(poly) --> false
-    @fact hasineqs(poly) --> true
-    @fact hashreps(poly) --> true
+    @test !haseqs(poly)
+    @test hasineqs(poly)
+    @test hashreps(poly)
 
     # haseqs has triggered a detection of linearity but
     # it shouldn't affect the V-representation
-    @fact hasrays(poly) --> false
-    @fact haspoints(poly) --> false
-    @fact hasvreps(poly) --> false
+    @test !hasrays(poly)
+    @test !haspoints(poly)
+    @test !hasvreps(poly)
 end

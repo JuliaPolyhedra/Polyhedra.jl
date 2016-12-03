@@ -8,8 +8,8 @@ function simplextest(lib::PolyhedraLibrary, n)
 
     poly = polyhedron(m, lib)
 
-    @fact npoints(poly) --> n
-    @fact nrays(poly) --> 0
+    @test npoints(poly) == n
+    @test nrays(poly) == 0
 
     V = zeros(Int, n, n)
     for k in 1:n
@@ -26,8 +26,8 @@ function simplexorigtest(lib::PolyhedraLibrary, n)
 
     poly = polyhedron(m, lib)
 
-    @fact npoints(poly) --> n+1
-    @fact nrays(poly) --> 0
+    @test npoints(poly) == n+1
+    @test nrays(poly) == 0
 
     V = zeros(Int, n+1, n)
     for k in 1:n

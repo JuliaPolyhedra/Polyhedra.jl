@@ -8,8 +8,8 @@ function hypercubetest(lib::PolyhedraLibrary, n)
 
     poly = polyhedron(m, lib)
 
-    @fact npoints(poly) --> 2^n
-    @fact nrays(poly) --> 0
+    @test npoints(poly) == 2^n
+    @test nrays(poly) == 0
 
     row = 0
     V = zeros(Int, 2^n, n)

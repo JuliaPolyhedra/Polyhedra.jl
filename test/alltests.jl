@@ -1,5 +1,7 @@
 using Polyhedra
 
+include("utils.jl")
+
 # JuMP
 include("hypercube.jl")
 include("crosspolytope.jl")
@@ -13,98 +15,22 @@ include("simplex.jl")
 include("permutahedron.jl")
 include("board.jl")
 
-myeq(x::Real, y::Real) = myeq(promote(x, y)...)
-myeq{T<:Real}(x::T, y::T) = x == y
-myeq{T<:AbstractFloat}(x::T, y::T) = y < x+1024*eps(T) && x < y+1024*eps(T)
-myeq{S<:Real,T<:Real}(x::Vector{S}, y::Vector{T}) = myeq(promote(x, y)...)
-myeq{T<:Real}(x::Vector{T}, y::Vector{T}) = x == y
-myeq{T<:AbstractFloat}(x::Vector{T}, y::Vector{T}) = myeq(norm(x - y), zero(T))
-myeqzero{T<:Real}(x::T) = myeq(x, zero(T))
+alltests = Tuple{String, Function}[]
+push!(alltests, ("Hypercube in 2 dimensions", lib->hypercubetest(lib, 2)))
+push!(alltests, ("Simplex in 2 dimensions", lib->simplextest(lib, 2)))
+push!(alltests, ("Simplex with the origin in 2 dimensions", lib->simplexorigtest(lib, 2)))
+push!(alltests, ("Cross Polytope in 2 dimensions", lib->crosspolytopetest(lib, 2)))
+push!(alltests, ("The ex1 example", ex1test))
+push!(alltests, ("Infeasible in 2 dimensions", lib->infeasibletest(lib, 2)))
+push!(alltests, ("Non full-dimensional", nonfulldimensionaltest))
+push!(alltests, ("Simplex", simplextest))
+push!(alltests, ("Permutahedron", permutahedrontest))
+push!(alltests, ("Board", boardtest))
 
-tomatrix(M::Matrix) = M
-function tomatrix(v::Vector)
-  M = Matrix{eltype(v)}(length(v), 1)
-  M[:,1] = v
-  M
-end
-
-function inlinspace(x, L)
-  for i in 1:size(L, 1)
-    y = vec(L[i,:])
-    # remove component
-    x = x * dot(y, y) - y * dot(y, x)
-  end
-  myeqzero(norm(x))
-end
-
-function inequality_fulltest(p::Polyhedron, A, b, linset)
-  A = tomatrix(A)
-  detecthlinearities!(p)
-  removehredundancy!(p)
-  ine = SimpleHRepresentation(p)
-  @fact size(ine.A) --> size(A)
-  @fact length(ine.linset) --> length(linset)
-
-  aff = SimpleHRepresentation(affinehull(p))
-  affAb = [aff.b aff.A]
-  inaff(x) = inlinspace(x, affAb)
-
-  for i in 1:size(A, 1)
-    found = false
-    for j in 1:size(ine.A, 1)
-      # vec for julia 0.4
-      if !((i in linset) $ (j in ine.linset)) && inaff([b[i]-ine.b[j];vec(A[i,:]-ine.A[j,:])])
-        found = true
-        break
-      end
-    end
-    @fact found --> true
-  end
-end
-function generator_fulltest(p::Polyhedron, V, R=Matrix{eltype(V)}(0, size(V, 2)), Vlinset = IntSet(), Rlinset = IntSet())
-  V = tomatrix(V)
-  R = tomatrix(R)
-  detectvlinearities!(p)
-  removevredundancy!(p)
-  ext = SimpleVRepresentation(p)
-  @fact size(ext.V) --> size(V)
-  @fact size(ext.R) --> size(R)
-  @fact length(ext.Vlinset) --> length(Vlinset)
-  @fact length(ext.Rlinset) --> length(Rlinset)
-  for i in 1:size(V, 1)
-    found = false
-    for j in 1:size(ext.V, 1)
-      if myeq(vec(V[i, :]), vec(ext.V[j, :]))
-        found = true
-        break
-      end
-    end
-    @fact found --> true
-  end
-  linspace = ext.R[collect(ext.Rlinset),:]
-  inlin(x) = inlinspace(vec(x), linspace)
-  for i in 1:size(R, 1)
-    found = false
-    for j in 1:size(ext.R, 1)
-      if !((i in Rlinset) $ (j in ext.Rlinset)) && inlin(R[i,:]-ext.R[j,:])
-      #if parallel(vec(R[i, :]), vec(ext.R[j, :]), (i in Rlinset) || (j in ext.Rlinset))
-        found = true
-        break
-      end
-    end
-    @fact found --> true
-  end
-end
-#generator_fulltest(p::Polyhedron, V) = generator_fulltest(p, V, Matrix{eltype(V)}(0, size(V, 2)))
-
-function alltests{Lib<:PolyhedraLibrary}(lib::Lib)
-    facts("Simplex tests") do
-        simplextest(lib)
-    end
-    facts("Permutahedron tests") do
-        permutahedrontest(lib)
-    end
-    facts("Board tests") do
-        boardtest(lib)
+function runtests{Lib<:PolyhedraLibrary}(lib::Lib, tests=alltests)
+    for (testname, testfun) in tests
+        @testset "$testname tests" begin
+            testfun(lib)
+        end
     end
 end

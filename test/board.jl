@@ -27,9 +27,9 @@ function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
   b = [b1; b2; b3]
   ine = SimpleHRepresentation(A, b)
   poly = polyhedron(ine, lib)
-  @fact nrays(poly) --> 0
-  @fact npoints(poly) --> 614
-  @fact isempty(poly) --> false
+  @test nrays(poly) == 0
+  @test npoints(poly) == 614
+  @test !isempty(poly)
   ext  = SimpleVRepresentation(poly)
   target = ones(Int, 9) * (3 // 4)
   ok = false
@@ -40,7 +40,7 @@ function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
       ok = true
     end
   end
-  @fact ok --> true
+  @test ok
 
   cutA = ones(Int, 1, 9)
   cutb = 6
@@ -48,11 +48,11 @@ function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
   bcut = [cutb; b]
   inecut = SimpleHRepresentation(Acut, bcut)
   polycut = polyhedron(inecut, lib)
-  @fact isempty(polycut) --> false
+  @test !isempty(polycut)
   #(isredundant, certificate) = isredundantinequality(polycut, 1)
   #@test !isredundant
   #@test certificate == target
-  @fact ishredundant(polycut, 1) --> false
+  @test !ishredundant(polycut, 1)
 # @test IntSet() == gethredundantindices(polycut) # TODO reactivate it when I figure out why it makes LRS tests fail
  #(issredundant, scertificate) = isstronglyredundantinequality(polycut, 1)
  #@test !issredundant
