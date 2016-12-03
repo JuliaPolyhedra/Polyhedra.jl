@@ -11,6 +11,9 @@ addons:
     - libgmp-dev # For CDDLib and LRSLib
 notifications:
   email: false
+before_script:
+  - julia -e 'Pkg.clone("git://github.com/blegat/CDDLib.jl.git")'
+  - julia -e 'Pkg.clone("git://github.com/blegat/LRSLib.jl.git")'
 # uncomment the following lines to override the default test script
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
