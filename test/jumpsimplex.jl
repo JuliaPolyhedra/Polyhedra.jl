@@ -6,8 +6,7 @@ function simplextest(lib::PolyhedraLibrary, n)
     @variable(m, x[1:n] >= 0)
     @constraint(m, sum(x[i] for i=1:n) == 1)
 
-    lphrep = LPHRepresentation(m)
-    poly = polyhedron(lphrep, lib)
+    poly = polyhedron(m, lib)
 
     @fact npoints(poly) --> n
     @fact nrays(poly) --> 0
@@ -25,8 +24,7 @@ function simplexorigtest(lib::PolyhedraLibrary, n)
     @variable(m, x[1:n] >= 0)
     @constraint(m, sum(x[i] for i=1:n) ≤ 1)
 
-    lphrep = LPHRepresentation(m)
-    poly = polyhedron(lphrep, lib)
+    poly = polyhedron(m, lib)
 
     @fact npoints(poly) --> n+1
     @fact nrays(poly) --> 0

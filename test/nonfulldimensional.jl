@@ -10,8 +10,7 @@ function nonfulldimensionaltest(lib::PolyhedraLibrary)
         x[2] ≤ 2
     end)
 
-    lphrep = LPHRepresentation(m)
-    poly = polyhedron(lphrep, lib)
+    poly = polyhedron(m, lib)
 
     V = [2 1 1;
          2 2 1]

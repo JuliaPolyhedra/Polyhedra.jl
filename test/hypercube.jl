@@ -6,8 +6,7 @@ function hypercubetest(lib::PolyhedraLibrary, n)
     m = Model()
     @variable(m, 0 ≤ x[1:n] ≤ 1)
 
-    lphrep = LPHRepresentation(m)
-    poly = polyhedron(lphrep, lib)
+    poly = polyhedron(m, lib)
 
     @fact npoints(poly) --> 2^n
     @fact nrays(poly) --> 0

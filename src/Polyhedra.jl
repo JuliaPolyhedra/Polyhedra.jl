@@ -27,6 +27,7 @@ include("operations.jl")
 
 # Implementations
 include("lphrep.jl")
+include("jump.jl")
 include("simplerep.jl")
 include("liftedrep.jl")
 include("simplepolyhedron.jl")

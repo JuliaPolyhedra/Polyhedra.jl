@@ -6,8 +6,7 @@ function infeasibletest(lib::PolyhedraLibrary, n)
     @variable(m, 0 ≤ x[1:n] ≤ 1)
     @constraint(m, x[1] ≥ 2)
 
-    lphrep = LPHRepresentation(m)
-    poly = polyhedron(lphrep, lib)
+    poly = polyhedron(m, lib)
 
     @fact hasrays(poly) --> false
     @fact haspoints(poly) --> false

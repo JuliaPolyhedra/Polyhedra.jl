@@ -1,5 +1,4 @@
 export LPHRepresentation
-using JuMP
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
 type LPHRepresentation{N, T} <: HRepresentation{N, T}
@@ -113,21 +112,6 @@ function (::Type{LPHRepresentation{N, T}}){N,T}(;eqs::Nullable{EqIterator{N, T}}
     end
   end
   new(A, l, u, lb, ub)
-end
-
-function LPHRepresentation(model::JuMP.Model)
-    # Inspired from Joey Huchette's code in ConvexHull.jl
-    A = JuMP.prepConstrMatrix(model)
-    c, lb, ub = JuMP.prepProblemBounds(model)
-    l, u = model.colLower, model.colUpper
-
-    m, n = size(A)
-    @assert m == length(lb) == length(ub)
-    @assert model.nlpdata == nothing
-    @assert isempty(model.quadconstr)
-    @assert isempty(model.sosconstr)
-
-    LPHRepresentation(A, l, u, lb, ub)
 end
 
 Base.copy{N,T}(lp::LPHRepresentation{N,T}) = LPHRepresentation{N,T}(copy(A), copy(l), copy(u), copy(colleqs), copy(colgeqs), copy(coleqs), copy(lb), copy(ub), copy(rowleqs), copy(rowgeqs), copy(roweqs))

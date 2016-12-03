@@ -12,8 +12,7 @@ function ex1test(lib::PolyhedraLibrary)
         1 + x ≥ 0
     end)
 
-    lphrep = LPHRepresentation(m)
-    poly = polyhedron(lphrep, lib)
+    poly = polyhedron(m, lib)
 
     @fact npoints(poly) --> 3
     @fact nrays(poly) --> 2

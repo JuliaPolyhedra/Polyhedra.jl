@@ -14,8 +14,7 @@ function crosspolytopetest(lib::PolyhedraLibrary, n)
         end
     end
 
-    lphrep = LPHRepresentation(m)
-    poly = polyhedron(lphrep, lib)
+    poly = polyhedron(m, lib)
 
     @fact npoints(poly) --> 2n
     @fact nrays(poly) --> 0
