@@ -53,75 +53,75 @@ fulldim{RepT<:Rep}(::Type{RepT}) = RepT.parameters[1]
 # next(it::VRepIterator, state) = error("This iterator is empty")
 
 function checknext(it, i, state, donep, startp)
-  while i <= length(it.ps) && (i == 0 || donep(it.ps[i], state))
-    i += 1
-    if i <= length(it.ps)
-      state = startp(it.ps[i])
+    while i <= length(it.ps) && (i == 0 || donep(it.ps[i], state))
+        i += 1
+        if i <= length(it.ps)
+            state = startp(it.ps[i])
+        end
     end
-  end
-  i > length(it.ps) ? i : (i, state)
+    i > length(it.ps) ? i : (i, state)
 end
 
 # convention: ax <= β
 for (rep, HorVRep, low) in [(true, :VRep, "vrep"), (false, :VRep, "point"), (false, :VRep, "ray"), (true, :HRep, "hrep"), (false, :HRep, "ineq"), (false, :HRep, "eq")]
-  if rep
-    up = uppercase(low[1:2]) * low[3:end]
-  else
-    up = uppercase(low[1:1]) * low[2:end]
-  end
-  typename = Symbol(up * "Iterator")
-  donep = Symbol("done" * low)
-  startp = Symbol("start" * low)
-  nextp = Symbol("next" * low)
-  shortcuts = low * "s"
-  shortcut = Symbol(shortcuts)
-  lenp = Symbol("n" * shortcuts)
-  isemp = Symbol("has" * shortcuts)
-
-  @eval begin
-    export $shortcut, $lenp, $startp, $donep, $nextp, $isemp
-    if !$rep
-      $lenp(p::$HorVRep)   = error("$($lenp) not implemented for $(typeof(p))")
-      $startp(p::$HorVRep) = error("$($startp) not implemented for $(typeof(p))")
-      $donep(p::$HorVRep)  = error("$($donep) not implemented for $(typeof(p))")
-      $nextp(p::$HorVRep)  = error("$($nextp) not implemented for $(typeof(p))")
+    if rep
+        up = uppercase(low[1:2]) * low[3:end]
+    else
+        up = uppercase(low[1:1]) * low[2:end]
     end
+    typename = Symbol(up * "Iterator")
+    donep = Symbol("done" * low)
+    startp = Symbol("start" * low)
+    nextp = Symbol("next" * low)
+    shortcuts = low * "s"
+    shortcut = Symbol(shortcuts)
+    lenp = Symbol("n" * shortcuts)
+    isemp = Symbol("has" * shortcuts)
 
-    type $typename{Nout, Tout, Nin, Tin}
-      ps::Vector
-      f::Nullable{Function}
-      function $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f)
-        new(ps, f)
-      end
+    @eval begin
+        export $shortcut, $lenp, $startp, $donep, $nextp, $isemp
+        if !$rep
+            $lenp(p::$HorVRep)   = error("$($lenp) not implemented for $(typeof(p))")
+            $startp(p::$HorVRep) = error("$($startp) not implemented for $(typeof(p))")
+            $donep(p::$HorVRep)  = error("$($donep) not implemented for $(typeof(p))")
+            $nextp(p::$HorVRep)  = error("$($nextp) not implemented for $(typeof(p))")
+        end
+
+        type $typename{Nout, Tout, Nin, Tin}
+            ps::Vector
+            f::Nullable{Function}
+            function $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f)
+                new(ps, f)
+            end
+        end
+        $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f=nothing) = $typename{fulldim(RepT),eltype(RepT),fulldim(RepT),eltype(RepT)}(ps, f)
+        $shortcut{N,T}(p::$HorVRep{N,T}, f=nothing) = $typename([p], f)
+
+        Base.length(it::$typename) = sum([$lenp(p) for p in it.ps])
+        Base.isempty(it::$typename) = reduce(&, true, [$isemp(p) for p in it.ps])
+        fulldim{N}(it::$typename{N}) = N
+        Base.eltype{N,T}(it::$typename{N,T}) = T
+
+        Base.start(it::$typename) = checknext(it, 0, nothing, $donep, $startp)
+        Base.done(it::$typename, state) = state[1] > length(it.ps)
+        function Base.next(it::$typename, state)
+            item, newsubstate = $nextp(it.ps[state[1]], state[2])
+            newstate = checknext(it, state[1], newsubstate, $donep, $startp)
+            (isnull(it.f) ? item : get(it.f)(state[1], item), newstate)
+        end
+
     end
-    $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f=nothing) = $typename{fulldim(RepT),eltype(RepT),fulldim(RepT),eltype(RepT)}(ps, f)
-    $shortcut{N,T}(p::$HorVRep{N,T}, f=nothing) = $typename([p], f)
-
-    Base.length(it::$typename) = sum([$lenp(p) for p in it.ps])
-    Base.isempty(it::$typename) = reduce(&, true, [$isemp(p) for p in it.ps])
-    fulldim{N}(it::$typename{N}) = N
-    Base.eltype{N,T}(it::$typename{N,T}) = T
-
-    Base.start(it::$typename) = checknext(it, 0, nothing, $donep, $startp)
-    Base.done(it::$typename, state) = state[1] > length(it.ps)
-    function Base.next(it::$typename, state)
-      item, newsubstate = $nextp(it.ps[state[1]], state[2])
-      newstate = checknext(it, state[1], newsubstate, $donep, $startp)
-      (isnull(it.f) ? item : get(it.f)(state[1], item), newstate)
-    end
-
-  end
 end
 
 # Default implementation for hrep and vrep
 function checknext(rep::Rep, i, state, donep, startp)
-  while i <= 2 && (i == 0 || donep[i](rep, state))
-    i += 1
-    if i <= 2
-      state = startp[i](rep)
+    while i <= 2 && (i == 0 || donep[i](rep, state))
+        i += 1
+        if i <= 2
+            state = startp[i](rep)
+        end
     end
-  end
-  i > 2 ? i : (i, state)
+    i > 2 ? i : (i, state)
 end
 
 #HRep
@@ -137,10 +137,10 @@ hashreps(hrep::HRep) = nhreps(hrep) > 0
 starthrep(hrep::HRep) = checknext(hrep, 0, nothing, [doneeq, doneineq], [starteq, startineq])
 donehrep(hrep::HRep, state) = state[1] > 2
 function nexthrep(hrep::HRep, state)
-  nextp = [nexteq, nextineq]
-  item, newsubstate = nextp[state[1]](hrep, state[2])
-  newstate = checknext(hrep, state[1], newsubstate, [doneeq, doneineq], [starteq, startineq])
-  (item, newstate)
+    nextp = [nexteq, nextineq]
+    item, newsubstate = nextp[state[1]](hrep, state[2])
+    newstate = checknext(hrep, state[1], newsubstate, [doneeq, doneineq], [starteq, startineq])
+    (item, newstate)
 end
 
 #VRep
@@ -156,31 +156,31 @@ hasvreps(vrep::VRep)  = nvreps(vrep) > 0
 startvrep(vrep::VRep) = checknext(vrep, 0, nothing, [doneray, donepoint], [startray, startpoint])
 donevrep(vrep::VRep, state) = state[1] > 2
 function nextvrep(vrep::VRep, state)
-  nextp = [nextray, nextpoint]
-  item, newsubstate = nextp[state[1]](vrep, state[2])
-  newstate = checknext(vrep, state[1], newsubstate, [doneray, donepoint], [startray, startpoint])
-  (item, newstate)
+    nextp = [nextray, nextpoint]
+    item, newsubstate = nextp[state[1]](vrep, state[2])
+    newstate = checknext(vrep, state[1], newsubstate, [doneray, donepoint], [startray, startpoint])
+    (item, newstate)
 end
 
 # Linearity Set
 export linset
 function linset(rep::HRepresentation)
-  s = IntSet()
-  for (i,h) in enumerate(hreps(rep))
-    if islin(h)
-      push!(s, i)
+    s = IntSet()
+    for (i,h) in enumerate(hreps(rep))
+        if islin(h)
+            push!(s, i)
+        end
     end
-  end
-  s
+    s
 end
 function linset(rep::VRepresentation)
-  s = IntSet()
-  for (i,v) in enumerate(vreps(rep))
-    if islin(v)
-      push!(s, i)
+    s = IntSet()
+    for (i,v) in enumerate(vreps(rep))
+        if islin(v)
+            push!(s, i)
+        end
     end
-  end
-  s
+    s
 end
 
 # Modify type
@@ -216,23 +216,23 @@ Base.convert{T<:HRepresentation}(::Type{T}, p::T) = p
 Base.convert{T<:VRepresentation}(::Type{T}, p::T) = p
 
 function hconvert{RepTout<:HRep, RepTin<:HRep}(::Type{RepTout}, p::RepTin)
-  Nin  = fulldim(RepTin)
-  Nout = fulldim(RepTout)
-  if Nin != Nout
-    error("Different dimension")
-  end
-  Tin  = eltype(RepTin)
-  Tout = eltype(RepTout)
-  if Tin == Tout
-    f = nothing
-  else
-    f = (i,x) -> changeeltype(typeof(x), Tout)(x)
-  end
-  if decomposedhfast(p)
-    RepTout(eqs=EqIterator{Nout,Tout,Nin,Tin}([p], f), ineqs=IneqIterator{Nout,Tout,Nin,Tin}([p], f))
-  else
-    RepTout(HRepIterator{Nout,Tout,Nin,Tin}([p], f))
-  end
+    Nin  = fulldim(RepTin)
+    Nout = fulldim(RepTout)
+    if Nin != Nout
+        error("Different dimension")
+    end
+    Tin  = eltype(RepTin)
+    Tout = eltype(RepTout)
+    if Tin == Tout
+        f = nothing
+    else
+        f = (i,x) -> changeeltype(typeof(x), Tout)(x)
+    end
+    if decomposedhfast(p)
+        RepTout(eqs=EqIterator{Nout,Tout,Nin,Tin}([p], f), ineqs=IneqIterator{Nout,Tout,Nin,Tin}([p], f))
+    else
+        RepTout(HRepIterator{Nout,Tout,Nin,Tin}([p], f))
+    end
 end
 
 Base.convert{RepTout<:HRep, RepTin<:HRepresentation}(::Type{RepTout}, p::RepTin) = hconvert(RepTout, p)
@@ -241,23 +241,23 @@ Base.convert{RepTout<:HRepresentation, RepTin<:HRep}(::Type{RepTout}, p::RepTin)
 Base.convert{RepTout<:HRepresentation, RepTin<:HRepresentation}(::Type{RepTout}, p::RepTin) = hconvert(RepTout, p)
 
 function vconvert{RepTout<:VRep, RepTin<:VRep}(::Type{RepTout}, p::RepTin)
-  Nin  = fulldim(RepTin)
-  Nout = fulldim(RepTout)
-  if Nin != Nout
-    error("Different dimension")
-  end
-  Tin  = eltype(RepTin)
-  Tout = eltype(RepTout)
-  if Tin == Tout
-    f = nothing
-  else
-    f = (i,x) -> changeeltype(typeof(x), Tout)(x)
-  end
-  if decomposedvfast(p)
-    RepTout(points=PointIterator{Nout,Tout,Nin,Tin}([p], f), rays=RayIterator{Nout,Tout,Nin,Tin}([p], f))
-  else
-    RepTout(VRepIterator{Nout,Tout,Nin,Tin}([p], f))
-  end
+    Nin  = fulldim(RepTin)
+    Nout = fulldim(RepTout)
+    if Nin != Nout
+        error("Different dimension")
+    end
+    Tin  = eltype(RepTin)
+    Tout = eltype(RepTout)
+    if Tin == Tout
+        f = nothing
+    else
+        f = (i,x) -> changeeltype(typeof(x), Tout)(x)
+    end
+    if decomposedvfast(p)
+        RepTout(points=PointIterator{Nout,Tout,Nin,Tin}([p], f), rays=RayIterator{Nout,Tout,Nin,Tin}([p], f))
+    else
+        RepTout(VRepIterator{Nout,Tout,Nin,Tin}([p], f))
+    end
 end
 
 Base.convert{RepTout<:VRep, RepTin<:VRepresentation}(::Type{RepTout}, p::RepTin) = vconvert(RepTout, p)

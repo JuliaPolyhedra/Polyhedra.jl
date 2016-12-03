@@ -28,21 +28,21 @@ abstract HRepElement{N,T}
 
 # <a, x> <= β
 type HalfSpace{N,T} <: HRepElement{N,T}
-  a::MyVec{N,T}
-  β::T
-  function HalfSpace(a::MyVec{N,T}, β::T)
-    new(a, β)
-  end
+    a::MyVec{N,T}
+    β::T
+    function HalfSpace(a::MyVec{N,T}, β::T)
+        new(a, β)
+    end
 end
 
 (::Type{HalfSpace{N,T}}){N,T}(a::MyVec, β) = HalfSpace{N,T}(myvec(T, a), T(β))
 
 type HyperPlane{N,T} <: HRepElement{N,T}
-  a::MyVec{N,T}
-  β::T
-  function HyperPlane(a::MyVec{N,T}, β::T)
-    new(a, β)
-  end
+    a::MyVec{N,T}
+    β::T
+    function HyperPlane(a::MyVec{N,T}, β::T)
+        new(a, β)
+    end
 end
 
 (::Type{HyperPlane{N,T}}){N,T}(a::MyVec, β) = HyperPlane{N,T}(myvec(T, a), T(β))
@@ -60,26 +60,26 @@ islin(v::HalfSpace) = false
 islin(v::HyperPlane) = true
 
 function (*){ElemT<:HRepElement}(h::ElemT, P::Matrix)
-  Tout = mypromote_type(eltype(ElemT), eltype(P))
-  ElemTout = changeboth(ElemT, size(P, 2), Tout)
-  ElemTout(P' * h.a, h.β)
+    Tout = mypromote_type(eltype(ElemT), eltype(P))
+    ElemTout = changeboth(ElemT, size(P, 2), Tout)
+    ElemTout(P' * h.a, h.β)
 end
 function zeropad{ElemT<:HRepElement}(h::ElemT, n::Integer)
-  if n == 0
-    h
-  else
-    ElemTout = changefulldim(ElemT, fulldim(h) + abs(n))
-    T = eltype(ElemT)
-    if n < 0
-      aout = [spzeros(T, n); h.a]
+    if n == 0
+        h
     else
-      aout = [h.a; spzeros(T, n)]
+        ElemTout = changefulldim(ElemT, fulldim(h) + abs(n))
+        T = eltype(ElemT)
+        if n < 0
+            aout = [spzeros(T, n); h.a]
+        else
+            aout = [h.a; spzeros(T, n)]
+        end
+        ElemTout(aout, h.β)
     end
-    ElemTout(aout, h.β)
-  end
 end
 function Base.round{ElemT<:HRepElement}(h::ElemT)
-  ElemT(round.(h.a), round(h.β))
+    ElemT(round.(h.a), round(h.β))
 end
 
 # Point:
@@ -92,39 +92,39 @@ end
 # Line{N, T}
 
 type SymPoint{N, T}
-  a::MyPoint{N, T}
-  function SymPoint(a::MyPoint{N, T})
-    new(a)
-  end
+    a::MyPoint{N, T}
+    function SymPoint(a::MyPoint{N, T})
+        new(a)
+    end
 end
 
 (::Type{SymPoint{N,T}}){N,T}(a::MyPoint) = SymPoint{N,T}(mypoint(T, a))
 
 type Ray{N, T}
-  a::MyVec{N, T}
-  function Ray(a::MyVec{N, T})
-    new(a)
-  end
+    a::MyVec{N, T}
+    function Ray(a::MyVec{N, T})
+        new(a)
+    end
 end
 
 (::Type{Ray{N,T}}){N,T}(a::MyVec) = Ray{N,T}(myvec(T, a))
 
 type Line{N,T}
-  a::MyVec{N, T}
-  function Line(a::MyVec{N, T})
-    new(a)
-  end
+    a::MyVec{N, T}
+    function Line(a::MyVec{N, T})
+        new(a)
+    end
 end
 
 getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
 vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 
 for op in [:dot, :cross, (:-), (:+)]
-  @eval begin
-    $op(x::Union{SymPoint,Ray,Line}, y) = $op(x.a, y)
-    $op(x, y::Union{SymPoint,Ray,Line}) = $op(x, y.a)
-    $op(x::Union{SymPoint,Ray,Line}, y::Union{SymPoint,Ray,Line}) = $op(x.a, y.a)
-  end
+    @eval begin
+        $op(x::Union{SymPoint,Ray,Line}, y) = $op(x.a, y)
+        $op(x, y::Union{SymPoint,Ray,Line}) = $op(x, y.a)
+        $op(x::Union{SymPoint,Ray,Line}, y::Union{SymPoint,Ray,Line}) = $op(x.a, y.a)
+    end
 end
 
 Base.convert{T}(::Type{Vector{T}}, x::Union{SymPoint,Ray,Line}) = convert(Vector{T}, x.a)
@@ -168,35 +168,35 @@ coord{ElemT<:Union{HRepElement,SymPoint,Ray,Line}}(v::ElemT) = v.a
 typealias VRepElementContainer Union{SymPoint, Ray, Line}
 
 @generated function (*){ElemT<:FixedVRepElement}(P::Matrix, v::ElemT)
-  if ElemT <: VRepElementContainer
-    Tout = mypromote_type(eltype(ElemT), eltype(P))
-    ElemTout = changeboth(ElemT, size(P, 1), Tout)
-    return :(:ElemTout(P * v.a))
-  else
-    return :(P * v.a)
-  end
+    if ElemT <: VRepElementContainer
+        Tout = mypromote_type(eltype(ElemT), eltype(P))
+        ElemTout = changeboth(ElemT, size(P, 1), Tout)
+        return :(:ElemTout(P * v.a))
+    else
+        return :(P * v.a)
+    end
 end
 function zeropad{ElemT<:VRepElement}(v::ElemT, n::Integer)
-  if n == 0
-    v
-  else
-    ElemTout = changefulldim(ElemT, fulldim(h) + abs(n))
-    T = eltype(ElemT)
-    if n < 0
-      aout = [spzeros(T, n); coef(v)]
+    if n == 0
+        v
     else
-      aout = [coef(v); spzeros(T, n)]
+        ElemTout = changefulldim(ElemT, fulldim(h) + abs(n))
+        T = eltype(ElemT)
+        if n < 0
+            aout = [spzeros(T, n); coef(v)]
+        else
+            aout = [coef(v); spzeros(T, n)]
+        end
+        ElemTout(aout)
     end
-    ElemTout(aout)
-  end
 end
 
 for ElemT in [:HalfSpace, :HyperPlane, :Point, :SymPoint, :Vec, :Ray, :Line]
-  @eval begin
-    changeeltype{N,T,Tout}(::Type{$ElemT{N,T}}, ::Type{Tout}) = $ElemT{N,Tout}
-    changefulldim{N,T}(::Type{$ElemT{N,T}}, Nout) = $ElemT{Nout,T}
-    changeboth{N,T,Tout}(::Type{$ElemT{N,T}}, Nout, ::Type{Tout}) = $ElemT{Nout,Tout}
-  end
+    @eval begin
+        changeeltype{N,T,Tout}(::Type{$ElemT{N,T}}, ::Type{Tout}) = $ElemT{N,Tout}
+        changefulldim{N,T}(::Type{$ElemT{N,T}}, Nout) = $ElemT{Nout,T}
+        changeboth{N,T,Tout}(::Type{$ElemT{N,T}}, Nout, ::Type{Tout}) = $ElemT{Nout,Tout}
+    end
 end
 
 changeeltype{VecT<:AbstractVector,Tout}(::Type{VecT}, ::Type{Tout}) = AbstractVector{Tout}
@@ -219,21 +219,21 @@ Base.in{N}(h::HyperPlane{N}, p::SymPoint{N}) = myeq(mydot(h.a, p.p), β)
 
 import Base.vec
 function Base.vec{N,T}(x::FixedVector{N,T})
-  y = Vector{T}(N)
-  for i in 1:N
-    y[i] = x[i]
-  end
-  y
+    y = Vector{T}(N)
+    for i in 1:N
+        y[i] = x[i]
+    end
+    y
 end
 #Base.vec{ElemT::VRepElementContainer}(x::ElemT) = ElemT(vec(x.a))
 
 pushbefore(a::AbstractVector, β) = [β; a]
 function pushbefore{ElemT<:FixedVector}(a::ElemT, β, ElemTout = changefulldim(ElemT, fulldim(ElemT)+1))
-  ElemTout([β; vec(a)])
+    ElemTout([β; vec(a)])
 end
 
 function lift{ElemT <: HRepElement}(h::ElemT)
-  ElemT(pushbefore(h.a, -h.β), zero(eltype(ElemT)))
+    ElemT(pushbefore(h.a, -h.β), zero(eltype(ElemT)))
 end
 lift{N,T}(h::Vec{N,T}) = pushbefore(h, zero(T))
 lift{N,T}(h::Ray{N,T}) = Ray{N+1,T}(pushbefore(h.a, zero(T)))

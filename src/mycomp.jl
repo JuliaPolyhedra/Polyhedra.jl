@@ -25,9 +25,9 @@ mynonneg{T<:Real}(x::T) = mygeq(x, zero(T))
 mynonpos{T<:Real}(x::T) = myleq(x, zero(T))
 
 function mypromote_type{T1,T2}(::Type{T1}, ::Type{T2})
-  if T1 <: AbstractFloat || T2 <: AbstractFloat
-    Float64
-  else
-    Rational{BigInt}
-  end
+    if T1 <: AbstractFloat || T2 <: AbstractFloat
+        Float64
+    else
+        Rational{BigInt}
+    end
 end
