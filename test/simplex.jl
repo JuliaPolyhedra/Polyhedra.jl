@@ -61,7 +61,7 @@ function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
   plin = polyhedron(inelin, lib)
   inequality_fulltest(plin, Alin, blin, linsetlin)
   generator_fulltest(plin, Vlin, Rlin, IntSet(), IntSet(1))
-  ineout = gethrep(plin)
+  ineout = hrep(plin)
   @fact linset(ineout) --> IntSet(1)
   Vlin = [1 0]
   Rlin = [1 -1]
@@ -69,6 +69,6 @@ function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
   plin = polyhedron(extlin, lib)
   inequality_fulltest(plin, Alin, blin, linsetlin)
   generator_fulltest(plin, Vlin, Rlin, IntSet(), IntSet(1))
-  extout = SimpleVRepresentation(getvrep(plin))
+  extout = SimpleVRepresentation(plin)
   @fact linset(extout) --> IntSet(1)
 end

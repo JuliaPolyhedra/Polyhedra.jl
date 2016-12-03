@@ -1,5 +1,14 @@
 using Polyhedra
 
+# JuMP
+include("hypercube.jl")
+include("crosspolytope.jl")
+include("ex1.jl")
+include("infeasible.jl")
+include("jumpsimplex.jl")
+include("nonfulldimensional.jl")
+
+# non-JuMP
 include("simplex.jl")
 include("permutahedron.jl")
 include("board.jl")
@@ -32,11 +41,11 @@ function inequality_fulltest(p::Polyhedron, A, b, linset)
   A = tomatrix(A)
   detecthlinearities!(p)
   removehredundancy!(p)
-  ine = SimpleHRepresentation(gethrep(p))
+  ine = SimpleHRepresentation(p)
   @fact size(ine.A) --> size(A)
   @fact length(ine.linset) --> length(linset)
 
-  aff = SimpleHRepresentation(gethrep(affinehull(p)))
+  aff = SimpleHRepresentation(affinehull(p))
   affAb = [aff.b aff.A]
   inaff(x) = inlinspace(x, affAb)
 
@@ -57,7 +66,7 @@ function generator_fulltest(p::Polyhedron, V, R=Matrix{eltype(V)}(0, size(V, 2))
   R = tomatrix(R)
   detectvlinearities!(p)
   removevredundancy!(p)
-  ext = SimpleVRepresentation(getvrep(p))
+  ext = SimpleVRepresentation(p)
   @fact size(ext.V) --> size(V)
   @fact size(ext.R) --> size(R)
   @fact length(ext.Vlinset) --> length(Vlinset)

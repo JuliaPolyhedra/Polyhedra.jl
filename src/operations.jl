@@ -1,5 +1,5 @@
 # Mandatory
-export polyhedron, gethrep, getvrep, eliminate, hrepiscomputed, vrepiscomputed, loadpolyhedron!
+export polyhedron, hrep, vrep, eliminate, hrepiscomputed, vrepiscomputed, loadpolyhedron!
 
 if VERSION < v"0.5-"
   export normalize
@@ -10,9 +10,9 @@ polyhedron(repr::Representation) = polyhedron(repr, getlibraryfor(eltype(repr)))
 Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})                             = error("push! not implemented for $(typeof(p)) for HRepresentation")
 Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})                             = error("push! not implemented for $(typeof(p)) for VRepresentation")
 hrepiscomputed(p::Polyhedron)                                                        = error("hrepiscomputed not implemented for $(typeof(p))")
-gethrep(p::Polyhedron)                                                               = error("gethrep not implemented for $(typeof(p))")
+hrep(p::Polyhedron)                                                               = error("hrep not implemented for $(typeof(p))")
 vrepiscomputed(p::Polyhedron)                                                        = error("vrepiscomputed not implemented for $(typeof(p))")
-getvrep(p::Polyhedron)                                                               = error("getvrep not implemented for $(typeof(p))")
+vrep(p::Polyhedron)                                                               = error("vrep not implemented for $(typeof(p))")
 implementseliminationmethod(p::Polyhedron, ::Type{Val{:FourierMotzkin}})             = false
 eliminate(p::Polyhedron, delset::IntSet, ::Type{Val{:FourierMotzkin}})               = error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
 implementseliminationmethod(p::Polyhedron, ::Type{Val{:BlockElimination}})           = false
@@ -52,7 +52,7 @@ function eliminate{N}(p::Polyhedron{N}, delset::IntSet=IntSet(N))
 end
 
 function eliminate{N}(p::Polyhedron{N}, delset::IntSet, ::Type{Val{:ProjectGenerators}})
-  ext = getvrep(p)
+  ext = vrep(p)
   I = eye(Int, N)
   polyhedron(I[setdiff(IntSet(1:N), collect(delset)),:] * ext, getlibrary(p))
 end
@@ -209,7 +209,7 @@ end
 # end
 
 function isvredundant{N,T}(p::Polyhedron{N,T}, v::VRepElement)
-  for h in hrep(p)
+  for h in hreps(p)
     if vertex in h
       return cert ? (false, Nullable{HRepElement{N,T}}(h)) : false
     end

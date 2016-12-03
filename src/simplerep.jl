@@ -36,7 +36,7 @@ function SimpleHRepresentation{S <: Real, T <: Real}(A::AbstractMatrix{S}, b::Ab
 end
 SimpleHRepresentation{T <: Real}(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet()) = SimpleHRepresentation{size(A,2),T}(A, b, linset)
 
-SimpleHRepresentation{N,T}(h::HRepresentation{N,T}) = SimpleHRepresentation{N,T}(h)
+SimpleHRepresentation{N,T}(h::HRep{N,T}) = SimpleHRepresentation{N,T}(h)
 
 function (::Type{SimpleHRepresentation{N, T}}){N, T}(it::HRepIterator{N, T})
   A = Matrix{T}(length(it), N)
@@ -146,7 +146,7 @@ function SimpleVRepresentation{S <: Real, T <: Real}(V::AbstractMatrix{S}, R::Ab
 end
 SimpleVRepresentation{T <: Real}(V::AbstractMatrix{T}, linset::IntSet=IntSet()) = SimpleVRepresentation{size(V, 2),T}(V, similar(V, 0, size(V, 2)), linset, IntSet())
 
-SimpleVRepresentation{N,T}(v::VRepresentation{N,T}) = SimpleVRepresentation{N,T}(v)
+SimpleVRepresentation{N,T}(v::VRep{N,T}) = SimpleVRepresentation{N,T}(v)
 
 function (::Type{SimpleVRepresentation{N, T}}){N, T}(it::VRepIterator{N, T})
   A = Matrix{T}(length(it), N)

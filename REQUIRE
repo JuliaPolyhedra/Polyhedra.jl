@@ -3,3 +3,4 @@ FixedSizeArrays
 GeometryTypes
 DataStructures
 MathProgBase
+JuMP

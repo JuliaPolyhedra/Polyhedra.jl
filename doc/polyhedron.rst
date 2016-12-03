@@ -59,11 +59,11 @@ of course, creating a representation in floating points with exact arithmetic wo
 Retrieving a representation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-One can retrieve an H-representation (resp. V-representation) from a polyhedron using ``gethrep`` (resp. ``getvrep``).
+One can retrieve an H-representation (resp. V-representation) from a polyhedron using ``hrep`` (resp. ``vrep``).
 The concrete subtype of ``HRepresentation`` (resp. ``VRepresentation``) returned is not necessarily the same that the one used to create the polyhedron.
 As a rule of thumb, it is the representation the closest to the internal representation used by the library.::
 
-    julia> hrep = gethrep(poly)
+    julia> hrep = hrep(poly)
     julia> typeof(hrep)
     Polyhedra.LiftedHRepresentation{2,Rational{BigInt}}
     julia> hrep = SimpleHRepresentation(hrep)
@@ -79,7 +79,7 @@ As a rule of thumb, it is the representation the closest to the internal represe
      1//1
      0//1
      0//1
-    julia> vrep = getvrep(poly)
+    julia> vrep = vrep(poly)
     julia> typeof(vrep)
     Polyhedra.LiftedVRepresentation{2,Rational{BigInt}}
     julia> vrep = SimpleVRepresentation(vrep)

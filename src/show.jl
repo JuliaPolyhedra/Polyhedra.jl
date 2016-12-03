@@ -27,7 +27,7 @@ function Base.show{N,T}(io::IO, rep::Representation{N,T})
   end
   println(io, " $(length(rep)) $(N+1) $typename")
   if typeof(rep) <: HRepresentation
-    for h in hrep(rep)
+    for h in hreps(rep)
       print(io, " $(h.β)")
       for j = 1:N
         print(io, " $(-h.a[j])")
@@ -35,7 +35,7 @@ function Base.show{N,T}(io::IO, rep::Representation{N,T})
       println(io)
     end
   else
-    for v in vrep(rep)
+    for v in vreps(rep)
       print(io, " $(Int(isray(v)))")
       for j = 1:N
         print(io, " $(v[j])")

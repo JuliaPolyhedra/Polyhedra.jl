@@ -1,8 +1,10 @@
 export LPHRepresentation
+using JuMP
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
 type LPHRepresentation{N, T} <: HRepresentation{N, T}
-  # Ax <= b
+  # lb <= Ax <= ub
+  # l <= x <= u
   A::AbstractMatrix{T}
   l::AbstractVector{T}
   u::AbstractVector{T}
@@ -113,6 +115,21 @@ function (::Type{LPHRepresentation{N, T}}){N,T}(;eqs::Nullable{EqIterator{N, T}}
   new(A, l, u, lb, ub)
 end
 
+function LPHRepresentation(model::JuMP.Model)
+    # Inspired from Joey Huchette's code in ConvexHull.jl
+    A = JuMP.prepConstrMatrix(model)
+    c, lb, ub = JuMP.prepProblemBounds(model)
+    l, u = model.colLower, model.colUpper
+
+    m, n = size(A)
+    @assert m == length(lb) == length(ub)
+    @assert model.nlpdata == nothing
+    @assert isempty(model.quadconstr)
+    @assert isempty(model.sosconstr)
+
+    LPHRepresentation(A, l, u, lb, ub)
+end
+
 Base.copy{N,T}(lp::LPHRepresentation{N,T}) = LPHRepresentation{N,T}(copy(A), copy(l), copy(u), copy(colleqs), copy(colgeqs), copy(coleqs), copy(lb), copy(ub), copy(rowleqs), copy(rowgeqs), copy(roweqs))
 
 function checknext(lp::LPHRepresentation, colrow, i, lgeq, allowed)
@@ -156,7 +173,7 @@ function nexthrep{N,T}(lp::LPHRepresentation{N,T}, state)
   if colrow == 1
     a = spzeros(T, N)
     a[i] = lgeq == 1 ? one(T) : -one(T)
-    β = lgeq == 1 ? lp.u[i] : lp.l[i]
+    β = lgeq == 1 ? lp.u[i] : -lp.l[i]
   elseif colrow == 2
     a = lgeq == 1 ? lp.A[i,:] : -lp.A[i,:]
     β = lgeq == 1 ? lp.ub[i] : -lp.lb[i]

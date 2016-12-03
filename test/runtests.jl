@@ -1,32 +1,25 @@
 using Polyhedra
 using FactCheck
 
-facts("Simple Representation with bad arguments") do
-    A = [1 1; -1 0; 0 -1]
-    b = [1, 0, 0]
-    linset = IntSet([1])
-
-    @fact_throws ErrorException SimpleHRepresentation(A, [0, 0], linset)
-    @fact_throws ErrorException SimpleHRepresentation(A, [0, 0], IntSet([4]))
-    ine = SimpleHRepresentation(A, b, linset)
-    @fact fulldim(ine) --> 2
-    @fact eltype(ine) --> Int
-
-    V = [0 1; 1 0]
-    @fact_throws ErrorException SimpleVRepresentation(V, [1 0 0], IntSet(), IntSet())
-    @fact_throws ErrorException SimpleVRepresentation(V, [1 1], IntSet(), IntSet([2]))
-    @fact_throws ErrorException SimpleVRepresentation(V, [1 1], IntSet([4]), IntSet())
-    @fact_throws ErrorException SimpleVRepresentation(V, IntSet([4]))
-    ext = SimpleVRepresentation(V)
-    @fact fulldim(ext) --> 2
-    @fact eltype(ext) --> Int
-end
+include("badargs.jl")
 
 include("alltests.jl")
 
 include("libraries.jl")
 
-for test in [("Simplex", simplextest), ("Permutahedron", permutahedrontest), ("Board", boardtest)]
+tests = Tuple{String, Function}[]
+push!(tests, ("Hypercube in 2 dimensions", lib->hypercubetest(lib, 2)))
+push!(tests, ("Simplex in 2 dimensions", lib->simplextest(lib, 2)))
+push!(tests, ("Simplex with the origin in 2 dimensions", lib->simplexorigtest(lib, 2)))
+push!(tests, ("Cross Polytope in 2 dimensions", lib->crosspolytopetest(lib, 2)))
+push!(tests, ("The ex1 example", ex1test))
+push!(tests, ("Infeasible in 2 dimensions", lib->infeasibletest(lib, 2)))
+push!(tests, ("Non full-dimensional", nonfulldimensionaltest))
+push!(tests, ("Simplex", simplextest))
+push!(tests, ("Permutahedron", permutahedrontest))
+push!(tests, ("Board", boardtest))
+
+for test in tests
     testname, testfun = test
     for arith in [("floating point", float_libraries), ("exact", exact_libraries)]
         arithname, arith_libraries = arith

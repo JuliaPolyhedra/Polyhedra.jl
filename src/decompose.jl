@@ -4,7 +4,7 @@ import DataStructures
 import GeometryTypes.decompose, GeometryTypes.isdecomposable
 
 function fulldecompose{T}(poly::Polyhedron{3,T})
-  ine = SimpleHRepresentation(gethrep(poly))
+  ine = SimpleHRepresentation(poly)
 
   # I need to do division so if T is e.g. Integer, I need to use another type
   RT = typeof(one(T)/2)

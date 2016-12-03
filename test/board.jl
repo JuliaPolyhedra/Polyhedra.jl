@@ -30,7 +30,7 @@ function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
   @fact nrays(poly) --> 0
   @fact npoints(poly) --> 614
   @fact isempty(poly) --> false
-  ext  = SimpleVRepresentation(getvrep(poly))
+  ext  = SimpleVRepresentation(poly)
   target = ones(Int, 9) * (3 // 4)
   ok = false
   for i = 1:size(ext.V, 1)

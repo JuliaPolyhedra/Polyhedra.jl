@@ -66,21 +66,20 @@ end
 for (rep, HorVRep, low) in [(true, :VRep, "vrep"), (false, :VRep, "point"), (false, :VRep, "ray"), (true, :HRep, "hrep"), (false, :HRep, "ineq"), (false, :HRep, "eq")]
   if rep
     up = uppercase(low[1:2]) * low[3:end]
-    shortcut = Symbol(low)
-    isemp = Symbol("has" * low)
   else
     up = uppercase(low[1:1]) * low[2:end]
-    shortcut = Symbol(low * "s")
-    isemp = Symbol("has" * low * "s")
   end
   typename = Symbol(up * "Iterator")
   donep = Symbol("done" * low)
   startp = Symbol("start" * low)
   nextp = Symbol("next" * low)
-  lenp = Symbol("n" * low * "s")
+  shortcuts = low * "s"
+  shortcut = Symbol(shortcuts)
+  lenp = Symbol("n" * shortcuts)
+  isemp = Symbol("has" * shortcuts)
 
   @eval begin
-    export $shortcut, $lenp, $startp, $donep, $nextp
+    export $shortcut, $lenp, $startp, $donep, $nextp, $isemp
     if !$rep
       $lenp(p::$HorVRep)   = error("$($lenp) not implemented for $(typeof(p))")
       $startp(p::$HorVRep) = error("$($startp) not implemented for $(typeof(p))")
@@ -132,8 +131,8 @@ Base.isempty(hrep::HRepresentation) = hashreps(hrep)
 nhreps(hrep::HRep) = neqs(hrep) + nineqs(hrep)
 
 haseqs(hrep::HRep)   = neqs(hrep) > 0
-hasineqs(hrep::HRep) = nhrep(hrep) > 0
-hashreps(hrep::HRep) = nhrep(hrep) > 0
+hasineqs(hrep::HRep) = nhreps(hrep) > 0
+hashreps(hrep::HRep) = nhreps(hrep) > 0
 
 starthrep(hrep::HRep) = checknext(hrep, 0, nothing, [doneeq, doneineq], [starteq, startineq])
 donehrep(hrep::HRep, state) = state[1] > 2
@@ -167,7 +166,7 @@ end
 export linset
 function linset(rep::HRepresentation)
   s = IntSet()
-  for (i,h) in enumerate(hrep(rep))
+  for (i,h) in enumerate(hreps(rep))
     if islin(h)
       push!(s, i)
     end
@@ -176,7 +175,7 @@ function linset(rep::HRepresentation)
 end
 function linset(rep::VRepresentation)
   s = IntSet()
-  for (i,v) in enumerate(vrep(rep))
+  for (i,v) in enumerate(vreps(rep))
     if islin(v)
       push!(s, i)
     end
@@ -241,7 +240,7 @@ Base.convert{RepTout<:HRepresentation, RepTin<:HRep}(::Type{RepTout}, p::RepTin)
 # avoid ambiguity
 Base.convert{RepTout<:HRepresentation, RepTin<:HRepresentation}(::Type{RepTout}, p::RepTin) = hconvert(RepTout, p)
 
-function vconvert{RepTout<:VRep, RepTin<:VRepresentation}(::Type{RepTout}, p::RepTin)
+function vconvert{RepTout<:VRep, RepTin<:VRep}(::Type{RepTout}, p::RepTin)
   Nin  = fulldim(RepTin)
   Nout = fulldim(RepTout)
   if Nin != Nout
