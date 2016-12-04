@@ -14,9 +14,6 @@ function ex1test(lib::PolyhedraLibrary)
 
     poly = polyhedron(m, lib)
 
-    @test npoints(poly) == 3
-    @test nrays(poly) == 2
-
     V = [ 0  3;
          -1  4;
          -1 10]

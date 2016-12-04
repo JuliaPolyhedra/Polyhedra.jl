@@ -16,9 +16,6 @@ function crosspolytopetest(lib::PolyhedraLibrary, n)
 
     poly = polyhedron(m, lib)
 
-    @test npoints(poly) == 2n
-    @test nrays(poly) == 0
-
     V = zeros(Int, 2n, n)
     for i in 1:n
         V[2i-1, i] = 1
