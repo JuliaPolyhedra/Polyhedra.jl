@@ -21,8 +21,9 @@ It defines the abstract type `Polyhedron` and splits the operations on this type
 Here is a list of the Polyhedra Manipulation Libraries implementing the interface of `Polyhedra.jl`
 
 * [CDDLib.jl](https://github.com/blegat/CDDLib.jl): [CDD](https://www.inf.ethz.ch/personal/fukudak/cdd_home/) wrapper.
-* [LRSLib.jl](https://github.com/blegat/LRSLib.jl): [LRS](http://cgm.cs.mcgill.ca/~avis/C/lrs.html) wrapper.
 * [ConvexHull.jl](https://github.com/joehuchette/ConvexHull.jl): Pure Julia implementation of the double description algorithm.
+* [LRSLib.jl](https://github.com/blegat/LRSLib.jl): [LRS](http://cgm.cs.mcgill.ca/~avis/C/lrs.html) wrapper.
+* [QHull.jl](https://github.com/davidavdav/QHull.jl): [qhull](http://www.qhull.org/) wrapper.
 
 Please let me know if you plan to write a new wrapper (or an implementation in pure Julia).
 Since libraries (`cdd`, `lrs`, `pd`, `porta`, `qhull`, ...) use different algorithms, there is no better library for every problem; [here](http://cgm.cs.mcgill.ca/~avis/doc/avis/ABS96a.ps) is a comparison.
