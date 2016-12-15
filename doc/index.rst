@@ -5,8 +5,8 @@ Polyhedra --- Manipulation of Polyhedra in Julia
 .. module:: Polyhedra
    :synopsis: Manipulation of Polyhedra in Julia
 
-`Polyhedra <https://github.com/blegat/Polyhedra.jl>`_ is a package for polyhedra manipulations in Julia.
-It provides an unified interface for Polyhedra Manipulation Libraries such as `CDDLib.jl <https://github.com/blegat/CDDLib.jl>`_ and `LRSLib.jl <https://github.com/blegat/CDDLib.jl>`_.
+`Polyhedra <https://github.com/JuliaPolyhedra/Polyhedra.jl>`_ is a package for polyhedra manipulations in Julia.
+It provides an unified interface for Polyhedra Manipulation Libraries such as `CDDLib.jl <https://github.com/JuliaPolyhedra/CDDLib.jl>`_ and `LRSLib.jl <https://github.com/JuliaPolyhedra/LRSLib.jl>`_.
 
 Polyhedra can either be represented by a set of linear inequalities or by vertices and rays.
 In the first case, the points of the polyhedron are the points which satisfies all the inequalities
