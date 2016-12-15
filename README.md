@@ -1,9 +1,9 @@
 # Polyhedra
 
-[![Build Status](https://travis-ci.org/blegat/Polyhedra.jl.svg?branch=master)](https://travis-ci.org/blegat/Polyhedra.jl)
+[![Build Status](https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl.svg?branch=master)](https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/q8shfbgt5jcv2g20/branch/master?svg=true)](https://ci.appveyor.com/project/blegat/polyhedra-jl/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/blegat/Polyhedra.jl/badge.svg?branch=master)](https://coveralls.io/github/blegat/Polyhedra.jl?branch=master)
-[![codecov.io](http://codecov.io/github/blegat/Polyhedra.jl/coverage.svg?branch=master)](http://codecov.io/github/blegat/Polyhedra.jl?branch=master)
+[![codecov.io](http://codecov.io/github/JuliaPolyhedra/Polyhedra.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaPolyhedra/Polyhedra.jl?branch=master)
 
 [<img src="examples/drakeperm.png" height="240">](https://github.com/blegat/Polyhedra.jl/tree/master/examples/drakeperm.jl)
 [<img src="examples/glvizperm.png" height="240">](https://github.com/blegat/Polyhedra.jl/tree/master/examples/glvizperm.jl)
