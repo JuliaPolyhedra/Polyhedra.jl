@@ -26,7 +26,7 @@ vecconv{T}(::Type{T}, a::FixedVector) = FixedVector{T}(a)
 
 abstract HRepElement{N,T}
 
-# <a, x> <= β
+# ⟨a, x⟩ <= β
 type HalfSpace{N,T} <: HRepElement{N,T}
     a::MyVec{N,T}
     β::T
