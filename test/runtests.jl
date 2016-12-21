@@ -1,6 +1,7 @@
 using Polyhedra
 using Base.Test
 
+include("default.jl")
 include("badargs.jl")
 
 include("alltests.jl")

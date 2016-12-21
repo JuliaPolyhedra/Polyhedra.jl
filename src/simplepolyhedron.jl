@@ -1,4 +1,4 @@
-getlibraryfor{T<:Real}(::Type{T}) = SimplePolyhedraLibrary()
+#getlibraryfor{T<:Real}(::Type{T}) = SimplePolyhedraLibrary()
 
 type SimplePolyhedraLibrary <: PolyhedraLibrary
 end
