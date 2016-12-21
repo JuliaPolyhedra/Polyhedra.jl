@@ -15,7 +15,7 @@ For instance, consider the 2-dimensional polyhedron described by the following H
 
 .. math::
 
-   x_1 + x_2 &\geq 1 \\
+   x_1 + x_2 &\leq 1 \\
    x_1 - x_2 &\leq 0 \\
    x_1 & \geq 0.
 
