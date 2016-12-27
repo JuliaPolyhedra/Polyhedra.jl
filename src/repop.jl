@@ -70,14 +70,14 @@ function (*){RepT<:HRep}(rep::RepT, P::AbstractMatrix)
         if RepT <: HRepresentation
             RepTout(ineqs=ineqs, eqs=eqs)
         else
-            polyhedron(ineqs, eqs, getlibraryfor(rep, Tout))
+            polyhedron(ineqs, eqs, getlibraryfor(rep, Nout, Tout))
         end
     else
         hreps = HRepIterator{Nout,Tout,Nin,Tin}([rep], f)
         if RepT <: HRepresentation
             RepTout(hreps)
         else
-            polyhedron(hreps, getlibraryfor(rep, Tout))
+            polyhedron(hreps, getlibraryfor(rep, Nout, Tout))
         end
     end
 end
@@ -97,14 +97,14 @@ function (*){RepT<:VRep}(P::AbstractMatrix, rep::RepT)
         if RepT <: VRepresentation
             RepTout(points=points, rays=rays)
         else
-            polyhedron(points, rays, getlibraryfor(rep, Tout))
+            polyhedron(points, rays, getlibraryfor(rep, Nout, Tout))
         end
     else
         vreps = VRepIterator{Nout,Tout,Nin,Tin}([rep], f)
         if RepT <: VRepresentation
             RepTout(vreps)
         else
-            polyhedron(vreps, getlibraryfor(rep, Tout))
+            polyhedron(vreps, getlibraryfor(rep, Nout, Tout))
         end
     end
 end

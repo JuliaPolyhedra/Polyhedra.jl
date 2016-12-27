@@ -6,7 +6,7 @@ if VERSION < v"0.5-"
   normalize(v,p=2) = v / norm(v,p)
 end
 
-polyhedron(repr::Representation) = polyhedron(repr, getlibraryfor(eltype(repr)))
+polyhedron{N, T}(rep::Representation{N, T}) = polyhedron(rep, getlibraryfor(N, T))
 Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})                             = error("push! not implemented for $(typeof(p)) for HRepresentation")
 Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})                             = error("push! not implemented for $(typeof(p)) for VRepresentation")
 hrepiscomputed(p::Polyhedron)                                                        = error("hrepiscomputed not implemented for $(typeof(p))")
@@ -61,15 +61,15 @@ function loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Abs
         if !hrepiscomputed(p) && vrepiscomputed(p)
             f = (i, x) -> changeeltype(typeof(x), S)(x)
             if decomposedvfast(p)
-                polyhedron(PointIterator(p, f), RayIterator(p, f), getlibraryfor(p, S))
+                polyhedron(PointIterator(p, f), RayIterator(p, f), getlibraryfor(p, N, S))
             else
-                polyhedron(VRepIterator(p, f), getlibraryfor(p, S))
+                polyhedron(VRepIterator(p, f), getlibraryfor(p, N, S))
             end
         else
             if decomposedvfast(p)
-                polyhedron(IneqIterator(p, f), EqIterator(p, f), getlibraryfor(p, S))
+                polyhedron(IneqIterator(p, f), EqIterator(p, f), getlibraryfor(p, N, S))
             else
-                polyhedron(HRepIterator(p, f), getlibraryfor(p, S))
+                polyhedron(HRepIterator(p, f), getlibraryfor(p, N, S))
             end
         end
     end
