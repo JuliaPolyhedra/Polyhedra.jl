@@ -1,9 +1,9 @@
 # Polyhedra
 
-[![Build Status](https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl.svg?branch=master)](https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/q8shfbgt5jcv2g20/branch/master?svg=true)](https://ci.appveyor.com/project/blegat/polyhedra-jl/branch/master)
-[![Coverage Status](https://coveralls.io/repos/github/JuliaPolyhedra/Polyhedra.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaPolyhedra/Polyhedra.jl?branch=master)
-[![codecov.io](http://codecov.io/github/JuliaPolyhedra/Polyhedra.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaPolyhedra/Polyhedra.jl?branch=master)
+| **Documentation** | **Build Status** |
+|:-----------------:|:----------------:|
+| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] |
 
 [<img src="examples/drakeperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/drakeperm.jl)
 [<img src="examples/glvizperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/glvizperm.jl)
@@ -27,3 +27,16 @@ Here is a list of the Polyhedral Computation Libraries implementing the interfac
 
 Please let me know if you plan to write a new wrapper (or an implementation in pure Julia).
 Since libraries (`cdd`, `lrs`, `pd`, `porta`, `qhull`, ...) use different algorithms, there is no better library for every problem; [here](http://cgm.cs.mcgill.ca/~avis/doc/avis/ABS96a.ps) is a comparison.
+
+[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
+[docs-stable-url]: http://polyhedra.readthedocs.io/en/stable
+[docs-latest-url]: http://polyhedra.readthedocs.io/en/latest
+[build-img]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl.svg?branch=master
+[build-url]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl
+[winbuild-img]: https://ci.appveyor.com/api/projects/status/q8shfbgt5jcv2g20/branch/master?svg=true
+[winbuild-url]: https://ci.appveyor.com/project/blegat/polyhedra-jl/branch/master
+[coveralls-img]: https://coveralls.io/repos/github/JuliaPolyhedra/Polyhedra.jl/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/JuliaPolyhedra/Polyhedra.jl?branch=master
+[codecov-img]: http://codecov.io/github/JuliaPolyhedra/Polyhedra.jl/coverage.svg?branch=master
+[codecov-url]: http://codecov.io/github/JuliaPolyhedra/Polyhedra.jl?branch=master
