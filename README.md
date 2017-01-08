@@ -1,9 +1,9 @@
 # Polyhedra
 
-| **Documentation** | **Build Status** |
-|:-----------------:|:----------------:|
-| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] |
-| [![][docs-latest-img]][docs-latest-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] |
+| **Documentation** | **PackageEvaluator** | **Build Status** |
+|:-----------------:|:--------------------:|:----------------:|
+| [![][docs-stable-img]][docs-stable-url] | [![][pkg-0.5-img]][pkg-0.5-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.6-img]][pkg-0.6-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] |
 
 [<img src="examples/drakeperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/drakeperm.jl)
 [<img src="examples/glvizperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/glvizperm.jl)
@@ -32,6 +32,12 @@ Since libraries (`cdd`, `lrs`, `pd`, `porta`, `qhull`, ...) use different algori
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-stable-url]: http://polyhedra.readthedocs.io/en/stable
 [docs-latest-url]: http://polyhedra.readthedocs.io/en/latest
+
+[pkg-0.5-img]: http://pkg.julialang.org/badges/Polyhedra_0.5.svg
+[pkg-0.5-url]: http://pkg.julialang.org/?pkg=Polyhedra
+[pkg-0.6-img]: http://pkg.julialang.org/badges/Polyhedra_0.6.svg
+[pkg-0.6-url]: http://pkg.julialang.org/?pkg=Polyhedra
+
 [build-img]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl.svg?branch=master
 [build-url]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl
 [winbuild-img]: https://ci.appveyor.com/api/projects/status/q8shfbgt5jcv2g20/branch/master?svg=true
