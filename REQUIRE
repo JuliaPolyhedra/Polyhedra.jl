@@ -2,5 +2,5 @@ julia 0.5
 FixedSizeArrays
 GeometryTypes
 DataStructures
-MathProgBase 0.5 0.6
+MathProgBase 0.5.10 0.6
 JuMP
