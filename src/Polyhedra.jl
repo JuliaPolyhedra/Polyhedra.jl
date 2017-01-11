@@ -26,6 +26,7 @@ include("liftedrep.jl")
 include("simplepolyhedron.jl")
 
 # Optimization
+importall MathProgBase.SolverInterface
 include("opt.jl")
 include("lpqp_to_polyhedra.jl")
 include("polyhedra_to_lpqp.jl")

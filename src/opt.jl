@@ -1,7 +1,5 @@
 using MathProgBase
 
-import MathProgBase.LinearQuadraticModel, MathProgBase.loadproblem!, MathProgBase.optimize!, MathProgBase.status, MathProgBase.getobjval, MathProgBase.getsolution, MathProgBase.getunboundedray, MathProgBase.linprog
-
 export AbstractPolyhedraModel
 
 abstract AbstractPolyhedraModel <: MathProgBase.AbstractLinearQuadraticModel
