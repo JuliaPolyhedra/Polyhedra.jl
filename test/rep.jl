@@ -18,3 +18,27 @@
     @test fulldim(ext) == 2
     @test eltype(ext) == Int
 end
+
+@testset "Iterating over ineqs of a SimpleHRepresentation broken #9" begin
+    A = [1 2; 3 4; 5 6]
+    b = [1, 2, 3]
+    ineq = [1, 3]
+    eq = [2]
+    linset = IntSet(2)
+    hrep = SimpleHRepresentation(A, b, linset)
+    for (i, h) in enumerate(hreps(hrep))
+        @test h.a == A[i, :]
+        @test h.β == b[i]
+        @test isa(h, i in linset ? HyperPlane{2, Int} : HalfSpace{2, Int})
+    end
+    for (i, h) in enumerate(ineqs(hrep))
+        @test h.a == A[ineq[i], :]
+        @test h.β == b[ineq[i]]
+        @test isa(h, HalfSpace{2, Int})
+    end
+    for (i, h) in enumerate(eqs(hrep))
+        @test h.a == A[eq[i], :]
+        @test h.β == b[eq[i]]
+        @test isa(h, HyperPlane{2, Int})
+    end
+end
