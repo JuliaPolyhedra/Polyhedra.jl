@@ -99,7 +99,7 @@ end
 nineqs(ine::SimpleHRepresentation) = length(ine) - neqs(ine)
 startineq(ine::SimpleHRepresentation) = nextz(ine.linset, 1)
 doneineq(ine::SimpleHRepresentation, state) = state > length(ine)
-nextineq(ine::SimpleHRepresentation, state) = (HalfSpace(ine.A[state,:], ine.b[state]), nextz(state+1))
+nextineq(ine::SimpleHRepresentation, state) = (HalfSpace(ine.A[state,:], ine.b[state]), nextz(ine.linset, state+1))
 
 # V-Representation
 
