@@ -19,6 +19,23 @@
     @test eltype(ext) == Int
 end
 
+@testset "eltype for some iterators is incorrect #7" begin
+    function collecttest(it, exp_type)
+        @test eltype(it) == exp_type
+        a = collect(it)
+        @test typeof(a) = Vector{exp_type}
+    end
+    hr = SimpleHRepresentation([1 2 3; 4 5 6], [7., 8], IntSet([1]))
+    @test eltype(hr) == Float64
+    @test eltype(hreps(hr)) == HRepElement{3, Float64}
+    @test eltype(ineqs(hr)) == HalfSpace{3, Float64}
+    @test eltype(eqs(hr)) == HyperPlane{3, Float64}
+    vr = SimpleVRepresentation([1 2; 3 4])
+    @test eltype(vreps(vr)) == VRepElement{2, Int}
+    @test eltype(points(vr)) == AbstractPoint{2, Int}
+    @test eltype(rays(vr)) == AbstractRay{2, Int}
+end
+
 @testset "Iterating over ineqs of a SimpleHRepresentation broken #9" begin
     A = [1 2; 3 4; 5 6]
     b = [1, 2, 3]

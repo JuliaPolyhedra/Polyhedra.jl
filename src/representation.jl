@@ -3,7 +3,7 @@ import Base.round, Base.eltype
 # TODO affinehull and sparse
 
 export Representation, HRepresentation, VRepresentation, fulldim
-export HRepIterator, EqIterator, IneqIterator, VRepIterator, RayIterator, PointIterator
+export AbstractRepIterator, AbstractHRepIterator, HRepIterator, EqIterator, IneqIterator, AbstractVRepIterator, VRepIterator, RayIterator, PointIterator
 export Rep
 export changeeltype, changefulldim, changeboth
 
@@ -63,7 +63,11 @@ function checknext(it, i, state, donep, startp)
 end
 
 # convention: ax <= β
-for (rep, HorVRep, low) in [(true, :VRep, "vrep"), (false, :VRep, "point"), (false, :VRep, "ray"), (true, :HRep, "hrep"), (false, :HRep, "ineq"), (false, :HRep, "eq")]
+abstract AbstractRepIterator{N, T}
+abstract AbstractHRepIterator{N, T} <: AbstractRepIterator{N, T}
+abstract AbstractVRepIterator{N, T} <: AbstractRepIterator{N, T}
+
+for (rep, HorVRep, elt, low) in [(true, :VRep, :VRepElement, "vrep"), (false, :VRep, :AbstractPoint, "point"), (false, :VRep, :AbstractRay, "ray"), (true, :HRep, :HRepElement, "hrep"), (false, :HRep, :HalfSpace, "ineq"), (false, :HRep, :HyperPlane, "eq")]
     if rep
         up = uppercase(low[1:2]) * low[3:end]
     else
@@ -77,6 +81,7 @@ for (rep, HorVRep, low) in [(true, :VRep, "vrep"), (false, :VRep, "point"), (fal
     shortcut = Symbol(shortcuts)
     lenp = Symbol("n" * shortcuts)
     isemp = Symbol("has" * shortcuts)
+    abstractit = Symbol("Abstract" * string(HorVRep) * "Iterator")
 
     @eval begin
         export $shortcut, $lenp, $startp, $donep, $nextp, $isemp
@@ -87,7 +92,7 @@ for (rep, HorVRep, low) in [(true, :VRep, "vrep"), (false, :VRep, "point"), (fal
             $nextp(p::$HorVRep)  = error("$($nextp) not implemented for $(typeof(p))")
         end
 
-        type $typename{Nout, Tout, Nin, Tin}
+        type $typename{Nout, Tout, Nin, Tin} <: $abstractit{Nout, Tout}
             ps::Vector
             f::Nullable{Function}
             function $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f)
@@ -100,7 +105,7 @@ for (rep, HorVRep, low) in [(true, :VRep, "vrep"), (false, :VRep, "point"), (fal
         Base.length(it::$typename) = sum([$lenp(p) for p in it.ps])
         Base.isempty(it::$typename) = reduce(&, true, [$isemp(p) for p in it.ps])
         fulldim{N}(it::$typename{N}) = N
-        Base.eltype{N,T}(it::$typename{N,T}) = T
+        Base.eltype{N, T}(it::$typename{N, T}) = $elt{N, T}
 
         Base.start(it::$typename) = checknext(it, 0, nothing, $donep, $startp)
         Base.done(it::$typename, state) = state[1] > length(it.ps)
