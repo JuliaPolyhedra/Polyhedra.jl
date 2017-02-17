@@ -3,4 +3,4 @@ FixedSizeArrays
 GeometryTypes
 DataStructures
 MathProgBase 0.5.10 0.7
-JuMP
+JuMP 0.15.1

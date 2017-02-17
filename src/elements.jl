@@ -1,6 +1,6 @@
 import Base.getindex, Base.vec, Base.dot, Base.cross, Base.-, Base.+
-export HalfSpace, HyperPlane
-export SymPoint, Ray, Line
+export HRepElement, HalfSpace, HyperPlane
+export VRepElement, AbstractPoint, SymPoint, AbstractRay, Ray, Line
 export islin, isray, ispoint, ispoint, coord, lift
 
 typealias MyPoint{N,T} Union{Point{N,T},AbstractArray{T}}
@@ -142,8 +142,10 @@ Base.convert{N,T}(::Type{SymPoint{N,T}}, v::SymPoint{N,T}) = v
 Base.convert{N,T}(::Type{Ray{N,T}}, v::Ray{N,T}) = v
 Base.convert{N,T}(::Type{Line{N,T}}, v::Line{N,T}) = v
 
-typealias FixedVRepElement{N,T} Union{Point{N,T},Vec{N,T},Ray{N,T},Line{N,T},SymPoint{N,T}}
-typealias VRepElement{N,T} Union{FixedVRepElement{N,T},AbstractVector{T}}
+typealias AbstractPoint{N, T} Union{Point{N, T}, AbstractVector{T}, SymPoint{N, T}}
+typealias AbstractRay{N, T} Union{Vec{N, T}, Ray{N, T}, Line{N, T}}
+typealias FixedVRepElement{N,T} Union{Point{N,T}, Vec{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,T}}
+typealias VRepElement{N,T} Union{FixedVRepElement{N,T}, AbstractVector{T}}
 typealias RepElement{N,T} Union{HRepElement{N,T}, VRepElement{N,T}}
 typealias FixedRepElement{N,T} Union{HRepElement{N,T}, FixedVRepElement{N,T}}
 

@@ -3,7 +3,8 @@ using JuMP
 function LPHRepresentation(model::JuMP.Model)
     # Inspired from Joey Huchette's code in ConvexHull.jl
     A = JuMP.prepConstrMatrix(model)
-    c, lb, ub = JuMP.prepProblemBounds(model)
+    c = JuMP.prepAffObjective(model)
+    lb, ub = JuMP.prepConstrBounds(model)
     l, u = model.colLower, model.colUpper
 
     m, n = size(A)
