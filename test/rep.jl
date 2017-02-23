@@ -42,3 +42,15 @@ end
         @test isa(h, HyperPlane{2, Int})
     end
 end
+
+@testset "changefulldim" begin
+    N = 5
+    M = 10
+    T = Int64
+    reps = [SimpleHRepresentation{N, T}, SimpleVRepresentation{N, T}, LiftedHRepresentation{N, T}, LiftedVRepresentation{N, T}]
+    for rep in reps
+        changedrep = changefulldim(rep, M)
+        @test fulldim(changedrep) == M
+        @test eltype(changedrep) == T
+    end
+end
