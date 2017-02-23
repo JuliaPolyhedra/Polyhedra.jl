@@ -71,7 +71,7 @@ function zeropad{ElemT<:HRepElement}(h::ElemT, n::Integer)
         ElemTout = changefulldim(ElemT, fulldim(h) + abs(n))
         T = eltype(ElemT)
         if n < 0
-            aout = [spzeros(T, n); h.a]
+            aout = [spzeros(T, -n); h.a]
         else
             aout = [h.a; spzeros(T, n)]
         end
