@@ -54,3 +54,16 @@ end
         @test eltype(changedrep) == T
     end
 end
+
+@testset "Cartesian product" begin
+    A = [1 2; 3 4; 5 6]
+    a = [7, 8, 9]
+    B = [10 11 12; 13 14 15]
+    b = [16, 17]
+    p1 = SimpleHRepresentation(A, a, IntSet([2]))
+    p2 = SimpleHRepresentation(B, b, IntSet([1]))
+    p = p1 * p2
+    @test p.A == [A zeros(3, 3); zeros(2, 2) B]
+    @test p.b == [a; b]
+    @test p.linset == IntSet([2, 4])
+end

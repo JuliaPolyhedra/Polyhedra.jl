@@ -32,25 +32,28 @@ function usehrep(p1::Polyhedron, p2::Polyhedron)
 end
 
 # Always type of first arg
-@generated function (*){T1<:Rep, T2<:Rep}(p1::T1, p2::T2)
-    if eltype(T1) != eltype(T2)
+@generated function (*){RepT1<:Rep, RepT2<:Rep}(p1::RepT1, p2::RepT2)
+    if eltype(RepT1) != eltype(RepT2)
         error("Cannot take the cartesian product between polyhedra of different element type")
     end
-    T = eltype(T1)
-    N1 = fulldim(T1)
-    N2 = fulldim(T2)
-    hashrep = T1 <: HRepresentation || T2 <: HRepresentation
-    hasvrep = T1 <: VRepresentation || T2 <: VRepresentation
-    Tout = changefulldim(T1, fulldim(T1)+fulldim(T2))
+    T = eltype(RepT1)
+    N1 = fulldim(RepT1)
+    N2 = fulldim(RepT2)
+    Nout = N1 + N2
+    hashrep = RepT1 <: HRepresentation || RepT2 <: HRepresentation
+    hasvrep = RepT1 <: VRepresentation || RepT2 <: VRepresentation
+    RepTout = changefulldim(RepT1, Nout)
     f = (i, x) -> zeropad(x, i == 1 ? N2 : -N1)
     if hashrep && hasvrep
         error("Cannot take the cartesian product between a H-Representation and a V-Representation")
     elseif hashrep || (!hasvrep && usehrep(p1, p2))
         # TODO fastdecompose
-        :($Tout(HRepIterator([p1, p2], $f)))
+        # FIXME Nin, Tin are only the N and T of p1. This does not make sense.
+        #       Do we really need these 2 last parameters ? I guess we should remove them
+        :($RepTout(HRepIterator{$Nout, $T, $N1, $T}([p1, p2], $f)))
     else
         # TODO fastdecompose
-        :($Tout(VRepIterator([p1, p2], $f)))
+        :($RepTout(VRepIterator{$Nout, $T, $N1, $T}([p1, p2], $f)))
     end
 end
 
