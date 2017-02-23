@@ -47,10 +47,10 @@ end
         error("Cannot take the cartesian product between a H-Representation and a V-Representation")
     elseif hashrep || (!hasvrep && usehrep(p1, p2))
         # TODO fastdecompose
-        :(Tout(HRepIterator([p1, p2], f)))
+        :($Tout(HRepIterator([p1, p2], $f)))
     else
         # TODO fastdecompose
-        :(Tout(VRepIterator([p1, p2], f)))
+        :($Tout(VRepIterator([p1, p2], $f)))
     end
 end
 
