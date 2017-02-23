@@ -20,7 +20,7 @@ type LiftedHRepresentation{N, T} <: HRepresentation{N, T}
 end
 
 changeeltype{N,T,S}(::Type{LiftedHRepresentation{N,T}}, ::Type{S})  = LiftedHRepresentation{N,S}
-changeelfulldim{N,T}(::Type{LiftedHRepresentation{N,T}}, M)  = LiftedHRepresentation{M,T}
+changefulldim{N,T}(::Type{LiftedHRepresentation{N,T}}, M)  = LiftedHRepresentation{M,T}
 changeboth{N,T,S}(::Type{LiftedHRepresentation{N,T}}, M, ::Type{S}) = LiftedHRepresentation{M,S}
 
 decomposedfast(rep::LiftedHRepresentation) = false
@@ -113,7 +113,7 @@ type LiftedVRepresentation{N,T} <: VRepresentation{N,T}
 end
 
 changeeltype{N,T,S}(::Type{LiftedVRepresentation{N,T}}, ::Type{S})  = LiftedVRepresentation{N,S}
-changeelfulldim{N,T}(::Type{LiftedVRepresentation{N,T}}, M)  = LiftedVRepresentation{M,T}
+changefulldim{N,T}(::Type{LiftedVRepresentation{N,T}}, M)  = LiftedVRepresentation{M,T}
 changeboth{N,T,S}(::Type{LiftedVRepresentation{N,T}}, M, ::Type{S}) = LiftedVRepresentation{M,S}
 
 decomposedfast(rep::LiftedVRepresentation) = true

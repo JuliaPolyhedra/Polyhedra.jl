@@ -24,7 +24,7 @@ type SimpleHRepresentation{N, T} <: HRepresentation{N, T}
 end
 
 changeeltype{N,T,S}(::Type{SimpleHRepresentation{N,T}}, ::Type{S})  = SimpleHRepresentation{N,S}
-changeelfulldim{N,T}(::Type{SimpleHRepresentation{N,T}}, M)  = SimpleHRepresentation{M,T}
+changefulldim{N,T}(::Type{SimpleHRepresentation{N,T}}, M)  = SimpleHRepresentation{M,T}
 changeboth{N,T,S}(::Type{SimpleHRepresentation{N,T}}, M, ::Type{S}) = SimpleHRepresentation{M,S}
 
 decomposedfast(rep::SimpleHRepresentation) = false
@@ -127,7 +127,7 @@ type SimpleVRepresentation{N,T} <: VRepresentation{N,T}
 end
 
 changeeltype{N,T,S}(::Type{SimpleVRepresentation{N,T}}, ::Type{S})  = SimpleVRepresentation{N,S}
-changeelfulldim{N,T}(::Type{SimpleVRepresentation{N,T}}, M)  = SimpleVRepresentation{M,T}
+changefulldim{N,T}(::Type{SimpleVRepresentation{N,T}}, M)  = SimpleVRepresentation{M,T}
 changeboth{N,T,S}(::Type{SimpleVRepresentation{N,T}}, M, ::Type{S}) = SimpleVRepresentation{M,S}
 
 decomposedfast(rep::SimpleVRepresentation) = true
