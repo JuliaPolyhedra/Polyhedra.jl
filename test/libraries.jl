@@ -9,7 +9,7 @@ function try_import(name::Symbol)
     end
 end
 
-cdd = false # try_import(:CDDLib)
+cdd = try_import(:CDDLib)
 lrs = try_import(:LRSLib)
 
 # Create library lists
