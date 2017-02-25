@@ -1,5 +1,7 @@
 using Polyhedra
 using Base.Test
+using Clp
+lpsolver = Clp.ClpSolver()
 
 include("rep.jl")
 

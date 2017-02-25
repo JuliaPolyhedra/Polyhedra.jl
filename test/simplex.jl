@@ -6,7 +6,7 @@ function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
 
     ine = SimpleHRepresentation(A, b, ls)
     poly1 = polyhedron(ine, lib)
-    @test !isempty(poly1)
+    @test !isempty(poly1, defaultLPsolverfor(poly1, lpsolver))
     inequality_fulltest(poly1, A, b, ls)
     generator_fulltest(poly1, V)
 
@@ -17,7 +17,8 @@ function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
     generator_fulltest(poly2, V)
 
     # x_1 cannot be 2
-    @test isempty(polyhedron(SimpleHRepresentation([A; 1 0], [b; 2], union(ls, IntSet([4]))), lib))
+    poly = polyhedron(SimpleHRepresentation([A; 1 0], [b; 2], union(ls, IntSet([4]))), lib)
+    @test isempty(poly, defaultLPsolverfor(poly, lpsolver))
 
     # We now add the vertex (0, 0)
     V0 = [0 0]

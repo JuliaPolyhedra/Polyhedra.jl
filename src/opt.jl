@@ -42,8 +42,8 @@ function MathProgBase.linprog{N}(c::Vector, p::Rep{N}, solver::MathProgBase.Abst
     end
 end
 
-function Base.isempty{N,T}(p::Polyhedron{N,T})
-    linprog(zeros(T, N), p).status == :Infeasible
+function Base.isempty{N,T}(p::Polyhedron{N,T}, solver::MathProgBase.AbstractMathProgSolver = defaultLPsolverfor(p))
+    linprog(zeros(T, N), p, solver).status == :Infeasible
 end
 
 function ishredundantaux(p::Polyhedron, a, b, strongly, cert, solver)

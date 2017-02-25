@@ -1,3 +1,4 @@
+export defaultLPsolverfor
 # these are the default library packages in order of decreasing precedence
 # for each supported polyhedra type
 
@@ -43,10 +44,14 @@ getlibraryfor{N, T}(p::Polyhedron{N}, ::Type{T}) = getlibraryfor(p, N, T)
 getlibraryfor{N, T}(p::Polyhedron{N, T}, n::Int) = getlibraryfor(p, n, T)
 getlibrary{N, T}(p::Polyhedron{N, T}) = getlibraryfor(p, N, T)
 
-function defaultLPsolverfor{N,T}(p::Rep{N,T})
+function defaultLPsolverfor{N,T}(p::Rep{N,T}, solver=nothing)
     if vrepiscomputed(p)
         SimpleVRepSolver()
     else
-        MathProgBase.defaultLPsolver
+        if solver === nothing
+            error("No LP solver specified")
+        else
+            solver
+        end
     end
 end
