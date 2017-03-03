@@ -84,3 +84,42 @@ end
     @test p.b == [a; b]
     @test p.linset == IntSet([2, 4])
 end
+
+@testset "isempty not working correctly for iterators #17" begin
+    function vtest(vr, nr, np)
+        hasr = nr > 0
+        hasp = np > 0
+        @test nvreps(vr) == length(vreps(vr)) == nr + np
+        @test nrays(vr) == length(rays(vr)) == nr
+        @test npoints(vr) == length(points(vr)) == np
+        @test hasvreps(vr) == !isempty(vreps(vr)) == hasr || hasp
+        @test hasrays(vr) == !isempty(rays(vr)) == hasr
+        @test haspoints(vr) == !isempty(points(vr)) == hasp
+    end
+    vtest(SimpleVRepresentation(zeros(0, 3)), 0, 0)
+    vtest(SimpleVRepresentation(zeros(1, 2)), 0, 1)
+    vtest(SimpleVRepresentation(zeros(0, 4), ones(2, 4)), 2, 0)
+    vtest(SimpleVRepresentation(zeros(2, 1), ones(1, 1)), 1, 2)
+    vtest(LiftedVRepresentation(zeros(0, 2)), 0, 0)
+    vtest(LiftedVRepresentation([1 0; 1 1]), 0, 2)
+    vtest(LiftedVRepresentation([0 1; 0 2]), 2, 0)
+    vtest(LiftedVRepresentation([0 0; 1 1]), 1, 1)
+    function htest(hr, ne, ni)
+        hase = ne > 0
+        hasi = ni > 0
+        @test nhreps(hr) == length(hreps(hr)) == ne + ni
+        @test neqs(hr) == length(eqs(hr)) == ne
+        @test nineqs(hr) == length(ineqs(hr)) == ni
+        @test hashreps(hr) == !isempty(hreps(hr)) == hase || hasi
+        @test haseqs(hr) == !isempty(eqs(hr)) == hase
+        @test hasineqs(hr) == !isempty(ineqs(hr)) == hasi
+    end
+    htest(SimpleHRepresentation(ones(0, 3), zeros(0)), 0, 0)
+    htest(SimpleHRepresentation(ones(1, 2), zeros(1)), 0, 1)
+    htest(SimpleHRepresentation(ones(2, 4), zeros(2), IntSet(1:2)), 2, 0)
+    htest(SimpleHRepresentation(ones(3, 1), zeros(3), IntSet([2])), 1, 2)
+    htest(LiftedHRepresentation(ones(0, 2)), 0, 0)
+    htest(LiftedHRepresentation([0 1; 0 2]), 0, 2)
+    htest(LiftedHRepresentation([0 1; 0 2], IntSet(1:2)), 2, 0)
+    htest(LiftedHRepresentation([0 1; 0 2], IntSet([2])), 1, 1)
+end

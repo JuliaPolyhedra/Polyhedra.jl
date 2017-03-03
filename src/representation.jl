@@ -103,7 +103,7 @@ for (rep, HorVRep, elt, low) in [(true, :VRep, :VRepElement, "vrep"), (false, :V
         $shortcut{N,T}(p::$HorVRep{N,T}, f=nothing) = $typename([p], f)
 
         Base.length(it::$typename) = sum([$lenp(p) for p in it.ps])
-        Base.isempty(it::$typename) = reduce(&, true, [$isemp(p) for p in it.ps])
+        Base.isempty(it::$typename) = !reduce(|, false, $isemp.(it.ps))
         fulldim{N}(it::$typename{N}) = N
         Base.eltype{N, T}(it::$typename{N, T}) = $elt{N, T}
 
@@ -136,7 +136,7 @@ Base.isempty(hrep::HRepresentation) = hashreps(hrep)
 nhreps(hrep::HRep) = neqs(hrep) + nineqs(hrep)
 
 haseqs(hrep::HRep)   = neqs(hrep) > 0
-hasineqs(hrep::HRep) = nhreps(hrep) > 0
+hasineqs(hrep::HRep) = nineqs(hrep) > 0
 hashreps(hrep::HRep) = nhreps(hrep) > 0
 
 starthrep(hrep::HRep) = checknext(hrep, 0, nothing, [doneeq, doneineq], [starteq, startineq])
