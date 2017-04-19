@@ -29,6 +29,23 @@ function loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Abs
     loadpolyhedron!(p, filename, [:ext, :ine][s])
 end
 
+function Base.convert{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
+    f = (i, x) -> changeeltype(typeof(x), S)(x)
+    if !hrepiscomputed(p) && vrepiscomputed(p)
+        if decomposedvfast(p)
+            polyhedron(PointIterator([p], f), RayIterator([p], f), getlibraryfor(p, N, S))
+        else
+            polyhedron(VRepIterator([p], f), getlibraryfor(p, N, S))
+        end
+    else
+        if decomposedvfast(p)
+            polyhedron(IneqIterator([p], f), EqIterator([p], f), getlibraryfor(p, N, S))
+        else
+            polyhedron(HRepIterator([p], f), getlibraryfor(p, N, S))
+        end
+    end
+end
+
 # function transformgenerators{N}(p::Polyhedron{N}, P::AbstractMatrix)
 #   # Each generator x is transformed to P * x
 #   # If P is orthogonal, the new axis are the rows of P.
@@ -76,42 +93,6 @@ end
 #   end
 # end
 
-
-# TODO rewrite, it is just cutting a cone with a half-space, nothing more
-# function radialprojectoncut{N}(p::Polyhedron{N}, cut::Vector, at)
-#   if myeqzero(at)
-#     error("at is zero")
-#   end
-#   if length(cut) != N
-#     error("The dimensions of the cut and of the polyhedron do not match")
-#   end
-#   ext = SimpleVRepresentation(getgenerators(p))
-#   V = copy(ext.V)
-#   R = copy(ext.R)
-#   for i in 1:size(V, 1)
-#     v = vec(ext.V[i,:])
-#     if !myeq(dot(cut, v), at)
-#       error("The nonhomogeneous part should be in the cut")
-#     end
-#   end
-#   for i in 1:size(R, 1)
-#     v = vec(ext.R[i,:])
-#     if myeqzero(v)
-#       # It can happen since I do not necessarily have removed redundancy
-#       v = zeros(eltype(v), length(v))
-#     elseif !myeq(dot(cut, v), at)
-#       if myeqzero(dot(cut, v))
-#         error("A ray is parallel to the cut") # FIXME is ok if some vertices are on the cut ? (i.e. at == 0, cut is not needed)
-#       end
-#       v = v * at / dot(cut, v)
-#     end
-#     R[i,:] = v
-#   end
-#   # no more rays nor linearity since at != 0
-#   ext2 = SimpleVRepresentation([V; R])
-#   polyhedron(ext2, getlibraryfor(p, eltype(ext2)))
-# end
-
 #function fulldim{N,T}(p::Polyhedron{N,T})
 #  N
 #end
@@ -126,9 +107,10 @@ end
 #   typeof(p)(affinehull(getinequalities(p)))
 # end
 
-function isvredundant{N,T}(p::Polyhedron{N,T}, v::VRepElement)
+function isvredundant{N,T}(p::Polyhedron{N,T}, v::VRepElement; strongly = false, cert = false)
+    # FIXME strongly not used
     for h in hreps(p)
-        if vertex in h
+        if !(v in h)
             return cert ? (false, Nullable{HRepElement{N,T}}(h)) : false
         end
     end

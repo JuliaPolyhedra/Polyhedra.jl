@@ -32,7 +32,8 @@ function usehrep(p1::Polyhedron, p2::Polyhedron)
 end
 
 # Always type of first arg
-@generated function (*){RepT1<:Rep, RepT2<:Rep}(p1::RepT1, p2::RepT2)
+#@generated
+function (*){RepT1<:Rep, RepT2<:Rep}(p1::RepT1, p2::RepT2)
     if eltype(RepT1) != eltype(RepT2)
         error("Cannot take the cartesian product between polyhedra of different element type")
     end
@@ -50,10 +51,11 @@ end
         # TODO fastdecompose
         # FIXME Nin, Tin are only the N and T of p1. This does not make sense.
         #       Do we really need these 2 last parameters ? I guess we should remove them
-        :($RepTout(HRepIterator{$Nout, $T, $N1, $T}([p1, p2], $f)))
+        RepTout(HRepIterator{Nout, T, N1, T}([p1, p2], f))
     else
         # TODO fastdecompose
-        :($RepTout(VRepIterator{$Nout, $T, $N1, $T}([p1, p2], $f)))
+        #:($RepTout(VRepIterator{$Nout, $T, $N1, $T}([p1, p2], $f)))
+        RepTout(VRepIterator{Nout, T, N1, T}([p1, p2], f))
     end
 end
 
