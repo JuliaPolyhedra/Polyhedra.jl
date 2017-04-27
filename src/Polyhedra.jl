@@ -17,6 +17,7 @@ include("mycomp.jl")
 include("representation.jl")
 include("repop.jl")
 include("operations.jl")
+include("projection.jl")
 
 # Implementations
 include("lphrep.jl")
