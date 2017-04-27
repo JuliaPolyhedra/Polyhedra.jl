@@ -1,8 +1,11 @@
-export eliminate, project
-implementseliminationmethod(p::Polyhedron, ::Type{Val{:FourierMotzkin}})             = false
-eliminate(p::Polyhedron, delset, ::Type{Val{:FourierMotzkin}})               = error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
-implementseliminationmethod(p::Polyhedron, ::Type{Val{:BlockElimination}})           = false
-eliminate(p::Polyhedron, delset, ::Type{Val{:BlockElimination}})             = error("Block elimination not implemented for $(typeof(p))")
+export implementseliminationmethod, eliminate, project
+project{N}(p::Polyhedron{N}, pset) = eliminate(p, setdiff(1:N, pset))
+project{N}(p::Polyhedron{N}, pset, method) = eliminate(p, setdiff(1:N, pset), method)
+
+implementseliminationmethod(p::Polyhedron, ::Type{Val{:FourierMotzkin}})   = false
+eliminate(p::Polyhedron, delset, ::Type{Val{:FourierMotzkin}})             = error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
+implementseliminationmethod(p::Polyhedron, ::Type{Val{:BlockElimination}}) = false
+eliminate(p::Polyhedron, delset, ::Type{Val{:BlockElimination}})           = error("Block elimination not implemented for $(typeof(p))")
 
 eliminate(p::Polyhedron, method::Symbol) = eliminate(p, Val{method})
 eliminate(p::Polyhedron, delset, method::Symbol) = eliminate(p, delset, Val{method})
@@ -12,7 +15,7 @@ eliminate{N}(p::Polyhedron{N}, method::Type{Val{:ProjectGenerators}}) = eliminat
 function eliminate{N}(p::Polyhedron{N}, delset=IntSet(N))
     fm = implementseliminationmethod(p, Val{:FourierMotzkin})
     be = implementseliminationmethod(p, Val{:BlockElimination})
-    if (!fm && !be) || generatorsarecomputed(p)
+    if (!fm && !be) || vrepiscomputed(p)
         method = :ProjectGenerators
     elseif fm && (!be || (length(delset) == 1 && N in delset))
         method = :FourierMotzkin

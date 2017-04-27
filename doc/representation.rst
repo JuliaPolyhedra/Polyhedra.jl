@@ -23,10 +23,11 @@ This set of inequalities can be written in the matrix form :math:`Ax \leq b` whe
 
 .. math::
 
-   A = \begin{pmatrix}1 & 1\\1 & -1\\1 & 0\end{pmatrix}, b = \begin{pmatrix}1\\0\\0\end{pmatrix}.
+   A = \begin{pmatrix}1 & 1\\1 & -1\\-1 & 0\end{pmatrix}, b = \begin{pmatrix}1\\0\\0\end{pmatrix}.
 
 Let's create this H-representation using the concrete subtype ``SimpleHRepresentation`` of the abstract type ``HRepresentation``.::
 
+    julia> using Polyhedra
     julia> A = [1 1;1 -1;-1 0]
     julia> b = [1,0,0]
     julia> hrep = SimpleHRepresentation(A, b)
