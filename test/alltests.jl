@@ -2,6 +2,9 @@ using Polyhedra
 
 include("utils.jl")
 
+# Basic
+include("basictests.jl")
+
 # JuMP
 include("hypercube.jl")
 include("crosspolytope.jl")

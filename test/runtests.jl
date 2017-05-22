@@ -1,15 +1,25 @@
 using Polyhedra
 using Base.Test
-using Clp
-lpsolver = Clp.ClpSolver()
+
+include("simplepolyhedron.jl")
 
 include("rep.jl")
 
 include("default.jl")
 
-include("alltests.jl")
-
 include("libraries.jl")
+if !isempty(lp_solvers)
+    lpsolver = first(lp_solvers)
+end
+
+include("alltests.jl")
+for lib in libraries
+    basicpolyhedrontests(lib)
+end
+
+include("rep.jl")
+
+include("default.jl")
 
 for (testname, testfun) in alltests
     @testset "$testname tests" begin

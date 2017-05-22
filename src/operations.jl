@@ -1,20 +1,15 @@
 # Mandatory
 export polyhedron, hrep, vrep, hrepiscomputed, vrepiscomputed, loadpolyhedron!
 
-if VERSION < v"0.5-"
-  export normalize
-  normalize(v,p=2) = v / norm(v,p)
-end
-
 polyhedron{N, T}(rep::Representation{N, T}) = polyhedron(rep, getlibraryfor(N, T))
 Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})                             = error("push! not implemented for $(typeof(p)) for HRepresentation")
 Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})                             = error("push! not implemented for $(typeof(p)) for VRepresentation")
 hrepiscomputed(p::Polyhedron)                                                        = error("hrepiscomputed not implemented for $(typeof(p))")
-hrep(p::Polyhedron)                                                               = error("hrep not implemented for $(typeof(p))")
+hrep(p::Polyhedron)                                                                  = error("hrep not implemented for $(typeof(p))")
 vrepiscomputed(p::Polyhedron)                                                        = error("vrepiscomputed not implemented for $(typeof(p))")
-vrep(p::Polyhedron)                                                               = error("vrep not implemented for $(typeof(p))")
-#loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ine}}) = error("not implemented")
-#loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("not implemented") # FIXME ExtFileVRepresentation or just ExtFile
+vrep(p::Polyhedron)                                                                  = error("vrep not implemented for $(typeof(p))")
+loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ine}}) = error("loadpolyhedron! not implemented for .ine")
+loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("loadpolyhedron! not implemented for .ext") # FIXME ExtFileVRepresentation or just ExtFile
 
 # These can optionally be reimplemented for speed by a library
 export numberofinequalities, numberofgenerators, dim, transforminequalities, transformgenerators, radialprojectoncut
@@ -33,15 +28,15 @@ function Base.convert{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
     f = (i, x) -> changeeltype(typeof(x), S)(x)
     if !hrepiscomputed(p) && vrepiscomputed(p)
         if decomposedvfast(p)
-            polyhedron(PointIterator([p], f), RayIterator([p], f), getlibraryfor(p, N, S))
+            polyhedron(points=PointIterator{N, S, N, T}([p], f), rays=RayIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
         else
-            polyhedron(VRepIterator([p], f), getlibraryfor(p, N, S))
+            polyhedron(VRepIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
         end
     else
         if decomposedvfast(p)
-            polyhedron(IneqIterator([p], f), EqIterator([p], f), getlibraryfor(p, N, S))
+            polyhedron(ineqs=IneqIterator{N, S, N, T}([p], f), eqs=EqIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
         else
-            polyhedron(HRepIterator([p], f), getlibraryfor(p, N, S))
+            polyhedron(HRepIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
         end
     end
 end
