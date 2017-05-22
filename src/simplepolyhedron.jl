@@ -10,18 +10,25 @@ end
 
 getlibraryfor{T}(p::SimplePolyhedron, N::Int, ::Type{T}) = SimplePolyhedraLibrary()
 
-function polyhedron{N, T}(hrep::HRepresentation{N, T}, ::SimplePolyhedraLibrary)
-    SimplePolyhedron{N, T}(hrep, nothing)
+function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::HRepresentation{N, T})
+    SimplePolyhedron{N, T}(rep, nothing)
 end
-function polyhedron{N, T}(vrep::VRepresentation{N, T}, ::SimplePolyhedraLibrary)
-    SimplePolyhedron{N, T}(nothing, vrep)
+function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::VRepresentation{N, T})
+    SimplePolyhedron{N, T}(nothing, rep)
+end
+function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::HRepIterator{N, T})
+    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(rep))
+end
+function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::VRepIterator{N, T})
+    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rep))
 end
 
-function polyhedron{N, T}(rep::HRepIterator{N, T}, lib::SimplePolyhedraLibrary)
-    polyhedron(SimpleHRepresentation{N, T}(rep), lib)
+
+function polyhedron{N, T}(rep::Representation{N, T}, ::SimplePolyhedraLibrary)
+    SimplePolyhedron{N, T}(rep)
 end
-function polyhedron{N, T}(rep::VRepIterator{N, T}, lib::SimplePolyhedraLibrary)
-    polyhedron(SimpleVRepresentation{N, T}(rep), lib)
+function polyhedron{N, T}(repit::Union{HRepIterator{N, T}, VRepIterator{N, T}}, lib::SimplePolyhedraLibrary)
+    SimplePolyhedron{N, T}(repit)
 end
 function polyhedron(lib::SimplePolyhedraLibrary; eqs=nothing, ineqs=nothing, points=nothing, rays=nothing)
     its = [eqs, ineqs, points, rays]
