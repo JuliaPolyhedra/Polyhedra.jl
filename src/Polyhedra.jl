@@ -2,12 +2,13 @@ __precompile__()
 
 module Polyhedra
 
-using FixedSizeArrays, GeometryTypes
+using GeometryTypes
+using StaticArrays.FixedSizeArrays: FixedVector
 
 export PolyhedraLibrary, Polyhedron, getlibrary, getlibraryfor
 
-abstract PolyhedraLibrary
-abstract Polyhedron{N,T} <: GeometryPrimitive{N,T}
+abstract type PolyhedraLibrary end
+abstract type Polyhedron{N,T} <: GeometryPrimitive{N,T} end
 
 import Base.intersect, Base.+, Base.*, Base.isempty, Base.copy, Base.push!, Base.length, Base.eltype, Base.start, Base.done, Base.next
 

@@ -2,7 +2,7 @@ using MathProgBase
 
 export AbstractPolyhedraModel
 
-abstract AbstractPolyhedraModel <: MathProgBase.AbstractLinearQuadraticModel
+abstract type AbstractPolyhedraModel <: MathProgBase.AbstractLinearQuadraticModel end
 
 # see the cheat in lpqp_to_polyhedra
 #function PolyhedraModel(solver::MathProgBase.AbstractMathProgSolver)

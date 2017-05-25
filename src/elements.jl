@@ -3,12 +3,12 @@ export HRepElement, HalfSpace, HyperPlane
 export VRepElement, AbstractPoint, SymPoint, AbstractRay, Ray, Line
 export islin, isray, ispoint, ispoint, coord, lift
 
-typealias MyPoint{N,T} Union{Point{N,T},AbstractArray{T}}
+const MyPoint{N,T} = Union{Point{N,T},AbstractArray{T}}
 mypoint{T}(::Type{T}, a::AbstractArray) = AbstractArray{T}(a)
 mypoint{T}(::Type{T}, a::AbstractArray{T}) = a
 mypoint{N,T}(::Type{T}, a::Point{N}) = Point{N,T}(a)
 mypoint{N,T}(::Type{T}, a::Point{N,T}) = a
-typealias MyVec{N,T} Union{Vec{N,T},AbstractArray{T}}
+const MyVec{N,T} = Union{Vec{N,T},AbstractArray{T}}
 myvec{T}(::Type{T}, a::AbstractArray) = AbstractArray{T}(a)
 myvec{T}(::Type{T}, a::AbstractArray{T}) = a
 myvec{N,T}(::Type{T}, a::Vec{N}) = Vec{N,T}(a)
@@ -24,7 +24,7 @@ mydot(f::FixedVector, v::FixedVector) = dot(f, v)
 vecconv{T}(::Type{T}, a::AbstractVector) = AbstractVector{T}(a)
 vecconv{T}(::Type{T}, a::FixedVector) = FixedVector{T}(a)
 
-abstract HRepElement{N,T}
+abstract type HRepElement{N,T} end
 
 # ⟨a, x⟩ <= β
 type HalfSpace{N,T} <: HRepElement{N,T}
@@ -142,12 +142,12 @@ Base.convert{N,T}(::Type{SymPoint{N,T}}, v::SymPoint{N,T}) = v
 Base.convert{N,T}(::Type{Ray{N,T}}, v::Ray{N,T}) = v
 Base.convert{N,T}(::Type{Line{N,T}}, v::Line{N,T}) = v
 
-typealias AbstractPoint{N, T} Union{Point{N, T}, AbstractVector{T}, SymPoint{N, T}}
-typealias AbstractRay{N, T} Union{Vec{N, T}, Ray{N, T}, Line{N, T}}
-typealias FixedVRepElement{N,T} Union{Point{N,T}, Vec{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,T}}
-typealias VRepElement{N,T} Union{FixedVRepElement{N,T}, AbstractVector{T}}
-typealias RepElement{N,T} Union{HRepElement{N,T}, VRepElement{N,T}}
-typealias FixedRepElement{N,T} Union{HRepElement{N,T}, FixedVRepElement{N,T}}
+const AbstractPoint{N, T} = Union{Point{N, T}, AbstractVector{T}, SymPoint{N, T}}
+const AbstractRay{N, T} = Union{Vec{N, T}, Ray{N, T}, Line{N, T}}
+const FixedVRepElement{N,T} = Union{Point{N,T}, Vec{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,T}}
+const VRepElement{N,T} = Union{FixedVRepElement{N,T}, AbstractVector{T}}
+const RepElement{N,T} = Union{HRepElement{N,T}, VRepElement{N,T}}
+const FixedRepElement{N,T} = Union{HRepElement{N,T}, FixedVRepElement{N,T}}
 
 fulldim{N}(e::FixedRepElement{N}) = N
 eltype{N,T}(e::FixedRepElement{N, T}) = T
@@ -167,7 +167,7 @@ ispoint{T<:Union{Vec,Ray,Line}}(v::T) = false
 coord{ElemT<:Union{Point,AbstractVector,Vec}}(v::ElemT) = v
 coord{ElemT<:Union{HRepElement,SymPoint,Ray,Line}}(v::ElemT) = v.a
 
-typealias VRepElementContainer Union{SymPoint, Ray, Line}
+const VRepElementContainer = Union{SymPoint, Ray, Line}
 
 @generated function (*){ElemT<:FixedVRepElement}(P::Matrix, v::ElemT)
     if ElemT <: VRepElementContainer

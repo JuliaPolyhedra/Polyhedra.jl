@@ -7,15 +7,15 @@ export AbstractRepIterator, AbstractHRepIterator, HRepIterator, EqIterator, Ineq
 export Rep
 export changeeltype, changefulldim, changeboth
 
-abstract Representation{N, T <: Real}
-abstract HRepresentation{N,T} <: Representation{N,T}
-abstract VRepresentation{N,T} <: Representation{N,T}
+abstract type Representation{N, T <: Real} end
+abstract type HRepresentation{N,T} <: Representation{N,T} end
+abstract type VRepresentation{N,T} <: Representation{N,T} end
 
 export Rep, HRep, VRep
 
-typealias  Rep{N,T} Union{ Representation{N,T}, Polyhedron{N,T}}
-typealias HRep{N,T} Union{HRepresentation{N,T}, Polyhedron{N,T}}
-typealias VRep{N,T} Union{VRepresentation{N,T}, Polyhedron{N,T}}
+const  Rep{N,T} = Union{ Representation{N,T}, Polyhedron{N,T}}
+const HRep{N,T} = Union{HRepresentation{N,T}, Polyhedron{N,T}}
+const VRep{N,T} = Union{VRepresentation{N,T}, Polyhedron{N,T}}
 
 Base.copy(rep::Rep)            = error("copy not implemented for $(typeof(rep))")
 
@@ -63,9 +63,9 @@ function checknext(it, i, state, donep, startp)
 end
 
 # convention: ax <= β
-abstract AbstractRepIterator{N, T}
-abstract AbstractHRepIterator{N, T} <: AbstractRepIterator{N, T}
-abstract AbstractVRepIterator{N, T} <: AbstractRepIterator{N, T}
+abstract type AbstractRepIterator{N, T} end
+abstract type AbstractHRepIterator{N, T} <: AbstractRepIterator{N, T} end
+abstract type AbstractVRepIterator{N, T} <: AbstractRepIterator{N, T} end
 
 for (rep, HorVRep, elt, low) in [(true, :VRep, :VRepElement, "vrep"), (false, :VRep, :AbstractPoint, "point"), (false, :VRep, :AbstractRay, "ray"), (true, :HRep, :HRepElement, "hrep"), (false, :HRep, :HalfSpace, "ineq"), (false, :HRep, :HyperPlane, "eq")]
     if rep
