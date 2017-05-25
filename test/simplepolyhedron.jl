@@ -18,4 +18,8 @@ end
     @test_throws ErrorException vrep(p)
     @test_throws ErrorException loadpolyhedron!(p, "test", "ine")
     @test_throws ErrorException loadpolyhedron!(p, "test", "ext")
+    for method in (Val{:FourierMotzkin}, Val{:BlockElimination})
+        @test !implementseliminationmethod(p, method)
+        @test_throws ErrorException eliminate(p, [1], method)
+    end
 end

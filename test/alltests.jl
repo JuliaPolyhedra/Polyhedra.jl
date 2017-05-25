@@ -17,6 +17,7 @@ include("nonfulldimensional.jl")
 include("simplex.jl")
 include("permutahedron.jl")
 include("board.jl")
+include("docexample.jl")
 
 alltests = Tuple{String, Function}[]
 push!(alltests, ("Hypercube in 2 dimensions", lib->hypercubetest(lib, 2)))
@@ -26,6 +27,7 @@ push!(alltests, ("Cross Polytope in 2 dimensions", lib->crosspolytopetest(lib, 2
 push!(alltests, ("The ex1 example", ex1test))
 push!(alltests, ("Infeasible in 2 dimensions", lib->infeasibletest(lib, 2)))
 push!(alltests, ("Non full-dimensional", nonfulldimensionaltest))
+push!(alltests, ("Doc example", doctest))
 push!(alltests, ("Simplex", simplextest))
 push!(alltests, ("Permutahedron", permutahedrontest))
 push!(alltests, ("Board", boardtest))

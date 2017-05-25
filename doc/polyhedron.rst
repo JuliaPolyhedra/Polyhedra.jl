@@ -144,7 +144,7 @@ This means that the H-representation obtained by eliminating :math:`x_1` is:
 where :math:`x_1` in the H-representation above represents :math:`x_2` in the previous one.
 This can be obtained as follows::
 
-    julia> poly_x2 = eliminate(poly, IntSet([1]))
+    julia> poly_x2 = eliminate(poly, [1])
     julia> hrep(poly_x2)
     H-representation
     begin
@@ -155,7 +155,7 @@ This can be obtained as follows::
 
 There is two methods of computing the elimination implemented in CDDLib: Fourier-Motzkin elimination and block elimination.
 As written by K. Fukuda in CDD's documentation, "[Block elimination] might be a faster way to eliminate variables than the repeated [Fourier-Motzkin elimination] when the number of variables to eliminate is large".
-You can specify the method to use as a third argument, e.g. ``eliminate(poly, IntSet([1]), :FourierMotzkin)``, ``eliminate(poly, IntSet([1]), :BlockElimination)``.
+You can specify the method to use as a third argument, e.g. ``eliminate(poly, [1], :FourierMotzkin)``, ``eliminate(poly, [1], :BlockElimination)``.
 A third method can be chosen: ``:ProjectGenerators``.
 It computes the V-representation and then project each of its elements.
 This is the method of choice when the V-representation is already computed.
