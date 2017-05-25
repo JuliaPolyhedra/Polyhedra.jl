@@ -1,4 +1,3 @@
-using FixedSizeArrays
 # I only import it and do not use "using" so that Datastructures.status does not conflict with MathProgBase.status
 import DataStructures
 import GeometryTypes.decompose, GeometryTypes.isdecomposable
@@ -185,7 +184,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
 
     end
     ntri = length(triangles)
-    pts  = Vector{FixedSizeArrays.Point{3,RT}}(3*ntri)
+    pts  = Vector{GeometryTypes.Point{3,RT}}(3*ntri)
     faces   = Vector{GeometryTypes.Face{3,Int,0}}(ntri)
     ns = Vector{GeometryTypes.Normal{3,RT}}(3*ntri)
     for i in 1:ntri
@@ -222,7 +221,7 @@ function decompose{N, T1, T2}(PT::Type{Point{N, T1}}, poly::Polyhedron{N, T2})
     points = fulldecompose(poly)[1]
     map(PT, points)
 end
-function decompose{N, T, O, T2}(FT::Type{Face{N, T, O}}, poly::Polyhedron{3, T2})
+function decompose{N, T, T2}(FT::Type{Face{N, T}}, poly::Polyhedron{3, T2})
     faces = fulldecompose(poly)[2]
     decompose(FT, faces)
 end
