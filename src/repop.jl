@@ -67,7 +67,9 @@ function (*){RepT<:HRep}(rep::RepT, P::AbstractMatrix)
     end
     Nout = size(P, 2)
     Tout = mypromote_type(eltype(RepT), eltype(P))
-    RepTout = lazychangeboth(RepT, Nout, Tout)
+    if RepT <: HRepresentation
+        RepTout = lazychangeboth(RepT, Nout, Tout)
+    end
     f = (i, h) -> h * P
     if decomposedhfast(rep)
         eqs = EqIterator{Nout,Tout,Nin,Tin}([rep], f)

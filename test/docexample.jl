@@ -16,5 +16,5 @@ function doctest(lib::PolyhedraLibrary)
         inequality_fulltest(eliminate(p, [1], Val{:BlockElimination}), Ap, bp, IntSet())
         inequality_fulltest(project(p, [2], Val{:BlockElimination}), Ap, bp, IntSet())
     end
-    inequality_fulltest(project(p, [0; 1]), Ap, bp, IntSet())
+    inequality_fulltest(project(p, reshape([0, 1], 2, 1)), Ap, bp, IntSet())
 end
