@@ -1,4 +1,5 @@
 Combinatorics
-Clp
-CDDLib
+GLPK
+GLPKMathProgInterface
 LRSLib
+CDDLib

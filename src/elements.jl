@@ -15,7 +15,7 @@ myvec{N,T}(::Type{T}, a::Vec{N}) = Vec{N,T}(a)
 myvec{N,T}(::Type{T}, a::Vec{N,T}) = a
 
 mydot(a, b) = sum(map(*, a, b))
-mydot(a::AbstractVector, b::AbstractVector) = dot(f, v)
+mydot(a::AbstractVector, b::AbstractVector) = dot(a, b)
 mydot(f::FixedVector, v::FixedVector) = dot(f, v)
 #mydot{T<:Union{Ray,Line}}(a::T, b::T) = mydot(a.r, b.r)
 #mydot{T<:Union{Ray,Line}}(a, b::T) = mydot(a, b.r)
@@ -205,19 +205,19 @@ changeeltype{VecT<:AbstractVector,Tout}(::Type{VecT}, ::Type{Tout}) = AbstractVe
 changefulldim{VecT<:AbstractVector}(::Type{VecT}, Nout) = VecT
 changeboth{VecT<:AbstractVector,Tout}(::Type{VecT}, Nout, ::Type{Tout}) = AbstractVector{Tout}
 
-Base.in{N}(h::HalfSpace{N}, r::Vec{N}) = mynonpos(mydot(h.a, r))
-Base.in{N}(h::HalfSpace{N}, r::Ray{N}) = mynonpos(mydot(h.a, r.r))
-Base.in{N}(h::HalfSpace{N}, l::Line{N}) = mynonpos(mydot(h.a, l.r))
-Base.in{N}(h::HalfSpace{N}, p::Point{N}) = myleq(mydot(h.a, p), β)
-Base.in{N}(h::HalfSpace{N}, p::AbstractVector) = myleq(mydot(h.a, p), β)
-Base.in{N}(h::HalfSpace{N}, p::SymPoint{N}) = myleq(mydot(h.a, p.p), β)
+Base.in{N}(r::Vec{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, r))
+Base.in{N}(r::Ray{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, r.r))
+Base.in{N}(l::Line{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, l.r))
+Base.in{N}(p::Point{N}, h::HalfSpace{N}) = myleq(mydot(h.a, p), h.β)
+Base.in{N}(p::AbstractVector, h::HalfSpace{N}) = myleq(mydot(h.a, p), h.β)
+Base.in{N}(p::SymPoint{N}, h::HalfSpace{N}) = myleq(mydot(h.a, p.p), h.β)
 
-Base.in{N}(h::HyperPlane{N}, r::Vec{N}) = myeqzero(mydot(h.a, r))
-Base.in{N}(h::HyperPlane{N}, r::Ray{N}) = myeqzero(mydot(h.a, r.r))
-Base.in{N}(h::HyperPlane{N}, l::Line{N}) = myeqzero(mydot(h.a, l.r))
-Base.in{N}(h::HyperPlane{N}, p::Point{N}) = myeq(mydot(h.a, p), β)
-Base.in{N}(h::HyperPlane{N}, p::AbstractVector) = myeq(mydot(h.a, p), β)
-Base.in{N}(h::HyperPlane{N}, p::SymPoint{N}) = myeq(mydot(h.a, p.p), β)
+Base.in{N}(r::Vec{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, r))
+Base.in{N}(r::Ray{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, r.r))
+Base.in{N}(l::Line{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, l.r))
+Base.in{N}(p::Point{N}, h::HyperPlane{N}) = myeq(mydot(h.a, p), h.β)
+Base.in{N}(p::AbstractVector, h::HyperPlane{N}) = myeq(mydot(h.a, p), h.β)
+Base.in{N}(p::SymPoint{N}, h::HyperPlane{N}) = myeq(mydot(h.a, p.p), h.β)
 
 import Base.vec
 function Base.vec{N,T}(x::FixedVector{N,T})

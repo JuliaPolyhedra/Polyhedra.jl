@@ -101,6 +101,17 @@ startineq(ine::SimpleHRepresentation) = nextz(ine.linset, 1)
 doneineq(ine::SimpleHRepresentation, state) = state > length(ine)
 nextineq(ine::SimpleHRepresentation, state) = (HalfSpace(ine.A[state,:], ine.b[state]), nextz(ine.linset, state+1))
 
+function filterintset(J::IntSet, I)
+    K = IntSet()
+    for (idx, i) in enumerate(I)
+        if i in J
+            push!(K, idx)
+        end
+    end
+    K
+end
+Base.getindex(h::SimpleHRepresentation, I::AbstractArray) = SimpleHRepresentation(h.A[I, :], h.b[I], filterintset(h.linset, I))
+
 # V-Representation
 
 type SimpleVRepresentation{N,T} <: VRepresentation{N,T}
@@ -110,10 +121,7 @@ type SimpleVRepresentation{N,T} <: VRepresentation{N,T}
     Rlinset::IntSet
 
     function SimpleVRepresentation(V::AbstractMatrix{T}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet())
-        if length(R) > 0 && size(R, 2) != N
-            error("dimension does not match")
-        end
-        if length(V) > 0 && size(V, 2) != N
+        if (length(R) > 0 && size(R, 2) != N) || (length(V) > 0 && size(V, 2) != N)
             error("dimension does not match")
         end
         if ~isempty(Vlinset) && last(Vlinset) > size(V, 1)

@@ -142,9 +142,9 @@ This means that the H-representation obtained by eliminating :math:`x_1` is:
    x_1 & \geq 0.
 
 where :math:`x_1` in the H-representation above represents :math:`x_2` in the previous one.
-This can be obtained as follows:
+This can be obtained as follows::
 
-    julia> poly_x2 = eliminate(poly, IntSet([1]))
+    julia> poly_x2 = eliminate(poly, [1])
     julia> hrep(poly_x2)
     H-representation
     begin
@@ -153,14 +153,14 @@ This can be obtained as follows:
      0//1 1//1
     end
 
-There is two methods of computing the elimination implemented in `CDDLib`: Fourier-Motzkin elimination and block elimination.
+There is two methods of computing the elimination implemented in CDDLib: Fourier-Motzkin elimination and block elimination.
 As written by K. Fukuda in CDD's documentation, "[Block elimination] might be a faster way to eliminate variables than the repeated [Fourier-Motzkin elimination] when the number of variables to eliminate is large".
-You can specify the method to use as a third argument, e.g. `eliminate(poly, IntSet([1]), :FourierMotzkin)`, `eliminate(poly, IntSet([1]), :BlockElimination)`.
-A third method can be chosen: `:ProjectGenerators`.
+You can specify the method to use as a third argument, e.g. ``eliminate(poly, [1], :FourierMotzkin)``, ``eliminate(poly, [1], :BlockElimination)``.
+A third method can be chosen: ``:ProjectGenerators``.
 It computes the V-representation and then project each of its elements.
 This is the method of choice when the V-representation is already computed.
 
 If nothing is specified as in the block of code above, the behavior depends on the polyhedral library.
-If neither Fourier-Motzkin nor block elimination is implemented or if the V-representation is already computed then `:ProjectGenerators` is chosen.
-Otherwise, Polyhedra lets the library decide. In CDDLib, `:FourierMotzkin` is chosen when only the last dimension needs to be eliminated and `BlockElimination` is chosen otherwise.
+If neither Fourier-Motzkin nor block elimination is implemented or if the V-representation is already computed then ``:ProjectGenerators`` is chosen.
+Otherwise, Polyhedra lets the library decide. In CDDLib, ``:FourierMotzkin`` is chosen when only the last dimension needs to be eliminated and ``:BlockElimination`` is chosen otherwise.
 Note that CDDLib only supports projecting the last trailing dimensions.
