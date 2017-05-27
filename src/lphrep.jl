@@ -93,29 +93,24 @@ function (::Type{LPHRepresentation{N, T}}){N,T}(it::HRepIterator{N, T})
     end
     LPHRepresentation{N, T}(A, l, u, lb, ub)
 end
-function (::Type{LPHRepresentation{N, T}}){N,T}(;eqs::Nullable{EqIterator{N, T}}=nothing, ineq::Nullable{IneqIterator{N, T}}=nothing)
-    neq = isnull(eqs) ? 0 : length(eqs)
-    nineq = isnull(ineqs) ? 0 : length(ineqs)
-    nhrep = neq + nineq
+function (::Type{LPHRepresentation{N, T}}){N,T}(eqs, ineqs)
+    neq = length(eqs)
+    nhrep = neq + length(ineqs)
     A = Matrix{T}(nhrep, N)
     lb = Vector{T}(nhrep)
     ub = Vector{T}(nhrep)
     MathProgBase.HighLevelInterface.warn_no_inf(T)
     l = fill(typemin(T), N)
     u = fill(typemax(T), N)
-    if !(eqs === nothing)
-        for (i, h) in enumerate(get(eqs))
-            A[i,:] = h.a
-            lb[i] = h.β
-            ub[i] = h.β
-        end
+    for (i, h) in enumerate(eqs)
+        A[i,:] = h.a
+        lb[i] = h.β
+        ub[i] = h.β
     end
-    if !(ineqs === nothing)
-        for (i, h) in enumerate(get(ineqs))
-            A[neq+i,:] = h.a
-            lb[neq+i] = typemin(T)
-            ub[neq+i] = h.β
-        end
+    for (i, h) in enumerate(ineqs)
+        A[neq+i,:] = h.a
+        lb[neq+i] = typemin(T)
+        ub[neq+i] = h.β
     end
     LPHRepresentation{N, T}(A, l, u, lb, ub)
 end

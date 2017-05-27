@@ -132,24 +132,3 @@ function Base.round{N,T<:AbstractFloat}(rep::VRepresentation{N,T})
         typeof(rep)(vreps(rep, f))
     end
 end
-
-export gethredundantindices, getvredundantindices
-
-function gethredundantindices(hrep::HRep; strongly=false, solver = defaultLPsolverfor(hrep))
-    red = IntSet()
-    for i in 1:nhreps(hrep)
-        if ishredundant(hrep, i; strongly, solver)
-            push!(red, i)
-        end
-    end
-    red
-end
-function getvredundantindices(vrep::VRep; strongly=false, solver = defaultLPsolverfor(vrep))
-    red = IntSet()
-    for i in 1:nvreps(vrep)
-        if isvredundant(p, i; strongly, solver)
-            push!(red, i)
-        end
-    end
-    red
-end
