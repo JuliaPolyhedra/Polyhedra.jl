@@ -45,34 +45,3 @@ end
 function Base.isempty{N,T}(p::Polyhedron{N,T}, solver::MathProgBase.AbstractMathProgSolver = defaultLPsolverfor(p))
     linprog(zeros(T, N), p, solver).status == :Infeasible
 end
-
-function ishredundantaux(p::Polyhedron, a, b, strongly, cert, solver)
-    sol = linprog(-a, p, solver)
-    if sol.status == :Unbounded
-        cert ?  (false, sol.attrs[:unboundedray], :UnboundedRay) : false
-    elseif sol.status == :Optimal
-        if mygt(sol.objval, b)
-            cert ? (false, sol.sol, :ExteriorPoint) : false
-        elseif mygeq(sol.objval, b)
-            if strongly
-                cert ? (false, sol.sol, :BoundaryPoint) : false
-            else
-                cert ? (true, sol.sol, :BoundaryPoint) : true
-            end
-        else
-            cert ? (true, nothing, :NotApplicable) : true
-        end
-    end
-end
-function ishredundant(p::Rep, h::HRepElement; strongly=false, cert=false, solver = defaultLPsolverfor(p))
-    if islin(h)
-        sol = ishredundantaux(p, h.a, h.β, strongly, cert, solver)
-        if !sol[1]
-            sol
-        else
-            ishredundantaux(p, -h.a, -h.β, strongly, cert, solver)
-        end
-    else
-        ishredundantaux(p, h.a, h.β, strongly, cert, solver)
-    end
-end

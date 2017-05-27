@@ -1,7 +1,5 @@
 import Base.round, Base.eltype
 
-# TODO affinehull and sparse
-
 export Representation, HRepresentation, VRepresentation, fulldim
 export AbstractRepIterator, AbstractHRepIterator, HRepIterator, EqIterator, IneqIterator, AbstractVRepIterator, VRepIterator, RayIterator, PointIterator
 export Rep
@@ -27,16 +25,6 @@ decomposedfast(rep::HRepresentation)      = error("decomposedfast not implemente
 decomposedfast(rep::VRepresentation)      = error("decomposedfast not implemented for $(typeof(rep))")
 decomposedhfast(rep::HRepresentation)     = decomposedfast(rep)
 decomposedvfast(rep::VRepresentation)     = decomposedfast(rep)
-
-export removevredundancy!, removehredundancy!, detecthlinearities!, detectvlinearities!, isvredundant, ishredundant
-
-removevredundancy!(p::VRep)               = error("removevredundancy! not implemented for $(typeof(p))")
-isvredundant(p::VRep, i::Integer; strongly=false, cert=false, solver = defaultLPsolverfor(p))         = error("not implemented for $(typeof(p))")
-detectvlinearities!(p::VRep)                = error("detectvlinearities! not implemented for $(typeof(p))")
-
-removehredundancy!(p::HRep)               = error("removehredundancy! not implemented for $(typeof(p))")
-ishredundant(p::HRep, i::Integer; strongly=false, cert=false, solver = defaultLPsolverfor(p))         = error("ishredundant not implemented for $(typeof(p))")
-detecthlinearities!(p::HRep)              = error("detecthlinearities! not implemented for $(typeof(p))")
 
 Base.eltype{N,T}(rep::Rep{N,T}) = T
 fulldim{N}(rep::Rep{N}) = N
@@ -153,6 +141,7 @@ Base.length(vrep::VRepresentation)  = nvreps(vrep)
 Base.isempty(vrep::VRepresentation) = hasvreps(vrep)
 
 nvreps(vrep::VRep) = nrays(vrep) + npoints(vrep)
+nlines(vrep::VRep) = sum(map(islin, rays(vrep))) # TODO: call detectvlinearity! before
 
 hasrays(vrep::VRep)   = nrays(vrep) > 0
 haspoints(vrep::VRep) = npoints(vrep) > 0

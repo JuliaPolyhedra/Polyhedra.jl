@@ -23,6 +23,19 @@ function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::VRepIterator{N, T})
     SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rep))
 end
 
+function (::Type{SimplePolyhedron{N, T}}){N, T}(; eqs=nothing, ineqs=nothing, points=nothing, rays=nothing)
+    noth = eqs === nothing && ineqs === nothing
+    notv = points === nothing && rays === nothing
+    if !noth && !notv
+        error("SimplePolyhedron constructed with a combination of eqs/ineqs with points/rays")
+    end
+    if notv
+        rep = SimpleHRepresentation{N, T}(eqs=eqs, ineqs=ineqs)
+    else
+        rep = SimpleVRepresentation{N, T}(points=points, rays=rays)
+    end
+    SimplePolyhedron{N, T}(rep)
+end
 
 function polyhedron{N, T}(rep::Representation{N, T}, ::SimplePolyhedraLibrary)
     SimplePolyhedron{N, T}(rep)
@@ -38,17 +51,7 @@ function polyhedron(lib::SimplePolyhedraLibrary; eqs=nothing, ineqs=nothing, poi
     end
     N = fulldim(its[i])
     T = typeof(its[i]).parameters[2]
-    noth = eqs === nothing && ineqs === nothing
-    notv = points === nothing && rays === nothing
-    if !noth && !notv
-        error("SimplePolyhedron constructed with a combination of eqs/ineqs with points/rays")
-    end
-    if notv
-        rep = SimpleHRepresentation{N, T}(eqs=eqs, ineqs=ineqs)
-    else
-        rep = SimpleVRepresentation{N, T}(points=points, rays=rays)
-    end
-    polyhedron(rep, lib)
+    SimplePolyhedron{N, T}(; eqs=eqs, ineqs=ineqs, points=points, rays=rays)
 end
 
 function Base.copy{N, T}(p::SimplePolyhedron{N, T})
@@ -64,9 +67,27 @@ function Base.push!{N}(p::SimplePolyhedron{N}, ine::HRepresentation{N})
 end
 
 hrepiscomputed(p::SimplePolyhedron) = !isnull(p.hrep)
-hrep(p::SimplePolyhedron) = get(p.hrep) # TODO copy
+function computehrep!(p::SimplePolyhedron)
+    # vrep(p) could trigger an infinite loop if both vrep and hrep are null
+    p.hrep = doubledescription(get(p.vrep))
+end
+function hrep(p::SimplePolyhedron)
+    if !hrepiscomputed(p)
+        computehrep!(p)
+    end
+    get(p.hrep)
+end
 vrepiscomputed(p::SimplePolyhedron) = !isnull(p.vrep)
-vrep(p::SimplePolyhedron) = get(p.vrep) # TODO copy
+function computevrep!(p::SimplePolyhedron)
+    # hrep(p) could trigger an infinite loop if both vrep and hrep are null
+    p.vrep = doubledescription(get(p.hrep))
+end
+function vrep(p::SimplePolyhedron)
+    if !vrepiscomputed(p)
+        computevrep!(p)
+    end
+    get(p.vrep)
+end
 function decomposedhfast(p::SimplePolyhedron)
     if isnull(p.hrep)
         false # what should be done here ?
@@ -82,24 +103,41 @@ function decomposedvfast(p::SimplePolyhedron)
     end
 end
 
+function detecthlinearities!(p::SimplePolyhedron)
+    warn("detecthlinearities! not supported by SimplePolyhedron")
+end
+function detectvlinearities!(p::SimplePolyhedron)
+    warn("detectvlinearities! not supported by SimplePolyhedron")
+end
+function removehredundancy!(p::SimplePolyhedron)
+    h = removeduplicates(hrep(p))
+    R = gethredundantindices(h)
+    p.hrep = h[setdiff(1:nhreps(p), R)]
+end
+function removevredundancy!(p::SimplePolyhedron)
+    p.vrep = removeduplicates(vrep(p))
+    R = getvredundantindices(p)
+    p.vrep = vrep(p)[setdiff(1:nvreps(p), R)]
+end
+
 for op in [:nhreps, :starthrep, :neqs, :starteq, :nineqs, :startineq]
     @eval begin
-        $op(p::SimplePolyhedron) = $op(get(p.hrep))
+        $op(p::SimplePolyhedron) = $op(hrep(p))
     end
 end
 for op in [:donehrep, :nexthrep, :doneeq, :nexteq, :doneineq, :nextineq]
     @eval begin
-        $op(p::SimplePolyhedron, state) = $op(get(p.hrep), state)
+        $op(p::SimplePolyhedron, state) = $op(hrep(p), state)
     end
 end
 
 for op in [:nvreps, :startvrep, :npoints, :startpoint, :nrays, :startray]
     @eval begin
-        $op(p::SimplePolyhedron) = $op(get(p.vrep))
+        $op(p::SimplePolyhedron) = $op(vrep(p))
     end
 end
 for op in [:donevrep, :nextvrep, :donepoint, :nextpoint, :doneray, :nextray]
     @eval begin
-        $op(p::SimplePolyhedron, state) = $op(get(p.vrep), state)
+        $op(p::SimplePolyhedron, state) = $op(vrep(p), state)
     end
 end

@@ -32,7 +32,7 @@ push!(alltests, ("Simplex", simplextest))
 push!(alltests, ("Permutahedron", permutahedrontest))
 push!(alltests, ("Board", boardtest))
 
-function runtests{Lib<:PolyhedraLibrary}(lib::Lib, tests=alltests)
+function runtests(lib::PolyhedraLibrary, tests=alltests)
     for (testname, testfun) in tests
         @testset "$testname tests" begin
             testfun(lib)
