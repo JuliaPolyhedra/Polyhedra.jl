@@ -1,4 +1,6 @@
 import Base.getindex, Base.vec, Base.dot, Base.cross, Base.-, Base.+
+import GeometryTypes.Point
+export Point
 export HRepElement, HalfSpace, HyperPlane
 export VRepElement, AbstractPoint, SymPoint, AbstractRay, Ray, Line
 export islin, isray, ispoint, ispoint, coord, lift
@@ -119,6 +121,7 @@ end
 getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
 vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 
+(-){ElemT<:Union{HyperPlane, HalfSpace}}(h::ElemT) = ElemT(-h.a, -h.β)
 (-){ElemT<:Union{SymPoint,Ray,Line}}(elem::ElemT) = ElemT(-coord(elem))
 (-)(r::Ray, s::Ray) = Ray(r.a - s.a)
 (+)(r::Ray, s::Ray) = Ray(r.a + s.a)

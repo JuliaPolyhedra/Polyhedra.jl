@@ -6,13 +6,15 @@ end
 
 # Always type of first arg
 function Base.intersect{T1<:HRep, T2<:HRep}(p1::T1, p2::T2)
-    if eltype(T1) != eltype(T2)
+    N = fulldim(T1)
+    T = eltype(T1)
+    if T != eltype(T2)
         error("Cannot take the intersection of polyhedra of different element type")
     end
-    if fulldim(T1) != fulldim(T2)
+    if N != fulldim(T2)
         error("Cannot take the intersection of polyhedra of different dimension")
     end
-    T1(HRepIterator([p1, p2]))
+    T1(HRepIterator{N, T, N, T}([p1, p2]))
 end
 
 # Always type of first arg

@@ -6,6 +6,57 @@ halfspace(h::HalfSpace) = h
 
 line(r::Ray) = Line(coord(r))
 
+######
+# IN #
+######
+function Base.in{N}(v::VRepElement{N}, hr::HRep{N})
+    for h in hreps(hr)
+        if !(v in h)
+            return false
+        end
+    end
+    return true
+end
+
+function _hinv{N}(h::HRepElement{N}, vr::VRep{N})
+    for v in vreps(vr)
+        if !(v in h)
+            return false
+        end
+    end
+    return true
+end
+function _hinh{N}(h::HalfSpace{N}, hr::HRep{N}, solver)
+    # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
+    sol = linprog(-h.a, hr, solver)
+    if sol.status == :Unbounded
+        false
+    elseif sol.status == :Infeasible
+        true
+    elseif sol.status == :Optimal
+        myleq(-sol.objval, h.β)
+    else
+        error("Solver returned with status $(sol.status)")
+    end
+end
+function _hinh{N}(h::HyperPlane{N}, hr::HRep{N}, solver)
+    _hinh(halfspace(h), hr, solver) && _hinh(halfspace(-h), hr, solver)
+end
+
+Base.in{N}(h::HRepElement{N}, vr::VRepresentation{N}) = _hinv(h, vr)
+Base.in{N}(h::HRepElement{N}, hr::HRepresentation{N}) = _hinh(h, hr)
+function Base.in{N}(h::HRepElement{N}, p::Polyhedron{N}, solver = defaultLPsolverfor(p))
+    if vrepiscomputed(p)
+        _hinv(h, p)
+    else
+        _hinh(h, p, solver)
+    end
+end
+
+
+################
+# INTERSECTION #
+################
 function _intres{T}(v::T, h::HyperPlane, pins, pinp, rins, rinp)
     T(pinp, rinp)
 end

@@ -1,4 +1,4 @@
-export implementseliminationmethod, eliminate, project
+export implementseliminationmethod, eliminate, project, fixandeliminate
 
 project{N}(p::Polyhedron{N}, pset) = eliminate(p, setdiff(1:N, pset))
 project{N}(p::Polyhedron{N}, pset, method) = eliminate(p, setdiff(1:N, pset), method)
@@ -68,6 +68,16 @@ function project{N,T}(p::Polyhedron{N,T}, P::AbstractMatrix)
         basis = [Q R]
     end
     eliminate(p * basis, IntSet(m+1:N))
+end
+
+_fixelim{ElemT<:HRepElement}(h::ElemT, I, J, v) = ElemT(h.a[J], h.β - dot(h.a[I], v))
+
+function fixandeliminate{N, T}(p::HRep{N, T}, I, v)
+    J = setdiff(1:N, I)
+    f = (i, h) -> _fixelim(h, I, J, v)
+    Nout = length(J)
+    Tout = promote_type(T, eltype(v))
+    lazychangeboth(typeof(p), Nout, Tout)(HRepIterator{Nout, Tout, N, T}([p], f))
 end
 
 # TODO rewrite, it is just cutting a cone with a half-space, nothing more
