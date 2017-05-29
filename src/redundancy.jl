@@ -1,7 +1,6 @@
-# Linearity
-export detecthlinearities!, detectvlinearities!
-detectvlinearities!(p::VRep) = error("detectvlinearities! not implemented for $(typeof(p))")
-detecthlinearities!(p::HRep) = error("detecthlinearities! not implemented for $(typeof(p))")
+######################
+# Redundancy removal #
+######################
 
 # Redundancy
 export removevredundancy!, removehredundancy!, isvredundant, ishredundant, gethredundantindices, getvredundantindices
@@ -54,14 +53,14 @@ function isvredundant{N,T}(p::HRep{N,T}, v::VRepElement; strongly = true, nl::In
 end
 
 # H-redundancy
-function ishredundantaux(p::Polyhedron, a, b, strongly, cert, solver)
+function ishredundantaux(p::Polyhedron, a, β, strongly, cert, solver)
     sol = linprog(-a, p, solver)
     if sol.status == :Unbounded
         cert ?  (false, sol.attrs[:unboundedray], :UnboundedRay) : false
     elseif sol.status == :Optimal
-        if mygt(sol.objval, b)
+        if mygt(sol.objval, β)
             cert ? (false, sol.sol, :ExteriorPoint) : false
-        elseif mygeq(sol.objval, b)
+        elseif mygeq(sol.objval, β)
             if strongly
                 cert ? (false, sol.sol, :BoundaryPoint) : false
             else
@@ -88,6 +87,11 @@ end
 ######################
 # Duplicates removal #
 ######################
+
+# Linearity
+export detecthlinearities!, detectvlinearities!
+detectvlinearities!(p::VRep) = error("detectvlinearities! not implemented for $(typeof(p))")
+detecthlinearities!(p::HRep) = error("detecthlinearities! not implemented for $(typeof(p))")
 
 # H-duplicates
 # Separate function so that it is compiled with a concrete type for p

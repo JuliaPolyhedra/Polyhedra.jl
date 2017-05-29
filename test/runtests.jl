@@ -20,8 +20,6 @@ include("simplepolyhedron.jl")
 
 include("rep.jl")
 
-include("default.jl")
-
 for (testname, testfun) in alltests
     @testset "$testname tests" begin
         for arith in [("floating point", float_libraries), ("exact", exact_libraries)]

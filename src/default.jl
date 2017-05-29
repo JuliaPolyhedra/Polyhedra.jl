@@ -49,7 +49,7 @@ function defaultLPsolverfor{N,T}(p::Rep{N,T}, solver=nothing)
         SimpleVRepSolver()
     else
         if solver === nothing
-            JuMP.UnsetSolver
+            JuMP.UnsetSolver()
         else
             solver
         end

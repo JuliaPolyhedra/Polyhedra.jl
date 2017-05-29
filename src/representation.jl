@@ -83,7 +83,7 @@ for (rep, HorVRep, elt, low) in [(true, :VRep, :VRepElement, "vrep"), (false, :V
         type $typename{Nout, Tout, Nin, Tin} <: $abstractit{Nout, Tout}
             ps::Vector
             f::Nullable{Function}
-            function $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f)
+            function $typename(ps::Vector, f=nothing)
                 new(ps, f)
             end
         end
@@ -182,7 +182,8 @@ changeeltype{RepT<:Rep,T}(::Type{RepT}, ::Type{T})  = error("changeeltype not im
 changefulldim{RepT<:Rep}(::Type{RepT}, N)           = error("changefulldim not implemented for $(RepT)")
 changeboth{RepT<:Rep,T}(::Type{RepT}, N, ::Type{T}) = error("changeboth not implemented for $(RepT)")
 lazychangeeltype{RepT<:Rep,T}(::Type{RepT}, ::Type{T}) = eltype(RepT) == T ? RepT : changeleltype(RepT, T)
-lazychangefulldim{RepT<:Rep}(::Type{RepT}, N)          = fulldim(RepT) == N ? RepT : changelfulldim(RepT, N)
+lazychangefulldim{RepT<:Rep}(::Type{RepT}, N)          = fulldim(RepT) == N ? RepT : changefulldim(RepT, N)
+# TODO in Julia v0.6, we can do {N1, T, RepT<:Rep{N2, T}} and {N, T1, RepT<:Rep{N, T2}} and remove lazychangeboth
 function lazychangeboth{RepT<:Rep,T}(::Type{RepT}, N, ::Type{T})
     if eltype(RepT) == T
         lazychangefulldim(RepT, N)
