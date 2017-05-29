@@ -40,8 +40,8 @@ Since libraries (`cdd`, `lrs`, `pd`, `porta`, `qhull`, ...) use different algori
 
 [build-img]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl.svg?branch=master
 [build-url]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl
-[winbuild-img]: https://ci.appveyor.com/api/projects/status/q8shfbgt5jcv2g20/branch/master?svg=true
-[winbuild-url]: https://ci.appveyor.com/project/blegat/polyhedra-jl/branch/master
+[winbuild-img]: https://ci.appveyor.com/api/projects/status/1c4frdxet094tntc/branch/master?svg=true
+[winbuild-url]: https://ci.appveyor.com/project/JuliaPolyhedra/polyhedra-jl/branch/master
 [coveralls-img]: https://coveralls.io/repos/github/JuliaPolyhedra/Polyhedra.jl/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/github/JuliaPolyhedra/Polyhedra.jl?branch=master
 [codecov-img]: http://codecov.io/github/JuliaPolyhedra/Polyhedra.jl/coverage.svg?branch=master
