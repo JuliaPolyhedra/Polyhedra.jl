@@ -256,3 +256,5 @@ lift{N,T}(h::Line{N,T}) = Line{N+1,T}(pushbefore(h.a, zero(T)))
 lift{N,T}(h::Point{N,T}) = pushbefore(h, one(T)), Vec{N+1,T}
 lift{T}(h::AbstractVector{T}) = Ray{length(h)+1,T}(pushbefore(h, one(T)))
 lift{N,T}(h::SymPoint{N,T}) = Line{N+1,T}(pushbefore(h.a, one(T)))
+
+translate{ElemT<:HRepElement}(h::ElemT, p) = ElemT(h.a, h.β + mydot(h.a, p))

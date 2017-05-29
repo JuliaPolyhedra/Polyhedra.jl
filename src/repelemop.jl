@@ -6,6 +6,19 @@ halfspace(h::HalfSpace) = h
 
 line(r::Ray) = Line(coord(r))
 
+###############
+# TRANSLATION #
+###############
+
+export translate
+
+function translate{N, S, T}(p::HRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}})
+    f = (i, h) -> translate(h, v)
+    Tout = Base.promote_op(+, T, S)
+    lazychangeeltype(typeof(p), Tout)(HRepIterator{N, Tout, N, T}([p], f))
+end
+
+
 ######
 # IN #
 ######

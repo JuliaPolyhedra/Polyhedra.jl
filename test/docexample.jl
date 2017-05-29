@@ -30,4 +30,5 @@ function doctest(lib::PolyhedraLibrary)
     inequality_fulltest(fixandeliminate(p, 2, eltype(p) <: AbstractFloat ? 1/4 : 1//4), reshape([1, -1], 2, 1), [1/4, 0], IntSet())
     # tries to create CDDPolyhedron of BigFloat, needs to let CDD decide of the promotion
     #inequality_fulltest(fixandeliminate(p, 2, 1/4, reshape([1, -1], 2, 1), [1/4, 0], IntSet())
+    inequality_fulltest(translate(p, -[0, 1]), [1 1; 1 -1;-1 0], [0, 1, 0], IntSet())
 end
