@@ -126,7 +126,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
             end
             if xray == nothing
                 sweep_norm = cross(zray, [1,0,0])
-                if sum(abs(sweep_norm)) == 0
+                if sum(abs, sweep_norm) == 0
                     sweep_norm = cross(zray, [0,1,0])
                 end
             else
@@ -185,7 +185,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
     end
     ntri = length(triangles)
     pts  = Vector{GeometryTypes.Point{3,RT}}(3*ntri)
-    faces   = Vector{GeometryTypes.Face{3,Int,0}}(ntri)
+    faces   = Vector{GeometryTypes.Face{3,Int}}(ntri)
     ns = Vector{GeometryTypes.Normal{3,RT}}(3*ntri)
     for i in 1:ntri
         tri = pop!(triangles)

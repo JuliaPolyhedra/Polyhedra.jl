@@ -59,7 +59,7 @@ function decompose(lib::PolyhedraLibrary)
      GeometryTypes.Point(0.0,1.0,-1.0),
      GeometryTypes.Point(-1.0,0.0,-1.0),
      GeometryTypes.Point(0.0,-1.0,-1.0)]
-    @test GeometryTypes.decompose(GeometryTypes.Face{3, Int, 1}, p) ==
+    @test GeometryTypes.decompose(GeometryTypes.Face{3, GeometryTypes.OffsetInteger{1, Int}}, p) ==
     [GeometryTypes.Face(2.0,3.0,4.0),
      GeometryTypes.Face(5.0,6.0,7.0),
      GeometryTypes.Face(8.0,9.0,10.0),
