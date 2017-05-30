@@ -55,7 +55,7 @@ function inequality_fulltest(ine::SimpleHRepresentation, A, b, linset, aff = ine
         found = false
         for j in 1:size(ine.A, 1)
             # vec for julia 0.4
-            if !((i in linset) $ (j in ine.linset)) && inaff([b[i]; A[i,:]], [ine.b[j]; ine.A[j,:]])
+            if !((i in linset) ⊻ (j in ine.linset)) && inaff([b[i]; A[i,:]], [ine.b[j]; ine.A[j,:]])
                 found = true
                 break
             end
@@ -90,7 +90,7 @@ function generator_fulltest(ext::SimpleVRepresentation, V, R=Matrix{eltype(V)}(0
     for i in 1:size(R, 1)
         found = false
         for j in 1:size(ext.R, 1)
-            if !((i in Rlinset) $ (j in ext.Rlinset)) && inaff(R[i,:], ext.R[j,:])
+            if !((i in Rlinset) ⊻ (j in ext.Rlinset)) && inaff(R[i,:], ext.R[j,:])
                 #if parallel(vec(R[i, :]), vec(ext.R[j, :]), (i in Rlinset) || (j in ext.Rlinset))
                 found = true
                 break
