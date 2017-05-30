@@ -13,6 +13,7 @@ notifications:
 # uncomment the following lines to override the default test script
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia -e 'Pkg.init(); Pkg.add("GeometryTypes"); Pkg.checkout("GeometryTypes")'
   - julia -e 'Pkg.clone(pwd()); Pkg.build("Polyhedra"); Pkg.test("Polyhedra"; coverage=true)'
 after_success:
   # push coverage results to Coveralls
