@@ -13,7 +13,8 @@ eliminate(p::Polyhedron, delset, method::Symbol) = eliminate(p, delset, Val{meth
 
 eliminate{N}(p::Polyhedron{N}, method::Type{Val{:ProjectGenerators}}) = eliminate(p, IntSet(N), method)
 
-function eliminate{N}(p::Polyhedron{N}, delset=IntSet(N))
+# eliminate the last dimension by default
+function eliminate{N}(p::Polyhedron{N}, delset=IntSet([N]))
     fm = implementseliminationmethod(p, Val{:FourierMotzkin})
     be = implementseliminationmethod(p, Val{:BlockElimination})
     if (!fm && !be) || vrepiscomputed(p)
@@ -31,9 +32,6 @@ function eliminate{N}(p::Polyhedron{N}, delset, ::Type{Val{:ProjectGenerators}})
     I = eye(Int, N)
     polyhedron(I[setdiff(IntSet(1:N), collect(delset)),:] * ext, getlibrary(p))
 end
-
-# eliminate the last dimension by default
-eliminate{N,T}(p::Polyhedron{N,T})  = eliminate(p::Polyhedron, IntSet([N]))
 
 function project{N,T}(p::Polyhedron{N,T}, P::AbstractMatrix)
     # Function to make x orthogonal to an orthonormal basis in Q
