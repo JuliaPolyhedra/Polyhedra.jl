@@ -32,8 +32,8 @@ abstract type HRepElement{N,T} end
 type HalfSpace{N,T} <: HRepElement{N,T}
     a::MyVec{N,T}
     β::T
-    function HalfSpace(a::MyVec{N,T}, β::T)
-        new(a, β)
+    function HalfSpace{N, T}(a::MyVec{N,T}, β::T) where {N, T}
+        new{N, T}(a, β)
     end
 end
 
@@ -42,8 +42,8 @@ end
 type HyperPlane{N,T} <: HRepElement{N,T}
     a::MyVec{N,T}
     β::T
-    function HyperPlane(a::MyVec{N,T}, β::T)
-        new(a, β)
+    function HyperPlane{N, T}(a::MyVec{N,T}, β::T) where {N, T}
+        new{N, T}(a, β)
     end
 end
 
@@ -95,8 +95,8 @@ end
 
 type SymPoint{N, T}
     a::MyPoint{N, T}
-    function SymPoint(a::MyPoint{N, T})
-        new(a)
+    function SymPoint{N, T}(a::MyPoint{N, T}) where {N, T}
+        new{N, T}(a)
     end
 end
 
@@ -104,8 +104,8 @@ end
 
 type Ray{N, T}
     a::MyVec{N, T}
-    function Ray(a::MyVec{N, T})
-        new(a)
+    function Ray{N, T}(a::MyVec{N, T}) where {N, T}
+        new{N, T}(a)
     end
 end
 
@@ -113,8 +113,8 @@ end
 
 type Line{N,T}
     a::MyVec{N, T}
-    function Line(a::MyVec{N, T})
-        new(a)
+    function Line{N, T}(a::MyVec{N, T}) where {N, T}
+        new{N, T}(a)
     end
 end
 
