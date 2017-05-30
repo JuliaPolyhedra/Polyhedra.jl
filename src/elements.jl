@@ -125,7 +125,7 @@ vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 (-){ElemT<:Union{SymPoint,Ray,Line}}(elem::ElemT) = ElemT(-coord(elem))
 (-)(r::Ray, s::Ray) = Ray(r.a - s.a)
 (+)(r::Ray, s::Ray) = Ray(r.a + s.a)
-(+)(p::Union{AbstractArray,Point}, r::Union{Vec,Ray}) = p + coord(r)
+(+)(p::Union{AbstractArray,Point}, r::Ray) = p + coord(r)
 
 for op in [:dot, :cross]
     @eval begin
