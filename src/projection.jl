@@ -14,7 +14,7 @@ eliminate(p::Polyhedron, delset, method::Symbol) = eliminate(p, delset, Val{meth
 eliminate{N}(p::Polyhedron{N}, method::Type{Val{:ProjectGenerators}}) = eliminate(p, IntSet(N), method)
 
 # eliminate the last dimension by default
-function eliminate{N}(p::Polyhedron{N}, delset=IntSet([N]))
+function eliminate{N}(p::Polyhedron{N}, delset=IntSet(N))
     fm = implementseliminationmethod(p, Val{:FourierMotzkin})
     be = implementseliminationmethod(p, Val{:BlockElimination})
     if (!fm && !be) || vrepiscomputed(p)
