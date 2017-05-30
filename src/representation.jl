@@ -1,7 +1,5 @@
 import Base.round, Base.eltype
 
-# TODO affinehull and sparse
-
 export Representation, HRepresentation, VRepresentation, fulldim
 export AbstractRepIterator, AbstractHRepIterator, HRepIterator, EqIterator, IneqIterator, AbstractVRepIterator, VRepIterator, RayIterator, PointIterator
 export Rep
@@ -27,16 +25,6 @@ decomposedfast(rep::HRepresentation)      = error("decomposedfast not implemente
 decomposedfast(rep::VRepresentation)      = error("decomposedfast not implemented for $(typeof(rep))")
 decomposedhfast(rep::HRepresentation)     = decomposedfast(rep)
 decomposedvfast(rep::VRepresentation)     = decomposedfast(rep)
-
-export removevredundancy!, removehredundancy!, detecthlinearities!, detectvlinearities!, isvredundant, ishredundant
-
-removevredundancy!(p::VRep)               = error("removevredundancy! not implemented for $(typeof(p))")
-isvredundant(p::VRep, i::Integer; strongly=false, cert=false, solver = defaultLPsolverfor(p))         = error("not implemented for $(typeof(p))")
-detectvlinearities!(p::VRep)                = error("detectvlinearities! not implemented for $(typeof(p))")
-
-removehredundancy!(p::HRep)               = error("removehredundancy! not implemented for $(typeof(p))")
-ishredundant(p::HRep, i::Integer; strongly=false, cert=false, solver = defaultLPsolverfor(p))         = error("ishredundant not implemented for $(typeof(p))")
-detecthlinearities!(p::HRep)              = error("detecthlinearities! not implemented for $(typeof(p))")
 
 Base.eltype{N,T}(rep::Rep{N,T}) = T
 fulldim{N}(rep::Rep{N}) = N
@@ -95,7 +83,7 @@ for (rep, HorVRep, elt, low) in [(true, :VRep, :VRepElement, "vrep"), (false, :V
         type $typename{Nout, Tout, Nin, Tin} <: $abstractit{Nout, Tout}
             ps::Vector
             f::Nullable{Function}
-            function $typename{Nout, Tout, Nin, Tin}(ps::Vector{RepT}, f) where {Nout, Tout, Nin, Tin, RepT<:$HorVRep}
+            function $typename{Nout, Tout, Nin, Tin}(ps::Vector{RepT}, f=nothing) where {Nout, Tout, Nin, Tin, RepT<:$HorVRep}
                 new{Nout, Tout, Nin, Tin}(ps, f)
             end
         end
@@ -153,6 +141,7 @@ Base.length(vrep::VRepresentation)  = nvreps(vrep)
 Base.isempty(vrep::VRepresentation) = hasvreps(vrep)
 
 nvreps(vrep::VRep) = nrays(vrep) + npoints(vrep)
+nlines(vrep::VRep) = sum(map(islin, rays(vrep))) # TODO: call detectvlinearity! before
 
 hasrays(vrep::VRep)   = nrays(vrep) > 0
 haspoints(vrep::VRep) = npoints(vrep) > 0
@@ -193,7 +182,8 @@ changeeltype{RepT<:Rep,T}(::Type{RepT}, ::Type{T})  = error("changeeltype not im
 changefulldim{RepT<:Rep}(::Type{RepT}, N)           = error("changefulldim not implemented for $(RepT)")
 changeboth{RepT<:Rep,T}(::Type{RepT}, N, ::Type{T}) = error("changeboth not implemented for $(RepT)")
 lazychangeeltype{RepT<:Rep,T}(::Type{RepT}, ::Type{T}) = eltype(RepT) == T ? RepT : changeleltype(RepT, T)
-lazychangefulldim{RepT<:Rep}(::Type{RepT}, N)          = fulldim(RepT) == N ? RepT : changelfulldim(RepT, N)
+lazychangefulldim{RepT<:Rep}(::Type{RepT}, N)          = fulldim(RepT) == N ? RepT : changefulldim(RepT, N)
+# TODO in Julia v0.6, we can do {N1, T, RepT<:Rep{N2, T}} and {N, T1, RepT<:Rep{N, T2}} and remove lazychangeboth
 function lazychangeboth{RepT<:Rep,T}(::Type{RepT}, N, ::Type{T})
     if eltype(RepT) == T
         lazychangefulldim(RepT, N)

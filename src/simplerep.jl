@@ -52,9 +52,25 @@ function (::Type{SimpleHRepresentation{N, T}}){N, T}(it::HRepIterator{N, T})
     SimpleHRepresentation{N, T}(A, b, linset)
 end
 
+function (::Type{SimpleHRepresentation{N, T}}){N, T}(eqs, ineqs)
+    neq = length(eqs)
+    nhrep = neq + length(ineqs)
+    A = Matrix{T}(nhrep, N)
+    b = Vector{T}(nhrep)
+    linset = IntSet(1:neq)
+    for (i, h) in enumerate(eqs)
+        A[i,:] = h.a
+        b[i] = h.β
+    end
+    for (i, h) in enumerate(ineqs)
+        A[neq+i,:] = h.a
+        b[neq+i] = h.β
+    end
+    SimpleHRepresentation{N, T}(A, b, linset)
+end
 function (::Type{SimpleHRepresentation{N, T}}){N, T}(; eqs=nothing, ineqs=nothing)
-    neq = isnull(eqs) ? 0 : length(eqs)
-    nineq = isnull(ineqs) ? 0 : length(ineqs)
+    neq = eqs === nothing ? 0 : length(eqs)
+    nineq = ineqs === nothing ? 0 : length(ineqs)
     nhrep = neq + nineq
     A = Matrix{T}(nhrep, N)
     b = Vector{T}(nhrep)
@@ -181,7 +197,7 @@ function (::Type{SimpleVRepresentation{N, T}}){N, T}(it::VRepIterator{N, T})
     SimpleVRepresentation{N, T}(V, R, Vlinset, Rlinset)
 end
 
-function (::Type{SimpleVRepresentation{N, T}}){N, T}(; points=nothing, rays=nothing)
+function (::Type{SimpleVRepresentation{N, T}}){N, T}(points, rays)
     npoint = isnull(points) ? 0 : length(points)
     nray = isnull(rays) ? 0 : length(rays)
     nvrep = npoint + nray
@@ -207,6 +223,9 @@ function (::Type{SimpleVRepresentation{N, T}}){N, T}(; points=nothing, rays=noth
     end
     SimpleVRepresentation{N, T}(V, R, Vlinset, Rlinset)
 end
+function (::Type{SimpleVRepresentation{N, T}}){N, T}(; points=nothing, rays=nothing)
+    SimpleVRepresentation{N, T}(points, rays)
+end
 
 Base.copy{N,T}(ext::SimpleVRepresentation{N,T}) = SimpleVRepresentation{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
 
@@ -224,4 +243,10 @@ donepoint(ext::SimpleVRepresentation, state) = state > size(ext.V, 1)
 function nextpoint(ext::SimpleVRepresentation, state)
     p = ext.V[state,:]
     (state in ext.Vlinset ? SymPoint(p) : p, state+1)
+end
+
+function Base.getindex(h::SimpleVRepresentation, I::AbstractArray)
+    Ir = filter(i -> i <= nrays(h), I)
+    Ip = filter(i -> i > nrays(h), I) - nrays(h)
+    SimpleVRepresentation(h.V[Ip,:], h.R[Ir,:], filterintset(h.Vlinset, I), filterintset(h.Rlinset, I))
 end

@@ -43,9 +43,24 @@ function (::Type{LiftedHRepresentation{N, T}}){N, T}(it::HRepIterator{N, T})
     LiftedHRepresentation{N, T}(A, linset)
 end
 
+function (::Type{LiftedHRepresentation{N, T}}){N, T}(eqs, ineqs)
+    neq = length(eqs)
+    nhrep = neq + length(ineqs)
+    A = Matrix{T}(nhrep, N+1)
+    linset = IntSet(1:neq)
+    for (i, h) in enumerate(eqs)
+        A[i,2:end] = -h.a
+        A[i,1] = h.β
+    end
+    for (i, h) in enumerate(ineqs)
+        A[neq+i,2:end] = h.a
+        A[neq+i,1] = h.β
+    end
+    LiftedHRepresentation{N, T}(A, linset)
+end
 function (::Type{LiftedHRepresentation{N, T}}){N, T}(; eqs=nothing, ineqs=nothing)
-    neq = isnull(eqs) ? 0 : nhreps(eqs)
-    nineq = isnull(ineqs) ? 0 : nhreps(ineqs)
+    neq = isnull(eqs) ? 0 : length(eqs)
+    nineq = isnull(ineqs) ? 0 : length(ineqs)
     nhrep = neq + nineq
     A = Matrix{T}(nhrep, N+1)
     linset = IntSet(1:neq)
@@ -159,7 +174,7 @@ function (::Type{LiftedVRepresentation{N, T}}){N, T}(; points=nothing, rays=noth
     end
     if !(rays === nothing)
         for (i, r) in enumerate(rays)
-            j = npoints + i
+            j = npoint + i
             R[j,2:end] = coord(r)
             R[j,1] = zero(T)
             if islin(r)

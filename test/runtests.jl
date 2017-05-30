@@ -1,8 +1,6 @@
 using Polyhedra
 using Base.Test
 
-include("simplepolyhedron.jl")
-
 include("rep.jl")
 
 include("default.jl")
@@ -13,13 +11,14 @@ if !isempty(lp_solvers)
 end
 
 include("alltests.jl")
+
 for lib in libraries
     basicpolyhedrontests(lib)
 end
 
-include("rep.jl")
+include("simplepolyhedron.jl")
 
-include("default.jl")
+include("rep.jl")
 
 for (testname, testfun) in alltests
     @testset "$testname tests" begin

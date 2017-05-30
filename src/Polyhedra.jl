@@ -17,7 +17,9 @@ include("elements.jl")
 include("mycomp.jl")
 include("representation.jl")
 include("repop.jl")
+include("repelemop.jl")
 include("operations.jl")
+include("redundancy.jl")
 include("projection.jl")
 
 # Implementations
@@ -25,6 +27,7 @@ include("lphrep.jl")
 include("jump.jl")
 include("simplerep.jl")
 include("liftedrep.jl")
+include("doubledescription.jl")
 include("simplepolyhedron.jl")
 
 # Optimization

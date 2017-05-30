@@ -1,4 +1,6 @@
 import Base.getindex, Base.vec, Base.dot, Base.cross, Base.-, Base.+
+import GeometryTypes.Point
+export Point
 export HRepElement, HalfSpace, HyperPlane
 export VRepElement, AbstractPoint, SymPoint, AbstractRay, Ray, Line
 export islin, isray, ispoint, ispoint, coord, lift
@@ -14,7 +16,7 @@ myvec{T}(::Type{T}, a::AbstractArray{T}) = a
 myvec{N,T}(::Type{T}, a::Vec{N}) = Vec{N,T}(a)
 myvec{N,T}(::Type{T}, a::Vec{N,T}) = a
 
-mydot(a, b) = sum(map(*, a, b))
+mydot(a, b) = sum(a .* b)
 mydot(a::AbstractVector, b::AbstractVector) = dot(a, b)
 mydot(f::FixedVector, v::FixedVector) = dot(f, v)
 #mydot{T<:Union{Ray,Line}}(a::T, b::T) = mydot(a.r, b.r)
@@ -82,7 +84,7 @@ function Base.round{ElemT<:HRepElement}(h::ElemT)
     ElemT(round.(h.a), round(h.β))
 end
 
-# Point:
+# Point: -> A same Rep should always return the same of the two types so that when points and sympoints will have different accessors it will be type stable
 # Point{N, T} or AbstractVector{T}
 # Linear Point:
 # SymPoint{N,T}
@@ -119,13 +121,21 @@ end
 getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
 vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 
-for op in [:dot, :cross, (:-), (:+)]
+(-){ElemT<:Union{HyperPlane, HalfSpace}}(h::ElemT) = ElemT(-h.a, -h.β)
+(-){ElemT<:Union{SymPoint,Ray,Line}}(elem::ElemT) = ElemT(-coord(elem))
+(-)(r::Ray, s::Ray) = Ray(r.a - s.a)
+(+)(r::Ray, s::Ray) = Ray(r.a + s.a)
+(+)(p::Union{AbstractArray,Point}, r::Union{Vec,Ray}) = p + coord(r)
+
+for op in [:dot, :cross]
     @eval begin
         $op(x::Union{SymPoint,Ray,Line}, y) = $op(x.a, y)
         $op(x, y::Union{SymPoint,Ray,Line}) = $op(x, y.a)
         $op(x::Union{SymPoint,Ray,Line}, y::Union{SymPoint,Ray,Line}) = $op(x.a, y.a)
     end
 end
+
+(*){T<:Union{SymPoint,Ray,Line}}(x, y::T) = T(x * y.a)
 
 Base.convert{T}(::Type{Vector{T}}, x::Union{SymPoint,Ray,Line}) = convert(Vector{T}, x.a)
 
@@ -169,13 +179,13 @@ coord{ElemT<:Union{HRepElement,SymPoint,Ray,Line}}(v::ElemT) = v.a
 
 const VRepElementContainer = Union{SymPoint, Ray, Line}
 
-@generated function (*){ElemT<:FixedVRepElement}(P::Matrix, v::ElemT)
+function (*){ElemT<:FixedVRepElement}(P::Matrix, v::ElemT)
     if ElemT <: VRepElementContainer
         Tout = mypromote_type(eltype(ElemT), eltype(P))
         ElemTout = changeboth(ElemT, size(P, 1), Tout)
-        return :(:ElemTout(P * v.a))
+        return ElemTout(P * v.a)
     else
-        return :(P * v.a)
+        return P * v.a
     end
 end
 function zeropad{ElemT<:VRepElement}(v::ElemT, n::Integer)
@@ -185,9 +195,9 @@ function zeropad{ElemT<:VRepElement}(v::ElemT, n::Integer)
         ElemTout = changefulldim(ElemT, fulldim(h) + abs(n))
         T = eltype(ElemT)
         if n < 0
-            aout = [spzeros(T, n); coef(v)]
+            aout = [spzeros(T, n); coord(v)]
         else
-            aout = [coef(v); spzeros(T, n)]
+            aout = [coord(v); spzeros(T, n)]
         end
         ElemTout(aout)
     end
@@ -205,16 +215,19 @@ changeeltype{VecT<:AbstractVector,Tout}(::Type{VecT}, ::Type{Tout}) = AbstractVe
 changefulldim{VecT<:AbstractVector}(::Type{VecT}, Nout) = VecT
 changeboth{VecT<:AbstractVector,Tout}(::Type{VecT}, Nout, ::Type{Tout}) = AbstractVector{Tout}
 
+mydot(a::AbstractVector, r::Ray) = mydot(a, r.a)
+mydot(a::AbstractVector, l::Line) = mydot(a, l.a)
+
 Base.in{N}(r::Vec{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, r))
-Base.in{N}(r::Ray{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, r.r))
-Base.in{N}(l::Line{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, l.r))
+Base.in{N}(r::Ray{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, r))
+Base.in{N}(l::Line{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, l))
 Base.in{N}(p::Point{N}, h::HalfSpace{N}) = myleq(mydot(h.a, p), h.β)
 Base.in{N}(p::AbstractVector, h::HalfSpace{N}) = myleq(mydot(h.a, p), h.β)
 Base.in{N}(p::SymPoint{N}, h::HalfSpace{N}) = myleq(mydot(h.a, p.p), h.β)
 
 Base.in{N}(r::Vec{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, r))
-Base.in{N}(r::Ray{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, r.r))
-Base.in{N}(l::Line{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, l.r))
+Base.in{N}(r::Ray{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, r))
+Base.in{N}(l::Line{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, l))
 Base.in{N}(p::Point{N}, h::HyperPlane{N}) = myeq(mydot(h.a, p), h.β)
 Base.in{N}(p::AbstractVector, h::HyperPlane{N}) = myeq(mydot(h.a, p), h.β)
 Base.in{N}(p::SymPoint{N}, h::HyperPlane{N}) = myeq(mydot(h.a, p.p), h.β)
@@ -243,3 +256,5 @@ lift{N,T}(h::Line{N,T}) = Line{N+1,T}(pushbefore(h.a, zero(T)))
 lift{N,T}(h::Point{N,T}) = pushbefore(h, one(T)), Vec{N+1,T}
 lift{T}(h::AbstractVector{T}) = Ray{length(h)+1,T}(pushbefore(h, one(T)))
 lift{N,T}(h::SymPoint{N,T}) = Line{N+1,T}(pushbefore(h.a, one(T)))
+
+translate{ElemT<:HRepElement}(h::ElemT, p) = ElemT(h.a, h.β + mydot(h.a, p))

@@ -101,13 +101,3 @@ end
 #   detecthlinearities!(p)
 #   typeof(p)(affinehull(getinequalities(p)))
 # end
-
-function isvredundant{N,T}(p::Polyhedron{N,T}, v::VRepElement; strongly = false, cert = false)
-    # FIXME strongly not used
-    for h in hreps(p)
-        if !(v in h)
-            return cert ? (false, Nullable{HRepElement{N,T}}(h)) : false
-        end
-    end
-    cert ? (true, Nullable{HRepElement{N,T}}(nothing)) : true
-end

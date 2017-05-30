@@ -6,13 +6,15 @@ end
 
 # Always type of first arg
 function Base.intersect{T1<:HRep, T2<:HRep}(p1::T1, p2::T2)
-    if eltype(T1) != eltype(T2)
+    N = fulldim(T1)
+    T = eltype(T1)
+    if T != eltype(T2)
         error("Cannot take the intersection of polyhedra of different element type")
     end
-    if fulldim(T1) != fulldim(T2)
+    if N != fulldim(T2)
         error("Cannot take the intersection of polyhedra of different dimension")
     end
-    T1(HRepIterator([p1, p2]))
+    T1(HRepIterator{N, T, N, T}([p1, p2]))
 end
 
 # Always type of first arg
@@ -67,7 +69,9 @@ function (*){RepT<:HRep}(rep::RepT, P::AbstractMatrix)
     end
     Nout = size(P, 2)
     Tout = mypromote_type(eltype(RepT), eltype(P))
-    RepTout = lazychangeboth(RepT, Nout, Tout)
+    if RepT <: HRepresentation
+        RepTout = lazychangeboth(RepT, Nout, Tout)
+    end
     f = (i, h) -> h * P
     if decomposedhfast(rep)
         eqs = EqIterator{Nout,Tout,Nin,Tin}([rep], f)
@@ -129,25 +133,4 @@ function Base.round{N,T<:AbstractFloat}(rep::VRepresentation{N,T})
     else
         typeof(rep)(vreps(rep, f))
     end
-end
-
-export gethredundantindices, getvredundantindices
-
-function gethredundantindices(hrep::HRep; strongly=false, solver = defaultLPsolverfor(hrep))
-    red = IntSet()
-    for i in 1:nhreps(hrep)
-        if ishredundant(hrep, i; strongly, solver)
-            push!(red, i)
-        end
-    end
-    red
-end
-function getvredundantindices(vrep::VRep; strongly=false, solver = defaultLPsolverfor(vrep))
-    red = IntSet()
-    for i in 1:nvreps(vrep)
-        if isvredundant(p, i; strongly, solver)
-            push!(red, i)
-        end
-    end
-    red
 end
