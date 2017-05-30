@@ -127,7 +127,7 @@ function Base.round{N,T<:AbstractFloat}(rep::HRepresentation{N,T})
     end
 end
 function Base.round{N,T<:AbstractFloat}(rep::VRepresentation{N,T})
-    f = (i, v) -> round(v)
+    f = (i, v) -> round.(v)
     if decomposedfast(rep)
         typeof(rep)(eqs=eqs(rep, f), ineqs=ineqs(rep, f))
     else
