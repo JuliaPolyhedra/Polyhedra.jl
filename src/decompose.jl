@@ -209,7 +209,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
     end
     # If the type of ns is Rational, it also works.
     # The normalized array in in float but then it it recast into Rational
-    map!(normalize, ns)
+    map!(normalize, ns, ns)
     (pts, faces, ns)
 end
 
