@@ -95,8 +95,8 @@ for (rep, HorVRep, elt, low) in [(true, :VRep, :VRepElement, "vrep"), (false, :V
         type $typename{Nout, Tout, Nin, Tin} <: $abstractit{Nout, Tout}
             ps::Vector
             f::Nullable{Function}
-            function $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f)
-                new(ps, f)
+            function $typename{Nout, Tout, Nin, Tin}(ps::Vector{RepT}, f) where {Nout, Tout, Nin, Tin, RepT<:$HorVRep}
+                new{Nout, Tout, Nin, Tin}(ps, f)
             end
         end
         $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f=nothing) = $typename{fulldim(RepT),eltype(RepT),fulldim(RepT),eltype(RepT)}(ps, f)

@@ -9,7 +9,7 @@ type SimpleHRepresentation{N, T} <: HRepresentation{N, T}
     b::AbstractVector{T}
     linset::IntSet
 
-    function SimpleHRepresentation(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet())
+    function SimpleHRepresentation{N, T}(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {N, T}
         if size(A, 1) != length(b)
             error("The length of b must be equal to the number of rows of A")
         end
@@ -19,7 +19,7 @@ type SimpleHRepresentation{N, T} <: HRepresentation{N, T}
         if size(A, 2) != N
             error("dimension does not match")
         end
-        new(A, b, linset)
+        new{N, T}(A, b, linset)
     end
 end
 
@@ -120,7 +120,7 @@ type SimpleVRepresentation{N,T} <: VRepresentation{N,T}
     Vlinset::IntSet
     Rlinset::IntSet
 
-    function SimpleVRepresentation(V::AbstractMatrix{T}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet())
+    function SimpleVRepresentation{N, T}(V::AbstractMatrix{T}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {N, T}
         if (length(R) > 0 && size(R, 2) != N) || (length(V) > 0 && size(V, 2) != N)
             error("dimension does not match")
         end
@@ -130,7 +130,7 @@ type SimpleVRepresentation{N,T} <: VRepresentation{N,T}
         if ~isempty(Rlinset) && last(Rlinset) > size(R, 1)
             error("The elements of Rlinset should be between 1 and the number of rows of R")
         end
-        new(V, R, Vlinset, Rlinset)
+        new{N, T}(V, R, Vlinset, Rlinset)
     end
 end
 
