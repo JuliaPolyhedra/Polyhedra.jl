@@ -16,7 +16,7 @@ type LPHRepresentation{N, T} <: HRepresentation{N, T}
     rowgeqs::IntSet
     roweqs::IntSet
 
-    function LPHRepresentation(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T})
+    function LPHRepresentation{N, T}(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {N, T}
         if length(l) != length(u) || size(A, 2) != length(l)
             error("The length of l and u must be equal to the number of rows of A")
         end
@@ -60,7 +60,7 @@ type LPHRepresentation{N, T} <: HRepresentation{N, T}
                 end
             end
         end
-        new(A, l, u, colleqs, colgeqs, coleqs, lb, ub, rowleqs, rowgeqs, roweqs)
+        new{N, T}(A, l, u, colleqs, colgeqs, coleqs, lb, ub, rowleqs, rowgeqs, roweqs)
     end
 end
 

@@ -8,14 +8,14 @@ type LiftedHRepresentation{N, T} <: HRepresentation{N, T}
     A::AbstractMatrix{T}
     linset::IntSet
 
-    function LiftedHRepresentation(A::AbstractMatrix{T}, linset::IntSet=IntSet())
+    function LiftedHRepresentation{N, T}(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where {N, T}
         if ~isempty(linset) && last(linset) > size(A, 1)
             error("The elements of linset should be between 1 and the number of rows of A")
         end
         if size(A, 2) != N+1
             error("dimension does not match")
         end
-        new(A, linset)
+        new{N, T}(A, linset)
     end
 end
 
@@ -116,14 +116,14 @@ type LiftedVRepresentation{N,T} <: VRepresentation{N,T}
     R::AbstractMatrix{T} # each row is a vertex if the first element is 1 and a ray otherwise
     linset::IntSet
 
-    function LiftedVRepresentation(R::AbstractMatrix{T}, linset::IntSet=IntSet([]))
+    function LiftedVRepresentation{N, T}(R::AbstractMatrix{T}, linset::IntSet=IntSet([])) where {N, T}
         if length(R) > 0 && size(R, 2) != N+1
             error("dimension does not match")
         end
         if ~isempty(linset) && last(linset) > size(R, 1)
             error("The elements of linset should be between 1 and the number of rows of R")
         end
-        new(R, linset)
+        new{N, T}(R, linset)
     end
 end
 
