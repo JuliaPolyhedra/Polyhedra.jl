@@ -15,6 +15,7 @@ notifications:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.init(); Pkg.add("GeometryTypes"); Pkg.checkout("GeometryTypes")'
+  - julia -e 'Pkg.clone("https://github.com/rdeits/CDDLib.jl"); Pkg.checkout("CDDLib", "fix-0.6"); Pkg.build("CDDLib")'
   - julia -e 'Pkg.clone(pwd()); Pkg.build("Polyhedra"); Pkg.test("Polyhedra"; coverage=true)'
 after_success:
   # push coverage results to Coveralls
