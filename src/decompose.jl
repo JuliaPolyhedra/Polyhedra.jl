@@ -24,7 +24,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
     end
     scene = HyperRectangle{3,RT}([(xmin+xmax)/2-width, (ymin+ymax)/2-width, (zmin+zmax)/2-width], 2*width*ones(RT,3))
     function exit_point(start, ray)
-        times = max((Vector(minimum(scene))-start) ./ ray, (Vector(maximum(scene))-start) ./ ray)
+        times = max.((Vector(minimum(scene))-start) ./ ray, (Vector(maximum(scene))-start) ./ ray)
         times[ray .== 0] = Inf # To avoid -Inf with .../(-0)
         time = minimum(times)
         start + time * ray
