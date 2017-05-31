@@ -12,14 +12,13 @@ getlibraryfor{N, T}(p::Polyhedron{N}, ::Type{T}) = getlibraryfor(p, N, T)
 getlibraryfor{N, T}(p::Polyhedron{N, T}, n::Int) = getlibraryfor(p, n, T)
 getlibrary{N, T}(p::Polyhedron{N, T}) = getlibraryfor(p, N, T)
 
-function defaultLPsolverfor{N,T}(p::Rep{N,T}, solver=nothing)
+function defaultLPsolverfor{N,T}(p::Rep{N,T}, solver=JuMP.UnsetSolver())
     if vrepiscomputed(p)
         SimpleVRepSolver()
     else
-        if solver === nothing
-            JuMP.UnsetSolver()
-        else
-            solver
-        end
+        solver
     end
 end
+
+defaultLPsolverfor(::VRepresentation, solver=JuMP.UnsetSolver()) = SimpleVRepSolver()
+defaultLPsolverfor(::HRepresentation, solver=JuMP.UnsetSolver()) = solver
