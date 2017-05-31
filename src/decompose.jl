@@ -1,4 +1,3 @@
-using FixedSizeArrays
 # I only import it and do not use "using" so that Datastructures.status does not conflict with MathProgBase.status
 import DataStructures
 import GeometryTypes.decompose, GeometryTypes.isdecomposable
@@ -25,7 +24,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
     end
     scene = HyperRectangle{3,RT}([(xmin+xmax)/2-width, (ymin+ymax)/2-width, (zmin+zmax)/2-width], 2*width*ones(RT,3))
     function exit_point(start, ray)
-        times = max((Vector(minimum(scene))-start) ./ ray, (Vector(maximum(scene))-start) ./ ray)
+        times = max.((Vector(minimum(scene))-start) ./ ray, (Vector(maximum(scene))-start) ./ ray)
         times[ray .== 0] = Inf # To avoid -Inf with .../(-0)
         time = minimum(times)
         start + time * ray
@@ -127,7 +126,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
             end
             if xray == nothing
                 sweep_norm = cross(zray, [1,0,0])
-                if sum(abs(sweep_norm)) == 0
+                if sum(abs, sweep_norm) == 0
                     sweep_norm = cross(zray, [0,1,0])
                 end
             else
@@ -185,8 +184,8 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
 
     end
     ntri = length(triangles)
-    pts  = Vector{FixedSizeArrays.Point{3,RT}}(3*ntri)
-    faces   = Vector{GeometryTypes.Face{3,Int,0}}(ntri)
+    pts  = Vector{GeometryTypes.Point{3,RT}}(3*ntri)
+    faces   = Vector{GeometryTypes.Face{3,Int}}(ntri)
     ns = Vector{GeometryTypes.Normal{3,RT}}(3*ntri)
     for i in 1:ntri
         tri = pop!(triangles)
@@ -210,7 +209,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
     end
     # If the type of ns is Rational, it also works.
     # The normalized array in in float but then it it recast into Rational
-    map!(normalize, ns)
+    map!(normalize, ns, ns)
     (pts, faces, ns)
 end
 
@@ -222,7 +221,7 @@ function decompose{N, T1, T2}(PT::Type{Point{N, T1}}, poly::Polyhedron{N, T2})
     points = fulldecompose(poly)[1]
     map(PT, points)
 end
-function decompose{N, T, O, T2}(FT::Type{Face{N, T, O}}, poly::Polyhedron{3, T2})
+function decompose{N, T, T2}(FT::Type{Face{N, T}}, poly::Polyhedron{3, T2})
     faces = fulldecompose(poly)[2]
     decompose(FT, faces)
 end

@@ -5,12 +5,12 @@ export HRepElement, HalfSpace, HyperPlane
 export VRepElement, AbstractPoint, SymPoint, AbstractRay, Ray, Line
 export islin, isray, ispoint, ispoint, coord, lift
 
-typealias MyPoint{N,T} Union{Point{N,T},AbstractArray{T}}
+const MyPoint{N,T} = Union{Point{N,T},AbstractArray{T}}
 mypoint{T}(::Type{T}, a::AbstractArray) = AbstractArray{T}(a)
 mypoint{T}(::Type{T}, a::AbstractArray{T}) = a
 mypoint{N,T}(::Type{T}, a::Point{N}) = Point{N,T}(a)
 mypoint{N,T}(::Type{T}, a::Point{N,T}) = a
-typealias MyVec{N,T} Union{Vec{N,T},AbstractArray{T}}
+const MyVec{N,T} = Union{Vec{N,T},AbstractArray{T}}
 myvec{T}(::Type{T}, a::AbstractArray) = AbstractArray{T}(a)
 myvec{T}(::Type{T}, a::AbstractArray{T}) = a
 myvec{N,T}(::Type{T}, a::Vec{N}) = Vec{N,T}(a)
@@ -26,14 +26,14 @@ mydot(f::FixedVector, v::FixedVector) = dot(f, v)
 vecconv{T}(::Type{T}, a::AbstractVector) = AbstractVector{T}(a)
 vecconv{T}(::Type{T}, a::FixedVector) = FixedVector{T}(a)
 
-abstract HRepElement{N,T}
+abstract type HRepElement{N,T} end
 
 # ⟨a, x⟩ <= β
 type HalfSpace{N,T} <: HRepElement{N,T}
     a::MyVec{N,T}
     β::T
-    function HalfSpace(a::MyVec{N,T}, β::T)
-        new(a, β)
+    function HalfSpace{N, T}(a::MyVec{N,T}, β::T) where {N, T}
+        new{N, T}(a, β)
     end
 end
 
@@ -42,8 +42,8 @@ end
 type HyperPlane{N,T} <: HRepElement{N,T}
     a::MyVec{N,T}
     β::T
-    function HyperPlane(a::MyVec{N,T}, β::T)
-        new(a, β)
+    function HyperPlane{N, T}(a::MyVec{N,T}, β::T) where {N, T}
+        new{N, T}(a, β)
     end
 end
 
@@ -95,8 +95,8 @@ end
 
 type SymPoint{N, T}
     a::MyPoint{N, T}
-    function SymPoint(a::MyPoint{N, T})
-        new(a)
+    function SymPoint{N, T}(a::MyPoint{N, T}) where {N, T}
+        new{N, T}(a)
     end
 end
 
@@ -104,8 +104,8 @@ end
 
 type Ray{N, T}
     a::MyVec{N, T}
-    function Ray(a::MyVec{N, T})
-        new(a)
+    function Ray{N, T}(a::MyVec{N, T}) where {N, T}
+        new{N, T}(a)
     end
 end
 
@@ -113,8 +113,8 @@ end
 
 type Line{N,T}
     a::MyVec{N, T}
-    function Line(a::MyVec{N, T})
-        new(a)
+    function Line{N, T}(a::MyVec{N, T}) where {N, T}
+        new{N, T}(a)
     end
 end
 
@@ -125,7 +125,7 @@ vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 (-){ElemT<:Union{SymPoint,Ray,Line}}(elem::ElemT) = ElemT(-coord(elem))
 (-)(r::Ray, s::Ray) = Ray(r.a - s.a)
 (+)(r::Ray, s::Ray) = Ray(r.a + s.a)
-(+)(p::Union{AbstractArray,Point}, r::Union{Vec,Ray}) = p + coord(r)
+(+)(p::Union{AbstractArray,Point}, r::Ray) = p + coord(r)
 
 for op in [:dot, :cross]
     @eval begin
@@ -152,12 +152,12 @@ Base.convert{N,T}(::Type{SymPoint{N,T}}, v::SymPoint{N,T}) = v
 Base.convert{N,T}(::Type{Ray{N,T}}, v::Ray{N,T}) = v
 Base.convert{N,T}(::Type{Line{N,T}}, v::Line{N,T}) = v
 
-typealias AbstractPoint{N, T} Union{Point{N, T}, AbstractVector{T}, SymPoint{N, T}}
-typealias AbstractRay{N, T} Union{Vec{N, T}, Ray{N, T}, Line{N, T}}
-typealias FixedVRepElement{N,T} Union{Point{N,T}, Vec{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,T}}
-typealias VRepElement{N,T} Union{FixedVRepElement{N,T}, AbstractVector{T}}
-typealias RepElement{N,T} Union{HRepElement{N,T}, VRepElement{N,T}}
-typealias FixedRepElement{N,T} Union{HRepElement{N,T}, FixedVRepElement{N,T}}
+const AbstractPoint{N, T} = Union{Point{N, T}, AbstractVector{T}, SymPoint{N, T}}
+const AbstractRay{N, T} = Union{Vec{N, T}, Ray{N, T}, Line{N, T}}
+const FixedVRepElement{N,T} = Union{Point{N,T}, Vec{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,T}}
+const VRepElement{N,T} = Union{FixedVRepElement{N,T}, AbstractVector{T}}
+const RepElement{N,T} = Union{HRepElement{N,T}, VRepElement{N,T}}
+const FixedRepElement{N,T} = Union{HRepElement{N,T}, FixedVRepElement{N,T}}
 
 fulldim{N}(e::FixedRepElement{N}) = N
 eltype{N,T}(e::FixedRepElement{N, T}) = T
@@ -177,7 +177,7 @@ ispoint{T<:Union{Vec,Ray,Line}}(v::T) = false
 coord{ElemT<:Union{Point,AbstractVector,Vec}}(v::ElemT) = v
 coord{ElemT<:Union{HRepElement,SymPoint,Ray,Line}}(v::ElemT) = v.a
 
-typealias VRepElementContainer Union{SymPoint, Ray, Line}
+const VRepElementContainer = Union{SymPoint, Ray, Line}
 
 function (*){ElemT<:FixedVRepElement}(P::Matrix, v::ElemT)
     if ElemT <: VRepElementContainer

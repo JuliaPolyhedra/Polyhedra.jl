@@ -2,7 +2,7 @@ const threshold = 1e-8
 
 myeqzero{T<:Real}(x::T) = x == zero(T)
 myeqzero{T<:AbstractFloat}(x::T) = -threshold < x < threshold
-myeqzero{T<:Real}(x::AbstractVector{T}) = myeqzero(sum(abs(x)))
+myeqzero{T<:Real}(x::AbstractVector{T}) = myeqzero(sum(abs, x))
 myeqzero(x::Union{SymPoint, Ray, Line}) = myeqzero(coord(x))
 
 myeq{T<:Union{Integer, Rational}}(x::Union{T, AbstractArray{T}}, y::Union{T, AbstractArray{T}}) = x == y

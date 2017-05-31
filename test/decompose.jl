@@ -59,25 +59,28 @@ function decompose(lib::PolyhedraLibrary)
      GeometryTypes.Point(0.0,1.0,-1.0),
      GeometryTypes.Point(-1.0,0.0,-1.0),
      GeometryTypes.Point(0.0,-1.0,-1.0)]
-    @test GeometryTypes.decompose(GeometryTypes.Face{3, Int, 1}, p) ==
-    [GeometryTypes.Face(2.0,3.0,4.0),
-     GeometryTypes.Face(5.0,6.0,7.0),
-     GeometryTypes.Face(8.0,9.0,10.0),
-     GeometryTypes.Face(11.0,12.0,13.0),
-     GeometryTypes.Face(14.0,15.0,16.0),
-     GeometryTypes.Face(17.0,18.0,19.0),
-     GeometryTypes.Face(20.0,21.0,22.0),
-     GeometryTypes.Face(23.0,24.0,25.0),
-     GeometryTypes.Face(26.0,27.0,28.0),
-     GeometryTypes.Face(29.0,30.0,31.0),
-     GeometryTypes.Face(32.0,33.0,34.0),
-     GeometryTypes.Face(35.0,36.0,37.0),
-     GeometryTypes.Face(38.0,39.0,40.0),
-     GeometryTypes.Face(41.0,42.0,43.0),
-     GeometryTypes.Face(44.0,45.0,46.0),
-     GeometryTypes.Face(47.0,48.0,49.0),
-     GeometryTypes.Face(50.0,51.0,52.0),
-     GeometryTypes.Face(53.0,54.0,55.0)]
+
+     # TODO: restore this test so that it tries to decompose into a Face with
+     # a non-zero offset, once https://github.com/JuliaGeometry/GeometryTypes.jl/issues/89 is resolved
+    @test GeometryTypes.decompose(GeometryTypes.Face{3, Int}, p) ==
+    [GeometryTypes.Face{3, Int}(2,3,4) .- 1,
+     GeometryTypes.Face{3, Int}(5,6,7) .- 1,
+     GeometryTypes.Face{3, Int}(8,9,10) .- 1,
+     GeometryTypes.Face{3, Int}(11,12,13) .- 1,
+     GeometryTypes.Face{3, Int}(14,15,16) .- 1,
+     GeometryTypes.Face{3, Int}(17,18,19) .- 1,
+     GeometryTypes.Face{3, Int}(20,21,22) .- 1,
+     GeometryTypes.Face{3, Int}(23,24,25) .- 1,
+     GeometryTypes.Face{3, Int}(26,27,28) .- 1,
+     GeometryTypes.Face{3, Int}(29,30,31) .- 1,
+     GeometryTypes.Face{3, Int}(32,33,34) .- 1,
+     GeometryTypes.Face{3, Int}(35,36,37) .- 1,
+     GeometryTypes.Face{3, Int}(38,39,40) .- 1,
+     GeometryTypes.Face{3, Int}(41,42,43) .- 1,
+     GeometryTypes.Face{3, Int}(44,45,46) .- 1,
+     GeometryTypes.Face{3, Int}(47,48,49) .- 1,
+     GeometryTypes.Face{3, Int}(50,51,52) .- 1,
+     GeometryTypes.Face{3, Int}(53,54,55) .- 1]
     @test GeometryTypes.decompose(GeometryTypes.Normal{3,Float64}, p) ==
     [GeometryTypes.Normal(1.0,0.0,0.0),
      GeometryTypes.Normal(1.0,0.0,0.0),
