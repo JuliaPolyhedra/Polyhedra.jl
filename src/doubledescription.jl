@@ -30,7 +30,13 @@ end
 
 function doubledescription{N, T}(v::VRepresentation{N, T})
     lv = LiftedVRepresentation(v)
-    vl = doubledescription(SimpleHRepresentation(lv.R, zeros(T, size(lv.R, 1)), lv.linset))
+    # See #28
+    if haspoints(v)
+        R = -lv.R
+    else
+        R = [-one(T) zeros(T, 1, N); -lv.R]
+    end
+    vl = doubledescription(SimpleHRepresentation(R, zeros(T, size(R, 1)), lv.linset))
     # it has been cut by homogeneous hyperplane (i.e. containing the origin) only
     @assert npoints(vl) == 0
     LiftedHRepresentation(vl.R, vl.Rlinset)

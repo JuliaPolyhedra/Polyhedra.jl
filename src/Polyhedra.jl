@@ -10,7 +10,7 @@ export PolyhedraLibrary, Polyhedron, getlibrary, getlibraryfor
 abstract type PolyhedraLibrary end
 abstract type Polyhedron{N,T} <: GeometryPrimitive{N,T} end
 
-import Base.intersect, Base.+, Base.*, Base.isempty, Base.copy, Base.push!, Base.length, Base.eltype, Base.start, Base.done, Base.next
+import Base.intersect, Base.==, Base.+, Base.*, Base.isempty, Base.copy, Base.push!, Base.length, Base.eltype, Base.start, Base.done, Base.next
 
 # Definitions
 include("elements.jl")
@@ -19,6 +19,7 @@ include("representation.jl")
 include("repop.jl")
 include("repelemop.jl")
 include("operations.jl")
+include("aff.jl")
 include("redundancy.jl")
 include("projection.jl")
 

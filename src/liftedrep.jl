@@ -53,7 +53,7 @@ function (::Type{LiftedHRepresentation{N, T}}){N, T}(eqs, ineqs)
         A[i,1] = h.β
     end
     for (i, h) in enumerate(ineqs)
-        A[neq+i,2:end] = h.a
+        A[neq+i,2:end] = -h.a
         A[neq+i,1] = h.β
     end
     LiftedHRepresentation{N, T}(A, linset)
@@ -72,7 +72,7 @@ function (::Type{LiftedHRepresentation{N, T}}){N, T}(; eqs=nothing, ineqs=nothin
     end
     if !(ineqs === nothing)
         for (i, h) in enumerate(ineqs)
-            A[neq+i,2:end] = h.a
+            A[neq+i,2:end] = -h.a
             A[neq+i,1] = h.β
         end
     end
@@ -108,7 +108,9 @@ end
 nineqs(ine::LiftedHRepresentation) = nhreps(ine) - neqs(ine)
 startineq(ine::LiftedHRepresentation) = nextz(ine.linset, 1)
 doneineq(ine::LiftedHRepresentation, state) = state > nhreps(ine)
-nextineq{N,T}(ine::LiftedHRepresentation{N,T}, state) = (extractrow(ine, state)::HalfSpace{N,T}, nextz(state+1))
+nextineq{N,T}(ine::LiftedHRepresentation{N,T}, state) = (extractrow(ine, state)::HalfSpace{N,T}, nextz(ine.linset, state+1))
+
+Base.getindex(h::LiftedHRepresentation, I::AbstractArray) = LiftedHRepresentation(h.A[I, :], filterintset(h.linset, I))
 
 # V-Represenation
 
@@ -157,29 +159,25 @@ function (::Type{LiftedVRepresentation{N, T}}){N, T}(it::VRepIterator{N, T})
     LiftedVRepresentation{N, T}(R, linset)
 end
 
-function (::Type{LiftedVRepresentation{N, T}}){N, T}(; points=nothing, rays=nothing)
-    npoint = isnull(points) ? 0 : length(points)
-    nray = isnull(rays) ? 0 : length(rays)
+function (::Type{LiftedVRepresentation{N, T}}){N, T}(points, rays)
+    npoint = length(points)
+    nray = length(rays)
     nvrep = npoint + nray
     R = Matrix{T}(nvrep, N+1)
     linset = IntSet()
-    if !(points === nothing)
-        for (i, p) in enumerate(points)
-            R[i,2:end] = coord(p)
-            R[i,1] = one(T)
-            if islin(p)
-                push!(linset, i)
-            end
+    for (i, p) in enumerate(points)
+        R[i,2:end] = coord(p)
+        R[i,1] = one(T)
+        if islin(p)
+            push!(linset, i)
         end
     end
-    if !(rays === nothing)
-        for (i, r) in enumerate(rays)
-            j = npoint + i
-            R[j,2:end] = coord(r)
-            R[j,1] = zero(T)
-            if islin(r)
-                push!(linset, j)
-            end
+    for (i, r) in enumerate(rays)
+        j = npoint + i
+        R[j,2:end] = coord(r)
+        R[j,1] = zero(T)
+        if islin(r)
+            push!(linset, j)
         end
     end
     LiftedVRepresentation{N, T}(R, linset)
@@ -257,3 +255,5 @@ function nextpoint(ext::LiftedVRepresentation, state)
     p = ext.R[state,:]
     (extractrow(ext, state), nextpointidx(ext, state+1))
 end
+
+Base.getindex(v::LiftedVRepresentation, I::AbstractArray) = LiftedVRepresentation(v.R[I, :], filterintset(v.linset, I))

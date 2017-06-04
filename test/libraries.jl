@@ -13,16 +13,19 @@ cdd = try_import(:CDDLib)
 lrs = try_import(:LRSLib)
 
 # Create library lists
-libraries = Any[]
-push!(libraries, SimplePolyhedraLibrary())
+libraries = PolyhedraLibrary[]
+push!(libraries, SimplePolyhedraLibrary{Rational{BigInt}}())
+push!(libraries, SimplePolyhedraLibrary{Float64}())
 cdd && push!(libraries, CDDLib.CDDLibrary(:float))
 cdd && push!(libraries, CDDLib.CDDLibrary(:exact))
 lrs && push!(libraries, LRSLib.LRSLibrary())
 # Floating point arithmetic libraries
-float_libraries = Any[]
+float_libraries = PolyhedraLibrary[]
+push!(float_libraries, SimplePolyhedraLibrary{Float64}())
 cdd && push!(float_libraries, CDDLib.CDDLibrary(:float))
 # Exact arithmetic libraries
-exact_libraries = Any[]
+exact_libraries = PolyhedraLibrary[]
+push!(exact_libraries, SimplePolyhedraLibrary{Rational{BigInt}}())
 cdd && push!(exact_libraries, CDDLib.CDDLibrary(:exact))
 lrs && push!(exact_libraries, LRSLib.LRSLibrary())
 

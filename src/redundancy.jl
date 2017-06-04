@@ -13,17 +13,31 @@ function removevredundancy(vrep::VRep, hrep::HRep; strongly=true)
     R = IntSet()
     nl = nlines(vrep)
     for (i, v) in enumerate(vreps(vrep))
-        if isvredundant(hrep, v, strongly=strongly, nl=nlines(vrep))
+        if isvredundant(hrep, v, strongly=strongly, nl=nl)
             push!(R, i)
         end
     end
     vrep[setdiff(1:nvreps(vrep), R)]
 end
 
+# Remove redundancy in the H-representation using the V-representation
+# There shouldn't be any duplicates in vrep for this to work
+function removehredundancy(hrep::HRep, vrep::VRep; strongly=true)
+    R = IntSet()
+    d = dim(hrep, true) # TODO dim(hrep)
+    for (i, h) in enumerate(hreps(hrep))
+        if ishredundant(vrep, h, strongly=strongly, d=d)
+            push!(R, i)
+        end
+    end
+    hrep[setdiff(1:nhreps(hrep), R)]
+end
+
+
 function gethredundantindices(hrep::HRep; strongly=false, solver = defaultLPsolverfor(hrep))
     red = IntSet()
-    for i in 1:nhreps(hrep)
-        if ishredundant(hrep, i; strongly, solver)
+    for (i, h) in enumerate(hreps(hrep))
+        if ishredundant(hrep, h; strongly=strongly, solver=solver)
             push!(red, i)
         end
     end
@@ -41,6 +55,7 @@ end
 
 # V-redundancy
 # If p is an H-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
+# TODO nlines should be the number of non-redundant lines so something similar to dim
 function isvredundant{N,T}(p::HRep{N,T}, v::VRepElement; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver)
     count = 0
     for h in hreps(p)
@@ -51,137 +66,193 @@ function isvredundant{N,T}(p::HRep{N,T}, v::VRepElement; strongly = true, nl::In
     strong = (isray(v) ? N-1 : N) - nl
     count < (strongly ? strong : min(strong, 1))
 end
+# A line is never redundant but it can be a duplicate
+isvredundant{N,T}(p::HRep{N,T}, v::Line; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) = false
 
 # H-redundancy
-function ishredundantaux(p::Polyhedron, a, β, strongly, cert, solver)
-    sol = linprog(-a, p, solver)
-    if sol.status == :Unbounded
-        cert ?  (false, sol.attrs[:unboundedray], :UnboundedRay) : false
-    elseif sol.status == :Optimal
-        if mygt(sol.objval, β)
-            cert ? (false, sol.sol, :ExteriorPoint) : false
-        elseif mygeq(sol.objval, β)
-            if strongly
-                cert ? (false, sol.sol, :BoundaryPoint) : false
+# If p is a V-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
+function ishredundant{N,T}(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver)
+    rcount = 0
+    pcount = 0
+    hp = hyperplane(h)
+    for v in vreps(p)
+        if v in hp
+            if isray(v)
+                rcount += 1
             else
-                cert ? (true, sol.sol, :BoundaryPoint) : true
+                pcount += 1
             end
-        else
-            cert ? (true, nothing, :NotApplicable) : true
         end
     end
-end
-function ishredundant(p::Rep, h::HRepElement; strongly=false, cert=false, solver = defaultLPsolverfor(p))
-    if islin(h)
-        sol = ishredundantaux(p, h.a, h.β, strongly, cert, solver)
-        if !sol[1]
-            sol
-        else
-            ishredundantaux(p, -h.a, -h.β, strongly, cert, solver)
-        end
-    else
-        ishredundantaux(p, h.a, h.β, strongly, cert, solver)
+    if myeqzero(h.β) && !haspoints(p)
+        # The origin, see #28
+        pcount += 1
     end
+    pcount < min(d, 1) || (strongly && pcount + rcount < d)
 end
+# An hyperplane is never redundant but it can be a duplicate
+ishredundant{N,T}(p::VRep{N,T}, h::HyperPlane; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) = false
+
+# H-redundancy
+#function ishredundantaux(p::HRep, a, β, strongly, solver)
+#    sol = linprog(-a, p, solver)
+#    if sol.status == :Unbounded
+#        false
+#    elseif sol.status == :Optimal
+#        if mygt(sol.objval, β)
+#            false
+#        elseif mygeq(sol.objval, β)
+#            if strongly
+#                false
+#            else
+#                true
+#            end
+#        else
+#            true
+#        end
+#    end
+#end
+#function ishredundant(p::Rep, h::HRepElement; strongly = false, solver = defaultLPsolverfor(p))
+#    if islin(h)
+#        sol = ishredundantaux(p, h.a, h.β, strongly, solver)
+#        if !sol[1]
+#            sol
+#        else
+#            ishredundantaux(p, -h.a, -h.β, strongly, solver)
+#        end
+#    else
+#        ishredundantaux(p, h.a, h.β, strongly, solver)
+#    end
+#end
 
 ######################
 # Duplicates removal #
 ######################
-
-# Linearity
-export detecthlinearities!, detectvlinearities!
-detectvlinearities!(p::VRep) = error("detectvlinearities! not implemented for $(typeof(p))")
-detecthlinearities!(p::HRep) = error("detecthlinearities! not implemented for $(typeof(p))")
+export removeduplicates
 
 # H-duplicates
 # Separate function so that it is compiled with a concrete type for p
-function vpupdatedup!(points, sympoints, p::SymPoint)
+function vpupdatedup!(aff, points, sympoints, p::SymPoint)
     found = false
-    mp = -p
     for (i, q) in enumerate(points)
-        if coord(p) ≈ q || coord(mp) ≈ q
+        if (coord(p) - q) in aff || (coord(p) + q) in aff
             found = true
             deleteat!(points, i)
             push!(sympoints, p)
             break
         end
     end
-    if !found && !any(isapprox.(sympoints, [p]))
+    if !found && !any(sp -> (sp - p) in aff || (sp + p) in aff, sympoints)
         push!(sympoints, p)
     end
 end
-function vpupdatedup!(points, sympoints, p)
-    mp = -p
-    if !any(isapprox.(points, [p])) && !any(isapprox.(coord.(sympoints), [p])) && !any(isapprox.(coord.(sympoints), [mp]))
+function vpupdatedup!(aff, points, sympoints, p)
+    if !any(point -> (point - p) in aff, points) && !any(sp -> (coord(sp) - p) in aff || (coord(sp) + p) in aff, sympoints)
         push!(points, p)
     end
 end
-function vrupdatedup!(rays, lines, l::Line)
-    if !any(isapprox.(lines, [l]))
-        for (i, r) in enumerate(rays)
-            if line(r) ≈ l
-                found = true
-                deleteat!(rays, i)
-                break
-            end
-        end
-        push!(lines, l)
-    end
-end
-function vrupdatedup!(rays, lines, r)
-    l = line(r)
-    if !any(isapprox.(rays, [r])) && !any(isapprox.(lines, [l]))
-        mr = -r
+#function vrupdatedup!(rays, lines, l::Line)
+#    if !any(isapprox.(lines, [l]))
+#        for (i, r) in enumerate(rays)
+#            if line(r) ≈ l
+#                found = true
+#                deleteat!(rays, i)
+#                break
+#            end
+#        end
+#        push!(lines, l)
+#    end
+#end
+function vrupdatedup!(aff, rays, r)
+    r = remproj(r, aff)
+    if !myeqzero(r) && !any(ray -> remproj(ray, aff) ≈ r, rays)
+        l = line(r)
         found = false
         for (i, s) in enumerate(rays)
             if line(s) ≈ l
                 deleteat!(rays, i)
-                push!(lines, l)
                 found = true
                 break
             end
         end
-        if !found
+        if found
+            push!(aff, l)
+        else
             push!(rays, r)
         end
+        found
+    else
+        false
     end
 end
 function removeduplicates{N, T}(vrep::VRepresentation{N, T})
+    aff = linespace(vrep, true)
+    newlin = true
+    while newlin
+        newlin = false
+        rs = Union{Vec{N, T}, Ray{N, T}}[]
+        for r in rays(vrep)
+            if !islin(r)
+                newlin |= vrupdatedup!(aff, rs, r)
+            end
+        end
+    end
     ps = Union{Point{N, T}, AbstractVector{T}}[]
     sympoints = SymPoint{N, T}[]
     for p in points(vrep)
-        vpupdatedup!(ps, sympoints, p)
+        vpupdatedup!(aff, ps, sympoints, p)
     end
-    rs = Union{Vec{N, T}, Ray{N, T}}[]
-    lines = Line{N, T}[]
-    for r in rays(vrep)
-        vrupdatedup!(rs, lines, r)
-    end
-    typeof(vrep)([sympoints; ps], [lines; rs])
+    typeof(vrep)([sympoints; ps], [aff.lines; rs])
 end
 
 # H-duplicates
-function hupdatedup!(hp, hs, h::HyperPlane)
-    if !any(isapprox.(hp, [h]))
-        for (i, s) in enumerate(hs)
-            if hyperplane(s) ≈ h
-                deleteat!(hs, i)
+#function hupdatedup!(hp, hs, h::HyperPlane)
+#    if !any(isapprox.(hp, [h]))
+#        for (i, s) in enumerate(hs)
+#            if hyperplane(s) ≈ h
+#                deleteat!(hs, i)
+#                break # There should be no duplicate in hp so no need to continue
+#            end
+#        end
+#        push!(hp, h)
+#    end
+#end
+function hupdatedup!(aff::HAffineSpace, hss, h::HalfSpace)
+    h = remproj(h, aff)
+    if !myeqzero(h) && !any(hs -> myeq(remproj(hs, aff), h), hss)
+        hp = hyperplane(h)
+        found = false
+        for (i, hs) in enumerate(hss)
+            # TODO Not enough, e.g.
+            # x <= 1
+            # y <= 1
+            # x + y >= 2
+            if hyperplane(hs) ≈ hp
+                deleteat!(hss, i)
+                found = true
                 break # There should be no duplicate in hp so no need to continue
             end
         end
-        push!(hp, h)
+        if found
+            push!(aff, hp)
+        else
+            push!(hss, h)
+        end
+        found
+    else
+        false
     end
 end
-function hupdatedup!(hp, hs, h::HalfSpace)
-    if !any(isapprox.(hp, [hyperplane(h)])) && !any(isapprox.(hs, [h]))
-        push!(hs, h)
+function removeduplicates{N, T}(hrep::HRepresentation{N, T})
+    aff = affinehull(hrep, true)
+    newlin = true
+    while newlin
+        newlin = false
+        aff = removeduplicates(aff)
+        hs = HalfSpace{N, T}[]
+        for h in ineqs(hrep)
+            newlin |= hupdatedup!(aff, hs, h)
+        end
     end
-end
-function removeduplicates{N, T}(vrep::HRepresentation{N, T})
-    hp = HyperPlane{N, T}[]
-    hs = HalfSpace{N, T}[]
-    for p in hreps(vrep)
-        hupdatedup!(hp, hs, p)
-    end
-    typeof(vrep)(hp, hs)
+    typeof(hrep)(aff.hps, hs)
 end

@@ -1,7 +1,7 @@
 import Base.round, Base.eltype
 
 export Representation, HRepresentation, VRepresentation, fulldim
-export AbstractRepIterator, AbstractHRepIterator, HRepIterator, EqIterator, IneqIterator, AbstractVRepIterator, VRepIterator, RayIterator, PointIterator
+export AbstractRepIterator, AbstractHRepIterator, HRepIterator, EqIterator, IneqIterator, AbstractVRepIterator, VRepIterator, LineIterator, RayIterator, PointIterator
 export Rep
 export changeeltype, changefulldim, changeboth
 
@@ -55,7 +55,7 @@ abstract type AbstractRepIterator{N, T} end
 abstract type AbstractHRepIterator{N, T} <: AbstractRepIterator{N, T} end
 abstract type AbstractVRepIterator{N, T} <: AbstractRepIterator{N, T} end
 
-for (rep, HorVRep, elt, low) in [(true, :VRep, :VRepElement, "vrep"), (false, :VRep, :AbstractPoint, "point"), (false, :VRep, :AbstractRay, "ray"), (true, :HRep, :HRepElement, "hrep"), (false, :HRep, :HalfSpace, "ineq"), (false, :HRep, :HyperPlane, "eq")]
+for (rep, HorVRep, elt, low) in [(true, :VRep, :VRepElement, "vrep"), (false, :VRep, :AbstractPoint, "point"), (false, :VRep, :Line, "line"), (false, :VRep, :AbstractRay, "ray"), (true, :HRep, :HRepElement, "hrep"), (false, :HRep, :HalfSpace, "ineq"), (false, :HRep, :HyperPlane, "eq")]
     if rep
         up = uppercase(low[1:2]) * low[3:end]
     else
@@ -141,7 +141,7 @@ Base.length(vrep::VRepresentation)  = nvreps(vrep)
 Base.isempty(vrep::VRepresentation) = hasvreps(vrep)
 
 nvreps(vrep::VRep) = nrays(vrep) + npoints(vrep)
-nlines(vrep::VRep) = sum(map(islin, rays(vrep))) # TODO: call detectvlinearity! before
+#nlines(vrep::VRep) = sum(map(islin, rays(vrep))) # TODO: call detectvlinearity! before
 
 hasrays(vrep::VRep)   = nrays(vrep) > 0
 haspoints(vrep::VRep) = npoints(vrep) > 0
@@ -249,7 +249,7 @@ function vconvert{RepTout<:VRep, RepTin<:VRep}(::Type{RepTout}, p::RepTin)
         f = (i,x) -> changeeltype(typeof(x), Tout)(x)
     end
     if decomposedvfast(p)
-        RepTout(points=PointIterator{Nout,Tout,Nin,Tin}([p], f), rays=RayIterator{Nout,Tout,Nin,Tin}([p], f))
+        RepTout(PointIterator{Nout,Tout,Nin,Tin}([p], f), RayIterator{Nout,Tout,Nin,Tin}([p], f))
     else
         RepTout(VRepIterator{Nout,Tout,Nin,Tin}([p], f))
     end
@@ -265,6 +265,14 @@ function changeeltype{RepTin<:Rep, Tout}(p::RepTin, ::Type{Tout})
     RepTout = changeeltype(RepTin, Tout)
     RepTout(p)
 end
+
+(::Type{VRepresentation{N, T}}){N, T, RepTin}(v::RepTin) = lazychangeboth(RepTin, N, T)(v)
+(::Type{HRepresentation{N, T}}){N, T, RepTin}(h::RepTin) = lazychangeboth(RepTin, N, T)(h)
+
+(::Type{VRep{N, T}}){N, T}(v::VRepresentation) = VRepresentation{N, T}(v)
+(::Type{VRep{N, T}}){N, T}(p::Polyhedron) = Polyhedron{N, T}(p)
+(::Type{HRep{N, T}}){N, T}(h::HRepresentation) = HRepresentation{N, T}(h)
+(::Type{HRep{N, T}}){N, T}(p::Polyhedron) = Polyhedron{N, T}(p)
 
 # FIXME it does not get called. The calls always go throug vconvert and hconvert. Use changeeltype instead
 #function Base.convert{N, T, RepT<:Representation}(::Type{Representation{N, T}}, rep::RepT)

@@ -9,7 +9,7 @@ function permutahedrontest{Lib<:PolyhedraLibrary}(lib::Lib)
     inequality_fulltest(poly, A, b, linset)
     generator_fulltest(poly, V, Array{Int}(0, 3))
 
-
+    isa(lib, SimplePolyhedraLibrary) && return
     # x1___x4____________1
     #      |         |
     #      V         V
