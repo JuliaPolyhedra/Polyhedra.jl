@@ -30,8 +30,6 @@ build_script:
       Pkg.init(); Pkg.add(\"GeometryTypes\"); Pkg.checkout(\"GeometryTypes\");
       Pkg.clone(pwd(), \"Polyhedra\");
       Pkg.clone(\"https://github.com/JuliaPolyhedra/CDDLib.jl\"); Pkg.checkout(\"CDDLib\", \"fix-0.6\"); Pkg.build(\"CDDLib\")
-      Pkg.clone(\"https://github.com/JuliaPolyhedra/LRSLib.jl\"); Pkg.checkout(\"LRSLib\", \"fix-0.6\"); Pkg.build(\"LRSLib\")
-
       Pkg.build(\"Polyhedra\")"
 
 test_script:
