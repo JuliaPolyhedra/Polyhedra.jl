@@ -61,6 +61,14 @@ Base.convert{N,T}(::Type{HyperPlane{N,T}}, h::HyperPlane{N,T}) = h
 islin(v::HalfSpace) = false
 islin(v::HyperPlane) = true
 
+(-)(h1::HRepElement, h2::HRepElement) = HalfSpace(h1.a - h2.a, h1.β - h2.β)
+(-)(h1::HyperPlane, h2::HyperPlane) = HyperPlane(h1.a - h2.a, h1.β - h2.β)
+
+(*)(h::HyperPlane, α::Real) = HyperPlane(h.a * α, h.β * α)
+(*)(α::Real, h::HyperPlane) = HyperPlane(α * h.a, α * h.β)
+(*)(h::HalfSpace, α::Real) = HalfSpace(h.a * α, h.β * α)
+(*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
+
 function (*){ElemT<:HRepElement}(h::ElemT, P::Matrix)
     Tout = mypromote_type(eltype(ElemT), eltype(P))
     ElemTout = changeboth(ElemT, size(P, 2), Tout)
@@ -123,7 +131,10 @@ vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 
 (-){ElemT<:Union{HyperPlane, HalfSpace}}(h::ElemT) = ElemT(-h.a, -h.β)
 (-){ElemT<:Union{SymPoint,Ray,Line}}(elem::ElemT) = ElemT(-coord(elem))
-(-)(r::Ray, s::Ray) = Ray(r.a - s.a)
+# Used in remproj
+(-)(p::AbstractArray, l::Line) = p - coord(l)
+# Ray - Line is done in remproj
+(-)(r::Ray, s::Union{Ray, Line}) = Ray(r.a - s.a)
 (+)(r::Ray, s::Ray) = Ray(r.a + s.a)
 (+)(p::Union{AbstractArray,Point}, r::Ray) = p + coord(r)
 
@@ -136,6 +147,7 @@ for op in [:dot, :cross]
 end
 
 (*){T<:Union{SymPoint,Ray,Line}}(x, y::T) = T(x * y.a)
+(*){T<:Union{SymPoint,Ray,Line}}(y::T, x) = T(y.a * x)
 
 Base.convert{T}(::Type{Vector{T}}, x::Union{SymPoint,Ray,Line}) = convert(Vector{T}, x.a)
 

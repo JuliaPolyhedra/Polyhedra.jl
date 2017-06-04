@@ -1,31 +1,15 @@
-export affinehull
-
-function affinehull{T<:HRep}(p::T)
-    T(eqs=eqs(p))
+# Always type of first arg
+function Base.intersect{N, T1, T2, RepTin<:HRep{N, T1}}(p1::RepTin, p2::HRep{N, T2})
+    Tout = promote_type(T1, T2)
+    RepTout = lazychangeeltype(RepTin, Tout)
+    RepTout(HRepIterator([HRep{N, Tout}(p1), HRep{N, Tout}(p2)]))
 end
 
 # Always type of first arg
-function Base.intersect{T1<:HRep, T2<:HRep}(p1::T1, p2::T2)
-    N = fulldim(T1)
-    T = eltype(T1)
-    if T != eltype(T2)
-        error("Cannot take the intersection of polyhedra of different element type")
-    end
-    if N != fulldim(T2)
-        error("Cannot take the intersection of polyhedra of different dimension")
-    end
-    T1(HRepIterator{N, T, N, T}([p1, p2]))
-end
-
-# Always type of first arg
-function (+){T1<:VRep, T2<:VRep}(p1::T1, p2::T2)
-    if eltype(T1) != eltype(T2)
-        error("Cannot take the Minkowski sum of polyhedra of different element type")
-    end
-    if fulldim(T1) != fulldim(T2)
-        error("Cannot take the Minkowski sum of polyhedra of different dimension")
-    end
-    T1(VRepIterator([p1, p2]))
+function (+){N, T1, T2, RepTin<:VRep{N, T1}}(p1::RepTin, p2::VRep{N, T2})
+    Tout = promote_type(T1, T2)
+    RepTout = lazychangeeltype(RepTin, Tout)
+    RepTout(VRepIterator([VRep{N, Tout}(p1), VRep{N, Tout}(p2)]))
 end
 
 # p1 has priority
@@ -104,7 +88,7 @@ function (*){RepT<:VRep}(P::AbstractMatrix, rep::RepT)
         points = PointIterator{Nout,Tout,Nin,Tin}([rep], f)
         rays = RayIterator{Nout,Tout,Nin,Tin}([rep], f)
         if RepT <: VRepresentation
-            RepTout(points=points, rays=rays)
+            RepTout(points, rays)
         else
             polyhedron(points, rays, getlibraryfor(rep, Nout, Tout))
         end

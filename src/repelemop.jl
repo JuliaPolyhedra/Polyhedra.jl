@@ -122,6 +122,7 @@ function Base.intersect{N, T}(v::VRep{N, T}, h::HRepElement)
         end
     end
     if !haspoints(v)
+        # The origin
         if !myeqzero(h.β)
             _pushinout!(pins, pout, zeros(T, N), hs)
         end

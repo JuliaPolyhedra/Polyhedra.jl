@@ -96,8 +96,3 @@ function dim(p::Polyhedron)
     detecthlinearities!(p)
     fulldim(p) - neqs(p)
 end
-
-# function affinehull(p::Polyhedron)
-#   detecthlinearities!(p)
-#   typeof(p)(affinehull(getinequalities(p)))
-# end

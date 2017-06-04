@@ -1,4 +1,5 @@
 function decompose(lib::PolyhedraLibrary)
+    isa(lib, SimplePolyhedraLibrary) && return
     contains(string(typeof(lib)),"LRSLibrary") && return
     V = [-1 -1 1; -1 1 1; 1 -1 1; 1 1 1; 0 1 -1; 1 0 -1; -1 0 -1; 0 -1 -1]
     R = [0 0 1]

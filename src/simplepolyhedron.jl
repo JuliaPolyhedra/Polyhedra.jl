@@ -1,6 +1,6 @@
 export SimplePolyhedraLibrary, SimplePolyhedron
 
-type SimplePolyhedraLibrary <: PolyhedraLibrary
+type SimplePolyhedraLibrary{T} <: PolyhedraLibrary
 end
 
 type SimplePolyhedron{N, T} <: Polyhedron{N, T}
@@ -8,7 +8,9 @@ type SimplePolyhedron{N, T} <: Polyhedron{N, T}
     vrep::Nullable{VRepresentation{N, T}}
 end
 
-getlibraryfor{T}(p::SimplePolyhedron, N::Int, ::Type{T}) = SimplePolyhedraLibrary()
+changefulldim{N, T}(::Type{SimplePolyhedron{N, T}}, n) = SimplePolyhedron{n, T}
+
+getlibraryfor{T}(p::SimplePolyhedron, N::Int, ::Type{T}) = SimplePolyhedraLibrary{T}()
 
 function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::HRepresentation{N, T})
     SimplePolyhedron{N, T}(rep, nothing)
@@ -16,11 +18,31 @@ end
 function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::VRepresentation{N, T})
     SimplePolyhedron{N, T}(nothing, rep)
 end
-function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::HRepIterator{N, T})
+
+function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::HRepIterator)
     SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(rep))
 end
-function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::VRepIterator{N, T})
+function (::Type{SimplePolyhedron{N, T}}){N, T}(eqs::EqIterator, points::IneqIterator)
+    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(eqs, ineqs))
+end
+function (::Type{SimplePolyhedron{N, T}}){N, T}(eqs::EqIterator)
+    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(eqs))
+end
+function (::Type{SimplePolyhedron{N, T}}){N, T}(ineqs::IneqIterator)
+    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(ineqs))
+end
+
+function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::VRepIterator)
     SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rep))
+end
+function (::Type{SimplePolyhedron{N, T}}){N, T}(points::PointIterator, rays::RayIterator)
+    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(points, rays))
+end
+function (::Type{SimplePolyhedron{N, T}}){N, T}(rays::RayIterator)
+    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rays))
+end
+function (::Type{SimplePolyhedron{N, T}}){N, T}(points::PointIterator)
+    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(points))
 end
 
 function (::Type{SimplePolyhedron{N, T}}){N, T}(; eqs=nothing, ineqs=nothing, points=nothing, rays=nothing)
@@ -37,20 +59,19 @@ function (::Type{SimplePolyhedron{N, T}}){N, T}(; eqs=nothing, ineqs=nothing, po
     SimplePolyhedron{N, T}(rep)
 end
 
-function polyhedron{N, T}(rep::Representation{N, T}, ::SimplePolyhedraLibrary)
+function polyhedron{N, T}(rep::Representation{N}, ::SimplePolyhedraLibrary{T})
     SimplePolyhedron{N, T}(rep)
 end
-function polyhedron{N, T}(repit::Union{HRepIterator{N, T}, VRepIterator{N, T}}, lib::SimplePolyhedraLibrary)
+function polyhedron{N, T}(repit::Union{HRepIterator{N}, VRepIterator{N}}, lib::SimplePolyhedraLibrary{T})
     SimplePolyhedron{N, T}(repit)
 end
-function polyhedron(lib::SimplePolyhedraLibrary; eqs=nothing, ineqs=nothing, points=nothing, rays=nothing)
+function polyhedron{T}(lib::SimplePolyhedraLibrary{T}; eqs=nothing, ineqs=nothing, points=nothing, rays=nothing)
     its = [eqs, ineqs, points, rays]
     i = findfirst(x -> !(x === nothing), its)
     if i == 0
         error("polyhedron should be given at least one iterator")
     end
     N = fulldim(its[i])
-    T = typeof(its[i]).parameters[2]
     SimplePolyhedron{N, T}(; eqs=eqs, ineqs=ineqs, points=points, rays=rays)
 end
 
@@ -63,7 +84,12 @@ function Base.copy{N, T}(p::SimplePolyhedron{N, T})
 end
 
 function Base.push!{N}(p::SimplePolyhedron{N}, ine::HRepresentation{N})
-    p.hrep = get(p.hrep) ∩ ine
+    p.hrep = hrep(p) ∩ ine
+    p.vrep = nothing
+end
+function Base.push!{N}(p::SimplePolyhedron{N}, ext::VRepresentation{N})
+    p.vrep = vrep(p) + ext
+    p.hrep = nothing
 end
 
 hrepiscomputed(p::SimplePolyhedron) = !isnull(p.hrep)
@@ -104,20 +130,20 @@ function decomposedvfast(p::SimplePolyhedron)
 end
 
 function detecthlinearities!(p::SimplePolyhedron)
-    warn("detecthlinearities! not supported by SimplePolyhedron")
+    p.hrep = removeduplicates(hrep(p))
 end
 function detectvlinearities!(p::SimplePolyhedron)
-    warn("detectvlinearities! not supported by SimplePolyhedron")
+    p.vrep = removeduplicates(vrep(p))
 end
 function removehredundancy!(p::SimplePolyhedron)
-    h = removeduplicates(hrep(p))
-    R = gethredundantindices(h)
-    p.hrep = h[setdiff(1:nhreps(p), R)]
+    detectvlinearities!(p)
+    detecthlinearities!(p)
+    p.hrep = removehredundancy(hrep(p), vrep(p))
 end
 function removevredundancy!(p::SimplePolyhedron)
-    p.vrep = removeduplicates(vrep(p))
-    R = getvredundantindices(p)
-    p.vrep = vrep(p)[setdiff(1:nvreps(p), R)]
+    detecthlinearities!(p)
+    detectvlinearities!(p)
+    p.vrep = removevredundancy(vrep(p), hrep(p))
 end
 
 for op in [:nhreps, :starthrep, :neqs, :starteq, :nineqs, :startineq]

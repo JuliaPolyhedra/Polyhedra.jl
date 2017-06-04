@@ -198,36 +198,38 @@ function (::Type{SimpleVRepresentation{N, T}}){N, T}(it::VRepIterator{N, T})
 end
 
 function (::Type{SimpleVRepresentation{N, T}}){N, T}(points, rays)
-    npoint = isnull(points) ? 0 : length(points)
-    nray = isnull(rays) ? 0 : length(rays)
+    npoint = length(points)
+    nray = length(rays)
     nvrep = npoint + nray
     V = Matrix{T}(npoint, N)
     R = Matrix{T}(nray, N)
     Vlinset = IntSet()
     Rlinset = IntSet()
-    if !(points === nothing)
-        for (i, p) in enumerate(points)
-            V[i,:] = coord(p)
-            if islin(p)
-                push!(Vlinset, i)
-            end
+    for (i, p) in enumerate(points)
+        V[i,:] = coord(p)
+        if islin(p)
+            push!(Vlinset, i)
         end
     end
-    if !(rays === nothing)
-        for (i, r) in enumerate(rays)
-            R[i,:] = coord(r)
-            if islin(r)
-                push!(Rlinset, i)
-            end
+    for (i, r) in enumerate(rays)
+        R[i,:] = coord(r)
+        if islin(r)
+            push!(Rlinset, i)
         end
     end
     SimpleVRepresentation{N, T}(V, R, Vlinset, Rlinset)
 end
-function (::Type{SimpleVRepresentation{N, T}}){N, T}(; points=nothing, rays=nothing)
-    SimpleVRepresentation{N, T}(points, rays)
-end
+(::Type{SimpleVRepresentation{N, T}}){N, T}(; points=Point{N, T}[], rays=Ray{N, T}[]) = SimpleVRepresentation{N, T}(points, rays)
 
 Base.copy{N,T}(ext::SimpleVRepresentation{N,T}) = SimpleVRepresentation{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
+
+nlines(ext::SimpleVRepresentation) = length(ext.Rlinset)
+startline(ext::SimpleVRepresentation) = start(ext.Rlinset)
+doneline(ext::SimpleVRepresentation, state) = done(ext.Rlinset, state)
+function nextline(ext::SimpleVRepresentation, state)
+    (i, nextstate) = next(ext.Rlinset, state)
+    (Line(ext.R[state,:]), nextstate)
+end
 
 nrays(ext::SimpleVRepresentation) = size(ext.R, 1)
 startray(ext::SimpleVRepresentation) = 1

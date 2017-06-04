@@ -1,7 +1,7 @@
 export defaultLPsolverfor
 
 getlibraryfor{T}(n::Int, ::Type{T}) = getlibraryfor(Val{n}, T)
-getlibraryfor(::Type{Val{N}}, ::Type{T}) where {N, T} = SimplePolyhedraLibrary()
+getlibraryfor(::Type{Val{N}}, ::Type{T}) where {N, T} = SimplePolyhedraLibrary{T}()
 
 # Libraries can implement this function to be the default for a certain type T
 # getlibraryfor{T<:Real}(p::LibraryPolyhedronType, n, ::Type{T})
