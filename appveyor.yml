@@ -29,7 +29,7 @@ build_script:
   - C:\projects\julia\bin\julia -e "versioninfo();
       Pkg.init(); Pkg.add(\"GeometryTypes\"); Pkg.checkout(\"GeometryTypes\");
       Pkg.clone(pwd(), \"Polyhedra\");
-      Pkg.clone(\"https://github.com/JuliaPolyhedra/CDDLib.jl\"); Pkg.checkout(\"CDDLib\", \"fix-0.6\"); Pkg.build(\"CDDLib\")
+      Pkg.clone(\"https://github.com/JuliaPolyhedra/CDDLib.jl\"); Pkg.checkout(\"CDDLib\", \"fix-0.6\"); Pkg.build(\"CDDLib\");
       Pkg.build(\"Polyhedra\")"
 
 test_script:
