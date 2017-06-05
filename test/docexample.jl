@@ -31,4 +31,6 @@ function doctest(lib::PolyhedraLibrary)
     # tries to create CDDPolyhedron of BigFloat, needs to let CDD decide of the promotion
     #inequality_fulltest(fixandeliminate(p, 2, 1/4, reshape([1, -1], 2, 1), [1/4, 0], IntSet())
     inequality_fulltest(translate(p, -[0, 1]), [1 1; 1 -1;-1 0], [0, 1, 0], IntSet())
+    # Testing 2D plotting
+    RecipesBase.apply_recipe(Dict{Symbol, Any}(), p)[1].args == ([0, 0.5, 0.5, 0, 0], [1, 0.5, 0.5, 0, 1])
 end

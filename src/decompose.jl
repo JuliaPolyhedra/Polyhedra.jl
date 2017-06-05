@@ -1,5 +1,4 @@
 # I only import it and do not use "using" so that Datastructures.status does not conflict with MathProgBase.status
-import DataStructures
 import GeometryTypes.decompose, GeometryTypes.isdecomposable
 
 function fulldecompose{T}(poly::Polyhedron{3,T})
@@ -30,7 +29,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
         start + time * ray
     end
 
-    triangles = DataStructures.Stack(Tuple{Tuple{Vector{Float64},Vector{Float64},Vector{Float64}},Int64})
+    triangles = Tuple{Tuple{Vector{Float64},Vector{Float64},Vector{Float64}},Int64}[]
     for i in 1:size(A, 1)
         xray = nothing
         yray = nothing
@@ -107,7 +106,7 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
             else
                 center = vec(first(face_vert))
             end
-            hull = DataStructures.Stack(Any)
+            hull = Any[]
             push!(hull, exit_point(center, line))
             if lineleft
                 push!(hull, exit_point(center, cross(zray, line)))
@@ -133,39 +132,16 @@ function fulldecompose{T}(poly::Polyhedron{3,T})
                 sweep_norm = cross(zray, xray)
             end
             sort!(face_vert, by = x -> dot(x, sweep_norm))
-            function getsemihull(sign_sense)
-                hull = DataStructures.Stack(Vector{T})
-                prev = sign_sense == 1 ? face_vert[1] : face_vert[length(face_vert)]
-                cur = prev
-                for j in (sign_sense == 1 ? (2:length(face_vert)) : ((length(face_vert)-1):-1:1))
-                    while prev != cur && counterclockwise(cur - prev, face_vert[j] - prev) >= 0
-                        cur = prev
-                        pop!(hull)
-                        if !isempty(hull)
-                            prev = DataStructures.top(hull)
-                        end
-                    end
-                    if yray != nothing && counterclockwise(face_vert[j] - cur, yray) >= 0
-                        break
-                    else
-                        push!(hull, cur)
-                        prev = cur
-                        cur = face_vert[j]
-                    end
-                end
-                push!(hull, cur)
-                hull
-            end
-            xtoy_hull = getsemihull(1)
+            xtoy_hull = getsemihull(face_vert, 1, counterclockwise, yray)
             if yray == nothing
-                ytox_hull = getsemihull(-1)
+                ytox_hull = getsemihull(face_vert, -1, counterclockwise, yray)
             else
-                ytox_hull = DataStructures.Stack(Any)
+                ytox_hull = Any[]
                 push!(ytox_hull, face_vert[1])
-                if DataStructures.top(xtoy_hull) != face_vert[1]
-                    push!(ytox_hull, DataStructures.top(xtoy_hull))
+                if last(xtoy_hull) != face_vert[1]
+                    push!(ytox_hull, last(xtoy_hull))
                 end
-                push!(ytox_hull, exit_point(DataStructures.top(xtoy_hull), yray))
+                push!(ytox_hull, exit_point(last(xtoy_hull), yray))
                 push!(ytox_hull, exit_point(face_vert[1], xray))
             end
             hulls = (xtoy_hull, ytox_hull)

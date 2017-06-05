@@ -41,6 +41,7 @@ include("default.jl")
 
 # Visualization
 include("show.jl")
+include("recipe.jl")
 include("decompose.jl")
 
 end # module
