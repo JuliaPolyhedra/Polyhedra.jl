@@ -1,6 +1,6 @@
 julia 0.6-
 GeometryTypes
 StaticArrays 0.5
-DataStructures
 MathProgBase 0.5.10 0.7
 JuMP 0.16
+RecipesBase
