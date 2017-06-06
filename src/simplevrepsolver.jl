@@ -1,9 +1,9 @@
 export SimpleVRepSolver, SimpleVRepPolyhedraModel
 
-type SimpleVRepSolver <: MathProgBase.AbstractMathProgSolver
+struct SimpleVRepSolver <: MathProgBase.AbstractMathProgSolver
 end
 
-type SimpleVRepPolyhedraModel <: AbstractPolyhedraModel
+mutable struct SimpleVRepPolyhedraModel <: AbstractPolyhedraModel
     vrep::Nullable{VRep}
     obj::Nullable{Vector}
     sense::Nullable{Symbol}

@@ -3,12 +3,12 @@ export LiftedHRepresentation, LiftedVRepresentation
 # H-Represenation
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
-type LiftedHRepresentation{N, T} <: HRepresentation{N, T}
+mutable struct LiftedHRepresentation{N, T} <: HRepresentation{N, T}
     # Ax >= 0, it is [b -A] * [z; x] where z = 1
     A::AbstractMatrix{T}
     linset::IntSet
 
-    function LiftedHRepresentation{N, T}(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where {N, T}
+    function LiftedHRepresentation{N, T}(A::AbstractMatrix, linset::IntSet=IntSet()) where {N, T}
         if ~isempty(linset) && last(linset) > size(A, 1)
             error("The elements of linset should be between 1 and the number of rows of A")
         end
@@ -114,11 +114,11 @@ Base.getindex(h::LiftedHRepresentation, I::AbstractArray) = LiftedHRepresentatio
 
 # V-Represenation
 
-type LiftedVRepresentation{N,T} <: VRepresentation{N,T}
+mutable struct LiftedVRepresentation{N,T} <: VRepresentation{N,T}
     R::AbstractMatrix{T} # each row is a vertex if the first element is 1 and a ray otherwise
     linset::IntSet
 
-    function LiftedVRepresentation{N, T}(R::AbstractMatrix{T}, linset::IntSet=IntSet([])) where {N, T}
+    function LiftedVRepresentation{N, T}(R::AbstractMatrix, linset::IntSet=IntSet([])) where {N, T}
         if length(R) > 0 && size(R, 2) != N+1
             error("dimension does not match")
         end

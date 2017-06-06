@@ -12,7 +12,7 @@ abstract type AbstractPolyhedraModel <: MathProgBase.AbstractLinearQuadraticMode
 #creates ambiguity with (::SimpleVRepMode, ::Vrep) when a polyhedron is given
 #loadproblem!(m::AbstractPolyhedraModel, hrep::HRep, c, sense) = error("loadproblem! not implemented")
 
-type LinprogSolution
+struct LinprogSolution
     status
     objval
     sol

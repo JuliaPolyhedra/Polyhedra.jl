@@ -24,7 +24,7 @@ end
 # An affine space L satisfies:
 # λx + (1-λ)y ∈ L, ∀x, y ∈ L, ∀ λ ∈ R
 # Note that λ is not required to be between 0 and 1 as in convex sets.
-immutable HAffineSpace{N, T} <: HRepresentation{N, T}
+struct HAffineSpace{N, T} <: HRepresentation{N, T}
     # HyperPlanes whose intersection is the affine space
     hps::Vector{HyperPlane{N, T}}
 end
@@ -81,7 +81,7 @@ end
 # V-representation
 
 # Representation of an affine space containing the origin by the minkowsky sum of lines
-immutable VAffineSpace{N, T} <: VRepresentation{N, T}
+struct VAffineSpace{N, T} <: VRepresentation{N, T}
     lines::Vector{Line{N, T}}
 end
 

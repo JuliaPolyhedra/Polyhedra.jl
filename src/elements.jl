@@ -29,7 +29,7 @@ vecconv{T}(::Type{T}, a::FixedVector) = FixedVector{T}(a)
 abstract type HRepElement{N,T} end
 
 # ⟨a, x⟩ <= β
-type HalfSpace{N,T} <: HRepElement{N,T}
+struct HalfSpace{N,T} <: HRepElement{N,T}
     a::MyVec{N,T}
     β::T
     function HalfSpace{N, T}(a::MyVec{N,T}, β::T) where {N, T}
@@ -39,7 +39,7 @@ end
 
 (::Type{HalfSpace{N,T}}){N,T}(a::MyVec, β) = HalfSpace{N,T}(myvec(T, a), T(β))
 
-type HyperPlane{N,T} <: HRepElement{N,T}
+struct HyperPlane{N,T} <: HRepElement{N,T}
     a::MyVec{N,T}
     β::T
     function HyperPlane{N, T}(a::MyVec{N,T}, β::T) where {N, T}
@@ -101,7 +101,7 @@ end
 # Linear Ray:
 # Line{N, T}
 
-type SymPoint{N, T}
+struct SymPoint{N, T}
     a::MyPoint{N, T}
     function SymPoint{N, T}(a::MyPoint{N, T}) where {N, T}
         new{N, T}(a)
@@ -110,7 +110,7 @@ end
 
 (::Type{SymPoint{N,T}}){N,T}(a::MyPoint) = SymPoint{N,T}(mypoint(T, a))
 
-type Ray{N, T}
+struct Ray{N, T}
     a::MyVec{N, T}
     function Ray{N, T}(a::MyVec{N, T}) where {N, T}
         new{N, T}(a)
@@ -119,7 +119,7 @@ end
 
 (::Type{Ray{N,T}}){N,T}(a::MyVec) = Ray{N,T}(myvec(T, a))
 
-type Line{N,T}
+struct Line{N,T}
     a::MyVec{N, T}
     function Line{N, T}(a::MyVec{N, T}) where {N, T}
         new{N, T}(a)

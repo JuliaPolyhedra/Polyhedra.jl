@@ -3,7 +3,7 @@
 # To enable LPQP support from a Polyhedra solver, define, e.g.,
 # LinearQuadraticModel(s::CDDSolver) = PolyhedraToLPQPBridge(PolyhedraModel(s))
 
-type PolyhedraToLPQPBridge <: MathProgBase.AbstractLinearQuadraticModel
+mutable struct PolyhedraToLPQPBridge <: MathProgBase.AbstractLinearQuadraticModel
     m::AbstractPolyhedraModel
     A::SparseMatrixCSC{Float64,Int}
     collb::Vector{Float64}

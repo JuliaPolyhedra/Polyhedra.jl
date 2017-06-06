@@ -80,7 +80,7 @@ for (rep, HorVRep, elt, low) in [(true, :VRep, :VRepElement, "vrep"), (false, :V
             $nextp(p::$HorVRep)  = error("$($nextp) not implemented for $(typeof(p))")
         end
 
-        type $typename{Nout, Tout, Nin, Tin} <: $abstractit{Nout, Tout}
+        struct $typename{Nout, Tout, Nin, Tin} <: $abstractit{Nout, Tout}
             ps::Vector
             f::Nullable{Function}
             function $typename{Nout, Tout, Nin, Tin}(ps::Vector, f=nothing) where {Nout, Tout, Nin, Tin}

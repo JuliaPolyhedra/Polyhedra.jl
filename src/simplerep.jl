@@ -3,13 +3,13 @@ export SimpleHRepresentation, SimpleVRepresentation
 # H-Representation
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
-type SimpleHRepresentation{N, T} <: HRepresentation{N, T}
+mutable struct SimpleHRepresentation{N, T} <: HRepresentation{N, T}
     # Ax <= b
     A::AbstractMatrix{T}
     b::AbstractVector{T}
     linset::IntSet
 
-    function SimpleHRepresentation{N, T}(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {N, T}
+    function SimpleHRepresentation{N, T}(A::AbstractMatrix, b::AbstractVector, linset::IntSet=IntSet()) where {N, T}
         if size(A, 1) != length(b)
             error("The length of b must be equal to the number of rows of A")
         end
@@ -130,13 +130,13 @@ Base.getindex(h::SimpleHRepresentation, I::AbstractArray) = SimpleHRepresentatio
 
 # V-Representation
 
-type SimpleVRepresentation{N,T} <: VRepresentation{N,T}
+mutable struct SimpleVRepresentation{N,T} <: VRepresentation{N,T}
     V::AbstractMatrix{T} # each row is a vertex
     R::AbstractMatrix{T} # each row is a ray
     Vlinset::IntSet
     Rlinset::IntSet
 
-    function SimpleVRepresentation{N, T}(V::AbstractMatrix{T}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {N, T}
+    function SimpleVRepresentation{N, T}(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {N, T}
         if (length(R) > 0 && size(R, 2) != N) || (length(V) > 0 && size(V, 2) != N)
             error("dimension does not match")
         end

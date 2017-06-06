@@ -1,9 +1,9 @@
 export SimplePolyhedraLibrary, SimplePolyhedron
 
-type SimplePolyhedraLibrary{T} <: PolyhedraLibrary
+struct SimplePolyhedraLibrary{T} <: PolyhedraLibrary
 end
 
-type SimplePolyhedron{N, T} <: Polyhedron{N, T}
+mutable struct SimplePolyhedron{N, T} <: Polyhedron{N, T}
     hrep::Nullable{HRepresentation{N, T}}
     vrep::Nullable{VRepresentation{N, T}}
 end

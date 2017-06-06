@@ -1,7 +1,7 @@
 export LPHRepresentation
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
-type LPHRepresentation{N, T} <: HRepresentation{N, T}
+mutable struct LPHRepresentation{N, T} <: HRepresentation{N, T}
     # lb <= Ax <= ub
     # l <= x <= u
     A::AbstractMatrix{T}
