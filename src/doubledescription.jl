@@ -1,3 +1,4 @@
+export doubledescription
 # Naive implementation of the double description Algorithm
 # See JuliaPolyhedra/ConvexHull.jl for an efficient implementation
 
