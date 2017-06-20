@@ -3,4 +3,4 @@ GeometryTypes 0.4
 StaticArrays 0.5
 MathProgBase 0.5.10 0.7
 JuMP 0.16
-RecipesBase
+RecipesBase 0.2
