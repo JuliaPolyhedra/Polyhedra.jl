@@ -188,9 +188,10 @@ end
 function removeduplicates{N, T}(vrep::VRepresentation{N, T})
     aff = linespace(vrep, true)
     newlin = true
+    rs = Union{Vec{N, T}, Ray{N, T}}[]
     while newlin
         newlin = false
-        rs = Union{Vec{N, T}, Ray{N, T}}[]
+        empty!(rs)
         for r in rays(vrep)
             if !islin(r)
                 newlin |= vrupdatedup!(aff, rs, r)
@@ -246,10 +247,11 @@ end
 function removeduplicates{N, T}(hrep::HRepresentation{N, T})
     aff = affinehull(hrep, true)
     newlin = true
+    hs = HalfSpace{N, T}[]
     while newlin
         newlin = false
         aff = removeduplicates(aff)
-        hs = HalfSpace{N, T}[]
+        empty!(hs)
         for h in ineqs(hrep)
             newlin |= hupdatedup!(aff, hs, h)
         end
