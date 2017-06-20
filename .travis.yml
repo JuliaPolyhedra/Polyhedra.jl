@@ -11,13 +11,10 @@ addons:
 notifications:
   email: false
 # uncomment the following lines to override the default test script
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.init(); Pkg.add("GeometryTypes"); Pkg.checkout("GeometryTypes")'
-  - julia -e 'Pkg.clone(pwd())'
-  - julia -e 'Pkg.clone("https://github.com/JuliaPolyhedra/CDDLib.jl"); Pkg.checkout("CDDLib"); Pkg.build("CDDLib")'
-  - julia -e 'Pkg.clone("https://github.com/JuliaPolyhedra/LRSLib.jl"); Pkg.checkout("LRSLib"); Pkg.build("LRSLib")'
-  - julia -e 'Pkg.build("Polyhedra"); Pkg.test("Polyhedra"; coverage=true)'
+# script:
+#   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#   - julia -e 'Pkg.clone(pwd())'
+#   - julia -e 'Pkg.build("Polyhedra"); Pkg.test("Polyhedra"; coverage=true)'
 after_success:
   # push coverage results to Coveralls
   - julia -e 'cd(Pkg.dir("Polyhedra")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
