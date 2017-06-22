@@ -27,9 +27,8 @@ build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
   - IF EXIST .git\shallow (git fetch --unshallow)
   - C:\projects\julia\bin\julia -e "versioninfo();
-      Pkg.init(); Pkg.add(\"GeometryTypes\"); Pkg.checkout(\"GeometryTypes\");
+      Pkg.init();
       Pkg.clone(pwd(), \"Polyhedra\");
-      Pkg.clone(\"https://github.com/JuliaPolyhedra/CDDLib.jl\"); Pkg.checkout(\"CDDLib\"); Pkg.build(\"CDDLib\");
       Pkg.build(\"Polyhedra\")"
 
 test_script:
