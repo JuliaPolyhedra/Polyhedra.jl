@@ -22,4 +22,14 @@ function basicpolyhedrontests(lib::PolyhedraLibrary)
         @test vrepiscomputed(p)
         generator_fulltest(SimpleVRepresentation(vrep(p)), A, R)
     end
+    @testset "Polyhedron cartesian product tests with $(typeof(lib))" begin
+        pv1 = polyhedron(SimpleVRepresentation([1 2; 3 4]), lib)
+        pv2 = polyhedron(SimpleVRepresentation([5 6; 7 8]), lib)
+        qv = pv1 * pv2
+        generator_fulltest(SimpleVRepresentation(vrep(qv)), [1 2 0 0; 3 4 0 0; 0 0 5 6; 0 0 7 8])
+        ph1 = polyhedron(SimpleHRepresentation([1 2; 3 4], [5, 6]), lib)
+        ph2 = polyhedron(SimpleHRepresentation([7 8; 9 1], [2, 3]), lib)
+        qh = ph1 * ph2
+        inequality_fulltest(SimpleHRepresentation(hrep(qh)), [1 2 0 0; 3 4 0 0; 0 0 7 8; 0 0 9 1], [5, 6, 2, 3], IntSet())
+    end
 end

@@ -204,10 +204,10 @@ function zeropad{ElemT<:VRepElement}(v::ElemT, n::Integer)
     if n == 0
         v
     else
-        ElemTout = changefulldim(ElemT, fulldim(h) + abs(n))
+        ElemTout = changefulldim(ElemT, fulldim(v) + abs(n))
         T = eltype(ElemT)
         if n < 0
-            aout = [spzeros(T, n); coord(v)]
+            aout = [spzeros(T, -n); coord(v)]
         else
             aout = [coord(v); spzeros(T, n)]
         end
