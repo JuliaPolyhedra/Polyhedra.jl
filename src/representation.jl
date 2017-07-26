@@ -19,12 +19,12 @@ Base.copy(rep::Rep)            = error("copy not implemented for $(typeof(rep))"
 
 export decomposedhfast, decomposedvfast, decomposedfast
 
-decomposedhfast(p::Polyhedron)          = error("decomposedhfast not implemented for $(typeof(p))")
-decomposedvfast(p::Polyhedron)          = error("decomposedvfast not implemented for $(typeof(p))")
-decomposedfast(rep::HRepresentation)      = error("decomposedfast not implemented for $(typeof(rep))")
-decomposedfast(rep::VRepresentation)      = error("decomposedfast not implemented for $(typeof(rep))")
-decomposedhfast(rep::HRepresentation)     = decomposedfast(rep)
-decomposedvfast(rep::VRepresentation)     = decomposedfast(rep)
+decomposedhfast(p::Polyhedron)        = error("decomposedhfast not implemented for $(typeof(p))")
+decomposedvfast(p::Polyhedron)        = error("decomposedvfast not implemented for $(typeof(p))")
+decomposedfast(rep::HRepresentation)  = error("decomposedfast not implemented for $(typeof(rep))")
+decomposedfast(rep::VRepresentation)  = error("decomposedfast not implemented for $(typeof(rep))")
+decomposedhfast(rep::HRepresentation) = decomposedfast(rep)
+decomposedvfast(rep::VRepresentation) = decomposedfast(rep)
 
 Base.eltype{N,T}(rep::Rep{N,T}) = T
 fulldim{N}(rep::Rep{N}) = N

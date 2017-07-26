@@ -97,7 +97,7 @@ end
 # Linear Point:
 # SymPoint{N,T}
 # Ray:
-# Vec{N, T} or Ray{N, T}
+# Ray{N, T}
 # Linear Ray:
 # Line{N, T}
 
@@ -165,8 +165,8 @@ Base.convert{N,T}(::Type{Ray{N,T}}, v::Ray{N,T}) = v
 Base.convert{N,T}(::Type{Line{N,T}}, v::Line{N,T}) = v
 
 const AbstractPoint{N, T} = Union{Point{N, T}, AbstractVector{T}, SymPoint{N, T}}
-const AbstractRay{N, T} = Union{Vec{N, T}, Ray{N, T}, Line{N, T}}
-const FixedVRepElement{N,T} = Union{Point{N,T}, Vec{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,T}}
+const AbstractRay{N, T} = Union{Ray{N, T}, Line{N, T}}
+const FixedVRepElement{N,T} = Union{Point{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,T}}
 const VRepElement{N,T} = Union{FixedVRepElement{N,T}, AbstractVector{T}}
 const RepElement{N,T} = Union{HRepElement{N,T}, VRepElement{N,T}}
 const FixedRepElement{N,T} = Union{HRepElement{N,T}, FixedVRepElement{N,T}}
@@ -179,14 +179,14 @@ eltype{T<:FixedRepElement}(::Type{T}) = T.parameters[2]
 fulldim(v::AbstractVector) = length(v)
 fulldim{T<:AbstractVector}(::Type{T}) = T.parameters[1]
 
-islin{T<:Union{Point,AbstractVector,Vec,Ray}}(v::T) = false
+islin{T<:Union{Point,AbstractVector,Ray}}(v::T) = false
 islin{T<:Union{SymPoint,Line}}(v::T) = true
 isray{T<:Union{Point,AbstractVector,SymPoint}}(v::T) = false
-isray{T<:Union{Vec,Ray,Line}}(v::T) = true
+isray{T<:Union{Ray,Line}}(v::T) = true
 ispoint{T<:Union{Point,AbstractVector,SymPoint}}(v::T) = true
-ispoint{T<:Union{Vec,Ray,Line}}(v::T) = false
+ispoint{T<:Union{Ray,Line}}(v::T) = false
 
-coord{ElemT<:Union{Point,AbstractVector,Vec}}(v::ElemT) = v
+coord{ElemT<:Union{Point,AbstractVector}}(v::ElemT) = v
 coord{ElemT<:Union{HRepElement,SymPoint,Ray,Line}}(v::ElemT) = v.a
 
 const VRepElementContainer = Union{SymPoint, Ray, Line}
@@ -230,14 +230,12 @@ changeboth{VecT<:AbstractVector,Tout}(::Type{VecT}, Nout, ::Type{Tout}) = Abstra
 mydot(a::AbstractVector, r::Ray) = mydot(a, r.a)
 mydot(a::AbstractVector, l::Line) = mydot(a, l.a)
 
-Base.in{N}(r::Vec{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, r))
 Base.in{N}(r::Ray{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, r))
 Base.in{N}(l::Line{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, l))
 Base.in{N}(p::Point{N}, h::HalfSpace{N}) = myleq(mydot(h.a, p), h.β)
 Base.in{N}(p::AbstractVector, h::HalfSpace{N}) = myleq(mydot(h.a, p), h.β)
 Base.in{N}(p::SymPoint{N}, h::HalfSpace{N}) = myleq(mydot(h.a, p.p), h.β)
 
-Base.in{N}(r::Vec{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, r))
 Base.in{N}(r::Ray{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, r))
 Base.in{N}(l::Line{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, l))
 Base.in{N}(p::Point{N}, h::HyperPlane{N}) = myeq(mydot(h.a, p), h.β)
@@ -262,10 +260,9 @@ end
 function lift{ElemT <: HRepElement}(h::ElemT)
     ElemT(pushbefore(h.a, -h.β), zero(eltype(ElemT)))
 end
-lift{N,T}(h::Vec{N,T}) = pushbefore(h, zero(T))
 lift{N,T}(h::Ray{N,T}) = Ray{N+1,T}(pushbefore(h.a, zero(T)))
 lift{N,T}(h::Line{N,T}) = Line{N+1,T}(pushbefore(h.a, zero(T)))
-lift{N,T}(h::Point{N,T}) = pushbefore(h, one(T)), Vec{N+1,T}
+lift{N,T}(h::Point{N,T}) = pushbefore(h, one(T))
 lift{T}(h::AbstractVector{T}) = Ray{length(h)+1,T}(pushbefore(h, one(T)))
 lift{N,T}(h::SymPoint{N,T}) = Line{N+1,T}(pushbefore(h.a, one(T)))
 
