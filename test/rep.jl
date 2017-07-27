@@ -22,6 +22,43 @@
         @test eltype(ext) == Int
     end
 
+    @testset "Lifted Representation with bad arguments" begin
+        A = [1 -1 -1; 0 1 0; 0 0 1]
+        ls = IntSet([1])
+
+        @test_throws ErrorException LiftedHRepresentation(A, IntSet([4]))
+        @test_throws ErrorException LiftedHRepresentation{3, Int}(A, ls)
+        ine = copy(LiftedHRepresentation(A, ls))
+        @test ine.A == A
+        @test ine.A !== A
+        @test linset(ine) == ls
+        @test ine.linset !== ls
+        @test changeeltype(LiftedHRepresentation{2, Int}, Float64) == LiftedHRepresentation{2, Float64}
+        @test changeboth(LiftedHRepresentation{2, Int}, 3, Float64) == LiftedHRepresentation{3, Float64}
+
+        A2 = [1 1; -1 0; 0 -1]
+        b2 = [1, 0, 0]
+        linset2 = IntSet([1])
+        ine2 = SimpleHRepresentation(A2, b2, linset2)
+
+        ine = LiftedHRepresentation(ine2)
+        @test ine.A == A
+        @test ine.linset == ls
+
+        V = [1 0 1; 1 1 0]
+        Vlinset = IntSet(2)
+        @test_throws ErrorException LiftedVRepresentation{3, Int}(V, Vlinset)
+        @test_throws ErrorException LiftedVRepresentation(V, IntSet([4]))
+        ext = copy(LiftedVRepresentation(V, Vlinset))
+        @test ext.R == V
+        @test ext.R !== V
+        @test linset(ext) == Vlinset
+        @test ext.linset !== Vlinset
+
+        @test changeeltype(LiftedVRepresentation{2, Int}, Float64) == LiftedVRepresentation{2, Float64}
+        @test changeboth(LiftedVRepresentation{2, Int}, 3, Float64) == LiftedVRepresentation{3, Float64}
+    end
+
     @testset "eltype for some iterators is incorrect #7" begin
         function collecttest(it, exp_type)
             @test eltype(it) == exp_type
