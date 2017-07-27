@@ -26,6 +26,7 @@ include("projection.jl")
 # Implementations
 include("lphrep.jl")
 include("jump.jl")
+include("vecrep.jl")
 include("simplerep.jl")
 include("liftedrep.jl")
 include("doubledescription.jl")

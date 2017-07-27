@@ -22,7 +22,7 @@ end
 function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::HRepIterator)
     SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(rep))
 end
-function (::Type{SimplePolyhedron{N, T}}){N, T}(eqs::EqIterator, points::IneqIterator)
+function (::Type{SimplePolyhedron{N, T}}){N, T}(eqs::EqIterator, ineqs::IneqIterator)
     SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(eqs, ineqs))
 end
 function (::Type{SimplePolyhedron{N, T}}){N, T}(eqs::EqIterator)
@@ -88,7 +88,7 @@ function Base.push!{N}(p::SimplePolyhedron{N}, ine::HRepresentation{N})
     p.vrep = nothing
 end
 function Base.push!{N}(p::SimplePolyhedron{N}, ext::VRepresentation{N})
-    p.vrep = vrep(p) + ext
+    p.vrep = convexhull(vrep(p), ext)
     p.hrep = nothing
 end
 
