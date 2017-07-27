@@ -128,20 +128,3 @@ function (*){RepT<:VRep}(P::AbstractMatrix, rep::RepT)
         end
     end
 end
-
-function Base.round{N,T<:AbstractFloat}(rep::HRepresentation{N,T})
-    f = (i, h) -> round(h)
-    if decomposedfast(rep)
-        typeof(rep)(eqs(rep, f), ineqs(rep, f))
-    else
-        typeof(rep)(hreps(rep, f))
-    end
-end
-function Base.round{N,T<:AbstractFloat}(rep::VRepresentation{N,T})
-    f = (i, v) -> round.(v)
-    if decomposedfast(rep)
-        typeof(rep)(eqs(rep, f), ineqs(rep, f))
-    else
-        typeof(rep)(vreps(rep, f))
-    end
-end

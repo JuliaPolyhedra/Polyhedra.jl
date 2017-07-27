@@ -88,9 +88,6 @@ function zeropad{ElemT<:HRepElement}(h::ElemT, n::Integer)
         ElemTout(aout, h.β)
     end
 end
-function Base.round{ElemT<:HRepElement}(h::ElemT)
-    ElemT(round.(h.a), round(h.β))
-end
 
 # Point: -> A same Rep should always return the same of the two types so that when points and sympoints will have different accessors it will be type stable
 # Point{N, T} or AbstractVector{T}

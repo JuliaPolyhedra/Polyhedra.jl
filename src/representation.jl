@@ -1,4 +1,4 @@
-import Base.round, Base.eltype
+import Base.eltype
 
 export Representation, HRepresentation, VRepresentation, fulldim
 export AbstractRepIterator, AbstractHRepIterator, HRepIterator, EqIterator, IneqIterator, AbstractVRepIterator, VRepIterator, LineIterator, RayIterator, PointIterator
