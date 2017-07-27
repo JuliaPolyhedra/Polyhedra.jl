@@ -88,7 +88,7 @@ function (*){RepT<:HRep}(rep::RepT, P::AbstractMatrix)
         eqs = EqIterator{Nout,Tout,Nin,Tin}([rep], f)
         ineqs = IneqIterator{Nout,Tout,Nin,Tin}([rep], f)
         if RepT <: HRepresentation
-            RepTout(ineqs=ineqs, eqs=eqs)
+            RepTout(eqs, ineqs)
         else
             polyhedron(ineqs, eqs, getlibraryfor(rep, Nout, Tout))
         end
@@ -132,7 +132,7 @@ end
 function Base.round{N,T<:AbstractFloat}(rep::HRepresentation{N,T})
     f = (i, h) -> round(h)
     if decomposedfast(rep)
-        typeof(rep)(eqs=eqs(rep, f), ineqs=ineqs(rep, f))
+        typeof(rep)(eqs(rep, f), ineqs(rep, f))
     else
         typeof(rep)(hreps(rep, f))
     end
@@ -140,7 +140,7 @@ end
 function Base.round{N,T<:AbstractFloat}(rep::VRepresentation{N,T})
     f = (i, v) -> round.(v)
     if decomposedfast(rep)
-        typeof(rep)(eqs=eqs(rep, f), ineqs=ineqs(rep, f))
+        typeof(rep)(eqs(rep, f), ineqs(rep, f))
     else
         typeof(rep)(vreps(rep, f))
     end

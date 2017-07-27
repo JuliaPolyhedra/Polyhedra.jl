@@ -224,7 +224,7 @@ function hconvert{RepTout<:HRep, RepTin<:HRep}(::Type{RepTout}, p::RepTin)
         f = (i,x) -> changeeltype(typeof(x), Tout)(x)
     end
     if decomposedhfast(p)
-        RepTout(eqs=EqIterator{Nout,Tout,Nin,Tin}([p], f), ineqs=IneqIterator{Nout,Tout,Nin,Tin}([p], f))
+        RepTout(EqIterator{Nout,Tout,Nin,Tin}([p], f), IneqIterator{Nout,Tout,Nin,Tin}([p], f))
     else
         RepTout(HRepIterator{Nout,Tout,Nin,Tin}([p], f))
     end

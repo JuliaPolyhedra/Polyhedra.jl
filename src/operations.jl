@@ -28,13 +28,13 @@ function Base.convert{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
     f = (i, x) -> changeeltype(typeof(x), S)(x)
     if !hrepiscomputed(p) && vrepiscomputed(p)
         if decomposedvfast(p)
-            polyhedron(points=PointIterator{N, S, N, T}([p], f), rays=RayIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
+            polyhedron(PointIterator{N, S, N, T}([p], f), RayIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
         else
             polyhedron(VRepIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
         end
     else
         if decomposedvfast(p)
-            polyhedron(ineqs=IneqIterator{N, S, N, T}([p], f), eqs=EqIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
+            polyhedron(IneqIterator{N, S, N, T}([p], f), EqIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
         else
             polyhedron(HRepIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
         end

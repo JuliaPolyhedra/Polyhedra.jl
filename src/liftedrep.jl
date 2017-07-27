@@ -58,26 +58,6 @@ function (::Type{LiftedHRepresentation{N, T}}){N, T}(eqs, ineqs)
     end
     LiftedHRepresentation{N, T}(A, linset)
 end
-function (::Type{LiftedHRepresentation{N, T}}){N, T}(; eqs=nothing, ineqs=nothing)
-    neq = isnull(eqs) ? 0 : length(eqs)
-    nineq = isnull(ineqs) ? 0 : length(ineqs)
-    nhrep = neq + nineq
-    A = Matrix{T}(nhrep, N+1)
-    linset = IntSet(1:neq)
-    if !(eqs === nothing)
-        for (i, h) in enumerate(eqs)
-            A[i,2:end] = -h.a
-            A[i,1] = h.β
-        end
-    end
-    if !(ineqs === nothing)
-        for (i, h) in enumerate(ineqs)
-            A[neq+i,2:end] = -h.a
-            A[neq+i,1] = h.β
-        end
-    end
-    LiftedHRepresentation{N, T}(A, linset)
-end
 
 Base.copy{N,T}(ine::LiftedHRepresentation{N,T}) = LiftedHRepresentation{N,T}(copy(ine.A), copy(ine.linset))
 
