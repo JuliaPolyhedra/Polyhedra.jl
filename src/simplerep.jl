@@ -68,27 +68,6 @@ function (::Type{SimpleHRepresentation{N, T}}){N, T}(eqs, ineqs)
     end
     SimpleHRepresentation{N, T}(A, b, linset)
 end
-function (::Type{SimpleHRepresentation{N, T}}){N, T}(; eqs=nothing, ineqs=nothing)
-    neq = eqs === nothing ? 0 : length(eqs)
-    nineq = ineqs === nothing ? 0 : length(ineqs)
-    nhrep = neq + nineq
-    A = Matrix{T}(nhrep, N)
-    b = Vector{T}(nhrep)
-    linset = IntSet(1:neq)
-    if !(eqs === nothing)
-        for (i, h) in enumerate(eqs)
-            A[i,:] = h.a
-            b[i] = h.β
-        end
-    end
-    if !(ineqs === nothing)
-        for (i, h) in enumerate(ineqs)
-            A[neq+i,:] = h.a
-            b[neq+i] = h.β
-        end
-    end
-    SimpleHRepresentation{N, T}(A, b, linset)
-end
 
 Base.copy{N,T}(ine::SimpleHRepresentation{N,T}) = SimpleHRepresentation{N,T}(copy(ine.A), copy(ine.b), copy(ine.linset))
 
@@ -219,7 +198,6 @@ function (::Type{SimpleVRepresentation{N, T}}){N, T}(points, rays)
     end
     SimpleVRepresentation{N, T}(V, R, Vlinset, Rlinset)
 end
-(::Type{SimpleVRepresentation{N, T}}){N, T}(; points=Point{N, T}[], rays=Ray{N, T}[]) = SimpleVRepresentation{N, T}(points, rays)
 
 Base.copy{N,T}(ext::SimpleVRepresentation{N,T}) = SimpleVRepresentation{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
 

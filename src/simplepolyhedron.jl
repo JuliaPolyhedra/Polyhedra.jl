@@ -45,34 +45,17 @@ function (::Type{SimplePolyhedron{N, T}}){N, T}(points::PointIterator)
     SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(points))
 end
 
-function (::Type{SimplePolyhedron{N, T}}){N, T}(; eqs=nothing, ineqs=nothing, points=nothing, rays=nothing)
-    noth = eqs === nothing && ineqs === nothing
-    notv = points === nothing && rays === nothing
-    if !noth && !notv
-        error("SimplePolyhedron constructed with a combination of eqs/ineqs with points/rays")
-    end
-    if notv
-        rep = SimpleHRepresentation{N, T}(eqs=eqs, ineqs=ineqs)
-    else
-        rep = SimpleVRepresentation{N, T}(points=points, rays=rays)
-    end
-    SimplePolyhedron{N, T}(rep)
-end
-
 function polyhedron{N, T}(rep::Representation{N}, ::SimplePolyhedraLibrary{T})
     SimplePolyhedron{N, T}(rep)
 end
 function polyhedron{N, T}(repit::Union{HRepIterator{N}, VRepIterator{N}}, lib::SimplePolyhedraLibrary{T})
     SimplePolyhedron{N, T}(repit)
 end
-function polyhedron{T}(lib::SimplePolyhedraLibrary{T}; eqs=nothing, ineqs=nothing, points=nothing, rays=nothing)
-    its = [eqs, ineqs, points, rays]
-    i = findfirst(x -> !(x === nothing), its)
-    if i == 0
-        error("polyhedron should be given at least one iterator")
-    end
-    N = fulldim(its[i])
-    SimplePolyhedron{N, T}(; eqs=eqs, ineqs=ineqs, points=points, rays=rays)
+function polyhedron{N, T}(hps::EqIterator{N}, hss::IneqIterator{N}, ::SimplePolyhedraLibrary{T})
+    SimplePolyhedron{N, T}(hps, hss)
+end
+function polyhedron{N, T}(ps::PointIterator{N}, rs::RayIterator{N}, ::SimplePolyhedraLibrary{T})
+    SimplePolyhedron{N, T}(ps, rs)
 end
 
 function Base.copy{N, T}(p::SimplePolyhedron{N, T})
