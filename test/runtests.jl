@@ -3,8 +3,6 @@ using Base.Test
 
 include("alltests.jl")
 
-include("rep.jl")
-
 include("default.jl")
 
 include("redundancy.jl")
@@ -13,6 +11,8 @@ include("libraries.jl")
 if !isempty(lp_solvers)
     lpsolver = first(lp_solvers)
 end
+
+include("rep.jl")
 
 for lib in libraries
     basicpolyhedrontests(lib)

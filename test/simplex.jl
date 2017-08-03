@@ -7,6 +7,9 @@ function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
     ine = SimpleHRepresentation(A, b, ls)
     poly1 = polyhedron(ine, lib)
     @test !isempty(poly1, defaultLPsolverfor(poly1, lpsolver))
+    center, radius = chebyshevcenter(poly1, defaultLPsolverfor(poly1, lpsolver))
+    @test center ≈ [1/2, 1/2]
+    @test radius ≈ 1/2
     inequality_fulltest(poly1, A, b, ls)
     generator_fulltest(poly1, V)
 
@@ -35,6 +38,7 @@ function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
     Vray = [1 0; 0 1]
     extray = SimpleVRepresentation(Matrix{Int}(0,2), Vray)
     poly3 = polyhedron(extray, lib)
+    @test_throws ErrorException chebyshevcenter(poly3)
     Acut = [1 1]
     bcut = [1]
     linsetcut = IntSet([1])
