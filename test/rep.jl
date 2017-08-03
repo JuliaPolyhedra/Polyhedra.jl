@@ -170,4 +170,17 @@
         @test eltype(LiftedHRepresentation{1, Float64}([1 2; 3 4])) == Float64
         @test eltype(LiftedVRepresentation{1, Float64}([1 2; 3 4])) == Float64
     end
+
+    @testset "Chebyshev center" begin
+        # examples/chebyshevcenter.ipynb
+        A = [ 2  1
+              2 -1
+             -1  2
+             -1 -2]
+        b = ones(4)
+        p = SimpleHRepresentation(A, b);
+        c, r = chebyshevcenter(p, lpsolver)
+        @test c ≈ [0, 0] atol=1e-6
+        @test r ≈ 0.4472135955 atol=1e-6
+    end
 end
