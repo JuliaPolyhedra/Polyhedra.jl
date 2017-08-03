@@ -8,7 +8,7 @@ Throws an error if the polyhedron is empty or if the radius is infinite.
 """
 function hchebyshevcenter{N}(p::HRep{N}, solver=defaultLPsolverfor(p, solver))
     m = Model(solver=solver)
-    r = @variable m
+    r = @variable m r >= 0
     c = @variable m [1:N]
     for hp in eqs(p)
         a = Vector{Float64}(hp.a)
@@ -33,6 +33,7 @@ function hchebyshevcenter{N}(p::HRep{N}, solver=defaultLPsolverfor(p, solver))
     end
     (getvalue(c), getvalue(r))
 end
+
 # TODO defaultLPsolverfor here should not be SimpleVRepSolver
 """
     vchebyshevcenter(p::VRep[, solver])
@@ -43,8 +44,12 @@ Throws an error if the polyhedron is empty or if the radius is infinite (i.e. `p
 function vchebyshevcenter(p::VRep, solver=defaultLPsolverfor(p, solver))
     error("TODO")
 end
-chebyshevcenter(p::HRepresentation, solver=defaultLPsolverfor(p)) = hchebyshevcenter(p, solver)
-chebyshevcenter(p::VRepresentation, solver=defaultLPsolverfor(p)) = vchebyshevcenter(p, solver)
+
+"""
+    chebyshevcenter(p::Rep[, solver])
+
+If `p` is a H-representation or is a polyhedron for which the H-representation has already been computed, calls `hchebyshevcenter`, otherwise, call `vchebyshevcenter`.
+"""
 function chebyshevcenter(p::Polyhedron, solver=defaultLPsolverfor(p))
     if hrepiscomputed(p)
         hchebyshevcenter(p, solver)
@@ -52,3 +57,5 @@ function chebyshevcenter(p::Polyhedron, solver=defaultLPsolverfor(p))
         vchebyshevcenter(p, solver)
     end
 end
+chebyshevcenter(p::HRepresentation, solver=defaultLPsolverfor(p)) = hchebyshevcenter(p, solver)
+chebyshevcenter(p::VRepresentation, solver=defaultLPsolverfor(p)) = vchebyshevcenter(p, solver)
