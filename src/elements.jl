@@ -227,11 +227,22 @@ changeboth{VecT<:AbstractVector,Tout}(::Type{VecT}, Nout, ::Type{Tout}) = Abstra
 mydot(a::AbstractVector, r::Ray) = mydot(a, r.a)
 mydot(a::AbstractVector, l::Line) = mydot(a, l.a)
 
+ininterior{N}(r::Ray{N}, h::HalfSpace{N}) = myneg(mydot(h.a, r))
+ininterior{N}(l::Line{N}, h::HalfSpace{N}) = myneg(mydot(h.a, l))
+ininterior{N}(p::Point{N}, h::HalfSpace{N}) = mylt(mydot(h.a, p), h.β)
+ininterior{N}(p::AbstractVector, h::HalfSpace{N}) = mylt(mydot(h.a, p), h.β)
+ininterior{N}(p::SymPoint{N}, h::HalfSpace{N}) = mylt(mydot(h.a, p.p), h.β)
+
+inrelateiveinterior(p::VRepElement, h::HalfSpace) = ininterior(p, h)
+
 Base.in(r::Ray{N}, h::HalfSpace{N}) where {N} = mynonpos(mydot(h.a, r))
 Base.in(l::Line{N}, h::HalfSpace{N}) where {N} = mynonpos(mydot(h.a, l))
 Base.in(p::Point{N}, h::HalfSpace{N}) where {N} = myleq(mydot(h.a, p), h.β)
 Base.in(p::AbstractVector, h::HalfSpace{N}) where {N} = myleq(mydot(h.a, p), h.β)
 Base.in(p::SymPoint{N}, h::HalfSpace{N}) where {N} = myleq(mydot(h.a, p.p), h.β)
+
+ininterior(p::VRepElement, h::HyperPlane) = false
+inrelateiveinterior(p::VRepElement, h::HyperPlane) = p in h
 
 Base.in(r::Ray{N}, h::HyperPlane{N}) where {N} = myeqzero(mydot(h.a, r))
 Base.in(l::Line{N}, h::HyperPlane{N}) where {N} = myeqzero(mydot(h.a, l))
@@ -262,5 +273,8 @@ lift(h::Line{N,T}) where {N,T} = Line{N+1,T}(pushbefore(h.a, zero(T)))
 lift(h::Point{N,T}) where {N,T} = pushbefore(h, one(T))
 lift(h::AbstractVector{T}) where {T} = Ray{length(h)+1,T}(pushbefore(h, one(T)))
 lift(h::SymPoint{N,T}) where {N,T} = Line{N+1,T}(pushbefore(h.a, one(T)))
+
+translate(p::Union{Point,AbstractVector,SymPoint}, v) = p + v
+translate(r::Union{Ray,Line}, v) = r
 
 translate(h::ElemT, p) where {ElemT<:HRepElement} = ElemT(h.a, h.β + mydot(h.a, p))

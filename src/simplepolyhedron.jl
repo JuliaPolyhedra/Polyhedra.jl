@@ -131,22 +131,22 @@ end
 
 for op in [:nhreps, :starthrep, :neqs, :starteq, :nineqs, :startineq]
     @eval begin
-        $op(p::SimplePolyhedron) = $op(hrep(p))
+        $op(p::Union{Interval, SimplePolyhedron}) = $op(hrep(p))
     end
 end
 for op in [:donehrep, :nexthrep, :doneeq, :nexteq, :doneineq, :nextineq]
     @eval begin
-        $op(p::SimplePolyhedron, state) = $op(hrep(p), state)
+        $op(p::Union{Interval, SimplePolyhedron}, state) = $op(hrep(p), state)
     end
 end
 
 for op in [:nvreps, :startvrep, :npoints, :startpoint, :nrays, :startray]
     @eval begin
-        $op(p::SimplePolyhedron) = $op(vrep(p))
+        $op(p::Union{Interval, SimplePolyhedron}) = $op(vrep(p))
     end
 end
 for op in [:donevrep, :nextvrep, :donepoint, :nextpoint, :doneray, :nextray]
     @eval begin
-        $op(p::SimplePolyhedron, state) = $op(vrep(p), state)
+        $op(p::Union{Interval, SimplePolyhedron}, state) = $op(vrep(p), state)
     end
 end

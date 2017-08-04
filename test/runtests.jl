@@ -13,6 +13,7 @@ if !isempty(lp_solvers)
 end
 
 include("rep.jl")
+include("interval.jl")
 
 for lib in libraries
     basicpolyhedrontests(lib)
