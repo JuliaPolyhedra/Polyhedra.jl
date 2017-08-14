@@ -1,4 +1,4 @@
-function boardtest{Lib<:PolyhedraLibrary}(lib::Lib)
+function boardtest(lib::Lib) where Lib<:PolyhedraLibrary
     isa(lib, SimplePolyhedraLibrary) && return
     A1 = -eye(Int, 9) # x >= 0
     b1 = zeros(Int, 9)

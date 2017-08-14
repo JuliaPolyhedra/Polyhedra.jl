@@ -10,55 +10,55 @@ end
 
 changefulldim{N, T}(::Type{SimplePolyhedron{N, T}}, n) = SimplePolyhedron{n, T}
 
-getlibraryfor{T}(p::SimplePolyhedron, N::Int, ::Type{T}) = SimplePolyhedraLibrary{T}()
+getlibraryfor(p::SimplePolyhedron, N::Int, ::Type{T}) where {T} = SimplePolyhedraLibrary{T}()
 
-function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::HRepresentation{N, T})
+function SimplePolyhedron{N, T}(rep::HRepresentation{N, T}) where {N, T}
     SimplePolyhedron{N, T}(rep, nothing)
 end
-function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::VRepresentation{N, T})
+function SimplePolyhedron{N, T}(rep::VRepresentation{N, T}) where {N, T}
     SimplePolyhedron{N, T}(nothing, rep)
 end
 
-function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::HRepIterator)
+function SimplePolyhedron{N, T}(rep::HRepIterator) where {N, T}
     SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(rep))
 end
-function (::Type{SimplePolyhedron{N, T}}){N, T}(eqs::EqIterator, ineqs::IneqIterator)
+function SimplePolyhedron{N, T}(eqs::EqIterator, ineqs::IneqIterator) where {N, T}
     SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(eqs, ineqs))
 end
-function (::Type{SimplePolyhedron{N, T}}){N, T}(eqs::EqIterator)
+function SimplePolyhedron{N, T}(eqs::EqIterator) where {N, T}
     SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(eqs))
 end
-function (::Type{SimplePolyhedron{N, T}}){N, T}(ineqs::IneqIterator)
+function SimplePolyhedron{N, T}(ineqs::IneqIterator) where {N, T}
     SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(ineqs))
 end
 
-function (::Type{SimplePolyhedron{N, T}}){N, T}(rep::VRepIterator)
+function SimplePolyhedron{N, T}(rep::VRepIterator) where {N, T}
     SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rep))
 end
-function (::Type{SimplePolyhedron{N, T}}){N, T}(points::PointIterator, rays::RayIterator)
+function SimplePolyhedron{N, T}(points::PointIterator, rays::RayIterator) where {N, T}
     SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(points, rays))
 end
-function (::Type{SimplePolyhedron{N, T}}){N, T}(rays::RayIterator)
+function SimplePolyhedron{N, T}(rays::RayIterator) where {N, T}
     SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rays))
 end
-function (::Type{SimplePolyhedron{N, T}}){N, T}(points::PointIterator)
+function SimplePolyhedron{N, T}(points::PointIterator) where {N, T}
     SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(points))
 end
 
-function polyhedron{N, T}(rep::Representation{N}, ::SimplePolyhedraLibrary{T})
+function polyhedron(rep::Representation{N}, ::SimplePolyhedraLibrary{T}) where {N, T}
     SimplePolyhedron{N, T}(rep)
 end
-function polyhedron{N, T}(repit::Union{HRepIterator{N}, VRepIterator{N}}, lib::SimplePolyhedraLibrary{T})
+function polyhedron(repit::Union{HRepIterator{N}, VRepIterator{N}}, lib::SimplePolyhedraLibrary{T}) where {N, T}
     SimplePolyhedron{N, T}(repit)
 end
-function polyhedron{N, T}(hps::EqIterator{N}, hss::IneqIterator{N}, ::SimplePolyhedraLibrary{T})
+function polyhedron(hps::EqIterator{N}, hss::IneqIterator{N}, ::SimplePolyhedraLibrary{T}) where {N, T}
     SimplePolyhedron{N, T}(hps, hss)
 end
-function polyhedron{N, T}(ps::PointIterator{N}, rs::RayIterator{N}, ::SimplePolyhedraLibrary{T})
+function polyhedron(ps::PointIterator{N}, rs::RayIterator{N}, ::SimplePolyhedraLibrary{T}) where {N, T}
     SimplePolyhedron{N, T}(ps, rs)
 end
 
-function Base.copy{N, T}(p::SimplePolyhedron{N, T})
+function Base.copy(p::SimplePolyhedron{N, T}) where {N, T}
     if !isnull(p.hrep)
         SimplePolyhedron{N, T}(get(p.hrep))
     else
@@ -66,11 +66,11 @@ function Base.copy{N, T}(p::SimplePolyhedron{N, T})
     end
 end
 
-function Base.push!{N}(p::SimplePolyhedron{N}, ine::HRepresentation{N})
+function Base.push!(p::SimplePolyhedron{N}, ine::HRepresentation{N}) where N
     p.hrep = hrep(p) ∩ ine
     p.vrep = nothing
 end
-function Base.push!{N}(p::SimplePolyhedron{N}, ext::VRepresentation{N})
+function Base.push!(p::SimplePolyhedron{N}, ext::VRepresentation{N}) where N
     p.vrep = convexhull(vrep(p), ext)
     p.hrep = nothing
 end

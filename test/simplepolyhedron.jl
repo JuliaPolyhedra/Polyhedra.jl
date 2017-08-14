@@ -1,6 +1,6 @@
-type TestLib <: PolyhedraLibrary
+mutable struct TestLib <: PolyhedraLibrary
 end
-type TestPoly{N, T} <: Polyhedron{N, T}
+mutable struct TestPoly{N, T} <: Polyhedron{N, T}
 end
 
 @testset "Testing error for unimplemented method" begin

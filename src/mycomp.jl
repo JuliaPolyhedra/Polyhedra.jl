@@ -1,12 +1,12 @@
 const threshold = 1e-8
 
-myeqzero{T<:Real}(x::T) = x == zero(T)
-myeqzero{T<:AbstractFloat}(x::T) = -threshold < x < threshold
-myeqzero{T<:Real}(x::AbstractVector{T}) = myeqzero(sum(abs, x))
+myeqzero(x::T) where {T<:Real} = x == zero(T)
+myeqzero(x::T) where {T<:AbstractFloat} = -threshold < x < threshold
+myeqzero(x::AbstractVector{T}) where {T<:Real} = myeqzero(sum(abs, x))
 myeqzero(x::Union{SymPoint, Ray, Line}) = myeqzero(coord(x))
 myeqzero(h::HRepElement) = myeqzero(h.a) && myeqzero(h.β)
 
-myeq{T<:Union{Integer, Rational}}(x::Union{T, AbstractArray{T}}, y::Union{T, AbstractArray{T}}) = x == y
+myeq(x::Union{T, AbstractArray{T}}, y::Union{T, AbstractArray{T}}) where {T<:Union{Integer, Rational}} = x == y
 # I check with zero because isapprox(0, 1e-100) is false...
 # but isapprox(1e-100, 2e-100) should be false
 myeq(x, y) = (myeqzero(x) ? myeqzero(y) : (myeqzero(y) ? myeqzero(x) : isapprox(x, y)))
@@ -47,18 +47,18 @@ function Base.isapprox(h1::HalfSpace, h2::HalfSpace)
     myeq(a1, a2) && myeq(β1, β2)
 end
 
-mylt{T<:Real}(x::T, y::T) = x < y
-mylt{T<:AbstractFloat}(x::T, y::T) = x < y && !myeq(x, y)
-mylt{S<:Real,T<:Real}(x::S, y::T) = mylt(promote(x, y)...)
-mygt{S<:Real, T<:Real}(x::S, y::T) = mylt(y, x)
-myleq{T<:Real}(x::T, y::T) = x <= y
-myleq{T<:AbstractFloat}(x::T, y::T) = x <= y || myeq(x, y)
-myleq{S<:Real,T<:Real}(x::S, y::T) = myleq(promote(x, y)...)
-mygeq{T<:Real}(x::T, y::T) = myleq(y, x)
-mypos{T<:Real}(x::T) = mygt(x, zero(T))
-myneg{T<:Real}(x::T) = mylt(x, zero(T))
-mynonneg{T<:Real}(x::T) = mygeq(x, zero(T))
-mynonpos{T<:Real}(x::T) = myleq(x, zero(T))
+mylt(x::T, y::T) where {T<:Real} = x < y
+mylt(x::T, y::T) where {T<:AbstractFloat} = x < y && !myeq(x, y)
+mylt(x::S, y::T) where {S<:Real,T<:Real} = mylt(promote(x, y)...)
+mygt(x::S, y::T) where {S<:Real, T<:Real} = mylt(y, x)
+myleq(x::T, y::T) where {T<:Real} = x <= y
+myleq(x::T, y::T) where {T<:AbstractFloat} = x <= y || myeq(x, y)
+myleq(x::S, y::T) where {S<:Real,T<:Real} = myleq(promote(x, y)...)
+mygeq(x::T, y::T) where {T<:Real} = myleq(y, x)
+mypos(x::T) where {T<:Real} = mygt(x, zero(T))
+myneg(x::T) where {T<:Real} = mylt(x, zero(T))
+mynonneg(x::T) where {T<:Real} = mygeq(x, zero(T))
+mynonpos(x::T) where {T<:Real} = myleq(x, zero(T))
 
 function mypromote_type{T1,T2}(::Type{T1}, ::Type{T2})
     if T1 <: AbstractFloat || T2 <: AbstractFloat

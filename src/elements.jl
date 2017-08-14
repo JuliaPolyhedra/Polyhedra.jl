@@ -37,7 +37,7 @@ struct HalfSpace{N,T} <: HRepElement{N,T}
     end
 end
 
-(::Type{HalfSpace{N,T}}){N,T}(a::MyVec, β) = HalfSpace{N,T}(myvec(T, a), T(β))
+HalfSpace{N,T}(a::MyVec, β) where {N,T} = HalfSpace{N,T}(myvec(T, a), T(β))
 
 struct HyperPlane{N,T} <: HRepElement{N,T}
     a::MyVec{N,T}
@@ -47,7 +47,7 @@ struct HyperPlane{N,T} <: HRepElement{N,T}
     end
 end
 
-(::Type{HyperPlane{N,T}}){N,T}(a::MyVec, β) = HyperPlane{N,T}(myvec(T, a), T(β))
+HyperPlane{N,T}(a::MyVec, β) where {N,T} = HyperPlane{N,T}(myvec(T, a), T(β))
 
 # FIXME should promote between a and β
 HalfSpace(a, β) = HalfSpace{fulldim(a), eltype(a)}(a, eltype(a)(β))
@@ -69,12 +69,12 @@ islin(v::HyperPlane) = true
 (*)(h::HalfSpace, α::Real) = HalfSpace(h.a * α, h.β * α)
 (*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
 
-function (*){ElemT<:HRepElement}(h::ElemT, P::Matrix)
+function (*)(h::ElemT, P::Matrix) where ElemT<:HRepElement
     Tout = mypromote_type(eltype(ElemT), eltype(P))
     ElemTout = changeboth(ElemT, size(P, 2), Tout)
     ElemTout(P' * h.a, h.β)
 end
-function zeropad{ElemT<:HRepElement}(h::ElemT, n::Integer)
+function zeropad(h::ElemT, n::Integer) where ElemT<:HRepElement
     if n == 0
         h
     else
@@ -105,7 +105,7 @@ struct SymPoint{N, T}
     end
 end
 
-(::Type{SymPoint{N,T}}){N,T}(a::MyPoint) = SymPoint{N,T}(mypoint(T, a))
+SymPoint{N,T}(a::MyPoint) where {N,T} = SymPoint{N,T}(mypoint(T, a))
 
 struct Ray{N, T}
     a::MyVec{N, T}
@@ -114,7 +114,7 @@ struct Ray{N, T}
     end
 end
 
-(::Type{Ray{N,T}}){N,T}(a::MyVec) = Ray{N,T}(myvec(T, a))
+Ray{N,T}(a::MyVec) where {N,T} = Ray{N,T}(myvec(T, a))
 
 struct Line{N,T}
     a::MyVec{N, T}
@@ -126,8 +126,8 @@ end
 getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
 vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 
-(-){ElemT<:Union{HyperPlane, HalfSpace}}(h::ElemT) = ElemT(-h.a, -h.β)
-(-){ElemT<:Union{SymPoint,Ray,Line}}(elem::ElemT) = ElemT(-coord(elem))
+(-)(h::ElemT) where {ElemT<:Union{HyperPlane, HalfSpace}} = ElemT(-h.a, -h.β)
+(-)(elem::ElemT) where {ElemT<:Union{SymPoint,Ray,Line}} = ElemT(-coord(elem))
 # Used in remproj
 (-)(p::AbstractArray, l::Line) = p - coord(l)
 # Ray - Line is done in remproj
@@ -143,12 +143,12 @@ for op in [:dot, :cross]
     end
 end
 
-(*){T<:Union{SymPoint,Ray,Line}}(x, y::T) = T(x * y.a)
-(*){T<:Union{SymPoint,Ray,Line}}(y::T, x) = T(y.a * x)
+(*)(x, y::T) where {T<:Union{SymPoint,Ray,Line}} = T(x * y.a)
+(*)(y::T, x) where {T<:Union{SymPoint,Ray,Line}} = T(y.a * x)
 
 Base.convert{T}(::Type{Vector{T}}, x::Union{SymPoint,Ray,Line}) = convert(Vector{T}, x.a)
 
-(::Type{Line{N,T}}){N,T}(a::MyVec) = Line{N,T}(myvec(T, a))
+Line{N,T}(a::MyVec) where {N,T} = Line{N,T}(myvec(T, a))
 
 SymPoint(a::Union{Point,AbstractVector}) = SymPoint{fulldim(a), eltype(a)}(a)
 Ray(a::Union{Vec,AbstractVector}) = Ray{fulldim(a), eltype(a)}(a)
@@ -168,27 +168,27 @@ const VRepElement{N,T} = Union{FixedVRepElement{N,T}, AbstractVector{T}}
 const RepElement{N,T} = Union{HRepElement{N,T}, VRepElement{N,T}}
 const FixedRepElement{N,T} = Union{HRepElement{N,T}, FixedVRepElement{N,T}}
 
-fulldim{N}(e::FixedRepElement{N}) = N
-eltype{N,T}(e::FixedRepElement{N, T}) = T
+fulldim(e::FixedRepElement{N}) where {N} = N
+eltype(e::FixedRepElement{N, T}) where {N,T} = T
 fulldim{T<:FixedRepElement}(::Type{T}) = T.parameters[1]
 eltype{T<:FixedRepElement}(::Type{T}) = T.parameters[2]
 
 fulldim(v::AbstractVector) = length(v)
 fulldim{T<:AbstractVector}(::Type{T}) = T.parameters[1]
 
-islin{T<:Union{Point,AbstractVector,Ray}}(v::T) = false
-islin{T<:Union{SymPoint,Line}}(v::T) = true
-isray{T<:Union{Point,AbstractVector,SymPoint}}(v::T) = false
-isray{T<:Union{Ray,Line}}(v::T) = true
-ispoint{T<:Union{Point,AbstractVector,SymPoint}}(v::T) = true
-ispoint{T<:Union{Ray,Line}}(v::T) = false
+islin(v::T) where {T<:Union{Point,AbstractVector,Ray}} = false
+islin(v::T) where {T<:Union{SymPoint,Line}} = true
+isray(v::T) where {T<:Union{Point,AbstractVector,SymPoint}} = false
+isray(v::T) where {T<:Union{Ray,Line}} = true
+ispoint(v::T) where {T<:Union{Point,AbstractVector,SymPoint}} = true
+ispoint(v::T) where {T<:Union{Ray,Line}} = false
 
-coord{ElemT<:Union{Point,AbstractVector}}(v::ElemT) = v
-coord{ElemT<:Union{HRepElement,SymPoint,Ray,Line}}(v::ElemT) = v.a
+coord(v::ElemT) where {ElemT<:Union{Point,AbstractVector}} = v
+coord(v::ElemT) where {ElemT<:Union{HRepElement,SymPoint,Ray,Line}} = v.a
 
 const VRepElementContainer = Union{SymPoint, Ray, Line}
 
-function (*){ElemT<:FixedVRepElement}(P::Matrix, v::ElemT)
+function (*)(P::Matrix, v::ElemT) where ElemT<:FixedVRepElement
     if ElemT <: VRepElementContainer
         Tout = mypromote_type(eltype(ElemT), eltype(P))
         ElemTout = changeboth(ElemT, size(P, 1), Tout)
@@ -197,7 +197,7 @@ function (*){ElemT<:FixedVRepElement}(P::Matrix, v::ElemT)
         return P * v.a
     end
 end
-function zeropad{ElemT<:VRepElement}(v::ElemT, n::Integer)
+function zeropad(v::ElemT, n::Integer) where ElemT<:VRepElement
     if n == 0
         v
     else
@@ -227,20 +227,20 @@ changeboth{VecT<:AbstractVector,Tout}(::Type{VecT}, Nout, ::Type{Tout}) = Abstra
 mydot(a::AbstractVector, r::Ray) = mydot(a, r.a)
 mydot(a::AbstractVector, l::Line) = mydot(a, l.a)
 
-Base.in{N}(r::Ray{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, r))
-Base.in{N}(l::Line{N}, h::HalfSpace{N}) = mynonpos(mydot(h.a, l))
-Base.in{N}(p::Point{N}, h::HalfSpace{N}) = myleq(mydot(h.a, p), h.β)
-Base.in{N}(p::AbstractVector, h::HalfSpace{N}) = myleq(mydot(h.a, p), h.β)
-Base.in{N}(p::SymPoint{N}, h::HalfSpace{N}) = myleq(mydot(h.a, p.p), h.β)
+Base.in(r::Ray{N}, h::HalfSpace{N}) where {N} = mynonpos(mydot(h.a, r))
+Base.in(l::Line{N}, h::HalfSpace{N}) where {N} = mynonpos(mydot(h.a, l))
+Base.in(p::Point{N}, h::HalfSpace{N}) where {N} = myleq(mydot(h.a, p), h.β)
+Base.in(p::AbstractVector, h::HalfSpace{N}) where {N} = myleq(mydot(h.a, p), h.β)
+Base.in(p::SymPoint{N}, h::HalfSpace{N}) where {N} = myleq(mydot(h.a, p.p), h.β)
 
-Base.in{N}(r::Ray{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, r))
-Base.in{N}(l::Line{N}, h::HyperPlane{N}) = myeqzero(mydot(h.a, l))
-Base.in{N}(p::Point{N}, h::HyperPlane{N}) = myeq(mydot(h.a, p), h.β)
-Base.in{N}(p::AbstractVector, h::HyperPlane{N}) = myeq(mydot(h.a, p), h.β)
-Base.in{N}(p::SymPoint{N}, h::HyperPlane{N}) = myeq(mydot(h.a, p.p), h.β)
+Base.in(r::Ray{N}, h::HyperPlane{N}) where {N} = myeqzero(mydot(h.a, r))
+Base.in(l::Line{N}, h::HyperPlane{N}) where {N} = myeqzero(mydot(h.a, l))
+Base.in(p::Point{N}, h::HyperPlane{N}) where {N} = myeq(mydot(h.a, p), h.β)
+Base.in(p::AbstractVector, h::HyperPlane{N}) where {N} = myeq(mydot(h.a, p), h.β)
+Base.in(p::SymPoint{N}, h::HyperPlane{N}) where {N} = myeq(mydot(h.a, p.p), h.β)
 
 import Base.vec
-function Base.vec{N,T}(x::FixedVector{N,T})
+function Base.vec(x::FixedVector{N,T}) where {N,T}
     y = Vector{T}(N)
     for i in 1:N
         y[i] = x[i]
@@ -250,17 +250,17 @@ end
 #Base.vec{ElemT::VRepElementContainer}(x::ElemT) = ElemT(vec(x.a))
 
 pushbefore(a::AbstractVector, β) = [β; a]
-function pushbefore{ElemT<:FixedVector}(a::ElemT, β, ElemTout = changefulldim(ElemT, fulldim(ElemT)+1))
+function pushbefore(a::ElemT, β, ElemTout = changefulldim(ElemT, fulldim(ElemT)+1)) where ElemT<:FixedVector
     ElemTout([β; vec(a)])
 end
 
-function lift{ElemT <: HRepElement}(h::ElemT)
+function lift(h::ElemT) where ElemT <: HRepElement
     ElemT(pushbefore(h.a, -h.β), zero(eltype(ElemT)))
 end
-lift{N,T}(h::Ray{N,T}) = Ray{N+1,T}(pushbefore(h.a, zero(T)))
-lift{N,T}(h::Line{N,T}) = Line{N+1,T}(pushbefore(h.a, zero(T)))
-lift{N,T}(h::Point{N,T}) = pushbefore(h, one(T))
-lift{T}(h::AbstractVector{T}) = Ray{length(h)+1,T}(pushbefore(h, one(T)))
-lift{N,T}(h::SymPoint{N,T}) = Line{N+1,T}(pushbefore(h.a, one(T)))
+lift(h::Ray{N,T}) where {N,T} = Ray{N+1,T}(pushbefore(h.a, zero(T)))
+lift(h::Line{N,T}) where {N,T} = Line{N+1,T}(pushbefore(h.a, zero(T)))
+lift(h::Point{N,T}) where {N,T} = pushbefore(h, one(T))
+lift(h::AbstractVector{T}) where {T} = Ray{length(h)+1,T}(pushbefore(h, one(T)))
+lift(h::SymPoint{N,T}) where {N,T} = Line{N+1,T}(pushbefore(h.a, one(T)))
 
-translate{ElemT<:HRepElement}(h::ElemT, p) = ElemT(h.a, h.β + mydot(h.a, p))
+translate(h::ElemT, p) where {ElemT<:HRepElement} = ElemT(h.a, h.β + mydot(h.a, p))

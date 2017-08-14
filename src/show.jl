@@ -1,6 +1,6 @@
 import Base.show
 
-function Base.show{N,T}(io::IO, rep::Representation{N,T})
+function Base.show(io::IO, rep::Representation{N,T}) where {N,T}
     if typeof(rep) <: HRepresentation
         print(io, "H")
     else

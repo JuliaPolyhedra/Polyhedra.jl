@@ -1,6 +1,6 @@
 export convexhull
 # Always type of first arg
-function Base.intersect{N, T1, T2, RepTin<:HRep{N, T1}}(p1::RepTin, p2::HRep{N, T2})
+function Base.intersect(p1::RepTin, p2::HRep{N, T2}) where {N, T1, T2, RepTin<:HRep{N, T1}}
     Tout = promote_type(T1, T2)
     RepTout = lazychangeeltype(RepTin, Tout)
     RepTout(HRepIterator([HRep{N, Tout}(p1), HRep{N, Tout}(p2)]))
@@ -18,14 +18,14 @@ If `P1` and `P2` are both polyhedra (resp. V-representation), the resulting poly
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 ```
 """
-function convexhull{N, T1, T2, RepTin<:VRep{N, T1}}(p1::RepTin, p2::VRep{N, T2})
+function convexhull(p1::RepTin, p2::VRep{N, T2}) where {N, T1, T2, RepTin<:VRep{N, T1}}
     Tout = promote_type(T1, T2)
     # Always type of first arg
     RepTout = lazychangeeltype(RepTin, Tout)
     RepTout(VRepIterator([VRep{N, Tout}(p1), VRep{N, Tout}(p2)]))
 end
 
-function (+){N, T1, T2, RepTin<:VRep{N, T1}}(p1::RepTin, p2::VRep{N, T2})
+function (+)(p1::RepTin, p2::VRep{N, T2}) where {N, T1, T2, RepTin<:VRep{N, T1}}
     Tout = promote_type(T1, T2)
     # Always type of first arg
     RepTout = lazychangeeltype(RepTin, Tout)
@@ -39,7 +39,7 @@ function usehrep(p1::Polyhedron, p2::Polyhedron)
     hrepiscomputed(p1) && (!vrepiscomputed(p1) || hrepiscomputed(p2))
 end
 
-function hcartesianproduct{N1, N2, T, RepT1<:HRep{N1, T}, RepT2<:HRep{N2, T}}(p1::RepT1, p2::RepT2)
+function hcartesianproduct(p1::RepT1, p2::RepT2) where {N1, N2, T, RepT1<:HRep{N1, T}, RepT2<:HRep{N2, T}}
     Nout = N1 + N2
     # Always type of first arg
     RepTout = changefulldim(RepT1, Nout)
@@ -49,7 +49,7 @@ function hcartesianproduct{N1, N2, T, RepT1<:HRep{N1, T}, RepT2<:HRep{N2, T}}(p1
     #       Do we really need these 2 last parameters ? I guess we should remove them
     RepTout(HRepIterator{Nout, T, N1, T}([p1, p2], f))
 end
-function vcartesianproduct{N1, N2, T, RepT1<:VRep{N1, T}, RepT2<:VRep{N2, T}}(p1::RepT1, p2::RepT2)
+function vcartesianproduct(p1::RepT1, p2::RepT2) where {N1, N2, T, RepT1<:VRep{N1, T}, RepT2<:VRep{N2, T}}
     Nout = N1 + N2
     # Always type of first arg
     RepTout = changefulldim(RepT1, Nout)
@@ -72,7 +72,7 @@ function (*)(p1::Polyhedron, p2::Polyhedron)
     end
 end
 
-function (*){RepT<:HRep}(rep::RepT, P::AbstractMatrix)
+function (*)(rep::RepT, P::AbstractMatrix) where RepT<:HRep
     Nin = fulldim(rep)
     Tin = eltype(rep)
     if size(P, 1) != Nin
@@ -101,7 +101,7 @@ function (*){RepT<:HRep}(rep::RepT, P::AbstractMatrix)
         end
     end
 end
-function (*){RepT<:VRep}(P::AbstractMatrix, rep::RepT)
+function (*)(P::AbstractMatrix, rep::RepT) where RepT<:VRep
     Nin = fulldim(rep)
     Tin = eltype(rep)
     if size(P, 2) != Nin

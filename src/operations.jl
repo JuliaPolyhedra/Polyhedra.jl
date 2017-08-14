@@ -1,9 +1,9 @@
 # Mandatory
 export polyhedron, hrep, vrep, hrepiscomputed, vrepiscomputed, loadpolyhedron!
 
-polyhedron{N, T}(rep::Representation{N, T}) = polyhedron(rep, getlibraryfor(N, T))
-Base.push!{N}(p::Polyhedron{N}, ine::HRepresentation{N})                             = error("push! not implemented for $(typeof(p)) for HRepresentation")
-Base.push!{N}(p::Polyhedron{N}, ext::VRepresentation{N})                             = error("push! not implemented for $(typeof(p)) for VRepresentation")
+polyhedron(rep::Representation{N, T}) where {N, T} = polyhedron(rep, getlibraryfor(N, T))
+Base.push!(p::Polyhedron{N}, ine::HRepresentation{N}) where {N} = error("push! not implemented for $(typeof(p)) for HRepresentation")
+Base.push!(p::Polyhedron{N}, ext::VRepresentation{N}) where {N} = error("push! not implemented for $(typeof(p)) for VRepresentation")
 hrepiscomputed(p::Polyhedron)                                                        = error("hrepiscomputed not implemented for $(typeof(p))")
 hrep(p::Polyhedron)                                                                  = error("hrep not implemented for $(typeof(p))")
 vrepiscomputed(p::Polyhedron)                                                        = error("vrepiscomputed not implemented for $(typeof(p))")
