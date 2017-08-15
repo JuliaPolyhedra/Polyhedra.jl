@@ -3,7 +3,7 @@ export HAffineSpace, VAffineSpace, affinehull, linespace, detecthlinearities!, d
 # Linearity
 detectvlinearities!(p::VRep) = error("detectvlinearities! not implemented for $(typeof(p))")
 detecthlinearities!(p::HRep) = error("detecthlinearities! not implemented for $(typeof(p))")
-function dim{N}(h::HRep{N}, current=false)
+function dim(h::HRep{N}, current=false) where N
     if !current
         detecthlinearities!(h::HRep)
     end
@@ -29,13 +29,13 @@ struct HAffineSpace{N, T} <: HRepresentation{N, T}
     hps::Vector{HyperPlane{N, T}}
 end
 
-(::Type{HAffineSpace{N, T}}){N, T}() = HAffineSpace{N, T}(HyperPlane{N, T}[])
-function (::Type{HAffineSpace{N, T}}){N, T}(it::EqIterator)
+HAffineSpace{N, T}() where {N, T} = HAffineSpace{N, T}(HyperPlane{N, T}[])
+function HAffineSpace{N, T}(it::EqIterator) where {N, T}
     HAffineSpace{N, T}([hp for hp in it])
 end
-HAffineSpace{N, T}(it::EqIterator{N, T}) = HAffineSpace{N, T}(it)
+HAffineSpace(it::EqIterator{N, T}) where {N, T} = HAffineSpace{N, T}(it)
 
-Base.push!{N, T}(L::HAffineSpace{N, T}, h::HyperPlane{N, T}) = push!(L.hps, h)
+Base.push!(L::HAffineSpace{N, T}, h::HyperPlane{N, T}) where {N, T} = push!(L.hps, h)
 
 decomposedfast(L::HAffineSpace) = true
 
@@ -68,7 +68,7 @@ function Base.in(h::HRepElement, L::HAffineSpace)
     myeqzero(h)
 end
 
-function removeduplicates{N, T}(L::HAffineSpace{N, T})
+function removeduplicates(L::HAffineSpace{N, T}) where {N, T}
     H = HAffineSpace{N, T}()
     for h in eqs(L)
         if !(h in H)
@@ -85,13 +85,13 @@ struct VAffineSpace{N, T} <: VRepresentation{N, T}
     lines::Vector{Line{N, T}}
 end
 
-(::Type{VAffineSpace{N, T}}){N, T}() = VAffineSpace{N, T}(Line{N, T}[])
-function (::Type{VAffineSpace{N, T}}){N, T}(it::LineIterator)
+VAffineSpace{N, T}() where {N, T} = VAffineSpace{N, T}(Line{N, T}[])
+function VAffineSpace{N, T}(it::LineIterator) where {N, T}
     VAffineSpace{N, T}([l for l in it])
 end
-VAffineSpace{N, T}(it::LineIterator{N, T}) = VAffineSpace{N, T}(it)
+VAffineSpace(it::LineIterator{N, T}) where {N, T} = VAffineSpace{N, T}(it)
 
-Base.push!{N, T}(L::VAffineSpace{N, T}, l::Line{N, T}) = push!(L.lines, l)
+Base.push!(L::VAffineSpace{N, T}, l::Line{N, T}) where {N, T} = push!(L.lines, l)
 
 decomposedfast(L::VAffineSpace) = true
 
@@ -127,7 +127,7 @@ function Base.in(v::VRepElement, L::VAffineSpace)
     myeqzero(coord(v))
 end
 
-function removeduplicates{N, T}(L::VAffineSpace{N, T})
+function removeduplicates(L::VAffineSpace{N, T}) where {N, T}
     V = VAffineSpace{N, T}()
     for h in eqs(L)
         if !(h in H)

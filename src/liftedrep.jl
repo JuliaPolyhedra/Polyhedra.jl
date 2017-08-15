@@ -26,11 +26,11 @@ changeboth{N,T,S}(::Type{LiftedHRepresentation{N,T}}, M, ::Type{S}) = LiftedHRep
 decomposedfast(rep::LiftedHRepresentation) = false
 linset(rep::LiftedHRepresentation) = copy(rep.linset)
 
-LiftedHRepresentation{T <: Real}(A::AbstractMatrix{T}, linset::IntSet=IntSet()) = LiftedHRepresentation{size(A,2)-1,T}(A, linset)
+LiftedHRepresentation(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = LiftedHRepresentation{size(A,2)-1,T}(A, linset)
 
-LiftedHRepresentation{N,T}(h::HRepresentation{N,T}) = LiftedHRepresentation{N,T}(h)
+LiftedHRepresentation(h::HRepresentation{N,T}) where {N,T} = LiftedHRepresentation{N,T}(h)
 
-function (::Type{LiftedHRepresentation{N, T}}){N, T}(it::HRepIterator{N, T})
+function LiftedHRepresentation{N, T}(it::HRepIterator{N, T}) where {N, T}
     A = Matrix{T}(length(it), N+1)
     linset = IntSet()
     for (i, h) in enumerate(it)
@@ -43,7 +43,7 @@ function (::Type{LiftedHRepresentation{N, T}}){N, T}(it::HRepIterator{N, T})
     LiftedHRepresentation{N, T}(A, linset)
 end
 
-function (::Type{LiftedHRepresentation{N, T}}){N, T}(eqs, ineqs)
+function LiftedHRepresentation{N, T}(eqs, ineqs) where {N, T}
     neq = length(eqs)
     nhrep = neq + length(ineqs)
     A = Matrix{T}(nhrep, N+1)
@@ -59,9 +59,9 @@ function (::Type{LiftedHRepresentation{N, T}}){N, T}(eqs, ineqs)
     LiftedHRepresentation{N, T}(A, linset)
 end
 
-Base.copy{N,T}(ine::LiftedHRepresentation{N,T}) = LiftedHRepresentation{N,T}(copy(ine.A), copy(ine.linset))
+Base.copy(ine::LiftedHRepresentation{N,T}) where {N,T} = LiftedHRepresentation{N,T}(copy(ine.A), copy(ine.linset))
 
-function extractrow{N}(ine::LiftedHRepresentation{N}, i)
+function extractrow(ine::LiftedHRepresentation{N}, i) where N
     β = ine.A[i,1]
     a = -ine.A[i,2:end]
     if i in ine.linset
@@ -80,7 +80,7 @@ nexthrep(ine::LiftedHRepresentation, state) = (extractrow(ine, state), state+1)
 neqs(ine::LiftedHRepresentation) = length(ine.linset)
 starteq(ine::LiftedHRepresentation) = start(ine.linset)
 doneeq(ine::LiftedHRepresentation, state) = done(ine.linset, state)
-function nexteq{N,T}(ine::LiftedHRepresentation{N,T}, state)
+function nexteq(ine::LiftedHRepresentation{N,T}, state) where {N,T}
     (i, nextstate) = next(ine.linset, state)
     (extractrow(ine, i)::HyperPlane{N,T}, nextstate)
 end
@@ -88,7 +88,7 @@ end
 nineqs(ine::LiftedHRepresentation) = nhreps(ine) - neqs(ine)
 startineq(ine::LiftedHRepresentation) = nextz(ine.linset, 1)
 doneineq(ine::LiftedHRepresentation, state) = state > nhreps(ine)
-nextineq{N,T}(ine::LiftedHRepresentation{N,T}, state) = (extractrow(ine, state)::HalfSpace{N,T}, nextz(ine.linset, state+1))
+nextineq(ine::LiftedHRepresentation{N,T}, state) where {N,T} = (extractrow(ine, state)::HalfSpace{N,T}, nextz(ine.linset, state+1))
 
 Base.getindex(h::LiftedHRepresentation, I::AbstractArray) = LiftedHRepresentation(h.A[I, :], filterintset(h.linset, I))
 
@@ -118,11 +118,11 @@ function linset(rep::LiftedVRepresentation)
     rep.linset
 end
 
-LiftedVRepresentation{T <: Real}(R::AbstractMatrix{T}, linset::IntSet=IntSet()) = LiftedVRepresentation{size(R,2)-1,T}(R, linset)
+LiftedVRepresentation(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = LiftedVRepresentation{size(R,2)-1,T}(R, linset)
 
-LiftedVRepresentation{N,T}(v::VRepresentation{N,T}) = LiftedVRepresentation{N,T}(v)
+LiftedVRepresentation(v::VRepresentation{N,T}) where {N,T} = LiftedVRepresentation{N,T}(v)
 
-function (::Type{LiftedVRepresentation{N, T}}){N, T}(it::VRepIterator{N, T})
+function LiftedVRepresentation{N, T}(it::VRepIterator{N, T}) where {N, T}
     R = Matrix{T}(length(it), N+1)
     linset = IntSet()
     for (i, v) in enumerate(it)
@@ -139,7 +139,7 @@ function (::Type{LiftedVRepresentation{N, T}}){N, T}(it::VRepIterator{N, T})
     LiftedVRepresentation{N, T}(R, linset)
 end
 
-function (::Type{LiftedVRepresentation{N, T}}){N, T}(points, rays)
+function LiftedVRepresentation{N, T}(points, rays) where {N, T}
     npoint = length(points)
     nray = length(rays)
     nvrep = npoint + nray
@@ -163,16 +163,16 @@ function (::Type{LiftedVRepresentation{N, T}}){N, T}(points, rays)
     LiftedVRepresentation{N, T}(R, linset)
 end
 
-Base.copy{N,T}(ext::LiftedVRepresentation{N,T}) = LiftedVRepresentation{N,T}(copy(ext.R), copy(ext.linset))
+Base.copy(ext::LiftedVRepresentation{N,T}) where {N,T} = LiftedVRepresentation{N,T}(copy(ext.R), copy(ext.linset))
 
 nvreps(ext::LiftedVRepresentation) = size(ext.R, 1)
 
-function isrowpoint{N,T}(ext::LiftedVRepresentation{N,T}, i)
+function isrowpoint(ext::LiftedVRepresentation{N,T}, i) where {N,T}
     ispoint = ext.R[i,1]
     @assert ispoint == zero(T) || ispoint == one(T)
     ispoint == one(T)
 end
-function extractrow{N,T}(ext::LiftedVRepresentation{N,T}, i)
+function extractrow(ext::LiftedVRepresentation{N,T}, i) where {N,T}
     ispoint = ext.R[i,1]
     @assert ispoint == zero(T) || ispoint == one(T)
     a = ext.R[i,2:end]

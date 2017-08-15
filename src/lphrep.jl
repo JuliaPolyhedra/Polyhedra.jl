@@ -66,16 +66,16 @@ end
 
 decomposedfast(lp::LPHRepresentation) = false
 
-LPHRepresentation{T <: Real}(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) = LPHRepresentation{size(A,2),T}(A, l, u, lb, ub)
+LPHRepresentation(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {T <: Real} = LPHRepresentation{size(A,2),T}(A, l, u, lb, ub)
 function LPHRepresentation(A::AbstractMatrix, l::AbstractVector, u::AbstractVector, lb::AbstractVector, ub::AbstractVector)
     T = promote_type(eltype(A), eltype(l), eltype(u), eltype(lb), eltype(ub))
     LPHRepresentation{size(A,2),T}(AbstractMatrix{T}(A), AbstractVector{T}(l), AbstractVector{T}(u), AbstractVector{T}(lb), AbstractVector{T}(ub))
 end
 
 LPHRepresentation(rep::LPHRepresentation) = rep
-LPHRepresentation{N,T}(rep::HRep{N,T}) = LPHRepresentation{N,T}(rep)
+LPHRepresentation(rep::HRep{N,T}) where {N,T} = LPHRepresentation{N,T}(rep)
 
-function (::Type{LPHRepresentation{N, T}}){N,T}(it::HRepIterator{N, T})
+function LPHRepresentation{N, T}(it::HRepIterator{N, T}) where {N,T}
     A = Matrix{T}(length(it), N)
     lb = Vector{T}(length(it))
     ub = Vector{T}(length(it))
@@ -93,7 +93,7 @@ function (::Type{LPHRepresentation{N, T}}){N,T}(it::HRepIterator{N, T})
     end
     LPHRepresentation{N, T}(A, l, u, lb, ub)
 end
-function (::Type{LPHRepresentation{N, T}}){N,T}(eqs, ineqs)
+function LPHRepresentation{N, T}(eqs, ineqs) where {N,T}
     neq = length(eqs)
     nhrep = neq + length(ineqs)
     A = Matrix{T}(nhrep, N)
@@ -115,7 +115,7 @@ function (::Type{LPHRepresentation{N, T}}){N,T}(eqs, ineqs)
     LPHRepresentation{N, T}(A, l, u, lb, ub)
 end
 
-Base.copy{N,T}(lp::LPHRepresentation{N,T}) = LPHRepresentation{N,T}(copy(A), copy(l), copy(u), copy(colleqs), copy(colgeqs), copy(coleqs), copy(lb), copy(ub), copy(rowleqs), copy(rowgeqs), copy(roweqs))
+Base.copy(lp::LPHRepresentation{N,T}) where {N,T} = LPHRepresentation{N,T}(copy(A), copy(l), copy(u), copy(colleqs), copy(colgeqs), copy(coleqs), copy(lb), copy(ub), copy(rowleqs), copy(rowgeqs), copy(roweqs))
 
 function checknext(lp::LPHRepresentation, state, allowed)
     colrow, i, lgeq = state
@@ -152,7 +152,7 @@ end
 neqs(lp::LPHRepresentation) = length(lp.coleqs) + length(lp.roweqs)
 nineqs(lp::LPHRepresentation) = length(lp.colleqs) + length(lp.colgeqs) + length(lp.rowleqs) + length(lp.rowgeqs)
 
-function gethrepaux{N, T}(lp::LPHRepresentation{N, T}, state)
+function gethrepaux(lp::LPHRepresentation{N, T}, state) where {N, T}
     colrow, i, lgeq = state
     if colrow == 1
         a = spzeros(T, N)

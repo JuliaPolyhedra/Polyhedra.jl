@@ -1,7 +1,7 @@
 # I only import it and do not use "using" so that Datastructures.status does not conflict with MathProgBase.status
 import GeometryTypes.decompose, GeometryTypes.isdecomposable
 
-function fulldecompose{T}(poly::Polyhedron{3,T})
+function fulldecompose(poly::Polyhedron{3,T}) where T
     ine = SimpleHRepresentation(poly)
 
     # I need to do division so if T is e.g. Integer, I need to use another type
@@ -193,11 +193,11 @@ end
 isdecomposable{T<:Point, S<:Polyhedron}(::Type{T}, ::Type{S}) = true
 isdecomposable{T<:Face, S<:Polyhedron}(::Type{T}, ::Type{S}) = true
 isdecomposable{T<:Normal, S<:Polyhedron}(::Type{T}, ::Type{S}) = true
-function decompose{N, T1, T2}(PT::Type{Point{N, T1}}, poly::Polyhedron{N, T2})
+function decompose(PT::Type{Point{N, T1}}, poly::Polyhedron{N, T2}) where {N, T1, T2}
     points = fulldecompose(poly)[1]
     map(PT, points)
 end
-function decompose{N, T, T2}(FT::Type{Face{N, T}}, poly::Polyhedron{3, T2})
+function decompose(FT::Type{Face{N, T}}, poly::Polyhedron{3, T2}) where {N, T, T2}
     faces = fulldecompose(poly)[2]
     decompose(FT, faces)
 end

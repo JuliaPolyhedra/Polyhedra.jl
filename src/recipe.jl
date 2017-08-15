@@ -1,6 +1,6 @@
 using RecipesBase
 
-function getsemihull{PT}(ps::Vector{PT}, sign_sense, counterclockwise, yray = nothing)
+function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray = nothing) where PT
     hull = PT[]
     prev = sign_sense == 1 ? first(ps) : last(ps)
     cur = prev

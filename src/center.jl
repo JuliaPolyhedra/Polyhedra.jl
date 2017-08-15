@@ -6,7 +6,7 @@ using JuMP
 Return a tuple with the center and radius of the largest euclidean ball contained in the polyhedron `p`.
 Throws an error if the polyhedron is empty or if the radius is infinite.
 """
-function hchebyshevcenter{N}(p::HRep{N}, solver=defaultLPsolverfor(p, solver))
+function hchebyshevcenter(p::HRep{N}, solver=defaultLPsolverfor(p, solver)) where N
     m = Model(solver=solver)
     r = @variable m r >= 0
     c = @variable m [1:N]

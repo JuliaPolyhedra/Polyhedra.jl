@@ -6,7 +6,7 @@ polytypefor{T <: Integer}(::Type{T}) = Rational{BigInt}
 polytypefor(::Type{Float32}) = Float64
 polytypefor{T}(::Type{T}) = T
 
-function dualfullspace{N, Tin}(h::HRepresentation{N, Tin})
+function dualfullspace(h::HRepresentation{N, Tin}) where {N, Tin}
     Tout = polytypefor(Tin)
     SimpleVRepresentation(Matrix{Tout}(0, N), eye(Tout, N), IntSet(), IntSet(1:N))
 end
@@ -29,7 +29,7 @@ function doubledescription(h::HRepresentation)
     v
 end
 
-function doubledescription{N, T}(v::VRepresentation{N, T})
+function doubledescription(v::VRepresentation{N, T}) where {N, T}
     lv = LiftedVRepresentation(v)
     # See #28
     if haspoints(v)

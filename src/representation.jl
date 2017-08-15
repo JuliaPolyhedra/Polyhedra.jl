@@ -26,8 +26,8 @@ decomposedfast(rep::VRepresentation)  = error("decomposedfast not implemented fo
 decomposedhfast(rep::HRepresentation) = decomposedfast(rep)
 decomposedvfast(rep::VRepresentation) = decomposedfast(rep)
 
-Base.eltype{N,T}(rep::Rep{N,T}) = T
-fulldim{N}(rep::Rep{N}) = N
+Base.eltype(rep::Rep{N,T}) where {N,T} = T
+fulldim(rep::Rep{N}) where {N} = N
 Base.eltype{RepT<:Rep}(::Type{RepT}) = RepT.parameters[2]
 fulldim{RepT<:Rep}(::Type{RepT}) = RepT.parameters[1]
 
@@ -260,19 +260,19 @@ Base.convert{RepTout<:VRepresentation, RepTin<:VRep}(::Type{RepTout}, p::RepTin)
 # avoid ambiguity
 Base.convert{RepTout<:VRepresentation, RepTin<:VRepresentation}(::Type{RepTout}, p::RepTin) = vconvert(RepTout, p)
 
-changeeltype{N,T}(p::Rep{N,T}, ::Type{T}) = p
-function changeeltype{RepTin<:Rep, Tout}(p::RepTin, ::Type{Tout})
+changeeltype(p::Rep{N,T}, ::Type{T}) where {N,T} = p
+function changeeltype(p::RepTin, ::Type{Tout}) where {RepTin<:Rep, Tout}
     RepTout = changeeltype(RepTin, Tout)
     RepTout(p)
 end
 
-(::Type{VRepresentation{N, T}}){N, T, RepTin}(v::RepTin) = lazychangeboth(RepTin, N, T)(v)
-(::Type{HRepresentation{N, T}}){N, T, RepTin}(h::RepTin) = lazychangeboth(RepTin, N, T)(h)
+VRepresentation{N, T}(v::RepTin) where {N, T, RepTin} = lazychangeboth(RepTin, N, T)(v)
+HRepresentation{N, T}(h::RepTin) where {N, T, RepTin} = lazychangeboth(RepTin, N, T)(h)
 
-(::Type{VRep{N, T}}){N, T}(v::VRepresentation) = VRepresentation{N, T}(v)
-(::Type{VRep{N, T}}){N, T}(p::Polyhedron) = Polyhedron{N, T}(p)
-(::Type{HRep{N, T}}){N, T}(h::HRepresentation) = HRepresentation{N, T}(h)
-(::Type{HRep{N, T}}){N, T}(p::Polyhedron) = Polyhedron{N, T}(p)
+VRep{N, T}(v::VRepresentation) where {N, T} = VRepresentation{N, T}(v)
+VRep{N, T}(p::Polyhedron) where {N, T} = Polyhedron{N, T}(p)
+HRep{N, T}(h::HRepresentation) where {N, T} = HRepresentation{N, T}(h)
+HRep{N, T}(p::Polyhedron) where {N, T} = Polyhedron{N, T}(p)
 
 # FIXME it does not get called. The calls always go throug vconvert and hconvert. Use changeeltype instead
 #function Base.convert{N, T, RepT<:Representation}(::Type{Representation{N, T}}, rep::RepT)

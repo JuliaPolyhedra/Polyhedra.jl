@@ -19,7 +19,7 @@ struct LinprogSolution
     attrs
 end
 
-function MathProgBase.linprog{N}(c::AbstractVector, p::Rep{N}, solver::MathProgBase.AbstractMathProgSolver = defaultLPsolverfor(p))
+function MathProgBase.linprog(c::AbstractVector, p::Rep{N}, solver::MathProgBase.AbstractMathProgSolver = defaultLPsolverfor(p)) where N
     m = PolyhedraModel(solver)
     if N != length(c)
         println("length of objective does not match dimension of polyhedron")
@@ -42,6 +42,6 @@ function MathProgBase.linprog{N}(c::AbstractVector, p::Rep{N}, solver::MathProgB
     end
 end
 
-function Base.isempty{N,T}(p::Polyhedron{N,T}, solver::MathProgBase.AbstractMathProgSolver = defaultLPsolverfor(p))
+function Base.isempty(p::Polyhedron{N,T}, solver::MathProgBase.AbstractMathProgSolver = defaultLPsolverfor(p)) where {N,T}
     linprog(zeros(T, N), p, solver).status == :Infeasible
 end

@@ -1,4 +1,4 @@
-function simplextest{Lib<:PolyhedraLibrary}(lib::Lib)
+function simplextest(lib::Lib) where Lib<:PolyhedraLibrary
     A = [1 1; -1 0; 0 -1]
     b = [1, 0, 0]
     ls = IntSet([1])

@@ -56,7 +56,7 @@ end
 # V-redundancy
 # If p is an H-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 # TODO nlines should be the number of non-redundant lines so something similar to dim
-function isvredundant{N,T}(p::HRep{N,T}, v::VRepElement; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver)
+function isvredundant(p::HRep{N,T}, v::VRepElement; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) where {N,T}
     count = 0
     for h in hreps(p)
         if v in hyperplane(h)
@@ -67,11 +67,11 @@ function isvredundant{N,T}(p::HRep{N,T}, v::VRepElement; strongly = true, nl::In
     count < (strongly ? strong : min(strong, 1))
 end
 # A line is never redundant but it can be a duplicate
-isvredundant{N,T}(p::HRep{N,T}, v::Line; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) = false
+isvredundant(p::HRep{N,T}, v::Line; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) where {N,T} = false
 
 # H-redundancy
 # If p is a V-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
-function ishredundant{N,T}(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver)
+function ishredundant(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) where {N,T}
     rcount = 0
     pcount = 0
     hp = hyperplane(h)
@@ -91,7 +91,7 @@ function ishredundant{N,T}(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int
     pcount < min(d, 1) || (strongly && pcount + rcount < d)
 end
 # An hyperplane is never redundant but it can be a duplicate
-ishredundant{N,T}(p::VRep{N,T}, h::HyperPlane; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) = false
+ishredundant(p::VRep{N,T}, h::HyperPlane; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) where {N,T} = false
 
 # H-redundancy
 #function ishredundantaux(p::HRep, a, β, strongly, solver)
@@ -185,7 +185,7 @@ function vrupdatedup!(aff, rays, r)
         false
     end
 end
-function removeduplicates{N, T}(vrep::VRepresentation{N, T})
+function removeduplicates(vrep::VRepresentation{N, T}) where {N, T}
     aff = linespace(vrep, true)
     newlin = true
     rs = Union{Vec{N, T}, Ray{N, T}}[]
@@ -244,7 +244,7 @@ function hupdatedup!(aff::HAffineSpace, hss, h::HalfSpace)
         false
     end
 end
-function removeduplicates{N, T}(hrep::HRepresentation{N, T})
+function removeduplicates(hrep::HRepresentation{N, T}) where {N, T}
     aff = affinehull(hrep, true)
     newlin = true
     hs = HalfSpace{N, T}[]

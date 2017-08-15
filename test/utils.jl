@@ -1,10 +1,10 @@
 myeq(x::Real, y::Real) = myeq(promote(x, y)...)
-myeq{T<:Real}(x::T, y::T) = x == y
-myeq{T<:AbstractFloat}(x::T, y::T) = y < x+1024*eps(T) && x < y+1024*eps(T)
-myeq{S<:Real,T<:Real}(x::Vector{S}, y::Vector{T}) = myeq(promote(x, y)...)
-myeq{T<:Real}(x::Vector{T}, y::Vector{T}) = x == y
-myeq{T<:AbstractFloat}(x::Vector{T}, y::Vector{T}) = myeq(norm(x - y), zero(T))
-myeqzero{T<:Real}(x::T) = myeq(x, zero(T))
+myeq(x::T, y::T) where {T<:Real} = x == y
+myeq(x::T, y::T) where {T<:AbstractFloat} = y < x+1024*eps(T) && x < y+1024*eps(T)
+myeq(x::Vector{S}, y::Vector{T}) where {S<:Real,T<:Real} = myeq(promote(x, y)...)
+myeq(x::Vector{T}, y::Vector{T}) where {T<:Real} = x == y
+myeq(x::Vector{T}, y::Vector{T}) where {T<:AbstractFloat} = myeq(norm(x - y), zero(T))
+myeqzero(x::T) where {T<:Real} = myeq(x, zero(T))
 
 tomatrix(M::Matrix) = M
 function tomatrix(v::Vector)

@@ -12,7 +12,7 @@ line(r::Ray) = Line(coord(r))
 
 export translate
 
-function translate{N, S, T}(p::HRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}})
+function translate(p::HRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}}) where {N, S, T}
     f = (i, h) -> translate(h, v)
     Tout = Base.promote_op(+, T, S)
     lazychangeeltype(typeof(p), Tout)(HRepIterator{N, Tout, N, T}([p], f))
@@ -22,7 +22,7 @@ end
 ######
 # IN #
 ######
-function Base.in{N}(v::VRepElement{N}, hr::HRep{N})
+function Base.in(v::VRepElement{N}, hr::HRep{N}) where N
     for h in hreps(hr)
         if !(v in h)
             return false
@@ -31,7 +31,7 @@ function Base.in{N}(v::VRepElement{N}, hr::HRep{N})
     return true
 end
 
-function _hinv{N}(h::HRepElement{N}, vr::VRep{N})
+function _hinv(h::HRepElement{N}, vr::VRep{N}) where N
     for v in vreps(vr)
         if !(v in h)
             return false
@@ -39,7 +39,7 @@ function _hinv{N}(h::HRepElement{N}, vr::VRep{N})
     end
     return true
 end
-function _hinh{N}(h::HalfSpace{N}, hr::HRep{N}, solver)
+function _hinh(h::HalfSpace{N}, hr::HRep{N}, solver) where N
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
     sol = linprog(-h.a, hr, solver)
     if sol.status == :Unbounded
@@ -52,13 +52,13 @@ function _hinh{N}(h::HalfSpace{N}, hr::HRep{N}, solver)
         error("Solver returned with status $(sol.status)")
     end
 end
-function _hinh{N}(h::HyperPlane{N}, hr::HRep{N}, solver)
+function _hinh(h::HyperPlane{N}, hr::HRep{N}, solver) where N
     _hinh(halfspace(h), hr, solver) && _hinh(halfspace(-h), hr, solver)
 end
 
-Base.in{N}(h::HRepElement{N}, vr::VRepresentation{N}) = _hinv(h, vr)
-Base.in{N}(h::HRepElement{N}, hr::HRepresentation{N}) = _hinh(h, hr)
-function Base.in{N}(h::HRepElement{N}, p::Polyhedron{N}, solver = defaultLPsolverfor(p))
+Base.in(h::HRepElement{N}, vr::VRepresentation{N}) where {N} = _hinv(h, vr)
+Base.in(h::HRepElement{N}, hr::HRepresentation{N}) where {N} = _hinh(h, hr)
+function Base.in(h::HRepElement{N}, p::Polyhedron{N}, solver = defaultLPsolverfor(p)) where N
     if vrepiscomputed(p)
         _hinv(h, p)
     else
@@ -70,11 +70,11 @@ end
 ################
 # INTERSECTION #
 ################
-function _intres{T}(v::T, h::HyperPlane, pins, pinp, rins, rinp)
+function _intres(v::T, h::HyperPlane, pins, pinp, rins, rinp) where T
     T(pinp, rinp)
 end
 
-function _intres{T}(v::T, h::HalfSpace, pins, pinp, rins, rinp)
+function _intres(v::T, h::HalfSpace, pins, pinp, rins, rinp) where T
     T([pins; pinp], [rins; rinp])
 end
 
@@ -108,7 +108,7 @@ function _pushinout!(ins, out, pr::Union{AbstractPoint, AbstractRay}, h::HalfSpa
     end
 end
 
-function Base.intersect{N, T}(v::VRep{N, T}, h::HRepElement)
+function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
     pins = AbstractPoint{N, T}[] # Inside
     pinp = AbstractPoint{N, T}[] # In plane
     pout = AbstractPoint{N, T}[] # Outside

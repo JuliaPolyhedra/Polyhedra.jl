@@ -30,15 +30,15 @@ changeboth{N,T,S}(::Type{SimpleHRepresentation{N,T}}, M, ::Type{S}) = SimpleHRep
 decomposedfast(rep::SimpleHRepresentation) = false
 linset(rep::SimpleHRepresentation) = copy(rep.linset)
 
-function SimpleHRepresentation{S <: Real, T <: Real}(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet=IntSet())
+function SimpleHRepresentation(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {S <: Real, T <: Real}
     U = promote_type(S, T)
     SimpleHRepresentation{size(A,2),U}(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
 end
-SimpleHRepresentation{T <: Real}(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet()) = SimpleHRepresentation{size(A,2),T}(A, b, linset)
+SimpleHRepresentation(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {T <: Real} = SimpleHRepresentation{size(A,2),T}(A, b, linset)
 
-SimpleHRepresentation{N,T}(h::HRep{N,T}) = SimpleHRepresentation{N,T}(h)
+SimpleHRepresentation(h::HRep{N,T}) where {N,T} = SimpleHRepresentation{N,T}(h)
 
-function (::Type{SimpleHRepresentation{N, T}}){N, T}(it::HRepIterator{N, T})
+function SimpleHRepresentation{N, T}(it::HRepIterator{N, T}) where {N, T}
     A = Matrix{T}(length(it), N)
     b = Vector{T}(length(it))
     linset = IntSet()
@@ -52,7 +52,7 @@ function (::Type{SimpleHRepresentation{N, T}}){N, T}(it::HRepIterator{N, T})
     SimpleHRepresentation{N, T}(A, b, linset)
 end
 
-function (::Type{SimpleHRepresentation{N, T}}){N, T}(eqs, ineqs)
+function SimpleHRepresentation{N, T}(eqs, ineqs) where {N, T}
     neq = length(eqs)
     nhrep = neq + length(ineqs)
     A = Matrix{T}(nhrep, N)
@@ -69,7 +69,7 @@ function (::Type{SimpleHRepresentation{N, T}}){N, T}(eqs, ineqs)
     SimpleHRepresentation{N, T}(A, b, linset)
 end
 
-Base.copy{N,T}(ine::SimpleHRepresentation{N,T}) = SimpleHRepresentation{N,T}(copy(ine.A), copy(ine.b), copy(ine.linset))
+Base.copy(ine::SimpleHRepresentation{N,T}) where {N,T} = SimpleHRepresentation{N,T}(copy(ine.A), copy(ine.b), copy(ine.linset))
 
 Base.length(ine::SimpleHRepresentation) = size(ine.A, 1)
 
@@ -143,15 +143,15 @@ function linset(rep::SimpleVRepresentation)
     ls
 end
 
-function SimpleVRepresentation{S <: Real, T <: Real}(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet())
+function SimpleVRepresentation(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {S <: Real, T <: Real}
     U = promote_type(S, T)
     SimpleVRepresentation{size(V,2),U}(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Vlinset, Rlinset)
 end
-SimpleVRepresentation{T <: Real}(V::AbstractMatrix{T}, linset::IntSet=IntSet()) = SimpleVRepresentation{size(V, 2),T}(V, similar(V, 0, size(V, 2)), linset, IntSet())
+SimpleVRepresentation(V::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = SimpleVRepresentation{size(V, 2),T}(V, similar(V, 0, size(V, 2)), linset, IntSet())
 
-SimpleVRepresentation{N,T}(v::VRep{N,T}) = SimpleVRepresentation{N,T}(v)
+SimpleVRepresentation(v::VRep{N,T}) where {N,T} = SimpleVRepresentation{N,T}(v)
 
-function (::Type{SimpleVRepresentation{N, T}}){N, T}(it::VRepIterator{N, T})
+function SimpleVRepresentation{N, T}(it::VRepIterator{N, T}) where {N, T}
     A = Matrix{T}(length(it), N)
     Rlinset = IntSet()
     Vlinset = IntSet()
@@ -176,7 +176,7 @@ function (::Type{SimpleVRepresentation{N, T}}){N, T}(it::VRepIterator{N, T})
     SimpleVRepresentation{N, T}(V, R, Vlinset, Rlinset)
 end
 
-function (::Type{SimpleVRepresentation{N, T}}){N, T}(points, rays)
+function SimpleVRepresentation{N, T}(points, rays) where {N, T}
     npoint = length(points)
     nray = length(rays)
     nvrep = npoint + nray
@@ -199,7 +199,7 @@ function (::Type{SimpleVRepresentation{N, T}}){N, T}(points, rays)
     SimpleVRepresentation{N, T}(V, R, Vlinset, Rlinset)
 end
 
-Base.copy{N,T}(ext::SimpleVRepresentation{N,T}) = SimpleVRepresentation{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
+Base.copy(ext::SimpleVRepresentation{N,T}) where {N,T} = SimpleVRepresentation{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
 
 nlines(ext::SimpleVRepresentation) = length(ext.Rlinset)
 startline(ext::SimpleVRepresentation) = start(ext.Rlinset)

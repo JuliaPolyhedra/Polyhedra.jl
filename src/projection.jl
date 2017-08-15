@@ -1,7 +1,7 @@
 export implementseliminationmethod, eliminate, project, fixandeliminate
 
-project{N}(p::Polyhedron{N}, pset) = eliminate(p, setdiff(1:N, pset))
-project{N}(p::Polyhedron{N}, pset, method) = eliminate(p, setdiff(1:N, pset), method)
+project(p::Polyhedron{N}, pset) where {N} = eliminate(p, setdiff(1:N, pset))
+project(p::Polyhedron{N}, pset, method) where {N} = eliminate(p, setdiff(1:N, pset), method)
 
 implementseliminationmethod(p::Polyhedron, ::Type{Val{:FourierMotzkin}})   = false
 eliminate(p::Polyhedron, delset, ::Type{Val{:FourierMotzkin}})             = error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
@@ -11,10 +11,10 @@ eliminate(p::Polyhedron, delset, ::Type{Val{:BlockElimination}})           = err
 eliminate(p::Polyhedron, method::Symbol) = eliminate(p, Val{method})
 eliminate(p::Polyhedron, delset, method::Symbol) = eliminate(p, delset, Val{method})
 
-eliminate{N}(p::Polyhedron{N}, method::Type{Val{:ProjectGenerators}}) = eliminate(p, IntSet(N), method)
+eliminate(p::Polyhedron{N}, method::Type{Val{:ProjectGenerators}}) where {N} = eliminate(p, IntSet(N), method)
 
 # eliminate the last dimension by default
-function eliminate{N}(p::Polyhedron{N}, delset=IntSet(N))
+function eliminate(p::Polyhedron{N}, delset=IntSet(N)) where N
     fm = implementseliminationmethod(p, Val{:FourierMotzkin})
     be = implementseliminationmethod(p, Val{:BlockElimination})
     if (!fm && !be) || vrepiscomputed(p)
@@ -27,13 +27,13 @@ function eliminate{N}(p::Polyhedron{N}, delset=IntSet(N))
     eliminate(p, delset, Val{method})
 end
 
-function eliminate{N}(p::Polyhedron{N}, delset, ::Type{Val{:ProjectGenerators}})
+function eliminate(p::Polyhedron{N}, delset, ::Type{Val{:ProjectGenerators}}) where N
     ext = vrep(p)
     I = eye(Int, N)
     polyhedron(I[collect(setdiff(IntSet(1:N), delset)),:] * ext, getlibrary(p))
 end
 
-function project{N,T}(p::Polyhedron{N,T}, P::AbstractMatrix)
+function project(p::Polyhedron{N,T}, P::AbstractMatrix) where {N,T}
     # Function to make x orthogonal to an orthonormal basis in Q
     # We first make the columns of P orthonormal
     if size(P, 1) != N
@@ -68,9 +68,9 @@ function project{N,T}(p::Polyhedron{N,T}, P::AbstractMatrix)
     eliminate(p * basis, IntSet(m+1:N))
 end
 
-_fixelim{ElemT<:HRepElement}(h::ElemT, I, J, v) = ElemT(h.a[J], h.β - dot(h.a[I], v))
+_fixelim(h::ElemT, I, J, v) where {ElemT<:HRepElement} = ElemT(h.a[J], h.β - dot(h.a[I], v))
 
-function fixandeliminate{N, T}(p::HRep{N, T}, I, v)
+function fixandeliminate(p::HRep{N, T}, I, v) where {N, T}
     J = setdiff(1:N, I)
     f = (i, h) -> _fixelim(h, I, J, v)
     Nout = length(J)
