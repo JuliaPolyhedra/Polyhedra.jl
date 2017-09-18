@@ -147,7 +147,7 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
             aq = mydot(h.a, q)
             λ = (aq - h.β) / (aq - ap)
             @assert 0 <= λ <= 1
-            push!(pinp, λ * p + (1 - λ) * q)
+            push!(pinp, simplify(λ * p + (1 - λ) * q))
         end
     end
     # Similar but with rays
@@ -161,7 +161,7 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
             # but by homogeneity we can avoid the division
             newr = as * r - ar * s
             if !myeqzero(coord(newr))
-                push!(rinp, newr)
+                push!(rinp, simplify(newr))
             end
         end
     end

@@ -1,10 +1,8 @@
-const threshold = 1e-8
-
-myeqzero(x::T) where {T<:Real} = x == zero(T)
-myeqzero(x::T) where {T<:AbstractFloat} = -threshold < x < threshold
-myeqzero(x::AbstractVector{T}) where {T<:Real} = myeqzero(sum(abs, x))
-myeqzero(x::Union{SymPoint, Ray, Line}) = myeqzero(coord(x))
-myeqzero(h::HRepElement) = myeqzero(h.a) && myeqzero(h.β)
+myeqzero(x::T; kws...) where {T<:Real} = x == zero(T)
+myeqzero(x::T; ztol=Base.rtoldefault(Float64)) where {T<:AbstractFloat} = abs(x) < ztol
+myeqzero(x::AbstractVector{T}; kws...) where {T<:Real} = myeqzero(maximum(abs.(x)); kws...)
+myeqzero(x::Union{SymPoint, Ray, Line}; kws...) = myeqzero(coord(x); kws...)
+myeqzero(h::HRepElement; kws...) = myeqzero(h.a; kws...) && myeqzero(h.β; kws...)
 
 myeq(x::Union{T, AbstractArray{T}}, y::Union{T, AbstractArray{T}}) where {T<:Union{Integer, Rational}} = x == y
 # I check with zero because isapprox(0, 1e-100) is false...

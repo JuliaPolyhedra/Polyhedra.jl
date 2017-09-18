@@ -3,7 +3,7 @@ import GeometryTypes.Point
 export Point
 export HRepElement, HalfSpace, HyperPlane
 export VRepElement, AbstractPoint, SymPoint, AbstractRay, Ray, Line
-export islin, isray, ispoint, ispoint, coord, lift
+export islin, isray, ispoint, ispoint, coord, lift, simplify
 
 const MyPoint{N,T} = Union{Point{N,T},AbstractArray{T}}
 mypoint{T}(::Type{T}, a::AbstractArray) = AbstractArray{T}(a)
@@ -264,3 +264,56 @@ lift(h::AbstractVector{T}) where {T} = Ray{length(h)+1,T}(pushbefore(h, one(T)))
 lift(h::SymPoint{N,T}) where {N,T} = Line{N+1,T}(pushbefore(h.a, one(T)))
 
 translate(h::ElemT, p) where {ElemT<:HRepElement} = ElemT(h.a, h.β + mydot(h.a, p))
+
+_simplify(a::AbstractVector) = a
+_simplify(a::AbstractVector, β) = a, β
+
+iszo(g) = iszero(g) || g == 1 # TODO isone in v0.7
+
+function _simplify(a::AbstractVector{<:Integer})
+    g = gcd(a)
+    if !iszo(g)
+        div.(a, g)
+    else
+        a
+    end
+end
+function _simplify(a::AbstractVector{<:Integer}, β::Integer)
+    g = gcd(gcd(a), β)
+    if !iszo(g)
+        div.(a, g), div(β, g)
+    else
+        a, β
+    end
+end
+function _simplify(a::AbstractVector{<:Rational})
+    g = gcd(numerator.(a))
+    if !iszo(g)
+        a = a ./ g
+    end
+    g = gcd(denominator.(a))
+    if !iszo(g)
+        a .* g
+    else
+        a
+    end
+end
+function _simplify(a::AbstractVector{<:Rational}, β::Rational)
+    g = gcd(gcd(numerator.(a)), numerator(β))
+    if !iszo(g)
+        a = a ./ g
+        β = β / g
+    end
+    g = gcd(gcd(denominator.(a)), denominator(β))
+    if !iszo(g)
+        a .* g, β * g
+    else
+        a, β
+    end
+end
+
+simplify(h::HalfSpace{N, T}) where {N, T} = HalfSpace{N, T}(_simplify(h.a, h.β)...)
+simplify(h::HyperPlane{N, T}) where {N, T} = HyperPlane{N, T}(_simplify(h.a, h.β)...)
+simplify(r::T) where {T<:Union{Ray,Line}} = T(_simplify(coord(r)))
+# Cannot scale points
+simplify(p::Union{Point, AbstractVector, SymPoint}) = p
