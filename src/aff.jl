@@ -13,8 +13,12 @@ end
 
 # It is easy to go from H-rep of affine space to V-rep of affine space by computing the kernel of a matrix using RowEchelon
 # However, it is really worth it since Base.in for an HRepElement in HAffineSpace and Base.in for an VRepElement in VAffineSpace are false already.
-function remproj(x, l)
+function remproj(x::RepElement{N, <:Integer}, l::RepElement{N, <:Integer}) where N
+    # generates large numbers but keeps the type integer
     x * dot(coord(l), coord(l)) - l * dot(coord(x), coord(l))
+end
+function remproj(x, l)
+    simplify(x - l * (dot(coord(x), coord(l)) / dot(coord(l), coord(l))))
 end
 
 # H-representation

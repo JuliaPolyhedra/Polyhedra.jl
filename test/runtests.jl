@@ -12,6 +12,7 @@ if !isempty(lp_solvers)
     lpsolver = first(lp_solvers)
 end
 
+include("element.jl")
 include("rep.jl")
 
 for lib in libraries
@@ -19,8 +20,6 @@ for lib in libraries
 end
 
 include("simplepolyhedron.jl")
-
-include("rep.jl")
 
 for (testname, testfun) in alltests
     @testset "$testname tests" begin
