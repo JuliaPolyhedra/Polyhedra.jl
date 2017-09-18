@@ -10,6 +10,7 @@
         ine = SimpleHRepresentation(A, b, linset)
         @test fulldim(ine) == 2
         @test eltype(ine) == Int
+        @test translate(ine, [1, 0]).b == [2, -1, 0]
 
         V = [0 1; 1 0]
         @test_throws ErrorException SimpleVRepresentation{3, Int}(V, [1 0], IntSet(), IntSet())
@@ -20,6 +21,7 @@
         ext = SimpleVRepresentation(V)
         @test fulldim(ext) == 2
         @test eltype(ext) == Int
+        @test translate(ext, [1, 0]).V == [1 1; 2 0]
     end
 
     @testset "Lifted Representation with bad arguments" begin

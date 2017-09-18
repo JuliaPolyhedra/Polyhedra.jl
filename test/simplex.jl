@@ -26,6 +26,7 @@ function simplextest(lib::Lib) where Lib<:PolyhedraLibrary
     # We now add the vertex (0, 0)
     V0 = [0 0]
     ext0 = SimpleVRepresentation(V0)
+    @test translate(ext0, [1, 0]).V == [1 0]
 
     push!(poly1, ext0)
     inequality_fulltest(poly1, A, b, IntSet([]))
@@ -43,6 +44,8 @@ function simplextest(lib::Lib) where Lib<:PolyhedraLibrary
     bcut = [1]
     linsetcut = IntSet([1])
     inecut = SimpleHRepresentation(Acut, bcut, linsetcut)
+    @test !ininterior([1/2, 1/2], inecut)
+    @test inrelativeinterior([1/2, 1/2], inecut)
     push!(poly3, inecut)
     inequality_fulltest(poly3, A, b, ls)
     generator_fulltest(poly3, V)

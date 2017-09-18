@@ -233,7 +233,7 @@ ininterior{N}(p::Point{N}, h::HalfSpace{N}) = mylt(mydot(h.a, p), h.β)
 ininterior{N}(p::AbstractVector, h::HalfSpace{N}) = mylt(mydot(h.a, p), h.β)
 ininterior{N}(p::SymPoint{N}, h::HalfSpace{N}) = mylt(mydot(h.a, p.p), h.β)
 
-inrelateiveinterior(p::VRepElement, h::HalfSpace) = ininterior(p, h)
+inrelativeinterior(p::VRepElement, h::HalfSpace) = ininterior(p, h)
 
 Base.in(r::Ray{N}, h::HalfSpace{N}) where {N} = mynonpos(mydot(h.a, r))
 Base.in(l::Line{N}, h::HalfSpace{N}) where {N} = mynonpos(mydot(h.a, l))
@@ -242,7 +242,7 @@ Base.in(p::AbstractVector, h::HalfSpace{N}) where {N} = myleq(mydot(h.a, p), h.�
 Base.in(p::SymPoint{N}, h::HalfSpace{N}) where {N} = myleq(mydot(h.a, p.p), h.β)
 
 ininterior(p::VRepElement, h::HyperPlane) = false
-inrelateiveinterior(p::VRepElement, h::HyperPlane) = p in h
+inrelativeinterior(p::VRepElement, h::HyperPlane) = p in h
 
 Base.in(r::Ray{N}, h::HyperPlane{N}) where {N} = myeqzero(mydot(h.a, r))
 Base.in(l::Line{N}, h::HyperPlane{N}) where {N} = myeqzero(mydot(h.a, l))
