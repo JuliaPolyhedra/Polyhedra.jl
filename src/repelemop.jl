@@ -14,16 +14,26 @@ line(r::Ray) = Line(coord(r))
 
 export translate
 
-function translate(p::HRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}}) where {N, S, T}
+function htranslate(p::HRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}}) where {N, S, T}
     f = (i, h) -> translate(h, v)
     Tout = Base.promote_op(+, T, S)
     lazychangeeltype(typeof(p), Tout)(HRepIterator{N, Tout, N, T}([p], f))
 end
 
-function translate{N, S, T}(p::VRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}})
+function vtranslate{N, S, T}(p::VRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}})
     f = (i, u) -> translate(u, v)
     Tout = Base.promote_op(+, T, S)
     lazychangeeltype(typeof(p), Tout)(VRepIterator{N, Tout, N, T}([p], f))
+end
+
+translate(p::HRep, v) = htranslate(p, v)
+translate(p::VRep, v) = vtranslate(p, v)
+function translate(p::Polyhedron, v)
+    if hrepiscomputed(p)
+        htranslate(p, v)
+    else
+        vtranslate(p, v)
+    end
 end
 
 ######
