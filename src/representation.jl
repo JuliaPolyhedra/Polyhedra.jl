@@ -87,8 +87,12 @@ for (rep, HorVRep, elt, low) in [(true, :VRep, :VRepElement, "vrep"), (false, :V
                 new{Nout, Tout, Nin, Tin}(ps, f)
             end
         end
-        $typename{RepT<:$HorVRep}(ps::Vector{RepT}, f=nothing) = $typename{fulldim(RepT),eltype(RepT),fulldim(RepT),eltype(RepT)}(ps, f)
-        $shortcut{N,T}(p::$HorVRep{N,T}, f=nothing) = $typename([p], f)
+        function $typename(ps::Vector{RepT}, f=nothing) where {RepT<:$HorVRep}
+            $typename{fulldim(RepT),eltype(RepT),fulldim(RepT),eltype(RepT)}(ps, f)
+        end
+        function $shortcut{N,T}(p::$HorVRep{N,T}, f=nothing)
+            $typename([p], f)
+        end
 
         Base.length(it::$typename) = sum([$lenp(p) for p in it.ps])
         Base.isempty(it::$typename) = !reduce(|, false, $isemp.(it.ps))

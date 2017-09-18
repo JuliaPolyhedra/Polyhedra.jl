@@ -1,3 +1,5 @@
+export IntervalLibrary, Interval
+
 struct IntervalLibrary{T} <: PolyhedraLibrary
 end
 
@@ -7,11 +9,13 @@ mutable struct Interval{T} <: Polyhedron{1, T}
     length::T
 end
 
+Base.eltype(::Type{Interval{T}}) where T = T
+fulldim(::Type{<:Interval}) = 1
 area{T}(::Interval{T}) = zero(T)
 volume(p::Interval) = p.length
 isempty(p::Interval) = isempty(p.vrep)
 
-function Interval{T}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool)
+function Interval{T}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) where T
     if haslb && hasub && mygt(lb, ub)
         isempty = true
     end
@@ -82,7 +86,7 @@ function _hinterval(rep::HRep{1, T}) where T
             ub = min(ub, newub)
         end
     end
-    for hp in eqs(h)
+    for hp in eqs(rep)
         α = hp.a[1]
         if myeqzero(α)
             if !myeqzero(hp.β)
@@ -93,20 +97,20 @@ function _hinterval(rep::HRep{1, T}) where T
             _setub(hp.β / α)
         end
     end
-    for hs in ineqs(h)
-        α = hp.a[1]
+    for hs in ineqs(rep)
+        α = hs.a[1]
         if myeqzero(α)
-            if hp.β < 0
+            if hs.β < 0
                 lb = Inf
                 ub = -Inf
             end
         elseif α < 0
-            _setlb(hp.β / α)
+            _setlb(hs.β / α)
         else
-            _setub(hp.β / α)
+            _setub(hs.β / α)
         end
     end
-    Interval{T}(haslb, lb, hasub, ub, isempty)
+    Interval{T}(haslb, lb, hasub, ub, empty)
 end
 
 function _vinterval(v::VRep{1, T}) where T
@@ -132,13 +136,18 @@ function _vinterval(v::VRep{1, T}) where T
         end
     end
     for p in points(v)
-        isempty = false
         x = coord(p)[1]
-        lb = min(lb, x)
-        ub = max(ub, x)
+        if isempty
+            isempty = false
+            lb = x
+            ub = x
+        else
+            lb = min(lb, x)
+            ub = max(ub, x)
+        end
         if islin(p)
-            lb = min(lb, -x)
-            ub = max(ub, -x)
+          lb = min(lb, -x)
+          ub = max(ub, -x)
         end
     end
     Interval{T}(haslb, lb, hasub, ub, isempty)
@@ -154,9 +163,12 @@ function Interval{T}(p::Polyhedron{1, T}) where T
     end
 end
 
-function polyhedron{T}(rep::Rep{1, T}, ::SimplePolyhedraLibrary{T})
+function polyhedron{T}(rep::Rep{1, T}, ::IntervalLibrary{T})
     Interval{T}(rep)
 end
+
+decomposedhfast(p::Interval) = true
+decomposedvfast(p::Interval) = true
 
 hrep(p::Interval) = p.hrep
 vrep(p::Interval) = p.vrep
