@@ -13,9 +13,17 @@ function doctest(lib::PolyhedraLibrary)
     @test hrepiscomputed(p)
     @test vrepiscomputed(p) # computation triggered in generator_fulltest
     @test [1//4, 1//2] in p
+    @test ininterior([1//4, 1//2], p)
+    @test inrelativeinterior([1//4, 1//2], p)
     @test !([1, 1//2] in p)
+    @test !ininterior([1, 1//2], p)
+    @test !inrelativeinterior([1, 1//2], p)
     @test [0, 1] in p
+    @test !ininterior([0, 1], p)
+    @test !inrelativeinterior([0, 1], p)
     @test !(Ray([0, 1]) in p)
+    @test !ininterior(Ray([0, 1]), p)
+    @test !inrelativeinterior(Ray([0, 1]), p)
     Ap = [1; -1]
     bp = [1, 0]
     inequality_fulltest(eliminate(p, [1]), Ap, bp, IntSet())

@@ -31,6 +31,7 @@ include("vecrep.jl")
 include("simplerep.jl")
 include("liftedrep.jl")
 include("doubledescription.jl")
+include("interval.jl") # 1D polyhedron
 include("simplepolyhedron.jl")
 
 # Optimization

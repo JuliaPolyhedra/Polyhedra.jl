@@ -2,8 +2,22 @@
 export polyhedron, hrep, vrep, hrepiscomputed, vrepiscomputed, loadpolyhedron!
 
 polyhedron(rep::Representation{N, T}) where {N, T} = polyhedron(rep, getlibraryfor(N, T))
-Base.push!(p::Polyhedron{N}, ine::HRepresentation{N}) where {N} = error("push! not implemented for $(typeof(p)) for HRepresentation")
-Base.push!(p::Polyhedron{N}, ext::VRepresentation{N}) where {N} = error("push! not implemented for $(typeof(p)) for VRepresentation")
+"""
+    volume(p::Polyhedron{N, T}) where {N, T}
+
+Returns the `N`-dimensional hyper-volume of the polyhedron `p`.
+Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
+"""
+function volume(p::Polyhedron) end
+"""
+    surface(p::Polyhedron{N, T}) where {N, T}
+
+Returns the `N-1`-dimensional hyper-volume of the surface of the polyhedron `p`.
+Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
+"""
+function surface(p::Polyhedron) end
+Base.push!(p::Polyhedron{N}, ine::HRepresentation{N}) where {N}                      = error("push! not implemented for $(typeof(p)) for HRepresentation")
+Base.push!(p::Polyhedron{N}, ext::VRepresentation{N}) where {N}                      = error("push! not implemented for $(typeof(p)) for VRepresentation")
 hrepiscomputed(p::Polyhedron)                                                        = error("hrepiscomputed not implemented for $(typeof(p))")
 hrep(p::Polyhedron)                                                                  = error("hrep not implemented for $(typeof(p))")
 vrepiscomputed(p::Polyhedron)                                                        = error("vrepiscomputed not implemented for $(typeof(p))")

@@ -1,3 +1,5 @@
+export ininterior, inrelativeinterior
+
 hyperplane(h::HyperPlane) = h
 hyperplane(h::HalfSpace) = HyperPlane(h.a, h.β)
 
@@ -12,24 +14,66 @@ line(r::Ray) = Line(coord(r))
 
 export translate
 
-function translate(p::HRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}}) where {N, S, T}
+function htranslate(p::HRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}}) where {N, S, T}
     f = (i, h) -> translate(h, v)
     Tout = Base.promote_op(+, T, S)
     lazychangeeltype(typeof(p), Tout)(HRepIterator{N, Tout, N, T}([p], f))
 end
 
+function vtranslate{N, S, T}(p::VRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}})
+    f = (i, u) -> translate(u, v)
+    Tout = Base.promote_op(+, T, S)
+    lazychangeeltype(typeof(p), Tout)(VRepIterator{N, Tout, N, T}([p], f))
+end
+
+translate(p::HRep, v) = htranslate(p, v)
+translate(p::VRep, v) = vtranslate(p, v)
+function translate(p::Polyhedron, v)
+    if hrepiscomputed(p)
+        htranslate(p, v)
+    else
+        vtranslate(p, v)
+    end
+end
 
 ######
 # IN #
 ######
-function Base.in(v::VRepElement{N}, hr::HRep{N}) where N
+function _vinh(v::VRepElement{N}, hr::HRep{N}, infun) where N
     for h in hreps(hr)
-        if !(v in h)
+        if !infun(v, h)
             return false
         end
     end
     return true
 end
+Base.in(v::VRepElement{N}, hr::HRep{N}) where {N} = _vinh(v, hr, Base.in)
+
+"""
+    ininterior(p::VRepElement, h::HRepElement)
+
+Returns whether `p` is in the interior of `h`.
+If `h` is an hyperplane, it always returns `false`.
+If `h` is an halfspace ``\\langle a, x \\rangle \\leq \\beta``, it returns whether `p` is in the open halfspace ``\\langle a, x \\rangle < \\beta``
+
+    ininterior(p::VRepElement, h::HRep)
+
+Returns whether `p` is in the interior of `h`, e.g. in the interior of all the hyperplanes and halfspaces supporting `h`.
+"""
+ininterior(v::VRepElement{N}, hr::HRep{N}) where {N} = _vinh(v, hr, ininterior)
+
+"""
+    inrelativeinterior(p::VRepElement, h::HRepElement)
+
+Returns whether `p` is in the relative interior of `h`.
+If `h` is an hyperplane, it is equivalent to `p in h` since the relative interior of an hyperplane is itself.
+If `h` is an halfspace, it is equivalent to `ininterior(p, h)`.
+
+    inrelativeinterior(p::VRepElement, h::HRep)
+
+Returns whether `p` is in the relative interior of `h`, e.g. in the relative interior of all the hyperplanes and halfspaces supporting `h`.
+"""
+inrelativeinterior(v::VRepElement{N}, hr::HRep{N}) where {N} = _vinh(v, hr, inrelativeinterior)
 
 function _hinv(h::HRepElement{N}, vr::VRep{N}) where N
     for v in vreps(vr)

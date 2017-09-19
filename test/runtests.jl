@@ -14,6 +14,7 @@ end
 
 include("element.jl")
 include("rep.jl")
+include("interval.jl")
 
 for lib in libraries
     basicpolyhedrontests(lib)
