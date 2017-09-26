@@ -8,19 +8,21 @@ Throws an error if the polyhedron is empty or if the radius is infinite.
 """
 function hchebyshevcenter(p::HRep{N}, solver=defaultLPsolverfor(p, solver)) where N
     m = Model(solver=solver)
-    r = @variable m r >= 0
     c = @variable m [1:N]
     for hp in eqs(p)
         a = Vector{Float64}(hp.a)
         β = Float64(hp.β)
         @constraint m dot(a, c) == β
     end
-    for hs in ineqs(p)
+    @variable m r[1:nineqs(p)] >= 0
+    for (i, hs) in enumerate(ineqs(p))
         a = Vector{Float64}(hs.a)
         β = Float64(hs.β)
-        @constraint m dot(a, c) + r * norm(a, 2) <= β
+        @constraint m dot(a, c) + r[i] * norm(a, 2) <= β
     end
-    @objective m Max r
+    @variable m minr >= 0
+    @constraint m minr .<= r
+    @objective m Max minr
     status = solve(m)
     if status != :Optimal
         if status == :Infeasible
@@ -31,7 +33,13 @@ function hchebyshevcenter(p::HRep{N}, solver=defaultLPsolverfor(p, solver)) wher
             error("Solver returned $status when computing the H-Chebyshev center")
         end
     end
-    (getvalue(c), getvalue(r))
+    @constraint m minr == getvalue(minr)
+    @variable m maxr >= 0
+    @constraint m maxr .>= r
+    @objective m Min maxr
+    status = solve(m)
+    @assert status == :Optimal
+    (getvalue(c), getvalue(minr))
 end
 
 # TODO defaultLPsolverfor here should not be SimpleVRepSolver
