@@ -1,4 +1,4 @@
-import Base.getindex, Base.vec, Base.dot, Base.cross, Base.-, Base.+
+import Base: getindex, vec, dot, cross, -, +, /
 import GeometryTypes.Point
 export Point
 export HRepElement, HalfSpace, HyperPlane
@@ -143,8 +143,9 @@ for op in [:dot, :cross]
     end
 end
 
-(*)(x, y::T) where {T<:Union{SymPoint,Ray,Line}} = T(x * y.a)
-(*)(y::T, x) where {T<:Union{SymPoint,Ray,Line}} = T(y.a * x)
+(*)(α, r::T) where {T<:Union{SymPoint,Ray,Line}} = T(α * r.a)
+(*)(r::T, α) where {T<:Union{SymPoint,Ray,Line}} = T(r.a * α)
+/(r::T, α) where {T<:Union{SymPoint,Ray,Line}} = T(r.a / α)
 
 Base.convert{T}(::Type{Vector{T}}, x::Union{SymPoint,Ray,Line}) = convert(Vector{T}, x.a)
 

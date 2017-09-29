@@ -202,8 +202,13 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
             # should take
             # λ = as / (as - ar)
             @assert 0 <= as / (as - ar) <= 1
-            # but by homogeneity we can avoid the division
-            newr = as * r - ar * s
+            # By homogeneity we can avoid the division and do
+            #newr = as * r - ar * s
+            # but this can generate very large numbers (see JuliaPolyhedra/Polyhedra.jl#48)
+            # so we still divide
+            newr = (as * r - ar * s) / (as - ar)
+            # In CDD, it does as * r - ar * s but then it normalize the ray
+            # by dividing it by its smallest nonzero entry (see dd_CreateNewRay)
             if !myeqzero(coord(newr))
                 push!(rinp, simplify(newr))
             end
