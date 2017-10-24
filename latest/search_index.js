@@ -185,11 +185,83 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "representation.html#Polyhedra.vreps",
+    "page": "Representation",
+    "title": "Polyhedra.vreps",
+    "category": "Function",
+    "text": "vreps(vr::VRep)\n\nReturns an iterator over the elements of the V-representation.\n\nNote\n\nThis is type unstable as the iterator returns both points and rays. It is therefore more efficient to call points and rays separately.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.nvreps",
+    "page": "Representation",
+    "title": "Polyhedra.nvreps",
+    "category": "Function",
+    "text": "nvreps(vr::VRep)\n\nReturns the number of points and rays of the V-representation.\n\nNote\n\nNote that it does not do redundancy removal so it is not the minimal number of points and rays needed to represent the polyhedron, it is simply the number that are currently used.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.hasvreps",
+    "page": "Representation",
+    "title": "Polyhedra.hasvreps",
+    "category": "Function",
+    "text": "hasvreps(vr::VRep)\n\nReturns whether the V-representation contain any ray or point.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.rays",
+    "page": "Representation",
+    "title": "Polyhedra.rays",
+    "category": "Function",
+    "text": "rays(vr::VRep)\n\nReturns an iterator over the rays of the V-representation.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.nrays",
+    "page": "Representation",
+    "title": "Polyhedra.nrays",
+    "category": "Function",
+    "text": "nrays(hr::HRep)\n\nReturns the number of rays of the V-representation.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.hasrays",
+    "page": "Representation",
+    "title": "Polyhedra.hasrays",
+    "category": "Function",
+    "text": "hasrays(vr::VRep)\n\nReturns whether the V-representation contain any ray.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.points",
+    "page": "Representation",
+    "title": "Polyhedra.points",
+    "category": "Function",
+    "text": "points(vr::VRep)\n\nReturns an iterator over the points of the V-representation.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.npoints",
+    "page": "Representation",
+    "title": "Polyhedra.npoints",
+    "category": "Function",
+    "text": "npoints(vr::VRep)\n\nReturns the number of points of the V-representation.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.haspoints",
+    "page": "Representation",
+    "title": "Polyhedra.haspoints",
+    "category": "Function",
+    "text": "haspoints(vr::VRep)\n\nReturns whether the V-representation contain any point.\n\n\n\n"
+},
+
+{
     "location": "representation.html#V-representation-interface-1",
     "page": "Representation",
     "title": "V-representation interface",
     "category": "section",
-    "text": ""
+    "text": "vreps\nnvreps\nhasvreps\nrays\nnrays\nhasrays\npoints\nnpoints\nhaspoints"
 },
 
 {
