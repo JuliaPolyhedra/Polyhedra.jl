@@ -7,7 +7,8 @@ makedocs(
         "Index" => "index.md",
         "Installation" => "installation.md",
         "Representation" => "representation.md",
-        "Polyhedron" => "polyhedron.md"
+        "Polyhedron" => "polyhedron.md",
+        "Utilities" => "utilities.md"
     ]
 )
 

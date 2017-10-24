@@ -27,6 +27,12 @@ decomposedhfast(rep::HRepresentation) = decomposedfast(rep)
 decomposedvfast(rep::VRepresentation) = decomposedfast(rep)
 
 Base.eltype(rep::Rep{N,T}) where {N,T} = T
+"""
+    fulldim(rep::Rep)
+
+Returns the dimension of the space in which the representation is defined.
+That is, a straight line in a 3D space has `fulldim` 3.
+"""
 fulldim(rep::Rep{N}) where {N} = N
 Base.eltype{RepT<:Rep}(::Type{RepT}) = RepT.parameters[2]
 fulldim{RepT<:Rep}(::Type{RepT}) = RepT.parameters[1]
@@ -125,10 +131,74 @@ end
 Base.length(hrep::HRepresentation)  = nhreps(hrep)
 Base.isempty(hrep::HRepresentation) = hashreps(hrep)
 
+"""
+    hreps(hr::HRep)
+
+Returns an iterator over the elements of the H-representation.
+
+### Note
+
+This is type unstable as the iterator returns both halfspaces and hyperplanes.
+It is therefore more efficient to call [`eqs`](@ref) and [`ineqs`](@ref) separately.
+"""
+function hreps end
+
+"""
+    eqs(hr::HRep)
+
+Returns an iterator over the hyperplanes of the H-representation.
+"""
+function eqs end
+
+"""
+    ineqs(hr::HRep)
+
+Returns an iterator over the halfspaces of the H-representation.
+"""
+function ineqs end
+
+"""
+    nhreps(hr::HRep)
+
+Returns the number of halfspaces and hyperplanes of the H-representation.
+
+### Note
+
+Note that it does not do redundancy removal so it is not the minimal number of halfspace and hyperplanes needed to represent the polyhedron, it is simply the number that are currently used.
+"""
 nhreps(hrep::HRep) = neqs(hrep) + nineqs(hrep)
 
+"""
+    neqs(hr::HRep)
+
+Returns the number of hyperplanes of the H-representation.
+"""
+function neqs end
+
+"""
+    nineqs(hr::HRep)
+
+Returns the number of halfspaces of the H-representation.
+"""
+function nineqs end
+
+"""
+    haseqs(hr::HRep)
+
+Returns whether the H-representation contain any hyperplane.
+"""
 haseqs(hrep::HRep)   = neqs(hrep) > 0
+"""
+    hasineqs(hr::HRep)
+
+Returns whether the H-representation contain any halfspace.
+"""
 hasineqs(hrep::HRep) = nineqs(hrep) > 0
+"""
+    hashreps(hr::HRep)
+
+Returns whether the H-representation contain any halfspace or hyperplane.
+"""
 hashreps(hrep::HRep) = nhreps(hrep) > 0
 
 starthrep(hrep::HRep) = checknext(hrep, 0, nothing, [doneeq, doneineq], [starteq, startineq])

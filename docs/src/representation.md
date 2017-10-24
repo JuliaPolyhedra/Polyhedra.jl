@@ -48,3 +48,24 @@ julia> vrepf = SimpleVRepresentation(Vf)
 julia> typeof(vrepf)
 Polyhedra.SimpleVRepresentation{2,Float64}
 ```
+
+## Representation interface
+These functions can be called on both H-representation and V-representation
+```@docs
+fulldim
+```
+
+### H-representation interface
+```@docs
+hreps
+nhreps
+hashreps
+eqs
+neqs
+haseqs
+ineqs
+nineqs
+hasineqs
+```
+
+### V-representation interface
