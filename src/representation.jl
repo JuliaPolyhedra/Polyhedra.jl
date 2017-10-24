@@ -211,14 +211,80 @@ function nexthrep(hrep::HRep, state)
 end
 
 #VRep
+"""
+    vreps(vr::VRep)
+
+Returns an iterator over the elements of the V-representation.
+
+### Note
+
+This is type unstable as the iterator returns both points and rays.
+It is therefore more efficient to call [`points`](@ref) and [`rays`](@ref) separately.
+"""
+function vreps end
+
+"""
+    points(vr::VRep)
+
+Returns an iterator over the points of the V-representation.
+"""
+function points end
+
+"""
+    rays(vr::VRep)
+
+Returns an iterator over the rays of the V-representation.
+"""
+function rays end
+
+
 Base.length(vrep::VRepresentation)  = nvreps(vrep)
 Base.isempty(vrep::VRepresentation) = hasvreps(vrep)
 
+"""
+    npoints(vr::VRep)
+
+Returns the number of points of the V-representation.
+"""
+function npoints end
+
+"""
+    nrays(hr::HRep)
+
+Returns the number of rays of the V-representation.
+"""
+function nrays end
+
+
+"""
+    nvreps(vr::VRep)
+
+Returns the number of points and rays of the V-representation.
+
+### Note
+
+Note that it does not do redundancy removal so it is not the minimal number of points and rays needed to represent the polyhedron, it is simply the number that are currently used.
+"""
 nvreps(vrep::VRep) = nrays(vrep) + npoints(vrep)
 #nlines(vrep::VRep) = sum(map(islin, rays(vrep))) # TODO: call detectvlinearity! before
 
+"""
+    hasrays(vr::VRep)
+
+Returns whether the V-representation contain any ray.
+"""
 hasrays(vrep::VRep)   = nrays(vrep) > 0
+"""
+    haspoints(vr::VRep)
+
+Returns whether the V-representation contain any point.
+"""
 haspoints(vrep::VRep) = npoints(vrep) > 0
+"""
+    hasvreps(vr::VRep)
+
+Returns whether the V-representation contain any ray or point.
+"""
 hasvreps(vrep::VRep)  = nvreps(vrep) > 0
 
 startvrep(vrep::VRep) = checknext(vrep, 0, nothing, [doneray, donepoint], [startray, startpoint])

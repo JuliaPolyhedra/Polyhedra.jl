@@ -69,3 +69,14 @@ hasineqs
 ```
 
 ### V-representation interface
+```@docs
+vreps
+nvreps
+hasvreps
+rays
+nrays
+hasrays
+points
+npoints
+haspoints
+```
