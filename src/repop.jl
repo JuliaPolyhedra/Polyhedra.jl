@@ -1,7 +1,20 @@
 export convexhull
-# Always type of first arg
+
+"""
+    intersect(P1::HRep, P2::HRep)
+
+Takes the intersection of `P1` and `P2` ``\\{\\, x : x \\in P_1, x \\in P_2 \\,\\}``.
+It is very efficient between two H-representations or between two polyhedron for which the H-representation has already been computed.
+However, if `P1` (resp. `P2`) is a polyhedron for which the H-representation has not been computed yet, it will trigger a representation conversion which is costly.
+See the [Polyhedral Computation FAQ](http://www.cs.mcgill.ca/~fukuda/soft/polyfaq/node25.html) for a discussion on this operation.
+
+The type of the result will be chosen closer to the type of `P1`. For instance, if `P1` is a polyhedron (resp. H-representation) and `P2` is a H-representation (resp. polyhedron), `intersect(P1, P2)` will be a polyhedron (resp. H-representation).
+If `P1` and `P2` are both polyhedra (resp. H-representation), the resulting polyhedron type (resp. H-representation type) will be computed according to the type of `P1`.
+The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
+"""
 function Base.intersect(p1::RepTin, p2::HRep{N, T2}) where {N, T1, T2, RepTin<:HRep{N, T1}}
     Tout = promote_type(T1, T2)
+    # Always type of first arg
     RepTout = lazychangeeltype(RepTin, Tout)
     RepTout(HRepIterator([HRep{N, Tout}(p1), HRep{N, Tout}(p2)]))
 end
@@ -9,14 +22,13 @@ end
 """
     convexhull(P1::VRep, P2::VRep)
 
-Takes the convex hull of `P1` and `P2` ``\\{\\, \\lambda x + (1-\\lambda) y : x \\in P1, y \\in P2 \\,\\}``.
+Takes the convex hull of `P1` and `P2` ``\\{\\, \\lambda x + (1-\\lambda) y : x \\in P_1, y \\in P_2 \\,\\}``.
 It is very efficient between two V-representations or between two polyhedron for which the V-representation has already been computed.
 However, if `P1` (resp. `P2`) is a polyhedron for which the V-representation has not been computed yet, it will trigger a representation conversion which is costly.
 
 The type of the result will be chosen closer to the type of `P1`. For instance, if `P1` is a polyhedron (resp. V-representation) and `P2` is a V-representation (resp. polyhedron), `convexhull(P1, P2)` will be a polyhedron (resp. V-representation).
-If `P1` and `P2` are both polyhedra (resp. V-representation), the resulting polyhedron type (V-representation type) will be computing according to the type of `P1`.
+If `P1` and `P2` are both polyhedra (resp. V-representation), the resulting polyhedron type (resp. V-representation type) will be computed according to the type of `P1`.
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
-```
 """
 function convexhull(p1::RepTin, p2::VRep{N, T2}) where {N, T1, T2, RepTin<:VRep{N, T1}}
     Tout = promote_type(T1, T2)

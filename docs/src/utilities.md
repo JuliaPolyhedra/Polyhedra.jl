@@ -2,6 +2,7 @@
 
 ## Operations
 ```@docs
+intersect
 convexhull
 ```
 
