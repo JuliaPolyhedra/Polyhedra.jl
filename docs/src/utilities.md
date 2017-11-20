@@ -1,7 +1,14 @@
 # Utilities
 
+## Redundancy
+```@docs
+removevredundancy!
+removehredundancy!
+```
+
 ## Operations
 ```@docs
+intersect
 convexhull
 ```
 

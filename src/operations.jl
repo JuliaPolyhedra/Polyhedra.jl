@@ -22,9 +22,23 @@ function surface end
 
 Base.push!(p::Polyhedron{N}, ine::HRepresentation{N}) where {N}                      = error("push! not implemented for $(typeof(p)) for HRepresentation")
 Base.push!(p::Polyhedron{N}, ext::VRepresentation{N}) where {N}                      = error("push! not implemented for $(typeof(p)) for VRepresentation")
+
+"""
+    hrepiscomputed(p::Polyhedron)
+
+Returns whether the H-representation of this polyhedron has been computed.
+"""
 hrepiscomputed(p::Polyhedron)                                                        = error("hrepiscomputed not implemented for $(typeof(p))")
+
 hrep(p::Polyhedron)                                                                  = error("hrep not implemented for $(typeof(p))")
+
+"""
+    vrepiscomputed(p::Polyhedron)
+
+Returns whether the V-representation of this polyhedron has been computed.
+"""
 vrepiscomputed(p::Polyhedron)                                                        = error("vrepiscomputed not implemented for $(typeof(p))")
+
 vrep(p::Polyhedron)                                                                  = error("vrep not implemented for $(typeof(p))")
 loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ine}}) = error("loadpolyhedron! not implemented for .ine")
 loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("loadpolyhedron! not implemented for .ext") # FIXME ExtFileVRepresentation or just ExtFile

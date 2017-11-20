@@ -4,7 +4,17 @@
 
 # Redundancy
 export removevredundancy!, removehredundancy!, isvredundant, ishredundant, gethredundantindices, getvredundantindices
+"""
+    removevredundancy!(P::VRep)
+
+Removes the elements of the V-representation of `P` that can be removed without changing the polyhedron represented by `P`. That is, it only keeps the extreme points and rays. This operation is often called "convex hull" as the remaining points are the extreme points of the convex hull of the initial set of points.
+"""
 removevredundancy!(p::VRep) = error("removevredundancy! not implemented for $(typeof(p))")
+"""
+    removehredundancy!(P::HRep)
+
+Removes the elements of the H-representation of `P` that can be removed without changing the polyhedron represented by `P`. That is, it only keeps the halfspaces corresponding to facets of the polyhedron.
+"""
 removehredundancy!(p::HRep) = error("removehredundancy! not implemented for $(typeof(p))")
 
 # Remove redundancy in the V-representation using the H-representation

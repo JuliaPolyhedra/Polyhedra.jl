@@ -66,6 +66,7 @@ haseqs
 ineqs
 nineqs
 hasineqs
+hrepiscomputed
 ```
 
 ### V-representation interface
@@ -79,4 +80,5 @@ hasrays
 points
 npoints
 haspoints
+vrepiscomputed
 ```
