@@ -177,11 +177,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "representation.html#Polyhedra.hrepiscomputed",
+    "page": "Representation",
+    "title": "Polyhedra.hrepiscomputed",
+    "category": "Function",
+    "text": "hrepiscomputed(p::Polyhedron)\n\nReturns whether the H-representation of this polyhedron has been computed.\n\n\n\n"
+},
+
+{
     "location": "representation.html#H-representation-interface-1",
     "page": "Representation",
     "title": "H-representation interface",
     "category": "section",
-    "text": "hreps\nnhreps\nhashreps\neqs\nneqs\nhaseqs\nineqs\nnineqs\nhasineqs"
+    "text": "hreps\nnhreps\nhashreps\neqs\nneqs\nhaseqs\nineqs\nnineqs\nhasineqs\nhrepiscomputed"
 },
 
 {
@@ -257,11 +265,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "representation.html#Polyhedra.vrepiscomputed",
+    "page": "Representation",
+    "title": "Polyhedra.vrepiscomputed",
+    "category": "Function",
+    "text": "vrepiscomputed(p::Polyhedron)\n\nReturns whether the V-representation of this polyhedron has been computed.\n\n\n\n"
+},
+
+{
     "location": "representation.html#V-representation-interface-1",
     "page": "Representation",
     "title": "V-representation interface",
     "category": "section",
-    "text": "vreps\nnvreps\nhasvreps\nrays\nnrays\nhasrays\npoints\nnpoints\nhaspoints"
+    "text": "vreps\nnvreps\nhasvreps\nrays\nnrays\nhasrays\npoints\nnpoints\nhaspoints\nvrepiscomputed"
 },
 
 {
