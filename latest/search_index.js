@@ -321,6 +321,30 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "utilities.html#Polyhedra.removevredundancy!",
+    "page": "Utilities",
+    "title": "Polyhedra.removevredundancy!",
+    "category": "Function",
+    "text": "removevredundancy!(P::VRep)\n\nRemoves the elements of the V-representation of P that can be removed without changing the polyhedron represented by P. That is, it only keeps the extreme points and rays. This operation is often called \"convex hull\" as the remaining points are the extreme points of the convex hull of the initial set of points.\n\n\n\n"
+},
+
+{
+    "location": "utilities.html#Polyhedra.removehredundancy!",
+    "page": "Utilities",
+    "title": "Polyhedra.removehredundancy!",
+    "category": "Function",
+    "text": "removehredundancy!(P::HRep)\n\nRemoves the elements of the H-representation of P that can be removed without changing the polyhedron represented by P. That is, it only keeps the halfspaces corresponding to facets of the polyhedron.\n\n\n\n"
+},
+
+{
+    "location": "utilities.html#Redundancy-1",
+    "page": "Utilities",
+    "title": "Redundancy",
+    "category": "section",
+    "text": "removevredundancy!\nremovehredundancy!"
+},
+
+{
     "location": "utilities.html#Base.intersect",
     "page": "Utilities",
     "title": "Base.intersect",
