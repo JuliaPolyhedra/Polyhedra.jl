@@ -30,8 +30,8 @@ Since libraries (`cdd`, `lrs`, `pd`, `porta`, `qhull`, ...) use different algori
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
-[docs-stable-url]: http://polyhedra.readthedocs.io/en/stable
-[docs-latest-url]: https://juliapolyhedra.github.io/Polyhedra.jl/latest/polyhedron.html
+[docs-stable-url]: https://juliapolyhedra.github.io/Polyhedra.jl/stable/index.html
+[docs-latest-url]: https://juliapolyhedra.github.io/Polyhedra.jl/latest/index.html
 
 [pkg-0.5-img]: http://pkg.julialang.org/badges/Polyhedra_0.5.svg
 [pkg-0.5-url]: http://pkg.julialang.org/?pkg=Polyhedra
