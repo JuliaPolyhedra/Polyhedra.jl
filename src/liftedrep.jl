@@ -9,7 +9,7 @@ mutable struct LiftedHRepresentation{N, T} <: HRepresentation{N, T}
     linset::IntSet
 
     function LiftedHRepresentation{N, T}(A::AbstractMatrix, linset::IntSet=IntSet()) where {N, T}
-        if ~isempty(linset) && last(linset) > size(A, 1)
+        if !isempty(linset) && last(linset) > size(A, 1)
             error("The elements of linset should be between 1 and the number of rows of A")
         end
         if size(A, 2) != N+1
@@ -102,7 +102,7 @@ mutable struct LiftedVRepresentation{N,T} <: VRepresentation{N,T}
         if length(R) > 0 && size(R, 2) != N+1
             error("dimension does not match")
         end
-        if ~isempty(linset) && last(linset) > size(R, 1)
+        if !isempty(linset) && last(linset) > size(R, 1)
             error("The elements of linset should be between 1 and the number of rows of R")
         end
         new{N, T}(R, linset)

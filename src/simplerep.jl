@@ -13,7 +13,7 @@ mutable struct SimpleHRepresentation{N, T} <: HRepresentation{N, T}
         if size(A, 1) != length(b)
             error("The length of b must be equal to the number of rows of A")
         end
-        if ~isempty(linset) && last(linset) > length(b)
+        if !isempty(linset) && last(linset) > length(b)
             error("The elements of linset should be between 1 and the number of rows of A/length of b")
         end
         if size(A, 2) != N
@@ -119,10 +119,10 @@ mutable struct SimpleVRepresentation{N,T} <: VRepresentation{N,T}
         if (length(R) > 0 && size(R, 2) != N) || (length(V) > 0 && size(V, 2) != N)
             error("dimension does not match")
         end
-        if ~isempty(Vlinset) && last(Vlinset) > size(V, 1)
+        if !isempty(Vlinset) && last(Vlinset) > size(V, 1)
             error("The elements of Vlinset should be between 1 and the number of rows of V")
         end
-        if ~isempty(Rlinset) && last(Rlinset) > size(R, 1)
+        if !isempty(Rlinset) && last(Rlinset) > size(R, 1)
             error("The elements of Rlinset should be between 1 and the number of rows of R")
         end
         new{N, T}(V, R, Vlinset, Rlinset)
