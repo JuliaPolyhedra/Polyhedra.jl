@@ -187,16 +187,12 @@ ispoint(v::T) where {T<:Union{Ray,Line}} = false
 coord(v::ElemT) where {ElemT<:Union{Point,AbstractVector}} = v
 coord(v::ElemT) where {ElemT<:Union{HRepElement,SymPoint,Ray,Line}} = v.a
 
-const VRepElementContainer = Union{SymPoint, Ray, Line}
+const VRepElementContainer{N,T} = Union{Ray{N,T}, Line{N,T}, SymPoint{N,T}}
 
-function (*)(P::Matrix, v::ElemT) where ElemT<:FixedVRepElement
-    if ElemT <: VRepElementContainer
-        Tout = mypromote_type(eltype(ElemT), eltype(P))
-        ElemTout = changeboth(ElemT, size(P, 1), Tout)
-        return ElemTout(P * v.a)
-    else
-        return P * v.a
-    end
+function (*)(P::AbstractMatrix, v::ElemT) where ElemT<:VRepElementContainer
+      Tout = mypromote_type(eltype(ElemT), eltype(P))
+      ElemTout = changeboth(ElemT, size(P, 1), Tout)
+      return ElemTout(P * v.a)
 end
 function zeropad(v::ElemT, n::Integer) where ElemT<:VRepElement
     if n == 0
