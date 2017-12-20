@@ -99,10 +99,10 @@ Transform the polyhedron represented by ``p`` into ``P^{-T} p`` by transforming 
 function (/)(rep::RepT, P::AbstractMatrix) where RepT<:HRep
     Nin = fulldim(rep)
     Tin = eltype(rep)
-    if size(P, 1) != Nin
+    if size(P, 2) != Nin
         error("The number of rows of P must match the dimension of the H-representation")
     end
-    Nout = size(P, 2)
+    Nout = size(P, 1)
     Tout = mypromote_type(eltype(RepT), eltype(P))
     if RepT <: HRepresentation
         RepTout = lazychangeboth(RepT, Nout, Tout)
