@@ -361,6 +361,30 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "utilities.html#Base.:*",
+    "page": "Utilities",
+    "title": "Base.:*",
+    "category": "Function",
+    "text": "*(P::AbstractMatrix, p::HRep)\n\nTransform the polyhedron represented by p into P p by transforming each element of the V-representation (points, symmetric points, rays and lines) x into P x.\n\n\n\n"
+},
+
+{
+    "location": "utilities.html#Base.:\\",
+    "page": "Utilities",
+    "title": "Base.:\\",
+    "category": "Function",
+    "text": "\\(P::AbstractMatrix, p::HRep)\n\nTransform the polyhedron represented by p into P^-1 p by transforming each halfspace langle a x rangle le beta into langle P^top a x rangle le beta and each hyperplane langle a x rangle = beta into langle P^top a x rangle = beta.\n\n\n\n"
+},
+
+{
+    "location": "utilities.html#Base.:/",
+    "page": "Utilities",
+    "title": "Base.:/",
+    "category": "Function",
+    "text": "/(p::HRep, P::AbstractMatrix)\n\nTransform the polyhedron represented by p into P^-T p by transforming each halfspace langle a x rangle le beta into langle P a x rangle le beta and each hyperplane langle a x rangle = beta into langle P a x rangle = beta.\n\n\n\n"
+},
+
+{
     "location": "utilities.html#Base.intersect",
     "page": "Utilities",
     "title": "Base.intersect",
@@ -381,7 +405,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Operations",
     "category": "section",
-    "text": "intersect\nconvexhull"
+    "text": "*\n\\\n/\nintersect\nconvexhull"
 },
 
 {
