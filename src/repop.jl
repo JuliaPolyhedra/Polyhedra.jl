@@ -84,7 +84,19 @@ function (*)(p1::Polyhedron, p2::Polyhedron)
     end
 end
 
-function (*)(rep::RepT, P::AbstractMatrix) where RepT<:HRep
+"""
+    \\(P::AbstractMatrix, p::HRep)
+
+Transform the polyhedron represented by ``p`` into ``P^{-1} p`` by transforming each halfspace ``\\langle a, x \\rangle \\le \\beta`` into ``\\langle P^\\top a, x \\rangle \\le \\beta`` and each hyperplane ``\\langle a, x \\rangle = \\beta`` into ``\\langle P^\\top a, x \\rangle = \\beta``.
+"""
+(\)(P::AbstractMatrix, rep::HRep) = rep / P'
+
+"""
+    /(p::HRep, P::AbstractMatrix)
+
+Transform the polyhedron represented by ``p`` into ``P^{-T} p`` by transforming each halfspace ``\\langle a, x \\rangle \\le \\beta`` into ``\\langle P a, x \\rangle \\le \\beta`` and each hyperplane ``\\langle a, x \\rangle = \\beta`` into ``\\langle P a, x \\rangle = \\beta``.
+"""
+function (/)(rep::RepT, P::AbstractMatrix) where RepT<:HRep
     Nin = fulldim(rep)
     Tin = eltype(rep)
     if size(P, 1) != Nin
@@ -95,7 +107,7 @@ function (*)(rep::RepT, P::AbstractMatrix) where RepT<:HRep
     if RepT <: HRepresentation
         RepTout = lazychangeboth(RepT, Nout, Tout)
     end
-    f = (i, h) -> h * P
+    f = (i, h) -> h / P
     if decomposedhfast(rep)
         eqs = EqIterator{Nout,Tout,Nin,Tin}([rep], f)
         ineqs = IneqIterator{Nout,Tout,Nin,Tin}([rep], f)
@@ -113,6 +125,14 @@ function (*)(rep::RepT, P::AbstractMatrix) where RepT<:HRep
         end
     end
 end
+
+(*)(rep::HRep, P::AbstractMatrix) = warn("`*(p::HRep, P::AbstractMatrix)` is deprecated. Use `P \\ p` or `p / P'` instead.")
+
+"""
+    *(P::AbstractMatrix, p::HRep)
+
+Transform the polyhedron represented by ``p`` into ``P p`` by transforming each element of the V-representation (points, symmetric points, rays and lines) `x` into ``P x``.
+"""
 function (*)(P::AbstractMatrix, rep::RepT) where RepT<:VRep
     Nin = fulldim(rep)
     Tin = eltype(rep)
