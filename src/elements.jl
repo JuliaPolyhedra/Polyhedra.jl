@@ -69,10 +69,10 @@ islin(v::HyperPlane) = true
 (*)(h::HalfSpace, α::Real) = HalfSpace(h.a * α, h.β * α)
 (*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
 
-function (*)(h::ElemT, P::Matrix) where ElemT<:HRepElement
+function (/)(h::ElemT, P::Matrix) where ElemT<:HRepElement
     Tout = mypromote_type(eltype(ElemT), eltype(P))
     ElemTout = changeboth(ElemT, size(P, 2), Tout)
-    ElemTout(P' * h.a, h.β)
+    ElemTout(P * h.a, h.β)
 end
 function zeropad(h::ElemT, n::Integer) where ElemT<:HRepElement
     if n == 0

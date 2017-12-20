@@ -65,7 +65,7 @@ function project(p::Polyhedron{N,T}, P::AbstractMatrix) where {N,T}
         end
         basis = [Q R]
     end
-    eliminate(p * basis, IntSet(m+1:N))
+    eliminate(basis \ p, IntSet(m+1:N))
 end
 
 _fixelim(h::ElemT, I, J, v) where {ElemT<:HRepElement} = ElemT(h.a[J], h.β - dot(h.a[I], v))

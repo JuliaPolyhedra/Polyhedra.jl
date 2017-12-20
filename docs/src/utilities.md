@@ -8,6 +8,9 @@ removehredundancy!
 
 ## Operations
 ```@docs
+*
+\
+/
 intersect
 convexhull
 ```

@@ -10,7 +10,7 @@ export PolyhedraLibrary, Polyhedron, getlibrary, getlibraryfor
 abstract type PolyhedraLibrary end
 abstract type Polyhedron{N,T} <: GeometryPrimitive{N,T} end
 
-import Base.intersect, Base.==, Base.+, Base.*, Base.isempty, Base.copy, Base.push!, Base.length, Base.eltype, Base.start, Base.done, Base.next
+import Base: intersect, ==, +, *, \, /, isempty, copy, push!, length, eltype, start, done, next
 
 # Definitions
 include("elements.jl")
