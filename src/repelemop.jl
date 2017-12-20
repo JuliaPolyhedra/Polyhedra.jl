@@ -47,6 +47,18 @@ function _vinh(v::VRepElement{N}, hr::HRep{N}, infun) where N
     end
     return true
 end
+
+"""
+    in(p::VRepElement, h::HRepElement)
+
+Returns whether `p` is in `h`.
+If `h` is an hyperplane, it returns whether ``\\langle a, x \\rangle \\approx \\beta``.
+If `h` is an halfspace, it returns whether ``\\langle a, x \\rangle \\le \\beta``.
+
+    in(p::VRepElement, h::HRep)
+
+Returns whether `p` is in `h`, e.g. in all the hyperplanes and halfspaces supporting `h`.
+"""
 Base.in(v::VRepElement{N}, hr::HRep{N}) where {N} = _vinh(v, hr, Base.in)
 
 """
@@ -100,9 +112,15 @@ function _hinh(h::HyperPlane{N}, hr::HRep{N}, solver) where N
     _hinh(halfspace(h), hr, solver) && _hinh(halfspace(-h), hr, solver)
 end
 
-Base.in(h::HRepElement{N}, vr::VRepresentation{N}) where {N} = _hinv(h, vr)
-Base.in(h::HRepElement{N}, hr::HRepresentation{N}) where {N} = _hinh(h, hr)
-function Base.in(h::HRepElement{N}, p::Polyhedron{N}, solver = defaultLPsolverfor(p)) where N
+Base.issubset(vr::VRepresentation{N}, h::HRepElement{N}) where {N} = _hinv(h, vr)
+Base.issubset(hr::HRepresentation{N}, h::HRepElement{N}) where {N} = _hinh(h, hr)
+
+"""
+    issubset(p::Rep, h::HRepElement)
+
+Returns whether `p` is a subset of `h`, i.e. whether `h` supports the polyhedron `p`.
+"""
+function Base.issubset(p::Polyhedron{N}, h::HRepElement{N}, solver = defaultLPsolverfor(p)) where N
     if vrepiscomputed(p)
         _hinv(h, p)
     else
@@ -110,6 +128,7 @@ function Base.in(h::HRepElement{N}, p::Polyhedron{N}, solver = defaultLPsolverfo
     end
 end
 
+Base.in(h::HRepElement, p::Rep) = error("in(h::HRepElement, p::Rep) is deprecated. Use issubset(p, h) instead.")
 
 ################
 # INTERSECTION #

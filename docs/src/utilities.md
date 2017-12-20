@@ -17,6 +17,8 @@ convexhull
 
 ## Containment
 ```@docs
+in
+issubset
 ininterior
 inrelativeinterior
 ```
