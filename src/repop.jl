@@ -126,7 +126,10 @@ function (/)(rep::RepT, P::AbstractMatrix) where RepT<:HRep
     end
 end
 
-(*)(rep::HRep, P::AbstractMatrix) = warn("`*(p::HRep, P::AbstractMatrix)` is deprecated. Use `P \\ p` or `p / P'` instead.")
+function (*)(rep::HRep, P::AbstractMatrix)
+    warn("`*(p::HRep, P::AbstractMatrix)` is deprecated. Use `P \\ p` or `p / P'` instead.")
+    P \ rep
+end
 
 """
     *(P::AbstractMatrix, p::HRep)

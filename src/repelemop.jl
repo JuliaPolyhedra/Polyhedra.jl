@@ -128,7 +128,10 @@ function Base.issubset(p::Polyhedron{N}, h::HRepElement{N}, solver = defaultLPso
     end
 end
 
-Base.in(h::HRepElement, p::Rep) = error("in(h::HRepElement, p::Rep) is deprecated. Use issubset(p, h) instead.")
+function Base.in(h::HRepElement, p::Rep)
+    warn("in(h::HRepElement, p::Rep) is deprecated. Use issubset(p, h) instead.")
+    issubset(p, h)
+end
 
 ################
 # INTERSECTION #
