@@ -409,6 +409,22 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "utilities.html#Base.in",
+    "page": "Utilities",
+    "title": "Base.in",
+    "category": "Function",
+    "text": "in(p::VRepElement, h::HRepElement)\n\nReturns whether p is in h. If h is an hyperplane, it returns whether langle a x rangle approx beta. If h is an halfspace, it returns whether langle a x rangle le beta.\n\nin(p::VRepElement, h::HRep)\n\nReturns whether p is in h, e.g. in all the hyperplanes and halfspaces supporting h.\n\n\n\n"
+},
+
+{
+    "location": "utilities.html#Base.issubset",
+    "page": "Utilities",
+    "title": "Base.issubset",
+    "category": "Function",
+    "text": "issubset(p::Rep, h::HRepElement)\n\nReturns whether p is a subset of h, i.e. whether h supports the polyhedron p.\n\n\n\n"
+},
+
+{
     "location": "utilities.html#Polyhedra.ininterior",
     "page": "Utilities",
     "title": "Polyhedra.ininterior",
@@ -429,7 +445,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Containment",
     "category": "section",
-    "text": "ininterior\ninrelativeinterior"
+    "text": "in\nissubset\nininterior\ninrelativeinterior"
 },
 
 {
