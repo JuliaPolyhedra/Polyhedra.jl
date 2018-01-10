@@ -30,7 +30,7 @@ cdd && push!(exact_libraries, CDDLib.CDDLibrary(:exact))
 lrs && push!(exact_libraries, LRSLib.LRSLibrary())
 
 # Load available solvers
-grb = false && try_import(:Gurobi)
+grb = try_import(:Gurobi)
 cpx = try_import(:CPLEX)
 xpr = try_import(:Xpress)
 mos = try_import(:Mosek)

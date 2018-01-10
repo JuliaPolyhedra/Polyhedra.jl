@@ -8,7 +8,7 @@ polytypefor{T}(::Type{T}) = T
 
 function dualfullspace(h::HRepresentation{N, Tin}) where {N, Tin}
     Tout = polytypefor(Tin)
-    SimpleVRepresentation(Matrix{Tout}(0, N), eye(Tout, N), IntSet(), IntSet(1:N))
+    SimpleVRepresentation(zeros(Tout, 1, N), eye(Tout, N), IntSet(), IntSet(1:N))
 end
 
 function doubledescription(h::HRepresentation)
@@ -19,11 +19,18 @@ function doubledescription(h::HRepresentation)
 
     h = removeduplicates(h)
     v = dualfullspace(h)
-    for hel in hreps(h)
+    for hp in hyperplanes(h)
         #v = removeduplicates(v ∩ hel)
         # removeduplicates is cheaper than removevredundancy since the latter
         # needs to go through all the hrep element
-        v = removevredundancy(removeduplicates(v ∩ hel), h)
+        v = removevredundancy(removeduplicates(v ∩ hp), h)
+        #v = removevredundancy(v ∩ hel, h)
+    end
+    for hs in halfspaces(h)
+        #v = removeduplicates(v ∩ hel)
+        # removeduplicates is cheaper than removevredundancy since the latter
+        # needs to go through all the hrep element
+        v = removevredundancy(removeduplicates(v ∩ hs), h)
         #v = removevredundancy(v ∩ hel, h)
     end
     v
@@ -31,14 +38,7 @@ end
 
 function doubledescription(v::VRepresentation{N, T}) where {N, T}
     lv = LiftedVRepresentation(v)
-    # See #28
-    if haspoints(v)
-        R = -lv.R
-    else
-        R = [-one(T) zeros(T, 1, N); -lv.R]
-    end
+    R = -lv.R
     vl = doubledescription(SimpleHRepresentation(R, zeros(T, size(R, 1)), lv.linset))
-    # it has been cut by homogeneous hyperplane (i.e. containing the origin) only
-    @assert npoints(vl) == 0
     LiftedHRepresentation(vl.R, vl.Rlinset)
 end

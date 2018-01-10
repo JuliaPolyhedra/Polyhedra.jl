@@ -49,8 +49,8 @@ function optimize!(lpm::SimpleVRepPolyhedraModel)
     end
     prob = get(lpm.vrep)
     N = fulldim(prob)
-    T = eltype(prob)
-    if !hasvreps(prob)
+    T = MultivariatePolynomials.coefficienttype(prob)
+    if !hassympoints(prob) && !haspoints(prob) && !haslines(prob) && !hasrays(prob)
         lpm.status = :Infeasible
     else
         if lpm.sense in [:Max, :Min]

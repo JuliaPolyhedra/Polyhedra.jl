@@ -2,8 +2,14 @@
 
 ## Redundancy
 ```@docs
+dim
 removevredundancy!
 removehredundancy!
+```
+
+## Projection/Elimination
+```@docs
+fixandeliminate
 ```
 
 ## Operations
@@ -12,7 +18,9 @@ removehredundancy!
 \
 /
 intersect
+intersect!
 convexhull
+convexhull!
 ```
 
 ## Containment

@@ -1,14 +1,39 @@
 import Base.show
 
+_length(hrep::HRepresentation) = nhyperplanes(hrep) + nhalfspaces(hrep)
+_length(vrep::VRepresentation) = nsympoints(vrep) + npoints(vrep) + nlines(vrep) + nrays(vrep)
+
+function _print(io::IO, it::ElemIt{<:HRepElement})
+    for h in it
+        print(io, " $(h.β)")
+        for j in eachindex(h.a)
+            print(io, " $(-h.a[j])")
+        end
+        println(io)
+    end
+end
+
+function _print(io::IO, it::ElemIt{<:VRepElement})
+    for v in it
+        print(io, " $(Int(ispoint(v)))")
+        c = coord(v)
+        for j = eachindex(c)
+            print(io, " $(c[j])")
+        end
+        println(io)
+    end
+end
+
 function Base.show(io::IO, rep::Representation{N,T}) where {N,T}
     if typeof(rep) <: HRepresentation
         print(io, "H")
+        ls = IntSet(1:nhyperplanes(rep))
     else
         print(io, "V")
+        ls = IntSet(1:nsympoints(rep)) ∪ IntSet(nsympoints(rep) + npoints(rep) + (1:nlines(rep)))
     end
     println(io, "-representation")
 
-    ls = linset(rep)
     if !isempty(ls)
         print(io, "linearity $(length(ls))");
         for i in ls
@@ -25,23 +50,11 @@ function Base.show(io::IO, rep::Representation{N,T}) where {N,T}
     else
         typename = "rational"
     end
-    println(io, " $(length(rep)) $(N+1) $typename")
+    println(io, " $(_length(rep)) $(N+1) $typename")
     if typeof(rep) <: HRepresentation
-        for h in hreps(rep)
-            print(io, " $(h.β)")
-            for j = 1:N
-                print(io, " $(-h.a[j])")
-            end
-            println(io)
-        end
+        _print.(io, hreps(rep))
     else
-        for v in vreps(rep)
-            print(io, " $(Int(ispoint(v)))")
-            for j = 1:N
-                print(io, " $(v[j])")
-            end
-            println(io)
-        end
+        _print.(io, vreps(rep))
     end
     print(io, "end")
 end

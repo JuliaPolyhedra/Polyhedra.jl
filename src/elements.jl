@@ -5,14 +5,14 @@ export HRepElement, HalfSpace, HyperPlane
 export VRepElement, AbstractPoint, SymPoint, AbstractRay, Ray, Line
 export islin, isray, ispoint, ispoint, coord, lift, simplify
 
-const MyPoint{N,T} = Union{Point{N,T},AbstractArray{T}}
-mypoint{T}(::Type{T}, a::AbstractArray) = AbstractArray{T}(a)
-mypoint{T}(::Type{T}, a::AbstractArray{T}) = a
+const MyPoint{N,T} = Union{Point{N,T},AbstractVector{T}}
+mypoint{T}(::Type{T}, a::AbstractVector) = AbstractArray{T}(a)
+mypoint{T}(::Type{T}, a::AbstractVector{T}) = a
 mypoint{N,T}(::Type{T}, a::Point{N}) = Point{N,T}(a)
 mypoint{N,T}(::Type{T}, a::Point{N,T}) = a
-const MyVec{N,T} = Union{Vec{N,T},AbstractArray{T}}
-myvec{T}(::Type{T}, a::AbstractArray) = AbstractArray{T}(a)
-myvec{T}(::Type{T}, a::AbstractArray{T}) = a
+const MyVec{N,T} = Union{Vec{N,T},AbstractVector{T}}
+myvec{T}(::Type{T}, a::AbstractVector) = AbstractArray{T}(a)
+myvec{T}(::Type{T}, a::AbstractVector{T}) = a
 myvec{N,T}(::Type{T}, a::Vec{N}) = Vec{N,T}(a)
 myvec{N,T}(::Type{T}, a::Vec{N,T}) = a
 
@@ -28,35 +28,38 @@ vecconv{T}(::Type{T}, a::FixedVector) = FixedVector{T}(a)
 
 abstract type HRepElement{N,T} end
 
-# ⟨a, x⟩ <= β
-struct HalfSpace{N,T} <: HRepElement{N,T}
-    a::MyVec{N,T}
+# ⟨a, x⟩ ≤ β
+struct HalfSpace{N, T, AT<:MyVec{N, T}} <: HRepElement{N,T}
+    a::AT
     β::T
-    function HalfSpace{N, T}(a::MyVec{N,T}, β::T) where {N, T}
-        new{N, T}(a, β)
+    function HalfSpace{N, T, AT}(a::AT, β::T) where {N, T, AT<:MyVec{N, T}}
+        new{N, T, AT}(a, β)
     end
 end
 
-HalfSpace{N,T}(a::MyVec, β) where {N,T} = HalfSpace{N,T}(myvec(T, a), T(β))
+HalfSpace{N, T}(a::AT, β) where {N, T, AT <: MyVec{N, T}} = HalfSpace{N, T, AT}(a, β)
+HalfSpace{N, T}(a::MyVec, β) where {N, T} = HalfSpace{N, T}(myvec(T, a), T(β))
 
-struct HyperPlane{N,T} <: HRepElement{N,T}
-    a::MyVec{N,T}
+# ⟨a, x⟩ = β
+struct HyperPlane{N, T, AT<:MyVec{N, T}} <: HRepElement{N,T}
+    a::AT
     β::T
-    function HyperPlane{N, T}(a::MyVec{N,T}, β::T) where {N, T}
-        new{N, T}(a, β)
+    function HyperPlane{N, T, AT}(a::AT, β::T) where {N, T, AT<:MyVec{N, T}}
+        new{N, T, AT}(a, β)
     end
 end
 
-HyperPlane{N,T}(a::MyVec, β) where {N,T} = HyperPlane{N,T}(myvec(T, a), T(β))
+HyperPlane{N, T}(a::AT, β::T) where {N, T, AT <: MyVec{N, T}} = HyperPlane{N, T, AT}(a, β)
+HyperPlane{N, T}(a::MyVec, β) where {N, T} = HyperPlane{N, T}(myvec(T, a), T(β))
 
 # FIXME should promote between a and β
 HalfSpace(a, β) = HalfSpace{fulldim(a), eltype(a)}(a, eltype(a)(β))
 HyperPlane(a, β) = HyperPlane{fulldim(a), eltype(a)}(a, eltype(a)(β))
 
-Base.convert{N,Tin,Tout}(::Type{HalfSpace{N,Tout}}, h::HalfSpace{N,Tin}) = HalfSpace{N,Tout}(vecconv(Tout, h.a), Tout(h.β))
-Base.convert{N,Tin,Tout}(::Type{HyperPlane{N,Tout}}, h::HyperPlane{N,Tin}) = HyperPlane{N,Tout}(vecconv(Tout, h.a), Tout(h.β))
-Base.convert{N,T}(::Type{HalfSpace{N,T}}, h::HalfSpace{N,T}) = h
-Base.convert{N,T}(::Type{HyperPlane{N,T}}, h::HyperPlane{N,T}) = h
+Base.convert(::Type{HalfSpace{N, T, AT}}, h::HalfSpace{N}) where {N, T, AT} = HalfSpace{N, T, AT}(AT(h.a), T(h.β))
+Base.convert(::Type{HyperPlane{N, T, AT}}, h::HyperPlane{N}) where {N, T, AT} = HyperPlane{N, T, AT}(AT(h.a), T(h.β))
+Base.convert(::Type{HalfSpace{N, T, AT}}, h::HalfSpace{N, T, AT}) where {N, T, AT} = h
+Base.convert(::Type{HyperPlane{N, T, AT}}, h::HyperPlane{N, T, AT}) where {N, T, AT} = h
 
 islin(v::HalfSpace) = false
 islin(v::HyperPlane) = true
@@ -69,21 +72,20 @@ islin(v::HyperPlane) = true
 (*)(h::HalfSpace, α::Real) = HalfSpace(h.a * α, h.β * α)
 (*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
 
-function (/)(h::ElemT, P::Matrix) where ElemT<:HRepElement
-    Tout = mypromote_type(eltype(ElemT), eltype(P))
-    ElemTout = changeboth(ElemT, size(P, 2), Tout)
-    ElemTout(P * h.a, h.β)
+function (/)(h::ElemT, P::Matrix) where {N, T, ElemT<:HRepElement{N, T}}
+    Tout = mypromote_type(T, eltype(P))
+    ElemTout = similar_type(ElemT, FullDim{size(P, 2)}(), Tout)
+    ElemTout(Matrix{Tout}(P) * myvec(Tout, h.a), Tout(h.β))
 end
-function zeropad(h::ElemT, n::Integer) where ElemT<:HRepElement
+function zeropad(h::ElemT, n::Integer) where {N, T, ElemT<:HRepElement{N, T}}
     if n == 0
         h
     else
-        ElemTout = changefulldim(ElemT, fulldim(h) + abs(n))
-        T = eltype(ElemT)
+        ElemTout = similar_type(ElemT, FullDim{N+abs(n)}())
         if n < 0
-            aout = [spzeros(T, -n); h.a]
+            aout = [zeros(T, -n); h.a]
         else
-            aout = [h.a; spzeros(T, n)]
+            aout = [h.a; zeros(T, n)]
         end
         ElemTout(aout, h.β)
     end
@@ -98,30 +100,33 @@ end
 # Linear Ray:
 # Line{N, T}
 
-struct SymPoint{N, T}
-    a::MyPoint{N, T}
-    function SymPoint{N, T}(a::MyPoint{N, T}) where {N, T}
-        new{N, T}(a)
+struct SymPoint{N, T, AT <: MyPoint{N, T}}
+    a::AT
+    function SymPoint{N, T}(a::AT) where {N, T, AT<:MyPoint{N, T}}
+        new{N, T, AT}(a)
     end
 end
+SymPoint{N, T, AT}(sympoint::SymPoint) where {N, T, AT} = SymPoint{N, T, AT}(AT(sympoint.a))
+SymPoint{N, T}(a::MyPoint) where {N,T} = SymPoint{N,T}(mypoint(T, a))
 
-SymPoint{N,T}(a::MyPoint) where {N,T} = SymPoint{N,T}(mypoint(T, a))
-
-struct Ray{N, T}
-    a::MyVec{N, T}
-    function Ray{N, T}(a::MyVec{N, T}) where {N, T}
-        new{N, T}(a)
+struct Ray{N, T, AT <: MyVec{N, T}}
+    a::AT
+    function Ray{N, T, AT}(a::AT) where {N, T, AT<:MyVec{N, T}}
+        new{N, T, AT}(a)
     end
 end
+Ray{N, T, AT}(ray::Ray) where {N, T, AT} = Ray{N, T, AT}(AT(ray.a))
+Ray{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Ray{N, T, AT}(a)
+Ray{N, T}(a::MyVec) where {N,T} = Ray{N,T}(myvec(T, a))
 
-Ray{N,T}(a::MyVec) where {N,T} = Ray{N,T}(myvec(T, a))
-
-struct Line{N,T}
-    a::MyVec{N, T}
-    function Line{N, T}(a::MyVec{N, T}) where {N, T}
-        new{N, T}(a)
+struct Line{N, T, AT<:MyVec{N, T}}
+    a::AT
+    function Line{N, T, AT}(a::AT) where {N, T, AT<:MyVec{N, T}}
+        new{N, T, AT}(a)
     end
 end
+Line{N, T, AT}(line::Line) where {N, T, AT} = Line{N, T, AT}(AT(line.a))
+Line{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Line{N, T, AT}(a)
 
 getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
 vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
@@ -129,11 +134,11 @@ vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 (-)(h::ElemT) where {ElemT<:Union{HyperPlane, HalfSpace}} = ElemT(-h.a, -h.β)
 (-)(elem::ElemT) where {ElemT<:Union{SymPoint,Ray,Line}} = ElemT(-coord(elem))
 # Used in remproj
-(-)(p::AbstractArray, l::Line) = p - coord(l)
+(-)(p::AbstractVector, l::Line) = p - coord(l)
 # Ray - Line is done in remproj
 (-)(r::Ray, s::Union{Ray, Line}) = Ray(r.a - s.a)
 (+)(r::Ray, s::Ray) = Ray(r.a + s.a)
-(+)(p::Union{AbstractArray,Point}, r::Ray) = p + coord(r)
+(+)(p::MyPoint, r::Ray) = p + coord(r)
 
 for op in [:dot, :cross]
     @eval begin
@@ -155,12 +160,12 @@ SymPoint(a::Union{Point,AbstractVector}) = SymPoint{fulldim(a), eltype(a)}(a)
 Ray(a::Union{Vec,AbstractVector}) = Ray{fulldim(a), eltype(a)}(a)
 Line(a::Union{Vec,AbstractVector}) = Line{fulldim(a), eltype(a)}(a)
 
-Base.convert{N,Tin,Tout}(::Type{SymPoint{N,Tout}}, v::SymPoint{N,Tin}) = SymPoint{N,Tout}(vecconv(Tout, v.a))
-Base.convert{N,Tin,Tout}(::Type{Ray{N,Tout}}, v::Ray{N,Tin}) = Ray{N,Tout}(vecconv(Tout, v.a))
-Base.convert{N,Tin,Tout}(::Type{Line{N,Tout}}, v::Line{N,Tin}) = Line{N,Tout}(vecconv(Tout, v.a))
-Base.convert{N,T}(::Type{SymPoint{N,T}}, v::SymPoint{N,T}) = v
-Base.convert{N,T}(::Type{Ray{N,T}}, v::Ray{N,T}) = v
-Base.convert{N,T}(::Type{Line{N,T}}, v::Line{N,T}) = v
+for ElemT in (:SymPoint, :Ray, :Line)
+    @eval begin
+        $ElemT{N,Tout}(v::SymPoint{N,Tin}) where {N,Tin,Tout} = $ElemT{N,Tout}(vecconv(Tout, v.a))
+        $ElemT{N,T}(v::SymPoint{N,T}) = v
+    end
+end
 
 const AbstractPoint{N, T} = Union{Point{N, T}, AbstractVector{T}, SymPoint{N, T}}
 const AbstractRay{N, T} = Union{Ray{N, T}, Line{N, T}}
@@ -169,13 +174,8 @@ const VRepElement{N,T} = Union{FixedVRepElement{N,T}, AbstractVector{T}}
 const RepElement{N,T} = Union{HRepElement{N,T}, VRepElement{N,T}}
 const FixedRepElement{N,T} = Union{HRepElement{N,T}, FixedVRepElement{N,T}}
 
-fulldim(e::FixedRepElement{N}) where {N} = N
-eltype(e::FixedRepElement{N, T}) where {N,T} = T
-fulldim{T<:FixedRepElement}(::Type{T}) = T.parameters[1]
-eltype{T<:FixedRepElement}(::Type{T}) = T.parameters[2]
-
-fulldim(v::AbstractVector) = length(v)
-fulldim{T<:AbstractVector}(::Type{T}) = T.parameters[1]
+FullDim(::Union{FixedRepElement{N}, Type{<:FixedRepElement{N}}}) where {N} = FullDim{N}()
+MultivariatePolynomials.coefficienttype(::Union{FixedRepElement{N, T}, Type{<:FixedRepElement{N, T}}}) where {N, T} = T
 
 islin(v::T) where {T<:Union{Point,AbstractVector,Ray}} = false
 islin(v::T) where {T<:Union{SymPoint,Line}} = true
@@ -189,37 +189,35 @@ coord(v::ElemT) where {ElemT<:Union{HRepElement,SymPoint,Ray,Line}} = v.a
 
 const VRepElementContainer{N,T} = Union{Ray{N,T}, Line{N,T}, SymPoint{N,T}}
 
-function (*)(P::AbstractMatrix, v::ElemT) where ElemT<:VRepElementContainer
-      Tout = mypromote_type(eltype(ElemT), eltype(P))
-      ElemTout = changeboth(ElemT, size(P, 1), Tout)
+function (*)(P::AbstractMatrix, v::ElemT) where {N, T, ElemT<:VRepElementContainer{N, T}}
+      Tout = mypromote_type(T, eltype(P))
+      ElemTout = similar_type(ElemT, FullDim{size(P, 1)}(), Tout)
       return ElemTout(P * v.a)
 end
-function zeropad(v::ElemT, n::Integer) where ElemT<:VRepElement
+# FIXME there seem to be a Julia bug, with Vector, it does not recognize that the zeropad method
+#       works
+function _zeropad(v, n::Integer)
     if n == 0
         v
     else
-        ElemTout = changefulldim(ElemT, fulldim(v) + abs(n))
-        T = eltype(ElemT)
+        T = MultivariatePolynomials.coefficienttype(v)
+        ElemTout = similar_type(typeof(v), FullDim(v) + FullDim{abs(n)}())
         if n < 0
-            aout = [spzeros(T, -n); coord(v)]
+            aout = [zeros(T, -n); coord(v)]
         else
-            aout = [coord(v); spzeros(T, n)]
+            aout = [coord(v); zeros(T, n)]
         end
         ElemTout(aout)
     end
 end
+zeropad(v::ElemT, n::Integer) where {N, T, ElemT <: VRepElement{N, T}} = _zeropad(v, n)
+zeropad(v::AbstractVector, n::Integer) = _zeropad(v, n)
 
-for ElemT in [:HalfSpace, :HyperPlane, :Point, :SymPoint, :Vec, :Ray, :Line]
+for ElemT in [:HalfSpace, :HyperPlane, :SymPoint, :Ray, :Line]
     @eval begin
-        changeeltype{N,T,Tout}(::Type{$ElemT{N,T}}, ::Type{Tout}) = $ElemT{N,Tout}
-        changefulldim{N,T}(::Type{$ElemT{N,T}}, Nout) = $ElemT{Nout,T}
-        changeboth{N,T,Tout}(::Type{$ElemT{N,T}}, Nout, ::Type{Tout}) = $ElemT{Nout,Tout}
+        similar_type(::Type{$ElemT{N,T,AT}}, dout::FullDim{Nout}, ::Type{Tout}) where {N,T,AT,Nout,Tout} = $ElemT{Nout,Tout,similar_type(AT, dout, Tout)}
     end
 end
-
-changeeltype{VecT<:AbstractVector,Tout}(::Type{VecT}, ::Type{Tout}) = AbstractVector{Tout}
-changefulldim{VecT<:AbstractVector}(::Type{VecT}, Nout) = VecT
-changeboth{VecT<:AbstractVector,Tout}(::Type{VecT}, Nout, ::Type{Tout}) = AbstractVector{Tout}
 
 mydot(a::AbstractVector, r::Ray) = mydot(a, r.a)
 mydot(a::AbstractVector, l::Line) = mydot(a, l.a)
@@ -258,12 +256,12 @@ end
 #Base.vec{ElemT::VRepElementContainer}(x::ElemT) = ElemT(vec(x.a))
 
 pushbefore(a::AbstractVector, β) = [β; a]
-function pushbefore(a::ElemT, β, ElemTout = changefulldim(ElemT, fulldim(ElemT)+1)) where ElemT<:FixedVector
+function pushbefore(a::ElemT, β, ElemTout = similar_type(ElemT, FullDim{N+1}())) where {N, ElemT<:FixedVector{N}}
     ElemTout([β; vec(a)])
 end
 
-function lift(h::ElemT) where ElemT <: HRepElement
-    ElemT(pushbefore(h.a, -h.β), zero(eltype(ElemT)))
+function lift(h::ElemT) where {N, T, ElemT <: HRepElement{N, T}}
+    ElemT(pushbefore(h.a, -h.β), zero(T))
 end
 lift(h::Ray{N,T}) where {N,T} = Ray{N+1,T}(pushbefore(h.a, zero(T)))
 lift(h::Line{N,T}) where {N,T} = Line{N+1,T}(pushbefore(h.a, zero(T)))
