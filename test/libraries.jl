@@ -30,13 +30,13 @@ cdd && push!(exact_libraries, CDDLib.CDDLibrary(:exact))
 lrs && push!(exact_libraries, LRSLib.LRSLibrary())
 
 # Load available solvers
-grb = try_import(:Gurobi)
+glp = try_import(:GLPKMathProgInterface)
+cbc = try_import(:Cbc)
+if cbc; import Clp; end
+grb = false && try_import(:Gurobi) # Gurobi creates BigFloat when the input is BigInt and then cannot handle it
 cpx = try_import(:CPLEX)
 xpr = try_import(:Xpress)
 mos = try_import(:Mosek)
-cbc = try_import(:Cbc)
-if cbc; import Clp; end
-glp = try_import(:GLPKMathProgInterface)
 ipt = try_import(:Ipopt)
 eco = try_import(:ECOS)
 scs = try_import(:SCS)

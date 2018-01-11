@@ -93,8 +93,8 @@ startsympoint(L::VCone) = true
 donesympoint(L::VCone, state::Bool) = state
 
 # See issue #28
-npoint(L::VCone) = 1
-startpoint(L::VCone) = false
+npoint(L::VCone) = hasallrays(L) ? 1 : 0
+startpoint(L::VCone) = !hasallrays(L)
 donepoint(L::VCone, state::Bool) = state
 function nextpoint(L::VCone{N, T, AT}, state::Bool) where {N, T, AT}
     @assert !state

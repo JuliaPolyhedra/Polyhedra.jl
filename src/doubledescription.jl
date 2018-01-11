@@ -19,6 +19,7 @@ function doubledescription(h::HRepresentation)
 
     h = removeduplicates(h)
     v = dualfullspace(h)
+    checkvconsistency(v)
     for hp in hyperplanes(h)
         #v = removeduplicates(v ∩ hel)
         # removeduplicates is cheaper than removevredundancy since the latter
@@ -37,6 +38,7 @@ function doubledescription(h::HRepresentation)
 end
 
 function doubledescription(v::VRepresentation{N, T}) where {N, T}
+    checkvconsistency(v)
     lv = LiftedVRepresentation(v)
     R = -lv.R
     vl = doubledescription(SimpleHRepresentation(R, zeros(T, size(R, 1)), lv.linset))

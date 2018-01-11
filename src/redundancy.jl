@@ -90,6 +90,7 @@ isvredundant(p::HRep{N,T}, v::Line; strongly = true, nl::Int=nlines(p), solver =
 # H-redundancy
 # If p is a V-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 function ishredundant(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) where {N,T}
+    checkvconsistency(p)
     pcount = 0
     hp = hyperplane(h)
     for v in allpoints(p)
@@ -102,10 +103,6 @@ function ishredundant(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(
         if v in hp
             rcount += 1
         end
-    end
-    if myeqzero(h.β) && !haspoints(p)
-        # The origin, see #28
-        pcount += 1
     end
     pcount < min(d, 1) || (strongly && pcount + rcount < d)
 end

@@ -24,6 +24,15 @@ That is, a straight line in a 3D space has `fulldim` 3.
 fulldim(p) = fulldim(FullDim(p))
 FullDim(rep::Union{Rep{N}, Type{<:Rep{N}}}) where N = FullDim{N}()
 
+# Check that it is either empty or it has a point
+vconsistencyerror() = error("Non-empty V-representation must contain at least one point. If it is a polyhedral cone, the origin should be added.")
+function checkvconsistency(vrep::VRep)
+    if !hasallpoints(vrep) && hasallrays(vrep)
+        vconsistencyerror()
+    end
+end
+checkvconsistency(p::Polyhedron) = vrepiscomputed(p) && checkvconsistency(p)
+
 # type EmptyIterator{N,T}
 # end
 # length(it::VRepIterator) = 0
