@@ -9,8 +9,8 @@ function try_import(name::Symbol)
     end
 end
 
-cdd = try_import(:CDDLib)
-lrs = try_import(:LRSLib)
+cdd = false && try_import(:CDDLib)
+lrs = false && try_import(:LRSLib)
 
 # Create library lists
 libraries = PolyhedraLibrary[]

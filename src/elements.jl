@@ -61,8 +61,8 @@ Base.convert(::Type{HyperPlane{N, T, AT}}, h::HyperPlane{N}) where {N, T, AT} = 
 Base.convert(::Type{HalfSpace{N, T, AT}}, h::HalfSpace{N, T, AT}) where {N, T, AT} = h
 Base.convert(::Type{HyperPlane{N, T, AT}}, h::HyperPlane{N, T, AT}) where {N, T, AT} = h
 
-islin(v::HalfSpace) = false
-islin(v::HyperPlane) = true
+islin(::Union{HalfSpace, Type{<:HalfSpace}}) = false
+islin(::Union{HyperPlane, Type{<:HyperPlane}}) = true
 
 (-)(h1::HRepElement, h2::HRepElement) = HalfSpace(h1.a - h2.a, h1.β - h2.β)
 (-)(h1::HyperPlane, h2::HyperPlane) = HyperPlane(h1.a - h2.a, h1.β - h2.β)
@@ -177,12 +177,12 @@ const FixedRepElement{N,T} = Union{HRepElement{N,T}, FixedVRepElement{N,T}}
 FullDim(::Union{FixedRepElement{N}, Type{<:FixedRepElement{N}}}) where {N} = FullDim{N}()
 MultivariatePolynomials.coefficienttype(::Union{FixedRepElement{N, T}, Type{<:FixedRepElement{N, T}}}) where {N, T} = T
 
-islin(v::T) where {T<:Union{Point,AbstractVector,Ray}} = false
-islin(v::T) where {T<:Union{SymPoint,Line}} = true
-isray(v::T) where {T<:Union{Point,AbstractVector,SymPoint}} = false
-isray(v::T) where {T<:Union{Ray,Line}} = true
-ispoint(v::T) where {T<:Union{Point,AbstractVector,SymPoint}} = true
-ispoint(v::T) where {T<:Union{Ray,Line}} = false
+islin(::Union{SymPoint, Line, Type{<:Union{SymPoint, Line}}}) = true
+islin(::Union{MyPoint, Ray, Type{<:Union{MyPoint, Ray}}}) = false
+ispoint(::Union{SymPoint, MyPoint, Type{<:Union{SymPoint, MyPoint}}}) = true
+ispoint(::Union{Line, Ray, Type{<:Union{Line, Ray}}}) = false
+isray(::Union{SymPoint, MyPoint, Type{<:Union{SymPoint, MyPoint}}}) = false
+isray(::Union{Line, Ray, Type{<:Union{Line, Ray}}}) = true
 
 coord(v::ElemT) where {ElemT<:Union{Point,AbstractVector}} = v
 coord(v::ElemT) where {ElemT<:Union{HRepElement,SymPoint,Ray,Line}} = v.a

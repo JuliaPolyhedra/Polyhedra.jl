@@ -3,7 +3,7 @@ export SimpleHRepresentation, SimpleVRepresentation
 # H-Representation
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
-mutable struct SimpleHRepresentation{N, T} <: HRepresentation{N, T}
+mutable struct SimpleHRepresentation{N, T} <: MixedHRep{N, T}
     # Ax <= b
     A::AbstractMatrix{T}
     b::AbstractVector{T}
@@ -26,8 +26,6 @@ end
 similar_type{N,T}(::Type{<:SimpleHRepresentation}, ::FullDim{N}, ::Type{T}) = SimpleHRepresentation{N,T}
 arraytype(p::Union{SimpleHRepresentation{N, T}, Type{SimpleHRepresentation{N, T}}}) where {N, T} = Vector{T}
 
-linset(rep::SimpleHRepresentation) = copy(rep.linset)
-
 function SimpleHRepresentation(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {S <: Real, T <: Real}
     U = promote_type(S, T)
     SimpleHRepresentation{size(A,2),U}(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
@@ -35,20 +33,6 @@ end
 SimpleHRepresentation(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {T <: Real} = SimpleHRepresentation{size(A,2),T}(A, b, linset)
 
 SimpleHRepresentation(h::HRep{N,T}) where {N,T} = SimpleHRepresentation{N,T}(h)
-
-#function SimpleHRepresentation{N, T}(it::HRepIterator{N, T}) where {N, T}
-#    A = Matrix{T}(length(it), N)
-#    b = Vector{T}(length(it))
-#    linset = IntSet()
-#    for (i, h) in enumerate(it)
-#        A[i,:] = h.a
-#        b[i] = h.β
-#        if islin(h)
-#            push!(linset, i)
-#        end
-#    end
-#    SimpleHRepresentation{N, T}(A, b, linset)
-#end
 
 function SimpleHRepresentation{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
     nhyperplane = length(hyperplanes)
@@ -69,26 +53,9 @@ end
 
 Base.copy(ine::SimpleHRepresentation{N,T}) where {N,T} = SimpleHRepresentation{N,T}(copy(ine.A), copy(ine.b), copy(ine.linset))
 
-Base.length(ine::SimpleHRepresentation) = size(ine.A, 1) # TODO remove
-
-nhyperplanes(ine::SimpleHRepresentation) = length(ine.linset)
-starthyperplane(ine::SimpleHRepresentation) = start(ine.linset)
-donehyperplane(ine::SimpleHRepresentation, state) = done(ine.linset, state)
-function nexthyperplane(ine::SimpleHRepresentation, state)
-    (i, nextstate) = next(ine.linset, state)
-    (HyperPlane(ine.A[i,:], ine.b[i]), nextstate)
-end
-
-function nextz(is::IntSet, i)
-    while i in is
-        i += 1
-    end
-    i
-end
-nhalfspaces(ine::SimpleHRepresentation) = size(ine.A, 1) - nhyperplanes(ine)
-starthalfspace(ine::SimpleHRepresentation) = nextz(ine.linset, 1)
-donehalfspace(ine::SimpleHRepresentation, state) = state > size(ine.A, 1)
-nexthalfspace(ine::SimpleHRepresentation, state) = (HalfSpace(ine.A[state,:], ine.b[state]), nextz(ine.linset, state+1))
+Base.isvalid(hrep::SimpleHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} = 0 < idx.value <= size(hrep.A, 1) && (idx.value in hrep.linset) == islin(idx)
+Base.done(idxs::HIndices{N, T, <:SimpleHRepresentation{N, T}}, idx::HIndex{N, T}) where {N, T} = idx.value > size(idxs.rep.A, 1)
+Base.get(hrep::SimpleHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(idx)(hrep.A[idx.value,:], hrep.b[idx.value])
 
 function filterintset(J::IntSet, I)
     K = IntSet()
@@ -103,7 +70,7 @@ Base.getindex(h::SimpleHRepresentation, I::AbstractArray) = SimpleHRepresentatio
 
 # V-Representation
 
-mutable struct SimpleVRepresentation{N,T} <: VRepresentation{N,T}
+mutable struct SimpleVRepresentation{N,T} <: MixedVRep{N,T}
     V::AbstractMatrix{T} # each row is a vertex
     R::AbstractMatrix{T} # each row is a ray
     Vlinset::IntSet
@@ -129,15 +96,6 @@ end
 similar_type{N,T}(::Type{<:SimpleVRepresentation}, ::FullDim{N}, ::Type{T}) = SimpleVRepresentation{N,T}
 arraytype(p::Union{SimpleVRepresentation{N, T}, Type{SimpleVRepresentation{N, T}}}) where {N, T} = Vector{T}
 
-function linset(rep::SimpleVRepresentation)
-    ls = copy(rep.Rlinset)
-    nr = nrays(rep)
-    for i in rep.Vlinset
-        push!(ls, nr + i)
-    end
-    ls
-end
-
 function SimpleVRepresentation(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {S <: Real, T <: Real}
     U = promote_type(S, T)
     SimpleVRepresentation{size(V,2),U}(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Vlinset, Rlinset)
@@ -145,31 +103,6 @@ end
 SimpleVRepresentation(V::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = SimpleVRepresentation{size(V, 2),T}(V, similar(V, 0, size(V, 2)), linset, IntSet())
 
 SimpleVRepresentation(v::VRep{N,T}) where {N,T} = SimpleVRepresentation{N,T}(v)
-
-#function SimpleVRepresentation{N, T}(it::VRepIterator{N, T}) where {N, T}
-#    A = Matrix{T}(length(it), N)
-#    Rlinset = IntSet()
-#    Vlinset = IntSet()
-#    points = Int[]
-#    rays = Int[]
-#    for (i, v) in enumerate(it)
-#        A[i,:] = coord(v)
-#        if isray(v)
-#            push!(rays, i)
-#            if islin(v)
-#                push!(Rlinset, length(rays))
-#            end
-#        else
-#            push!(points, i)
-#            if islin(v)
-#                push!(Vlinset, length(points))
-#            end
-#        end
-#    end
-#    V = A[points, :]
-#    R = A[rays, :]
-#    SimpleVRepresentation{N, T}(V, R, Vlinset, Rlinset)
-#end
 
 function SimpleVRepresentation{N, T}(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:MyPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}) where {N, T}
     nsympoint = length(sympoints)
@@ -197,31 +130,14 @@ end
 
 Base.copy(ext::SimpleVRepresentation{N,T}) where {N,T} = SimpleVRepresentation{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
 
-nsympoints(ext::SimpleVRepresentation) = length(ext.Vlinset)
-startsympoint(ext::SimpleVRepresentation) = start(ext.Vlinset)
-donesympoint(ext::SimpleVRepresentation, state) = done(ext.Vlinset, state)
-function nextsympoint(ext::SimpleVRepresentation, state)
-    (i, nextstate) = next(ext.Vlinset, state)
-    (SymPoint(ext.V[i,:]), nextstate)
-end
+_mat(hrep::SimpleVRepresentation, ::PIndex) = hrep.V
+_mat(hrep::SimpleVRepresentation, ::RIndex) = hrep.R
+_linset(hrep::SimpleVRepresentation, ::PIndex) = hrep.Vlinset
+_linset(hrep::SimpleVRepresentation, ::RIndex) = hrep.Rlinset
 
-npoints(ext::SimpleVRepresentation) = size(ext.V, 1)
-startpoint(ext::SimpleVRepresentation) = nextz(ext.Vlinset, 1)
-donepoint(ext::SimpleVRepresentation, state) = state > size(ext.V, 1)
-nextpoint(ext::SimpleVRepresentation, state) = (ext.V[state,:], nextz(ext.Vlinset, state+1))
-
-nlines(ext::SimpleVRepresentation) = length(ext.Rlinset)
-startline(ext::SimpleVRepresentation) = start(ext.Rlinset)
-doneline(ext::SimpleVRepresentation, state) = done(ext.Rlinset, state)
-function nextline(ext::SimpleVRepresentation, state)
-    (i, nextstate) = next(ext.Rlinset, state)
-    (Line(ext.R[i,:]), nextstate)
-end
-
-nrays(ext::SimpleVRepresentation) = size(ext.R, 1) - nlines(ext)
-startray(ext::SimpleVRepresentation) = nextz(ext.Rlinset, 1)
-doneray(ext::SimpleVRepresentation, state) = state > size(ext.R, 1)
-nextray(ext::SimpleVRepresentation, state) = (Ray(ext.R[state,:]), nextz(ext.Rlinset, state+1))
+Base.isvalid(vrep::SimpleVRepresentation{N, T}, idx::VIndex{N, T}) where {N, T} = 0 < idx.value <= size(_mat(vrep, idx), 1) && (idx.value in _linset(vrep, idx)) == islin(idx)
+Base.done(idxs::VIndices{N, T, <:SimpleVRepresentation{N, T}}, idx::VIndex{N, T}) where {N, T} = idx.value > size(_mat(idxs.rep, idx), 1)
+Base.get(vrep::SimpleVRepresentation{N, T}, idx::VIndex{N, T}) where {N, T} = valuetype(idx)(_mat(vrep, idx)[idx.value, :])
 
 function Base.getindex(h::SimpleVRepresentation, I::AbstractArray)
     Ir = filter(i -> i <= nrays(h), I)

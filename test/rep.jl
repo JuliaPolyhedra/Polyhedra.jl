@@ -35,7 +35,7 @@
         ine = copy(LiftedHRepresentation(A, ls))
         @test ine.A == A
         @test ine.A !== A
-        @test linset(ine) == ls
+        #@test linset(ine) == ls
         @test ine.linset !== ls
         @test Polyhedra.similar_type(LiftedHRepresentation{2, Int}, Float64) == LiftedHRepresentation{2, Float64}
         @test Polyhedra.similar_type(LiftedHRepresentation{2, Int}, FullDim{3}(), Float64) == LiftedHRepresentation{3, Float64}
@@ -56,7 +56,7 @@
         ext = copy(LiftedVRepresentation(V, Vlinset))
         @test ext.R == V
         @test ext.R !== V
-        @test linset(ext) == Vlinset
+        #@test linset(ext) == Vlinset
         @test ext.linset !== Vlinset
 
         @test Polyhedra.similar_type(LiftedVRepresentation{2, Int}, Float64) == LiftedVRepresentation{2, Float64}

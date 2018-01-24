@@ -132,25 +132,3 @@ function removevredundancy!(p::SimplePolyhedron)
     detectvlinearities!(p)
     p.vrep = removevredundancy(vrep(p), hrep(p))
 end
-
-for op in [:nhyperplanes, :starthyperplane, :nhalfspaces, :starthalfspace]
-    @eval begin
-        $op(p::Union{Interval, SimplePolyhedron}) = $op(hrep(p))
-    end
-end
-for op in [:donehyperplane, :nexthyperplane, :donehalfspace, :nexthalfspace]
-    @eval begin
-        $op(p::Union{Interval, SimplePolyhedron}, state) = $op(hrep(p), state)
-    end
-end
-
-for op in [:nsympoints, :startsympoint, :npoints, :startpoint, :nlines, :startline, :nrays, :startray]
-    @eval begin
-        $op(p::Union{Interval, SimplePolyhedron}) = $op(vrep(p))
-    end
-end
-for op in [:donesympoint, :nextsympoint, :donepoint, :nextpoint, :doneline, :nextline, :doneray, :nextray]
-    @eval begin
-        $op(p::Union{Interval, SimplePolyhedron}, state) = $op(vrep(p), state)
-    end
-end
