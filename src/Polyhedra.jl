@@ -44,6 +44,8 @@ similar_type(::Type{<:Vec}, ::FullDim{N}, ::Type{T}) where {N, T} = Vec{N,T}
 include("elements.jl")
 include("mycomp.jl")
 include("representation.jl")
+include("indices.jl")
+include("iterators.jl")
 
 function similar_type(::Type{ET}, ::Type{Tout}) where {Tout, ET<:Union{HRepElement, VRepElement, Rep}}
     similar_type(ET, FullDim(ET), Tout)
@@ -61,9 +63,10 @@ include("redundancy.jl")
 include("projection.jl")
 
 # Implementations
+include("vecrep.jl")
+include("mixedrep.jl")
 include("lphrep.jl")
 include("jump.jl")
-include("vecrep.jl")
 include("simplerep.jl")
 include("liftedrep.jl")
 include("doubledescription.jl")

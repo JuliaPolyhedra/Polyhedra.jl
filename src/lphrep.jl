@@ -1,10 +1,10 @@
 export LPHRepresentation
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
-mutable struct LPHRepresentation{N, T} <: HRepresentation{N, T}
+mutable struct LPHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
     # lb <= Ax <= ub
     # l <= x <= u
-    A::AbstractMatrix{T}
+    A::MT
     l::AbstractVector{T}
     u::AbstractVector{T}
     colleqs::IntSet
@@ -16,7 +16,7 @@ mutable struct LPHRepresentation{N, T} <: HRepresentation{N, T}
     rowgeqs::IntSet
     roweqs::IntSet
 
-    function LPHRepresentation{N, T}(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {N, T}
+    function LPHRepresentation{N, T, MT}(A::MT, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {N, T, MT<:AbstractMatrix{T}}
         if length(l) != length(u) || size(A, 2) != length(l)
             error("The length of l and u must be equal to the number of rows of A")
         end
@@ -60,20 +60,23 @@ mutable struct LPHRepresentation{N, T} <: HRepresentation{N, T}
                 end
             end
         end
-        new{N, T}(A, l, u, colleqs, colgeqs, coleqs, lb, ub, rowleqs, rowgeqs, roweqs)
+        new{N, T, typeof(A)}(A, l, u, colleqs, colgeqs, coleqs, lb, ub, rowleqs, rowgeqs, roweqs)
     end
 end
 
-LPHRepresentation(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {T <: Real} = LPHRepresentation{size(A,2),T}(A, l, u, lb, ub)
+LPHRepresentation(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {T <: Real} = LPHRepresentation{size(A,2), T, typeof(A)}(A, l, u, lb, ub)
 function LPHRepresentation(A::AbstractMatrix, l::AbstractVector, u::AbstractVector, lb::AbstractVector, ub::AbstractVector)
     T = promote_type(eltype(A), eltype(l), eltype(u), eltype(lb), eltype(ub))
-    LPHRepresentation{size(A,2),T}(AbstractMatrix{T}(A), AbstractVector{T}(l), AbstractVector{T}(u), AbstractVector{T}(lb), AbstractVector{T}(ub))
+    AT = AbstractMatrix{T}(A)
+    LPHRepresentation{size(A,2), T, typeof(AT)}(AT, AbstractVector{T}(l), AbstractVector{T}(u), AbstractVector{T}(lb), AbstractVector{T}(ub))
 end
 
-arraytype(::Union{LPHRepresentation{N, T}, Type{LPHRepresentation{N, T}}}) where {N, T} = Vector{T}
+arraytype(::Union{LPHRepresentation{N, T, MT}, Type{LPHRepresentation{N, T, MT}}}) where {N, T, MT} = MT <: AbstractSparseArray ? SparseVector{T, Int} : Vector{T}
 
 LPHRepresentation(rep::LPHRepresentation) = rep
-LPHRepresentation(rep::HRep{N,T}) where {N,T} = LPHRepresentation{N,T}(rep)
+_mattype(::Type{<:AbstractVector{T}}) where T = Matrix{T}
+_mattype(::Type{<:AbstractSparseVector{T}}) where T = SparseMatrixCSC{T, Int}
+LPHRepresentation(rep::HRep{N, T}) where {N, T} = LPHRepresentation{N, T, _mattype(arraytype(rep))}(rep)
 
 #function LPHRepresentation{N, T}(it::HRepIterator{N, T}) where {N,T}
 #    A = Matrix{T}(length(it), N)
@@ -93,10 +96,10 @@ LPHRepresentation(rep::HRep{N,T}) where {N,T} = LPHRepresentation{N,T}(rep)
 #    end
 #    LPHRepresentation{N, T}(A, l, u, lb, ub)
 #end
-function LPHRepresentation{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N,T}
+function LPHRepresentation{N, T, MT}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
-    A = Matrix{T}(nhrep, N)
+    A = MT <: AbstractSparseArray ? spzeros(eltype(MT), nhrep, N) : MT(nhrep, N)
     lb = Vector{T}(nhrep)
     ub = Vector{T}(nhrep)
     MathProgBase.HighLevelInterface.warn_no_inf(T)
@@ -112,75 +115,88 @@ function LPHRepresentation{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfsp
         lb[nhyperplane+i] = typemin(T)
         ub[nhyperplane+i] = h.β
     end
-    LPHRepresentation{N, T}(A, l, u, lb, ub)
+    LPHRepresentation{N, T, MT}(A, l, u, lb, ub)
 end
 
-Base.copy(lp::LPHRepresentation{N,T}) where {N,T} = LPHRepresentation{N,T}(copy(A), copy(l), copy(u), copy(colleqs), copy(colgeqs), copy(coleqs), copy(lb), copy(ub), copy(rowleqs), copy(rowgeqs), copy(roweqs))
+Base.copy(lp::LPHRepresentation{N, T, MT}) where {N, T, MT} = LPHRepresentation{N, T, MT}(copy(lp.A), copy(lp.l), copy(lp.u), copy(lp.colleqs), copy(lp.colgeqs), copy(lp.coleqs), copy(lp.lb), copy(lp.ub), copy(lp.rowleqs), copy(lp.rowgeqs), copy(lp.roweqs))
 
-function checknext(lp::LPHRepresentation, state, allowed)
-    colrow, i, lgeq = state
-    lgeq += 1
-    ok = false
-    while colrow <= 2 && !ok
-        if colrow == 1
-            lgeqs = (lp.colleqs, lp.colgeqs, lp.coleqs)
-        else
-            lgeqs = (lp.rowleqs, lp.rowgeqs, lp.roweqs)
-        end
-        while i <= (colrow == 1 ? size(lp.A, 2) : size(lp.A, 1)) && !ok
-            while lgeq <= 3 && !ok
-                if allowed(lgeq) && i in lgeqs[lgeq]
-                    ok = true
-                else
-                    lgeq += 1
-                end
-            end
-            if !ok
-                i += 1
-                lgeq = 1
-            end
-        end
-        if !ok
-            colrow += 1
-            i = 1
-            lgeq = 1
-        end
+Base.length(idxs::Indices{N, T, <:HyperPlane{N, T}, LPHRepresentation{N, T}}) where {N, T} = length(idxs.rep.coleqs) + length(idxs.rep.roweqs)
+Base.length(idxs::Indices{N, T, <:HalfSpace{N, T}, LPHRepresentation{N, T}}) where {N, T} = length(idxs.rep.colleqs) + length(idxs.rep.colgeqs) + length(idxs.rep.rowleqs) + length(idxs.rep.rowgeqs)
+
+# m rows (constraints) and n columns (variables)
+# state : colrow, i, lgeq
+# * colrow :
+#   - 1 : columns (variables)
+#   - 2 : rows (constraints)
+#   - 3 : done
+# * i : index of row or column
+# * lgeq :
+#   - 1 : ⟨a, x⟩ ≤ β
+#   - 2 : ⟨a, x⟩ ≥ β
+#   - 3 : ⟨a, x⟩ = β
+
+# HyperPlane index j :
+#   1 <= j <= n   : column j
+# n+1 <= j <= n+m : row    j-n
+function _index2state(lp, idx::HyperPlaneIndex)
+    m = size(lp.A, 1)
+    n = size(lp.A, 2)
+    j = idx.value
+    @assert j >= 1
+    if j <= n
+        1, j, 3
+    elseif j <= n+m
+        2, j-n, 3
+    else
+        3, 0, 0
     end
-    (colrow, i, lgeq)
 end
 
-nhyperplanes(lp::LPHRepresentation) = length(lp.coleqs) + length(lp.roweqs)
-nhalfspaces(lp::LPHRepresentation) = length(lp.colleqs) + length(lp.colgeqs) + length(lp.rowleqs) + length(lp.rowgeqs)
+# HalfSpace index k :
+# first bit :
+# - 0 : lgeq = 1
+# - 1 : lgeq = 2
+# remaining bits : j
+#   1 <= j+1 <= n   : column j
+# n+1 <= j+1 <= n+m : row    j-n
+function _index2state(lp, idx::HalfSpaceIndex)
+    m = size(lp.A, 1)
+    n = size(lp.A, 2)
+    k = idx.value-1
+    lgeq = (k & 1) + 1
+    j = (k >> 1) + 1 # drop first bit
+    @assert j >= 1
+    if j <= n
+        1, j, lgeq
+    elseif j <= n+m
+        2, j-n, lgeq
+    else
+        3, 0, 0
+    end
+end
 
-function gethrepaux(lp::LPHRepresentation{N, T}, state) where {N, T}
-    colrow, i, lgeq = state
+function Base.isvalid(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T}
+    colrow, i, lgeq = _index2state(lp, idx)
     if colrow == 1
-        a = spzeros(T, N)
+        lgeqs = (lp.colleqs, lp.colgeqs, lp.coleqs)
+    else
+        lgeqs = (lp.rowleqs, lp.rowgeqs, lp.roweqs)
+    end
+    1 <= colrow <= 2 && i in lgeqs[lgeq]
+end
+Base.done(idxs::HIndices{N, T, <:LPHRepresentation{N, T}}, idx::HIndex{N, T}) where {N, T} = _index2state(idxs.rep, idx)[1] == 3
+
+function getaβ(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T}
+    colrow, i, lgeq = _index2state(lp, idx)
+    if colrow == 1
+        a = arraytype(lp) <: AbstractSparseArray ? spzeros(T, N) : zeros(T, N)
         a[i] = lgeq == 2 ? -one(T) : one(T)
         β = lgeq == 2 ? -lp.l[i] : lp.u[i]
-    elseif colrow == 2
+    else
+        @assert colrow == 2
         a = lgeq == 2 ? -lp.A[i,:] : lp.A[i,:]
         β = lgeq == 2 ? -lp.lb[i] : lp.ub[i]
-    else
-        error("The iterator is done")
     end
-    lgeq == 3 ? HyperPlane(a, β) : HalfSpace(a, β)
+    a, β
 end
-
-starthrep(lp::LPHRepresentation) = checknext(lp, (1, 0, 3), (i) -> true)
-donehrep(lp::LPHRepresentation, state) = state[1] > 2
-function nexthrep(lp::LPHRepresentation, state)
-    (gethrepaux(lp, state), checknext(lp, state, (i) -> true))
-end
-
-starthyperplane(lp::LPHRepresentation) = checknext(lp, (1, 0, 3), (i) -> i == 3)
-donehyperplane(lp::LPHRepresentation, state) = state[1] > 2
-function nexthyperplane(lp::LPHRepresentation, state)
-    (gethrepaux(lp, state), checknext(lp, state, (i) -> i == 3))
-end
-
-starthalfspace(lp::LPHRepresentation) = checknext(lp, (1, 0, 3), (i) -> i <= 2)
-donehalfspace(lp::LPHRepresentation, state) = state[1] > 2
-function nexthalfspace(lp::LPHRepresentation, state)
-    (gethrepaux(lp, state), checknext(lp, state, (i) -> i <= 2))
-end
+Base.get(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(idx)(getaβ(lp, idx)...)
