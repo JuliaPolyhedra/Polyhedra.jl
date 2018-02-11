@@ -7,6 +7,7 @@ halfspace(h::HyperPlane) = HalfSpace(h.a, h.β)
 halfspace(h::HalfSpace) = h
 
 line(r::Ray) = Line(coord(r))
+linetype(::Type{Ray{N, T, AT}}) where {N, T, AT} = Line{N, T, AT}
 
 ###############
 # TRANSLATION #
@@ -17,13 +18,13 @@ export translate
 function htranslate(p::HRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}}) where {N, S, T}
     f = (i, h) -> translate(h, v)
     Tout = Base.promote_op(+, T, S)
-    lazychangeeltype(typeof(p), Tout)(HRepIterator{N, Tout, N, T}([p], f))
+    similar_type(typeof(p), Tout)(hmap(f, FullDim{N}(), Tout, p)...)
 end
 
 function vtranslate{N, S, T}(p::VRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}})
     f = (i, u) -> translate(u, v)
     Tout = Base.promote_op(+, T, S)
-    lazychangeeltype(typeof(p), Tout)(VRepIterator{N, Tout, N, T}([p], f))
+    similar_type(typeof(p), Tout)(vmap(f, FullDim{N}(), Tout, p)...)
 end
 
 translate(p::HRep, v) = htranslate(p, v)
@@ -39,13 +40,16 @@ end
 ######
 # IN #
 ######
-function _vinh(v::VRepElement{N}, hr::HRep{N}, infun) where N
-    for h in hreps(hr)
+function _vinh(v::VRepElement{N}, it::ElemIt{<:HRepElement{N}}, infun) where N
+    for h in it
         if !infun(v, h)
             return false
         end
     end
     return true
+end
+function _vinh(v::VRepElement{N}, hr::HRep{N}, infun) where N
+    all(map(it -> _vinh(v, it, infun), hreps(hr)))
 end
 
 """
@@ -87,13 +91,11 @@ Returns whether `p` is in the relative interior of `h`, e.g. in the relative int
 """
 inrelativeinterior(v::VRepElement{N}, hr::HRep{N}) where {N} = _vinh(v, hr, inrelativeinterior)
 
+function _hinv(h::HRepElement{N}, vr::ElemIt{<:VRepElement{N}}) where N
+    all(in.(vr, h))
+end
 function _hinv(h::HRepElement{N}, vr::VRep{N}) where N
-    for v in vreps(vr)
-        if !(v in h)
-            return false
-        end
-    end
-    return true
+    all(_hinv.(h, vreps(vr)))
 end
 function _hinh(h::HalfSpace{N}, hr::HRep{N}, solver) where N
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
@@ -136,13 +138,8 @@ end
 ################
 # INTERSECTION #
 ################
-function _intres(v::T, h::HyperPlane, pins, pinp, rins, rinp) where T
-    T(pinp, rinp)
-end
-
-function _intres(v::T, h::HalfSpace, pins, pinp, rins, rinp) where T
-    T([pins; pinp], [rins; rinp])
-end
+_intres(h::HyperPlane, ins, inp) = inp
+_intres(h::HalfSpace, ins, inp) = [ins; inp]
 
 function _pushinout!(ins, out, l::Line, h::HalfSpace)
     r1 = Ray(l.a)
@@ -174,29 +171,39 @@ function _pushinout!(ins, out, pr::Union{AbstractPoint, AbstractRay}, h::HalfSpa
     end
 end
 
+"""
+    intersect(v::VRep{N, T}, h::HRepElement)
+
+Compute the intersection of `v` with an halfspace or hyperplane `h`.
+The method used by default is to keep the V-representation element of `v`
+that are in `h` and add new ones generated as the intersection between
+the hyperplane defining `h` and the segment between two adjacent
+V-representation elements of `v` that are in either sides of the hyperplane.
+See Lemma 3 of [1] for more detail on the method.
+
+[1] Fukuda, K. and Prodon, A.
+Double description method revisited
+*Combinatorics and computer science*, *Springer*, **1996**, 91-111
+"""
 function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
-    pins = AbstractPoint{N, T}[] # Inside
-    pinp = AbstractPoint{N, T}[] # In plane
-    pout = AbstractPoint{N, T}[] # Outside
+    PointT = pointtype(v)
+    pins = PointT[] # Inside
+    pinp = PointT[] # In plane
+    pout = PointT[] # Outside
     hp = hyperplane(h)
     hs = halfspace(h)
-    for p in points(v)
+    for p in allpoints(v) # we want sympoints to be treated as 2 points
         if p in hp
             push!(pinp, p)
         else
             _pushinout!(pins, pout, p, hs)
         end
     end
-    if !haspoints(v)
-        # The origin
-        if !myeqzero(h.β)
-            _pushinout!(pins, pout, zeros(T, N), hs)
-        end
-    end
-    rins = AbstractRay{N, T}[]
-    rinp = AbstractRay{N, T}[]
-    rout = AbstractRay{N, T}[]
-    for r in rays(v)
+    RayT = raytype(v)
+    rins = RayT[]
+    rinp = RayT[]
+    rout = RayT[]
+    for r in allrays(v) # we want lines to be treated as 2 rays
         if r in hp
             push!(rinp, r)
         else
@@ -247,5 +254,7 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
             end
         end
     end
-    _intres(v, h, pins, pinp, rins, rinp)
+    psout = _intres(h, pins, pinp)
+    rsout = _intres(h, rins, rinp)
+    typeof(v)(SymPoint{N, T, eltype(psout)}[], psout, linetype(eltype(rsout))[], rsout)
 end

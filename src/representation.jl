@@ -1,9 +1,6 @@
-import Base.eltype
-
 export Representation, HRepresentation, VRepresentation, fulldim
-export AbstractRepIterator, AbstractHRepIterator, HRepIterator, EqIterator, IneqIterator, AbstractVRepIterator, VRepIterator, LineIterator, RayIterator, PointIterator
+export RepIterator
 export Rep
-export changeeltype, changefulldim, changeboth
 
 abstract type Representation{N, T <: Real} end
 abstract type HRepresentation{N,T} <: Representation{N,T} end
@@ -17,25 +14,24 @@ const VRep{N,T} = Union{VRepresentation{N,T}, Polyhedron{N,T}}
 
 Base.copy(rep::Rep)            = error("copy not implemented for $(typeof(rep))")
 
-export decomposedhfast, decomposedvfast, decomposedfast
-
-decomposedhfast(p::Polyhedron)        = error("decomposedhfast not implemented for $(typeof(p))")
-decomposedvfast(p::Polyhedron)        = error("decomposedvfast not implemented for $(typeof(p))")
-decomposedfast(rep::HRepresentation)  = error("decomposedfast not implemented for $(typeof(rep))")
-decomposedfast(rep::VRepresentation)  = error("decomposedfast not implemented for $(typeof(rep))")
-decomposedhfast(rep::HRepresentation) = decomposedfast(rep)
-decomposedvfast(rep::VRepresentation) = decomposedfast(rep)
-
-Base.eltype(rep::Rep{N,T}) where {N,T} = T
+MultivariatePolynomials.coefficienttype(rep::Union{Rep{N,T}, Type{<:Rep{N,T}}}) where {N,T} = T
 """
     fulldim(rep::Rep)
 
 Returns the dimension of the space in which the representation is defined.
 That is, a straight line in a 3D space has `fulldim` 3.
 """
-fulldim(rep::Rep{N}) where {N} = N
-Base.eltype{RepT<:Rep}(::Type{RepT}) = RepT.parameters[2]
-fulldim{RepT<:Rep}(::Type{RepT}) = RepT.parameters[1]
+fulldim(p) = fulldim(FullDim(p))
+FullDim(rep::Union{Rep{N}, Type{<:Rep{N}}}) where N = FullDim{N}()
+
+# Check that it is either empty or it has a point
+vconsistencyerror() = error("Non-empty V-representation must contain at least one point. If it is a polyhedral cone, the origin should be added.")
+function checkvconsistency(vrep::VRep)
+    if !hasallpoints(vrep) && hasallrays(vrep)
+        vconsistencyerror()
+    end
+end
+checkvconsistency(p::Polyhedron) = vrepiscomputed(p) && checkvconsistency(p)
 
 # type EmptyIterator{N,T}
 # end
@@ -56,245 +52,219 @@ function checknext(it, i, state, donep, startp)
     i > length(it.ps) ? i : (i, state)
 end
 
-# convention: ax <= β
-abstract type AbstractRepIterator{N, T} end
-abstract type AbstractHRepIterator{N, T} <: AbstractRepIterator{N, T} end
-abstract type AbstractVRepIterator{N, T} <: AbstractRepIterator{N, T} end
+#abstract type AbstractRepIterator{N, T} end
+#abstract type AbstractHRepIterator{N, T} <: AbstractRepIterator{N, T} end
+#abstract type AbstractVRepIterator{N, T} <: AbstractRepIterator{N, T} end
 
-for (rep, HorVRep, elt, low) in [(true, :VRep, :VRepElement, "vrep"), (false, :VRep, :AbstractPoint, "point"), (false, :VRep, :Line, "line"), (false, :VRep, :AbstractRay, "ray"), (true, :HRep, :HRepElement, "hrep"), (false, :HRep, :HalfSpace, "ineq"), (false, :HRep, :HyperPlane, "eq")]
-    if rep
-        up = uppercase(low[1:2]) * low[3:end]
-    else
-        up = uppercase(low[1:1]) * low[2:end]
+# Subtyping AbstractVector{ElemT} make Base think that RepIterator implements indexing e.g. for copy!
+struct RepIterator{N, T, ElemT, PT}
+    ps::PT
+    f::Nullable{Function}
+    function RepIterator{N, T, ElemT}(ps::PT, f=nothing) where {N, T, ElemT, PT<:Tuple}
+        new{N, T, ElemT, PT}(ps, f)
     end
-    typename = Symbol(up * "Iterator")
-    donep = Symbol("done" * low)
-    startp = Symbol("start" * low)
-    nextp = Symbol("next" * low)
-    shortcuts = low * "s"
-    shortcut = Symbol(shortcuts)
-    lenp = Symbol("n" * shortcuts)
-    isemp = Symbol("has" * shortcuts)
-    abstractit = Symbol("Abstract" * string(HorVRep) * "Iterator")
+end
+
+function Base.first(it::RepIterator)
+    next(it, start(it))[1]
+end
+FullDim(it::RepIterator{N}) where N = FullDim{N}()
+Base.eltype(it::RepIterator{N, T, ElemT}) where {N, T, ElemT} = ElemT
+function typed_map(f, d::FullDim{N}, ::Type{T}, it::RepIterator{Nin, Tin, ElemT}) where {N, T, Nin, Tin, ElemT}
+    @assert isnull(it.f)
+    RepIterator{N, T, similar_type(ElemT, d, T)}(it.ps, f)
+end
+
+function RepIterator{N, T}(it::RepIterator) where {N, T}
+    typed_map((i,x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, it)
+end
+
+# FIXME the variables need to be defined outside of the local scope of for
+#       for Julia to know them inside the """ ... """ of the docstrings
+HorV = HorVRep = horvrep = singular = singularlin = plural = plurallin = lenp = isnotemptyp = repexem = listexem = :_
+
+for (isVrep, elt, singular) in [(true, :SymPoint, :sympoint), (true, :MyPoint, :point),
+                                (true, :Line, :line), (true, :Ray, :ray),
+                                (false, :HyperPlane, :hyperplane), (false, :HalfSpace, :halfspace)]
+    if isVrep
+        HorV = :V
+        HorVRep = :VRep
+        horvrep = :vrep
+    else
+        HorV = :H
+        HorVRep = :HRep
+        horvrep = :hrep
+    end
+    typename = :(RepIterator{N, T, <:$elt})
+    singularstr = string(singular)
+    elemtype = Symbol(singularstr * "type")
+    donep = Symbol("done" * singularstr)
+    startp = Symbol("start" * singularstr)
+    nextp = Symbol("next" * singularstr)
+    pluralstr = singularstr * "s"
+    plural = Symbol(pluralstr)
+    lenp = Symbol("n" * pluralstr)
+    isnotemptyp = Symbol("has" * pluralstr)
+    mapit = Symbol("map" * pluralstr)
 
     @eval begin
-        export $shortcut, $lenp, $startp, $donep, $nextp, $isemp
-        if !$rep
-            $lenp(p::$HorVRep)   = error("$($lenp) not implemented for $(typeof(p))")
-            $startp(p::$HorVRep) = error("$($startp) not implemented for $(typeof(p))")
-            $donep(p::$HorVRep)  = error("$($donep) not implemented for $(typeof(p))")
-            $nextp(p::$HorVRep)  = error("$($nextp) not implemented for $(typeof(p))")
+        export $plural, $lenp, $isnotemptyp, $startp, $donep, $nextp
+
+        """
+            $plural($horvrep::$HorVRep)
+
+        Returns an iterator over the $plural of the $HorV-representation `$horvrep`.
+        """
+        function $plural end
+
+        """
+            $lenp($horvrep::$HorVRep)
+
+        Returns the number of $plural of the $HorV-representation `$horvrep`.
+        """
+        function $lenp end
+
+        """
+            $isnotemptyp($horvrep::$HorVRep)
+
+        Returns whether the $HorV-representation `$horvrep` has any $singular.
+        """
+        $isnotemptyp($horvrep::$HorVRep) = !iszero($lenp($horvrep))
+
+        function $startp end
+        function $donep end
+        function $nextp end
+
+        if $singularstr == "point"
+            $elemtype(p::$HorVRep) = arraytype(p)
+        else
+            $elemtype(p::$HorVRep{N, T}) where {N, T} = $elt{N, T, arraytype(p)}
         end
 
-        struct $typename{Nout, Tout, Nin, Tin} <: $abstractit{Nout, Tout}
-            ps::Vector
-            f::Nullable{Function}
-            function $typename{Nout, Tout, Nin, Tin}(ps::Vector, f=nothing) where {Nout, Tout, Nin, Tin}
-                new{Nout, Tout, Nin, Tin}(ps, f)
-            end
-        end
-        function $typename(ps::Vector{RepT}, f=nothing) where {RepT<:$HorVRep}
-            $typename{fulldim(RepT),eltype(RepT),fulldim(RepT),eltype(RepT)}(ps, f)
-        end
-        function $shortcut{N,T}(p::$HorVRep{N,T}, f=nothing)
-            $typename([p], f)
+        function $plural(p::$HorVRep{N, T}...) where {N, T}
+            ElemT = promote_type($elemtype.(p)...)
+            RepIterator{N, T, ElemT}(p)
         end
 
-        Base.length(it::$typename) = sum([$lenp(p) for p in it.ps])
-        Base.isempty(it::$typename) = !reduce(|, false, $isemp.(it.ps))
-        fulldim{N}(it::$typename{N}) = N
-        Base.eltype{N, T}(it::$typename{N, T}) = $elt{N, T}
+        function $mapit(f::Function, d::FullDim{N}, ::Type{T}, p::$HorVRep...) where {N, T}
+            ElemT = promote_type(similar_type.($elemtype.(p), d, T)...)
+            RepIterator{N, T, ElemT}(p, f)
+        end
 
-        Base.start(it::$typename) = checknext(it, 0, nothing, $donep, $startp)
-        Base.done(it::$typename, state) = state[1] > length(it.ps)
-        function Base.next(it::$typename, state)
+        Base.length(it::$typename) where {N, T} = sum($lenp, it.ps)
+        Base.isempty(it::$typename) where {N, T} = !any($isnotemptyp.(it.ps))
+
+        Base.start(it::$typename) where {N, T} = checknext(it, 0, nothing, $donep, $startp)
+        Base.done(it::$typename, state) where {N, T} = state[1] > length(it.ps)
+        function Base.next(it::$typename, state) where {N, T}
             item, newsubstate = $nextp(it.ps[state[1]], state[2])
             newstate = checknext(it, state[1], newsubstate, $donep, $startp)
             (isnull(it.f) ? item : get(it.f)(state[1], item), newstate)
         end
-
     end
 end
 
-# Default implementation for hrep and vrep
-function checknext(rep::Rep, i, state, donep, startp)
-    while i <= 2 && (i == 0 || donep[i](rep, state))
+# Combines an element type with its linear version.
+# e.g. combines points with the sympoints by splitting sympoints in two points.
+struct AllRepIterator{N, T, ElemT, LinElemT, PT}
+    itlin::RepIterator{N, T, LinElemT, PT}
+    it::RepIterator{N, T, ElemT, PT}
+end
+
+Base.eltype(it::AllRepIterator{N, T, ElemT}) where {N, T, ElemT} = ElemT
+Base.length(it::AllRepIterator) = 2length(it.itlin) + length(it.it)
+Base.isempty(it::AllRepIterator) = isempty(it.itlin) && isempty(it.it)
+
+function checknext(it::AllRepIterator, i, state)
+    while i <= 3 && ((i <= 2 && done(it.itlin, state)) || (i == 3 && done(it.it, state)))
         i += 1
         if i <= 2
-            state = startp[i](rep)
-        end
+            state = start(it.itlin)
+        elseif i == 3
+            state = start(it.it)
+        end # Otherwise we leave state as it is to be type stable
     end
-    i > 2 ? i : (i, state)
+    i, state
 end
 
-#HRep
-Base.length(hrep::HRepresentation)  = nhreps(hrep)
-Base.isempty(hrep::HRepresentation) = hashreps(hrep)
+splitlin(h::HyperPlane, i) = (i == 1 ? HalfSpace(h.a, h.β) : HalfSpace(-h.a, -h.β))
+splitlin(s::SymPoint, i) = (i == 1 ? coord(s) : -coord(s))
+splitlin(l::Line, i) = (i == 1 ? Ray(coord(l)) : Ray(-coord(l)))
 
-"""
-    hreps(hr::HRep)
-
-Returns an iterator over the elements of the H-representation.
-
-### Note
-
-This is type unstable as the iterator returns both halfspaces and hyperplanes.
-It is therefore more efficient to call [`eqs`](@ref) and [`ineqs`](@ref) separately.
-"""
-function hreps end
-
-"""
-    eqs(hr::HRep)
-
-Returns an iterator over the hyperplanes of the H-representation.
-"""
-function eqs end
-
-"""
-    ineqs(hr::HRep)
-
-Returns an iterator over the halfspaces of the H-representation.
-"""
-function ineqs end
-
-"""
-    nhreps(hr::HRep)
-
-Returns the number of halfspaces and hyperplanes of the H-representation.
-
-### Note
-
-Note that it does not do redundancy removal so it is not the minimal number of halfspace and hyperplanes needed to represent the polyhedron, it is simply the number that are currently used.
-"""
-nhreps(hrep::HRep) = neqs(hrep) + nineqs(hrep)
-
-"""
-    neqs(hr::HRep)
-
-Returns the number of hyperplanes of the H-representation.
-"""
-function neqs end
-
-"""
-    nineqs(hr::HRep)
-
-Returns the number of halfspaces of the H-representation.
-"""
-function nineqs end
-
-"""
-    haseqs(hr::HRep)
-
-Returns whether the H-representation contain any hyperplane.
-"""
-haseqs(hrep::HRep)   = neqs(hrep) > 0
-"""
-    hasineqs(hr::HRep)
-
-Returns whether the H-representation contain any halfspace.
-"""
-hasineqs(hrep::HRep) = nineqs(hrep) > 0
-"""
-    hashreps(hr::HRep)
-
-Returns whether the H-representation contain any halfspace or hyperplane.
-"""
-hashreps(hrep::HRep) = nhreps(hrep) > 0
-
-starthrep(hrep::HRep) = checknext(hrep, 0, nothing, [doneeq, doneineq], [starteq, startineq])
-donehrep(hrep::HRep, state) = state[1] > 2
-function nexthrep(hrep::HRep, state)
-    nextp = [nexteq, nextineq]
-    item, newsubstate = nextp[state[1]](hrep, state[2])
-    newstate = checknext(hrep, state[1], newsubstate, [doneeq, doneineq], [starteq, startineq])
-    (item, newstate)
+Base.start(it::AllRepIterator) = checknext(it, 1, start(it.itlin))
+Base.done(::AllRepIterator, state) = state[1] > 3
+function Base.next(it::AllRepIterator, istate)
+    i, state = istate
+    if i <= 2
+        @assert i >= 1
+        itemlin, newstate = next(it.itlin, state)
+        item = splitlin(itemlin, i)
+    else
+        @assert i == 3
+        item, newstate = next(it.it, state)
+    end
+    newistate = checknext(it, i, newstate)
+    (item, newistate)
 end
 
-#VRep
-"""
-    vreps(vr::VRep)
+for (isVrep, singularlin, singular, repexem, listexem) in [(true, :sympoint, :point, "convexhull(SymPoint([1, 0]), [0, 1])", "[1, 0], [-1, 0], [0, 1]"),
+                                                           (true, :line, :ray, "Line([1, 0]) + Ray([0, 1])", "Ray([1, 0]), Ray([-1, 0]), Ray([0, 1])"),
+                                                           (false, :hyperplane, :halfspace, "HyperPlane([1, 0], 1) ∩ HalfSpace([0, 1], 1)", "HalfSpace([1, 0]), HalfSpace([-1, 0]), HalfSpace([0, 1])")]
+    if isVrep
+        HorV = :V
+        HorVRep = :VRep
+        horvrep = :vrep
+    else
+        HorV = :H
+        HorVRep = :HRep
+        horvrep = :hrep
+    end
+    pluralstrlin = string(singularlin) * "s"
+    plurallin = Symbol(pluralstrlin)
+    lenplin = Symbol("n" * pluralstrlin)
+    isnotemptyplin = Symbol("has" * pluralstrlin)
+    pluralstr = string(singular) * "s"
+    plural = Symbol(pluralstr)
+    lenp = Symbol("n" * pluralstr)
+    isnotemptyp = Symbol("has" * pluralstr)
+    allpluralstr = "all" * pluralstr
+    allplural = Symbol(allpluralstr)
+    alllenp = Symbol("n" * allpluralstr)
+    allisnotemptyp = Symbol("has" * allpluralstr)
+    @eval begin
+        export $allplural, $alllenp, $allisnotemptyp
 
-Returns an iterator over the elements of the V-representation.
+        """
+            all$plural($horvrep::$HorVRep)
 
-### Note
+        Returns an iterator over the $plural and $plurallin in the $HorV-representation `$horvrep` splitting $plurallin in two $plural.
 
-This is type unstable as the iterator returns both points and rays.
-It is therefore more efficient to call [`points`](@ref) and [`rays`](@ref) separately.
-"""
-function vreps end
+        ### Examples
 
-"""
-    points(vr::VRep)
+        ```julia
+        $horvrep = $repexem
+        collect(all$plural($horvrep)) # Returns [$listexem]
+        ```
+        """
+        $allplural(p::$HorVRep...) = AllRepIterator($plurallin(p...), $plural(p...))
 
-Returns an iterator over the points of the V-representation.
-"""
-function points end
+        """
+            nall$plural($horvrep::$HorVRep)
 
-"""
-    rays(vr::VRep)
+        Returns the number of $plural plus twice the number of $plurallin in the $HorV-representation `$horvrep`, i.e. `length(all$plural($horvrep))`
+        """
+        $alllenp($horvrep::$HorVRep) = 2 * $lenplin($horvrep) + $lenp($horvrep)
 
-Returns an iterator over the rays of the V-representation.
-"""
-function rays end
+        """
+            hasall$plural($horvrep::$HorVRep)
 
-
-Base.length(vrep::VRepresentation)  = nvreps(vrep)
-Base.isempty(vrep::VRepresentation) = hasvreps(vrep)
-
-"""
-    npoints(vr::VRep)
-
-Returns the number of points of the V-representation.
-"""
-function npoints end
-
-"""
-    nrays(hr::HRep)
-
-Returns the number of rays of the V-representation.
-"""
-function nrays end
-
-
-"""
-    nvreps(vr::VRep)
-
-Returns the number of points and rays of the V-representation.
-
-### Note
-
-Note that it does not do redundancy removal so it is not the minimal number of points and rays needed to represent the polyhedron, it is simply the number that are currently used.
-"""
-nvreps(vrep::VRep) = nrays(vrep) + npoints(vrep)
-#nlines(vrep::VRep) = sum(map(islin, rays(vrep))) # TODO: call detectvlinearity! before
-
-"""
-    hasrays(vr::VRep)
-
-Returns whether the V-representation contain any ray.
-"""
-hasrays(vrep::VRep)   = nrays(vrep) > 0
-"""
-    haspoints(vr::VRep)
-
-Returns whether the V-representation contain any point.
-"""
-haspoints(vrep::VRep) = npoints(vrep) > 0
-"""
-    hasvreps(vr::VRep)
-
-Returns whether the V-representation contain any ray or point.
-"""
-hasvreps(vrep::VRep)  = nvreps(vrep) > 0
-
-startvrep(vrep::VRep) = checknext(vrep, 0, nothing, [doneray, donepoint], [startray, startpoint])
-donevrep(vrep::VRep, state) = state[1] > 2
-function nextvrep(vrep::VRep, state)
-    nextp = [nextray, nextpoint]
-    item, newsubstate = nextp[state[1]](vrep, state[2])
-    newstate = checknext(vrep, state[1], newsubstate, [doneray, donepoint], [startray, startpoint])
-    (item, newstate)
+        Returns whether the $HorV-representation `$horvrep` contains any $singular or $singularlin.
+        """
+        $allisnotemptyp($horvrep::$HorVRep) = $isnotemptyplin($horvrep) || $isnotemptyp($horvrep)
+    end
 end
+
+const ElemIt{ElemT} = Union{AllRepIterator{<:Any, <:Any, ElemT}, RepIterator{<:Any, <:Any, ElemT}, AbstractVector{ElemT}}
 
 # Linearity Set
 export linset
@@ -317,119 +287,128 @@ function linset(rep::VRepresentation)
     s
 end
 
-# Modify type
-changeeltype{RepT<:Rep,T}(::Type{RepT}, ::Type{T})  = error("changeeltype not implemented for $(RepT)")
-changefulldim{RepT<:Rep}(::Type{RepT}, N)           = error("changefulldim not implemented for $(RepT)")
-changeboth{RepT<:Rep,T}(::Type{RepT}, N, ::Type{T}) = error("changeboth not implemented for $(RepT)")
-lazychangeeltype{RepT<:Rep,T}(::Type{RepT}, ::Type{T}) = eltype(RepT) == T ? RepT : changeleltype(RepT, T)
-lazychangefulldim{RepT<:Rep}(::Type{RepT}, N)          = fulldim(RepT) == N ? RepT : changefulldim(RepT, N)
-# TODO in Julia v0.6, we can do {N1, T, RepT<:Rep{N2, T}} and {N, T1, RepT<:Rep{N, T2}} and remove lazychangeboth
-function lazychangeboth{RepT<:Rep,T}(::Type{RepT}, N, ::Type{T})
-    if eltype(RepT) == T
-        lazychangefulldim(RepT, N)
-    elseif fulldim(RepT) == N
-        changeeltype(RepT, T)
-    else
-        changeboth(RepT, N, T)
-    end
+function hreps(p::HRep{N, T}...) where {N, T}
+    hyperplanes(p...), halfspaces(p...)
 end
 
-# Conversion
-changeeltype{S,N}(::Type{S}, x::HalfSpace{N}) = HalfSpace{N,S}(changeeltype(S, x.a), S(β))
-changeeltype{S,N}(::Type{S}, x::HyperPlane{N}) = HyperPlane{N,S}(changeeltype(S, x.a), S(β))
+function hmap(f, d::FullDim, ::Type{T}, p::HRep...) where T
+    maphyperplanes(f, d, T, p...), maphalfspaces(f, d, T, p...)
+end
 
-changeeltype{S,N}(::Type{S}, x::Vec{N}) = Vec{N,S}(x)
-changeeltype{S,N}(::Type{S}, x::Ray{N}) = Ray{N,S}(changeeltype(S, x.r))
-changeeltype{S,N}(::Type{S}, x::Line{N}) = Line{N,S}(changeeltype(S, x.r))
-changeeltype{S,N}(::Type{S}, x::Point{N}) = Point{N,S}(x)
-changeeltype{S,N}(::Type{S}, x::SymPoint{N}) = SymPoint{N,S}(changeeltype(S, x))
-changeeltype{S}(::Type{S}, x::AbstractVector) = AbstractVector{S}(x)
+function hconvert(::Type{RepTout}, p::HRep{N, T}) where {N, T, RepTout<:HRep{N, T}}
+    RepTout(hreps(p)...)
+end
+function hconvert(::Type{RepTout}, p::HRep{N}) where {N, T, RepTout<:HRep{N, T}}
+    RepTout(RepIterator{N, T}.(hreps(p))...)
+end
+#function hconvert(::Type{RepTout}, p::HRep{N, Tin}){N, Tin, Tout, RepTout<:HRep{N, Tout}}
+#    if Tin == Tout
+#        f = nothing
+#    else
+#        f = (i,x) -> similar_type(typeof(x), Tout)(x)
+#    end
+#    if decomposedhfast(p)
+#        RepTout(EqIterator{Nout,Tout}((p,), f), IneqIterator{Nout,Tout}((p,), f))
+#    else
+#        RepTout(HRepIterator{Nout,Tout}((p,), f))
+#    end
+#end
 
 # This method solves the ambiguity with the following methods and the general method
 # Base.convert{T}(::Type{T}, p::T) = p
 Base.convert{T<:HRepresentation}(::Type{T}, p::T) = p
 Base.convert{T<:VRepresentation}(::Type{T}, p::T) = p
 
-function hconvert{RepTout<:HRep, RepTin<:HRep}(::Type{RepTout}, p::RepTin)
-    Nin  = fulldim(RepTin)
-    Nout = fulldim(RepTout)
-    if Nin != Nout
-        error("Different dimension")
-    end
-    Tin  = eltype(RepTin)
-    Tout = eltype(RepTout)
-    if Tin == Tout
-        f = nothing
+Base.convert(::Type{RepTout}, p::HRepresentation) where RepTout<:HRep = hconvert(RepTout, p)
+Base.convert(::Type{RepTout}, p::HRep) where {RepTout<:HRepresentation} = hconvert(RepTout, p)
+# avoid ambiguity
+Base.convert(::Type{RepTout}, p::HRepresentation) where {RepTout<:HRepresentation} = hconvert(RepTout, p)
+
+function Polyhedron{N, S}(p::Polyhedron{N, T}) where {N, S, T}
+    RepTout = similar_type(typeof(p), S)
+    if !hrepiscomputed(p) && vrepiscomputed(p)
+        vconvert(RepTout, p)
     else
-        f = (i,x) -> changeeltype(typeof(x), Tout)(x)
-    end
-    if decomposedhfast(p)
-        RepTout(EqIterator{Nout,Tout,Nin,Tin}([p], f), IneqIterator{Nout,Tout,Nin,Tin}([p], f))
-    else
-        RepTout(HRepIterator{Nout,Tout,Nin,Tin}([p], f))
+        hconvert(RepTout, p)
     end
 end
 
-Base.convert{RepTout<:HRep, RepTin<:HRepresentation}(::Type{RepTout}, p::RepTin) = hconvert(RepTout, p)
-Base.convert{RepTout<:HRepresentation, RepTin<:HRep}(::Type{RepTout}, p::RepTin) = hconvert(RepTout, p)
-# avoid ambiguity
-Base.convert{RepTout<:HRepresentation, RepTin<:HRepresentation}(::Type{RepTout}, p::RepTin) = hconvert(RepTout, p)
-
-function vconvert{RepTout<:VRep, RepTin<:VRep}(::Type{RepTout}, p::RepTin)
-    Nin  = fulldim(RepTin)
-    Nout = fulldim(RepTout)
-    if Nin != Nout
-        error("Different dimension")
-    end
-    Tin  = eltype(RepTin)
-    Tout = eltype(RepTout)
-    if Tin == Tout
-        f = nothing
-    else
-        f = (i,x) -> changeeltype(typeof(x), Tout)(x)
-    end
-    if decomposedvfast(p)
-        RepTout(PointIterator{Nout,Tout,Nin,Tin}([p], f), RayIterator{Nout,Tout,Nin,Tin}([p], f))
-    else
-        RepTout(VRepIterator{Nout,Tout,Nin,Tin}([p], f))
-    end
+function vreps(p...)
+    preps(p...)..., rreps(p...)...
+end
+function preps(p::VRep{N, T}...) where {N, T}
+    sympoints(p...), points(p...)
+end
+function rreps(p::VRep{N, T}...) where {N, T}
+    lines(p...), rays(p...)
 end
 
-Base.convert{RepTout<:VRep, RepTin<:VRepresentation}(::Type{RepTout}, p::RepTin) = vconvert(RepTout, p)
-Base.convert{RepTout<:VRepresentation, RepTin<:VRep}(::Type{RepTout}, p::RepTin) = vconvert(RepTout, p)
-# avoid ambiguity
-Base.convert{RepTout<:VRepresentation, RepTin<:VRepresentation}(::Type{RepTout}, p::RepTin) = vconvert(RepTout, p)
+function vmap(f, d::FullDim, ::Type{T}, p::VRep...) where T
+    mapsympoints(f, d, T, p...), mappoints(f, d, T, p...), maplines(f, d, T, p...), maprays(f, d, T, p...)
+end
 
-changeeltype(p::Rep{N,T}, ::Type{T}) where {N,T} = p
-function changeeltype(p::RepTin, ::Type{Tout}) where {RepTin<:Rep, Tout}
-    RepTout = changeeltype(RepTin, Tout)
+function vconvert(::Type{RepTout}, p::VRep{N, T}) where {N, T, RepTout<:VRep{N, T}}
+    RepTout(vreps(p)...)
+end
+function vconvert(::Type{RepTout}, p::VRep{N}) where {N, T, RepTout<:VRep{N, T}}
+    RepTout(RepIterator{N, T}.(vreps(p))...)
+end
+
+#function vconvert{RepTout<:VRep, RepTin<:VRep}(::Type{RepTout}, p::RepTin)
+#    Nin  = fulldim(RepTin)
+#    Nout = fulldim(RepTout)
+#    if Nin != Nout
+#        error("Different dimension")
+#    end
+#    Tin  = eltype(RepTin)
+#    Tout = eltype(RepTout)
+#    if Tin == Tout
+#        f = nothing
+#    else
+#        f = (i,x) -> similar_type(typeof(x), Tout)(x)
+#    end
+#    if decomposedvfast(p)
+#        RepTout(PointIterator{Nout,Tout,Nin,Tin}([p], f), RayIterator{Nout,Tout,Nin,Tin}([p], f))
+#    else
+#        RepTout(VRepIterator{Nout,Tout,Nin,Tin}([p], f))
+#    end
+#end
+
+Base.convert(::Type{RepTout}, p::VRepresentation) where {RepTout<:VRep} = vconvert(RepTout, p)
+Base.convert(::Type{RepTout}, p::VRep) where {RepTout<:VRepresentation} = vconvert(RepTout, p)
+# avoid ambiguity
+Base.convert(::Type{RepTout}, p::VRepresentation) where {RepTout<:VRepresentation} = vconvert(RepTout, p)
+
+MultivariatePolynomials.changecoefficienttype(p::Rep{N,T}, ::Type{T}) where {N,T} = p
+function MultivariatePolynomials.changecoefficienttype(p::RepTin, ::Type{Tout}) where {RepTin<:Rep, Tout}
+    RepTout = similar_type(RepTin, Tout)
     RepTout(p)
 end
 
-VRepresentation{N, T}(v::RepTin) where {N, T, RepTin} = lazychangeboth(RepTin, N, T)(v)
-HRepresentation{N, T}(h::RepTin) where {N, T, RepTin} = lazychangeboth(RepTin, N, T)(h)
+VRepresentation{N, T}(v::RepTin) where {N, T, RepTin} = similar_type(RepTin, FullDim{N}(), T)(v)
+HRepresentation{N, T}(h::RepTin) where {N, T, RepTin} = similar_type(RepTin, FullDim{N}(), T)(h)
 
 VRep{N, T}(v::VRepresentation) where {N, T} = VRepresentation{N, T}(v)
 VRep{N, T}(p::Polyhedron) where {N, T} = Polyhedron{N, T}(p)
 HRep{N, T}(h::HRepresentation) where {N, T} = HRepresentation{N, T}(h)
 HRep{N, T}(p::Polyhedron) where {N, T} = Polyhedron{N, T}(p)
 
-# FIXME it does not get called. The calls always go throug vconvert and hconvert. Use changeeltype instead
+# FIXME it does not get called. The calls always go throug vconvert and hconvert. Use changecoefficienttype instead
 #function Base.convert{N, T, RepT<:Representation}(::Type{Representation{N, T}}, rep::RepT)
 #  if fulldim(RepT) != N
 #    error("Cannot convert representations of the same dimension")
 #  end
-#  Base.convert(changeeltype(RepT, T), rep)
+#  Base.convert(changecoefficienttype(RepT, T), rep)
 #end
 #function Base.convert{N, T, RepT<:HRepresentation}(::Type{HRepresentation{N, T}}, rep::RepT)
 #  if fulldim(RepT) != N
 #    error("Cannot convert representations of the same dimension")
 #  end
-#  Base.convert(changeeltype(RepT, T), rep)
+#  Base.convert(changecoefficienttype(RepT, T), rep)
 #end
 #function Base.convert{M, S, RepT<:VRepresentation}(::Type{VRepresentation{M, S}}, rep::RepT)
 #  if fulldim(RepT) != M
 #    error("Cannot convert representations of the same dimension")
 #  end
-#  Base.convert(changeeltype(RepT, S), rep)
+#  Base.convert(changecoefficienttype(RepT, S), rep)
 #end

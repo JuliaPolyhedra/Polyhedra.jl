@@ -20,31 +20,29 @@ Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` h
 """
 function surface end
 
-Base.push!(p::Polyhedron{N}, ine::HRepresentation{N}) where {N}                      = error("push! not implemented for $(typeof(p)) for HRepresentation")
-Base.push!(p::Polyhedron{N}, ext::VRepresentation{N}) where {N}                      = error("push! not implemented for $(typeof(p)) for VRepresentation")
-
 """
     hrepiscomputed(p::Polyhedron)
 
 Returns whether the H-representation of this polyhedron has been computed.
 """
-hrepiscomputed(p::Polyhedron)                                                        = error("hrepiscomputed not implemented for $(typeof(p))")
+function hrepiscomputed end
 
-hrep(p::Polyhedron)                                                                  = error("hrep not implemented for $(typeof(p))")
+function hrep end
 
 """
     vrepiscomputed(p::Polyhedron)
 
 Returns whether the V-representation of this polyhedron has been computed.
 """
-vrepiscomputed(p::Polyhedron)                                                        = error("vrepiscomputed not implemented for $(typeof(p))")
+function vrepiscomputed(p::Polyhedron) end
 
-vrep(p::Polyhedron)                                                                  = error("vrep not implemented for $(typeof(p))")
+function vrep(p::Polyhedron) end
+
 loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ine}}) = error("loadpolyhedron! not implemented for .ine")
 loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("loadpolyhedron! not implemented for .ext") # FIXME ExtFileVRepresentation or just ExtFile
 
 # These can optionally be reimplemented for speed by a library
-export numberofinequalities, numberofgenerators, dim, transforminequalities, transformgenerators, radialprojectoncut
+export dim, radialprojectoncut
 
 loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Symbol) = loadpolyhedron!(p, filename, Val{extension})
 
@@ -54,23 +52,6 @@ function loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Abs
         error("Invalid extension $extension, please give 'ext' for V-representation or 'ine' for H-representation")
     end
     loadpolyhedron!(p, filename, [:ext, :ine][s])
-end
-
-function Base.convert{N, S, T}(::Type{Polyhedron{N, S}}, p::Polyhedron{N, T})
-    f = (i, x) -> changeeltype(typeof(x), S)(x)
-    if !hrepiscomputed(p) && vrepiscomputed(p)
-        if decomposedvfast(p)
-            polyhedron(PointIterator{N, S, N, T}([p], f), RayIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
-        else
-            polyhedron(VRepIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
-        end
-    else
-        if decomposedvfast(p)
-            polyhedron(IneqIterator{N, S, N, T}([p], f), EqIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
-        else
-            polyhedron(HRepIterator{N, S, N, T}([p], f), getlibraryfor(p, N, S))
-        end
-    end
 end
 
 # function transformgenerators{N}(p::Polyhedron{N}, P::AbstractMatrix)
@@ -123,8 +104,3 @@ end
 #function fulldim{N,T}(p::Polyhedron{N,T})
 #  N
 #end
-
-function dim(p::Polyhedron)
-    detecthlinearities!(p)
-    fulldim(p) - neqs(p)
-end

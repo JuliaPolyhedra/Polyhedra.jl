@@ -70,12 +70,28 @@ end
 
 _fixelim(h::ElemT, I, J, v) where {ElemT<:HRepElement} = ElemT(h.a[J], h.β - dot(h.a[I], v))
 
+"""
+    fixandeliminate(p::HRep{N, T}, I, v)
+
+Fix the variables with indices in `I` to the corresponding value in `v`. This is equivalent to doing the following:
+```julia
+function ei(i)
+    a = zeros(T, N)
+    a[i] = one(T)
+    a
+end
+eliminate(p ∩ HyperPlane(ei(I[1], v[1]) ∩ ... ∩ HyperPlane(ei(I[1], v[1]))
+```
+but it is much more efficient. The code above does a polyhedral projection while this function simply replace
+each halfspace `⟨a, x⟩ ≤ β` (resp. each hyperplane `⟨a, x⟩ = β`) by the halfspace `⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩`
+(resp. the hyperplane `⟨a_J, x⟩ = β - ⟨a_I, v⟩`) where `J = setdiff(1:N, I)`.
+"""
 function fixandeliminate(p::HRep{N, T}, I, v) where {N, T}
     J = setdiff(1:N, I)
     f = (i, h) -> _fixelim(h, I, J, v)
-    Nout = length(J)
+    dout = FullDim{length(J)}()
     Tout = promote_type(T, eltype(v))
-    lazychangeboth(typeof(p), Nout, Tout)(HRepIterator{Nout, Tout, N, T}([p], f))
+    similar_type(typeof(p), dout, Tout)(hmap(f, dout, Tout, p)...)
 end
 
 # TODO rewrite, it is just cutting a cone with a half-space, nothing more

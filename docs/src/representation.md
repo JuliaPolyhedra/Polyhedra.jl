@@ -57,28 +57,37 @@ fulldim
 
 ### H-representation interface
 ```@docs
-hreps
-nhreps
-hashreps
-eqs
-neqs
-haseqs
-ineqs
-nineqs
-hasineqs
+halfspaces
+nhalfspaces
+hashalfspaces
+hyperplanes
+nhyperplanes
+hashyperplanes
+allhalfspaces
+nallhalfspaces
+hasallhalfspaces
 hrepiscomputed
 ```
 
 ### V-representation interface
 ```@docs
-vreps
-nvreps
-hasvreps
-rays
-nrays
-hasrays
 points
 npoints
 haspoints
+sympoints
+nsympoints
+hassympoints
+allpoints
+nallpoints
+hasallpoints
+rays
+nrays
+hasrays
+lines
+nlines
+haslines
+allrays
+nallrays
+hasallrays
 vrepiscomputed
 ```

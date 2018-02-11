@@ -3,59 +3,77 @@ export SimplePolyhedraLibrary, SimplePolyhedron
 struct SimplePolyhedraLibrary{T} <: PolyhedraLibrary
 end
 
-mutable struct SimplePolyhedron{N, T} <: Polyhedron{N, T}
-    hrep::Nullable{HRepresentation{N, T}}
-    vrep::Nullable{VRepresentation{N, T}}
+mutable struct SimplePolyhedron{N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}} <: Polyhedron{N, T}
+    hrep::Nullable{HRepT}
+    vrep::Nullable{VRepT}
+    function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::HRepT) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
+        new{N, T, HRepT, VRepT}(hrep, nothing)
+    end
+    function SimplePolyhedron{N, T, HRepT, VRepT}(vrep::VRepT) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
+        new{N, T, HRepT, VRepT}(nothing, vrep)
+    end
 end
 
-changefulldim{N, T}(::Type{SimplePolyhedron{N, T}}, n) = SimplePolyhedron{n, T}
+function arraytype(p::SimplePolyhedron{N, T, HRepT, VRepT}) where{N, T, HRepT, VRepT}
+    @assert arraytype(HRepT) == arraytype(VRepT)
+    arraytype(HRepT)
+end
+
+similar_type(::Type{<:SimplePolyhedron{M, S, HRepT, VRepT}}, d::FullDim{N}, ::Type{T}) where {M, S, HRepT, VRepT, N, T} = SimplePolyhedron{N, T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
 
 getlibraryfor(p::SimplePolyhedron, N::Int, ::Type{T}) where {T} = SimplePolyhedraLibrary{T}()
 
+function SimplePolyhedron{N, T, HRepT, VRepT}(hyperplanes::ElemIt{<:HyperPlane}, halfspaces::ElemIt{<:HalfSpace}) where {N, T, HRepT, VRepT}
+    SimplePolyhedron{N, T, HRepT, VRepT}(HRepT(hyperplanes, halfspaces))
+end
+function SimplePolyhedron{N, T, HRepT, VRepT}(sympoints::ElemIt{<:SymPoint}, points::ElemIt{<:MyPoint}, lines::ElemIt{<:Line}, rays::ElemIt{<:Ray}) where {N, T, HRepT, VRepT}
+    SimplePolyhedron{N, T, HRepT, VRepT}(VRepT(sympoints, points, lines, rays))
+end
+
 function SimplePolyhedron{N, T}(rep::HRepresentation{N, T}) where {N, T}
-    SimplePolyhedron{N, T}(rep, nothing)
+    SimplePolyhedron{N, T, typeof(rep), SimpleVRepresentation{N, T}}(rep)
 end
 function SimplePolyhedron{N, T}(rep::VRepresentation{N, T}) where {N, T}
-    SimplePolyhedron{N, T}(nothing, rep)
+    SimplePolyhedron{N, T, SimpleHRepresentation{N, T}, typeof(rep)}(rep)
 end
 
-function SimplePolyhedron{N, T}(rep::HRepIterator) where {N, T}
-    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(rep))
+#function SimplePolyhedron{N, T}(rep::HRepIterator) where {N, T}
+#    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(rep))
+#end
+function SimplePolyhedron{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
+    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(hyperplanes, halfspaces))
 end
-function SimplePolyhedron{N, T}(eqs::EqIterator, ineqs::IneqIterator) where {N, T}
-    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(eqs, ineqs))
-end
-function SimplePolyhedron{N, T}(eqs::EqIterator) where {N, T}
-    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(eqs))
-end
-function SimplePolyhedron{N, T}(ineqs::IneqIterator) where {N, T}
-    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(ineqs))
-end
+#function SimplePolyhedron{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}) where {N, T}
+#    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(hyperplanes))
+#end
+#function SimplePolyhedron{N, T}(halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
+#    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(halfspaces))
+#end
 
-function SimplePolyhedron{N, T}(rep::VRepIterator) where {N, T}
-    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rep))
+#function SimplePolyhedron{N, T}(rep::VRepIterator) where {N, T}
+#    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rep))
+#end
+function SimplePolyhedron{N, T}(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:MyPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}) where {N, T}
+    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(sympoints, points, lines, rays))
 end
-function SimplePolyhedron{N, T}(points::PointIterator, rays::RayIterator) where {N, T}
-    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(points, rays))
-end
-function SimplePolyhedron{N, T}(rays::RayIterator) where {N, T}
-    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rays))
-end
-function SimplePolyhedron{N, T}(points::PointIterator) where {N, T}
-    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(points))
-end
+#function SimplePolyhedron{N, T}(rays::RayIterator) where {N, T}
+#    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rays))
+#end
+#function SimplePolyhedron{N, T}(points::PointIterator) where {N, T}
+#    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(points))
+#end
 
 function polyhedron(rep::Representation{N}, ::SimplePolyhedraLibrary{T}) where {N, T}
     SimplePolyhedron{N, T}(rep)
 end
-function polyhedron(repit::Union{HRepIterator{N}, VRepIterator{N}}, lib::SimplePolyhedraLibrary{T}) where {N, T}
-    SimplePolyhedron{N, T}(repit)
-end
-function polyhedron(hps::EqIterator{N}, hss::IneqIterator{N}, ::SimplePolyhedraLibrary{T}) where {N, T}
+#function polyhedron(repit::Union{HRepIterator{N}, VRepIterator{N}}, lib::SimplePolyhedraLibrary{T}) where {N, T}
+#    SimplePolyhedron{N, T}(repit)
+#end
+function polyhedron(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}, ::SimplePolyhedraLibrary{T}) where {N, T}
     SimplePolyhedron{N, T}(hps, hss)
 end
-function polyhedron(ps::PointIterator{N}, rs::RayIterator{N}, ::SimplePolyhedraLibrary{T}) where {N, T}
-    SimplePolyhedron{N, T}(ps, rs)
+function polyhedron(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:MyPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}, ::SimplePolyhedraLibrary{T}) where {N, T}
+    SimplePolyhedron{N, T}(sympoints, points, lines, rays)
 end
 
 function Base.copy(p::SimplePolyhedron{N, T}) where {N, T}
@@ -97,20 +115,6 @@ function vrep(p::SimplePolyhedron)
     end
     get(p.vrep)
 end
-function decomposedhfast(p::SimplePolyhedron)
-    if isnull(p.hrep)
-        false # what should be done here ?
-    else
-        decomposedhfast(get(p.hrep))
-    end
-end
-function decomposedvfast(p::SimplePolyhedron)
-    if isnull(p.vrep)
-        false # what should be done here ?
-    else
-        decomposedvfast(get(p.vrep))
-    end
-end
 
 function detecthlinearities!(p::SimplePolyhedron)
     p.hrep = removeduplicates(hrep(p))
@@ -129,23 +133,23 @@ function removevredundancy!(p::SimplePolyhedron)
     p.vrep = removevredundancy(vrep(p), hrep(p))
 end
 
-for op in [:nhreps, :starthrep, :neqs, :starteq, :nineqs, :startineq]
+for op in [:nhyperplanes, :starthyperplane, :nhalfspaces, :starthalfspace]
     @eval begin
         $op(p::Union{Interval, SimplePolyhedron}) = $op(hrep(p))
     end
 end
-for op in [:donehrep, :nexthrep, :doneeq, :nexteq, :doneineq, :nextineq]
+for op in [:donehyperplane, :nexthyperplane, :donehalfspace, :nexthalfspace]
     @eval begin
         $op(p::Union{Interval, SimplePolyhedron}, state) = $op(hrep(p), state)
     end
 end
 
-for op in [:nvreps, :startvrep, :npoints, :startpoint, :nrays, :startray]
+for op in [:nsympoints, :startsympoint, :npoints, :startpoint, :nlines, :startline, :nrays, :startray]
     @eval begin
         $op(p::Union{Interval, SimplePolyhedron}) = $op(vrep(p))
     end
 end
-for op in [:donevrep, :nextvrep, :donepoint, :nextpoint, :doneray, :nextray]
+for op in [:donesympoint, :nextsympoint, :donepoint, :nextpoint, :doneline, :nextline, :doneray, :nextray]
     @eval begin
         $op(p::Union{Interval, SimplePolyhedron}, state) = $op(vrep(p), state)
     end

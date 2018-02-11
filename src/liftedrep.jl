@@ -19,42 +19,40 @@ mutable struct LiftedHRepresentation{N, T} <: HRepresentation{N, T}
     end
 end
 
-changeeltype{N,T,S}(::Type{LiftedHRepresentation{N,T}}, ::Type{S})  = LiftedHRepresentation{N,S}
-changefulldim{N,T}(::Type{LiftedHRepresentation{N,T}}, M)  = LiftedHRepresentation{M,T}
-changeboth{N,T,S}(::Type{LiftedHRepresentation{N,T}}, M, ::Type{S}) = LiftedHRepresentation{M,S}
+similar_type{N,T}(::Type{<:LiftedHRepresentation}, ::FullDim{N}, ::Type{T}) = LiftedHRepresentation{N,T}
+arraytype(p::Union{LiftedHRepresentation{N, T}, Type{LiftedHRepresentation{N, T}}}) where {N, T} = Vector{T}
 
-decomposedfast(rep::LiftedHRepresentation) = false
 linset(rep::LiftedHRepresentation) = copy(rep.linset)
 
 LiftedHRepresentation(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = LiftedHRepresentation{size(A,2)-1,T}(A, linset)
 
 LiftedHRepresentation(h::HRepresentation{N,T}) where {N,T} = LiftedHRepresentation{N,T}(h)
 
-function LiftedHRepresentation{N, T}(it::HRepIterator{N, T}) where {N, T}
-    A = Matrix{T}(length(it), N+1)
-    linset = IntSet()
-    for (i, h) in enumerate(it)
-        A[i,2:end] = -h.a
-        A[i,1] = h.β
-        if islin(h)
-            push!(linset, i)
-        end
-    end
-    LiftedHRepresentation{N, T}(A, linset)
-end
+#function LiftedHRepresentation{N, T}(it::HRepIterator{N, T}) where {N, T}
+#    A = Matrix{T}(length(it), N+1)
+#    linset = IntSet()
+#    for (i, h) in enumerate(it)
+#        A[i,2:end] = -h.a
+#        A[i,1] = h.β
+#        if islin(h)
+#            push!(linset, i)
+#        end
+#    end
+#    LiftedHRepresentation{N, T}(A, linset)
+#end
 
-function LiftedHRepresentation{N, T}(eqs, ineqs) where {N, T}
-    neq = length(eqs)
-    nhrep = neq + length(ineqs)
+function LiftedHRepresentation{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
+    nhyperplane = length(hyperplanes)
+    nhrep = nhyperplane + length(halfspaces)
     A = Matrix{T}(nhrep, N+1)
-    linset = IntSet(1:neq)
-    for (i, h) in enumerate(eqs)
+    linset = IntSet(1:nhyperplane)
+    for (i, h) in enumerate(hyperplanes)
         A[i,2:end] = -h.a
         A[i,1] = h.β
     end
-    for (i, h) in enumerate(ineqs)
-        A[neq+i,2:end] = -h.a
-        A[neq+i,1] = h.β
+    for (i, h) in enumerate(halfspaces)
+        A[nhyperplane+i,2:end] = -h.a
+        A[nhyperplane+i,1] = h.β
     end
     LiftedHRepresentation{N, T}(A, linset)
 end
@@ -77,18 +75,18 @@ starthrep(ine::LiftedHRepresentation) = 1
 donehrep(ine::LiftedHRepresentation, state) = state > nhreps(ine)
 nexthrep(ine::LiftedHRepresentation, state) = (extractrow(ine, state), state+1)
 
-neqs(ine::LiftedHRepresentation) = length(ine.linset)
-starteq(ine::LiftedHRepresentation) = start(ine.linset)
-doneeq(ine::LiftedHRepresentation, state) = done(ine.linset, state)
-function nexteq(ine::LiftedHRepresentation{N,T}, state) where {N,T}
+nhyperplanes(ine::LiftedHRepresentation) = length(ine.linset)
+starthyperplane(ine::LiftedHRepresentation) = start(ine.linset)
+donehyperplane(ine::LiftedHRepresentation, state) = done(ine.linset, state)
+function nexthyperplane(ine::LiftedHRepresentation{N,T}, state) where {N,T}
     (i, nextstate) = next(ine.linset, state)
     (extractrow(ine, i)::HyperPlane{N,T}, nextstate)
 end
 
-nineqs(ine::LiftedHRepresentation) = nhreps(ine) - neqs(ine)
-startineq(ine::LiftedHRepresentation) = nextz(ine.linset, 1)
-doneineq(ine::LiftedHRepresentation, state) = state > nhreps(ine)
-nextineq(ine::LiftedHRepresentation{N,T}, state) where {N,T} = (extractrow(ine, state)::HalfSpace{N,T}, nextz(ine.linset, state+1))
+nhalfspaces(ine::LiftedHRepresentation) = nhreps(ine) - nhyperplanes(ine)
+starthalfspace(ine::LiftedHRepresentation) = nextz(ine.linset, 1)
+donehalfspace(ine::LiftedHRepresentation, state) = state > nhreps(ine)
+nexthalfspace(ine::LiftedHRepresentation{N,T}, state) where {N,T} = (extractrow(ine, state)::HalfSpace{N,T}, nextz(ine.linset, state+1))
 
 Base.getindex(h::LiftedHRepresentation, I::AbstractArray) = LiftedHRepresentation(h.A[I, :], filterintset(h.linset, I))
 
@@ -109,11 +107,9 @@ mutable struct LiftedVRepresentation{N,T} <: VRepresentation{N,T}
     end
 end
 
-changeeltype{N,T,S}(::Type{LiftedVRepresentation{N,T}}, ::Type{S})  = LiftedVRepresentation{N,S}
-changefulldim{N,T}(::Type{LiftedVRepresentation{N,T}}, M)  = LiftedVRepresentation{M,T}
-changeboth{N,T,S}(::Type{LiftedVRepresentation{N,T}}, M, ::Type{S}) = LiftedVRepresentation{M,S}
+similar_type{N,T}(::Type{<:LiftedVRepresentation}, ::FullDim{N}, ::Type{T}) = LiftedVRepresentation{N,T}
+arraytype(p::Union{LiftedVRepresentation{N, T}, Type{LiftedVRepresentation{N, T}}}) where {N, T} = Vector{T}
 
-decomposedfast(rep::LiftedVRepresentation) = true
 function linset(rep::LiftedVRepresentation)
     rep.linset
 end
@@ -122,118 +118,92 @@ LiftedVRepresentation(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <:
 
 LiftedVRepresentation(v::VRepresentation{N,T}) where {N,T} = LiftedVRepresentation{N,T}(v)
 
-function LiftedVRepresentation{N, T}(it::VRepIterator{N, T}) where {N, T}
-    R = Matrix{T}(length(it), N+1)
-    linset = IntSet()
-    for (i, v) in enumerate(it)
-        R[i,2:end] = coord(v)
-        if isray(v)
-            R[i,1] = zero(T)
-        else
-            R[i,1] = one(T)
-        end
-        if islin(v)
-            push!(linset, i)
-        end
-    end
-    LiftedVRepresentation{N, T}(R, linset)
-end
+#function LiftedVRepresentation{N, T}(it::VRepIterator{N, T}) where {N, T}
+#    R = Matrix{T}(length(it), N+1)
+#    linset = IntSet()
+#    for (i, v) in enumerate(it)
+#        R[i,2:end] = coord(v)
+#        if isray(v)
+#            R[i,1] = zero(T)
+#        else
+#            R[i,1] = one(T)
+#        end
+#        if islin(v)
+#            push!(linset, i)
+#        end
+#    end
+#    LiftedVRepresentation{N, T}(R, linset)
+#end
 
-function LiftedVRepresentation{N, T}(points, rays) where {N, T}
+function LiftedVRepresentation{N, T}(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:MyPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}) where {N, T}
+    nsympoint = length(sympoints)
     npoint = length(points)
+    nline = length(lines)
     nray = length(rays)
-    nvrep = npoint + nray
+    nvrep = nsympoint + npoint + nline + nray
     R = Matrix{T}(nvrep, N+1)
     linset = IntSet()
-    for (i, p) in enumerate(points)
-        R[i,2:end] = coord(p)
-        R[i,1] = one(T)
-        if islin(p)
-            push!(linset, i)
+    function _fill(offset, z, ps)
+        for (i, p) in enumerate(ps)
+            R[offset + i,2:end] = coord(p)
+            R[offset + i,1] = z
+            if islin(p)
+                push!(linset, offset + i)
+            end
         end
     end
-    for (i, r) in enumerate(rays)
-        j = npoint + i
-        R[j,2:end] = coord(r)
-        R[j,1] = zero(T)
-        if islin(r)
-            push!(linset, j)
-        end
-    end
+    _fill(0, one(T), sympoints)
+    _fill(nsympoint, one(T), points)
+    _fill(nsympoint+npoint, zero(T), lines)
+    _fill(nsympoint+npoint+nline, zero(T), rays)
     LiftedVRepresentation{N, T}(R, linset)
 end
 
 Base.copy(ext::LiftedVRepresentation{N,T}) where {N,T} = LiftedVRepresentation{N,T}(copy(ext.R), copy(ext.linset))
 
-nvreps(ext::LiftedVRepresentation) = size(ext.R, 1)
+_nvreps(ext::LiftedVRepresentation) = size(ext.R, 1)
 
 function isrowpoint(ext::LiftedVRepresentation{N,T}, i) where {N,T}
     ispoint = ext.R[i,1]
     @assert ispoint == zero(T) || ispoint == one(T)
     ispoint == one(T)
 end
-function extractrow(ext::LiftedVRepresentation{N,T}, i) where {N,T}
-    ispoint = ext.R[i,1]
-    @assert ispoint == zero(T) || ispoint == one(T)
-    a = ext.R[i,2:end]
-    if isrowpoint(ext, i)
-        if i in ext.linset
-            SymPoint(a)
-        else
-            a
-        end
-    else
-        if i in ext.linset
-            Line(a)
-        else
-            Ray(a)
-        end
-    end
-end
-function npoints(ext::LiftedVRepresentation)
+function _count(ext::LiftedVRepresentation, point::Bool, lin::Bool)
     count = 0
-    for i in 1:nvreps(ext)
-        if isrowpoint(ext, i)
+    for i in 1:_nvreps(ext)
+        if isrowpoint(ext, i) == point && (i in ext.linset) == lin
             count += 1
         end
     end
     count
 end
-nrays(ext::LiftedVRepresentation) = nvreps(ext) - npoints(ext)
+nsympoints(ext::LiftedVRepresentation) = _count(ext, true, true)
+npoints(ext::LiftedVRepresentation) = _count(ext, true, false)
+nlines(ext::LiftedVRepresentation) = _count(ext, false, true)
+nrays(ext::LiftedVRepresentation) = _count(ext, false, false)
 
-startvrep(ext::LiftedVRepresentation) = 1
-donevrep(ext::LiftedVRepresentation, state) = state > nvreps(ext)
-function nextvrep(ext::LiftedVRepresentation, state)
-    (extractrow(ext, state), state+1)
-end
-
-function nextrayidx(ext::LiftedVRepresentation, i)
-    n = nvreps(ext)
-    while i <= n && isrowpoint(ext, i)
-        i += 1
-    end
-    i
-end
-function nextpointidx(ext::LiftedVRepresentation, i)
-    n = nvreps(ext)
-    while i <= n && !isrowpoint(ext, i)
+function nextidx(ext::LiftedVRepresentation, i, point::Bool, lin::Bool)
+    n = _nvreps(ext)
+    while i <= n && (isrowpoint(ext, i) != point || (i in ext.linset) != lin)
         i += 1
     end
     i
 end
 
-startray(ext::LiftedVRepresentation) = nextrayidx(ext, 1)
-doneray(ext::LiftedVRepresentation, state) = state > nvreps(ext)
-function nextray(ext::LiftedVRepresentation, state)
-    r = ext.R[state,:]
-    (extractrow(ext, state), nextrayidx(ext, state+1))
-end
+startsympoint(ext::LiftedVRepresentation) = nextidx(ext, 1, true, true)
+donesympoint(ext::LiftedVRepresentation, state) = state > _nvreps(ext)
+nextsympoint(ext::LiftedVRepresentation, state) = (SymPoint(ext.R[state,2:end]), nextidx(ext, state+1, true, true))
 
-startpoint(ext::LiftedVRepresentation) = nextpointidx(ext, 1)
-donepoint(ext::LiftedVRepresentation, state) = state > nvreps(ext)
-function nextpoint(ext::LiftedVRepresentation, state)
-    p = ext.R[state,:]
-    (extractrow(ext, state), nextpointidx(ext, state+1))
-end
+startpoint(ext::LiftedVRepresentation) = nextidx(ext, 1, true, false)
+donepoint(ext::LiftedVRepresentation, state) = state > _nvreps(ext)
+nextpoint(ext::LiftedVRepresentation, state) = (ext.R[state,2:end], nextidx(ext, state+1, true, false))
+
+startline(ext::LiftedVRepresentation) = nextidx(ext, 1, false, true)
+doneline(ext::LiftedVRepresentation, state) = state > _nvreps(ext)
+nextline(ext::LiftedVRepresentation, state) = (Line(ext.R[state,2:end]), nextidx(ext, state+1, false, true))
+
+startray(ext::LiftedVRepresentation) = nextidx(ext, 1, false, false)
+doneray(ext::LiftedVRepresentation, state) = state > _nvreps(ext)
+nextray(ext::LiftedVRepresentation, state) = (Ray(ext.R[state,2:end]), nextidx(ext, state+1, false, false))
 
 Base.getindex(v::LiftedVRepresentation, I::AbstractArray) = LiftedVRepresentation(v.R[I, :], filterintset(v.linset, I))

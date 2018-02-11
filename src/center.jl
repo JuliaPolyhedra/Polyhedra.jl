@@ -9,13 +9,13 @@ Throws an error if the polyhedron is empty or if the radius is infinite.
 function hchebyshevcenter(p::HRep{N}, solver=defaultLPsolverfor(p, solver)) where N
     m = Model(solver=solver)
     c = @variable m [1:N]
-    for hp in eqs(p)
+    for hp in hyperplanes(p)
         a = Vector{Float64}(hp.a)
         β = Float64(hp.β)
         @constraint m dot(a, c) == β
     end
-    @variable m r[1:nineqs(p)] >= 0
-    for (i, hs) in enumerate(ineqs(p))
+    @variable m r[1:nhalfspaces(p)] >= 0
+    for (i, hs) in enumerate(halfspaces(p))
         a = Vector{Float64}(hs.a)
         β = Float64(hs.β)
         @constraint m dot(a, c) + r[i] * norm(a, 2) <= β

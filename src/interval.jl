@@ -9,11 +9,11 @@ mutable struct Interval{T} <: Polyhedron{1, T}
     length::T
 end
 
-Base.eltype(::Type{Interval{T}}) where T = T
-fulldim(::Type{<:Interval}) = 1
+arraytype(p::Interval) = arraytype(p.hrep)
+
 area{T}(::Interval{T}) = zero(T)
 volume(p::Interval) = p.length
-isempty(p::Interval) = isempty(p.vrep)
+Base.isempty(p::Interval) = isempty(p.vrep)
 
 function Interval{T}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) where T
     if haslb && hasub && mygt(lb, ub)
@@ -86,7 +86,7 @@ function _hinterval(rep::HRep{1, T}) where T
             ub = min(ub, newub)
         end
     end
-    for hp in eqs(rep)
+    for hp in hyperplanes(rep)
         α = hp.a[1]
         if myeqzero(α)
             if !myeqzero(hp.β)
@@ -97,7 +97,7 @@ function _hinterval(rep::HRep{1, T}) where T
             _setub(hp.β / α)
         end
     end
-    for hs in ineqs(rep)
+    for hs in halfspaces(rep)
         α = hs.a[1]
         if myeqzero(α)
             if hs.β < 0
@@ -167,14 +167,12 @@ function polyhedron{T}(rep::Rep{1, T}, ::IntervalLibrary{T})
     Interval{T}(rep)
 end
 
-decomposedhfast(p::Interval) = true
-decomposedvfast(p::Interval) = true
-
 hrep(p::Interval) = p.hrep
 vrep(p::Interval) = p.vrep
 
 hrepiscomputed(::Interval) = true
 vrepiscomputed(::Interval) = true
+
 function detecthlinearities!(::Interval) end
 function detectvlinearities!(::Interval) end
 function removehredundancy!(::Interval) end

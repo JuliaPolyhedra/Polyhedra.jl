@@ -1,6 +1,9 @@
 using Polyhedra
 using Base.Test
 
+import MultivariatePolynomials
+MP = MultivariatePolynomials
+
 include("alltests.jl")
 
 include("default.jl")
@@ -20,7 +23,7 @@ for lib in libraries
     basicpolyhedrontests(lib)
 end
 
-include("simplepolyhedron.jl")
+#include("simplepolyhedron.jl")
 
 for (testname, testfun) in alltests
     @testset "$testname tests" begin

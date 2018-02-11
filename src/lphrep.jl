@@ -64,53 +64,53 @@ mutable struct LPHRepresentation{N, T} <: HRepresentation{N, T}
     end
 end
 
-decomposedfast(lp::LPHRepresentation) = false
-
 LPHRepresentation(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {T <: Real} = LPHRepresentation{size(A,2),T}(A, l, u, lb, ub)
 function LPHRepresentation(A::AbstractMatrix, l::AbstractVector, u::AbstractVector, lb::AbstractVector, ub::AbstractVector)
     T = promote_type(eltype(A), eltype(l), eltype(u), eltype(lb), eltype(ub))
     LPHRepresentation{size(A,2),T}(AbstractMatrix{T}(A), AbstractVector{T}(l), AbstractVector{T}(u), AbstractVector{T}(lb), AbstractVector{T}(ub))
 end
 
+arraytype(::Union{LPHRepresentation{N, T}, Type{LPHRepresentation{N, T}}}) where {N, T} = Vector{T}
+
 LPHRepresentation(rep::LPHRepresentation) = rep
 LPHRepresentation(rep::HRep{N,T}) where {N,T} = LPHRepresentation{N,T}(rep)
 
-function LPHRepresentation{N, T}(it::HRepIterator{N, T}) where {N,T}
-    A = Matrix{T}(length(it), N)
-    lb = Vector{T}(length(it))
-    ub = Vector{T}(length(it))
-    MathProgBase.HighLevelInterface.warn_no_inf(T)
-    l = fill(typemin(T), N)
-    u = fill(typemax(T), N)
-    for (i, h) in enumerate(it)
-        A[i,:] = h.a
-        ub[i] = h.β
-        if islin(h)
-            lb[i] = ub[i]
-        else
-            lb[i] = typemin(T)
-        end
-    end
-    LPHRepresentation{N, T}(A, l, u, lb, ub)
-end
-function LPHRepresentation{N, T}(eqs, ineqs) where {N,T}
-    neq = length(eqs)
-    nhrep = neq + length(ineqs)
+#function LPHRepresentation{N, T}(it::HRepIterator{N, T}) where {N,T}
+#    A = Matrix{T}(length(it), N)
+#    lb = Vector{T}(length(it))
+#    ub = Vector{T}(length(it))
+#    MathProgBase.HighLevelInterface.warn_no_inf(T)
+#    l = fill(typemin(T), N)
+#    u = fill(typemax(T), N)
+#    for (i, h) in enumerate(it)
+#        A[i,:] = h.a
+#        ub[i] = h.β
+#        if islin(h)
+#            lb[i] = ub[i]
+#        else
+#            lb[i] = typemin(T)
+#        end
+#    end
+#    LPHRepresentation{N, T}(A, l, u, lb, ub)
+#end
+function LPHRepresentation{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N,T}
+    nhyperplane = length(hyperplanes)
+    nhrep = nhyperplane + length(halfspaces)
     A = Matrix{T}(nhrep, N)
     lb = Vector{T}(nhrep)
     ub = Vector{T}(nhrep)
     MathProgBase.HighLevelInterface.warn_no_inf(T)
     l = fill(typemin(T), N)
     u = fill(typemax(T), N)
-    for (i, h) in enumerate(eqs)
+    for (i, h) in enumerate(hyperplanes)
         A[i,:] = h.a
         lb[i] = h.β
         ub[i] = h.β
     end
-    for (i, h) in enumerate(ineqs)
-        A[neq+i,:] = h.a
-        lb[neq+i] = typemin(T)
-        ub[neq+i] = h.β
+    for (i, h) in enumerate(halfspaces)
+        A[nhyperplane+i,:] = h.a
+        lb[nhyperplane+i] = typemin(T)
+        ub[nhyperplane+i] = h.β
     end
     LPHRepresentation{N, T}(A, l, u, lb, ub)
 end
@@ -149,8 +149,8 @@ function checknext(lp::LPHRepresentation, state, allowed)
     (colrow, i, lgeq)
 end
 
-neqs(lp::LPHRepresentation) = length(lp.coleqs) + length(lp.roweqs)
-nineqs(lp::LPHRepresentation) = length(lp.colleqs) + length(lp.colgeqs) + length(lp.rowleqs) + length(lp.rowgeqs)
+nhyperplanes(lp::LPHRepresentation) = length(lp.coleqs) + length(lp.roweqs)
+nhalfspaces(lp::LPHRepresentation) = length(lp.colleqs) + length(lp.colgeqs) + length(lp.rowleqs) + length(lp.rowgeqs)
 
 function gethrepaux(lp::LPHRepresentation{N, T}, state) where {N, T}
     colrow, i, lgeq = state
@@ -173,14 +173,14 @@ function nexthrep(lp::LPHRepresentation, state)
     (gethrepaux(lp, state), checknext(lp, state, (i) -> true))
 end
 
-starteq(lp::LPHRepresentation) = checknext(lp, (1, 0, 3), (i) -> i == 3)
-doneeq(lp::LPHRepresentation, state) = state[1] > 2
-function nexteq(lp::LPHRepresentation, state)
+starthyperplane(lp::LPHRepresentation) = checknext(lp, (1, 0, 3), (i) -> i == 3)
+donehyperplane(lp::LPHRepresentation, state) = state[1] > 2
+function nexthyperplane(lp::LPHRepresentation, state)
     (gethrepaux(lp, state), checknext(lp, state, (i) -> i == 3))
 end
 
-startineq(lp::LPHRepresentation) = checknext(lp, (1, 0, 3), (i) -> i <= 2)
-doneineq(lp::LPHRepresentation, state) = state[1] > 2
-function nextineq(lp::LPHRepresentation, state)
+starthalfspace(lp::LPHRepresentation) = checknext(lp, (1, 0, 3), (i) -> i <= 2)
+donehalfspace(lp::LPHRepresentation, state) = state[1] > 2
+function nexthalfspace(lp::LPHRepresentation, state)
     (gethrepaux(lp, state), checknext(lp, state, (i) -> i <= 2))
 end

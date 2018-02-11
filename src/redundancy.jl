@@ -17,17 +17,30 @@ Removes the elements of the H-representation of `P` that can be removed without 
 """
 removehredundancy!(p::HRep) = error("removehredundancy! not implemented for $(typeof(p))")
 
+function _filter(f, it)
+    # FIXME returns a Vector{Any}
+    #collect(Iterators.filter(f, it)) # filter does not implement length so we need to collect
+    ret = eltype(it)[]
+    for el in it
+        if f(el)
+            push!(ret, el)
+        end
+    end
+    ret
+end
+function removevredundancy(vrepit::ElemIt{<:VRepElement}, hrep::HRep; strongly=true, nl=nlines(hrep))
+    _filter(v -> !isvredundant(hrep, v, strongly=strongly, nl=nl), vrepit)
+end
+
 # Remove redundancy in the V-representation using the H-representation
 # There shouldn't be any duplicates in hrep for this to work
 function removevredundancy(vrep::VRep, hrep::HRep; strongly=true)
-    R = IntSet()
     nl = nlines(vrep)
-    for (i, v) in enumerate(vreps(vrep))
-        if isvredundant(hrep, v, strongly=strongly, nl=nl)
-            push!(R, i)
-        end
-    end
-    vrep[setdiff(1:nvreps(vrep), R)]
+    typeof(vrep)(removevredundancy.(vreps(vrep), hrep, strongly=strongly, nl=nl)...)
+end
+
+function removehredundancy(hrepit::ElemIt{<:HRepElement}, vrep::VRep; strongly=true, d=dim(vrep))
+    _filter(h -> !ishredundant(vrep, h, strongly=strongly, d=d), hrepit)
 end
 
 # Remove redundancy in the H-representation using the V-representation
@@ -35,12 +48,7 @@ end
 function removehredundancy(hrep::HRep, vrep::VRep; strongly=true)
     R = IntSet()
     d = dim(hrep, true) # TODO dim(hrep)
-    for (i, h) in enumerate(hreps(hrep))
-        if ishredundant(vrep, h, strongly=strongly, d=d)
-            push!(R, i)
-        end
-    end
-    hrep[setdiff(1:nhreps(hrep), R)]
+    typeof(hrep)(removehredundancy.(hreps(hrep), vrep, strongly=strongly, d=d)...)
 end
 
 
@@ -67,8 +75,8 @@ end
 # If p is an H-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 # TODO nlines should be the number of non-redundant lines so something similar to dim
 function isvredundant(p::HRep{N,T}, v::VRepElement; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) where {N,T}
-    count = 0
-    for h in hreps(p)
+    count = nhyperplanes(p) # v is in every hyperplane otherwise it would not be valid
+    for h in halfspaces(p)
         if v in hyperplane(h)
             count += 1
         end
@@ -82,21 +90,19 @@ isvredundant(p::HRep{N,T}, v::Line; strongly = true, nl::Int=nlines(p), solver =
 # H-redundancy
 # If p is a V-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 function ishredundant(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) where {N,T}
-    rcount = 0
+    checkvconsistency(p)
     pcount = 0
     hp = hyperplane(h)
-    for v in vreps(p)
+    for v in allpoints(p)
         if v in hp
-            if isray(v)
-                rcount += 1
-            else
-                pcount += 1
-            end
+            pcount += 1
         end
     end
-    if myeqzero(h.β) && !haspoints(p)
-        # The origin, see #28
-        pcount += 1
+    rcount = nlines(p) # every line is in h, otherwise it would not be valid
+    for v in rays(p)
+        if v in hp
+            rcount += 1
+        end
     end
     pcount < min(d, 1) || (strongly && pcount + rcount < d)
 end
@@ -173,7 +179,7 @@ end
 #        push!(lines, l)
 #    end
 #end
-function vrupdatedup!(aff, rays, r)
+function vrupdatedup!(aff::VAffineSpace, rays::Vector{<:Ray}, r)
     r = remproj(r, aff)
     if !myeqzero(r) && !any(ray -> remproj(ray, aff) ≈ r, rays)
         l = line(r)
@@ -186,7 +192,7 @@ function vrupdatedup!(aff, rays, r)
             end
         end
         if found
-            push!(aff, l)
+            convexhull!(aff, l)
         else
             push!(rays, r)
         end
@@ -198,22 +204,23 @@ end
 function removeduplicates(vrep::VRepresentation{N, T}) where {N, T}
     aff = linespace(vrep, true)
     newlin = true
-    rs = Union{Vec{N, T}, Ray{N, T}}[]
+    rs = raytype(vrep)[]
     while newlin
         newlin = false
         empty!(rs)
         for r in rays(vrep)
-            if !islin(r)
-                newlin |= vrupdatedup!(aff, rs, r)
-            end
+            newlin |= vrupdatedup!(aff, rs, r)
         end
     end
-    ps = Union{Point{N, T}, AbstractVector{T}}[]
-    sympoints = SymPoint{N, T}[]
-    for p in points(vrep)
-        vpupdatedup!(aff, ps, sympoints, p)
+    ps = pointtype(vrep)[]
+    sps = sympointtype(vrep)[]
+    for p in sympoints(vrep)
+        vpupdatedup!(aff, ps, sps, p)
     end
-    typeof(vrep)([sympoints; ps], [aff.lines; rs])
+    for p in points(vrep)
+        vpupdatedup!(aff, ps, sps, p)
+    end
+    typeof(vrep)(sps, ps, aff.lines, rs)
 end
 
 # H-duplicates
@@ -245,7 +252,7 @@ function hupdatedup!(aff::HAffineSpace, hss, h::HalfSpace)
             end
         end
         if found
-            push!(aff, hp)
+            intersect!(aff, hp)
         else
             push!(hss, h)
         end
@@ -262,7 +269,7 @@ function removeduplicates(hrep::HRepresentation{N, T}) where {N, T}
         newlin = false
         aff = removeduplicates(aff)
         empty!(hs)
-        for h in ineqs(hrep)
+        for h in halfspaces(hrep)
             newlin |= hupdatedup!(aff, hs, h)
         end
     end

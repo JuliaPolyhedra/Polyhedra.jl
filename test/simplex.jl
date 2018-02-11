@@ -37,7 +37,7 @@ function simplextest(lib::PolyhedraLibrary)
 
     # nonnegative orthant cut by x_1 + x_2 = 1
     Vray = [1 0; 0 1]
-    extray = SimpleVRepresentation(Matrix{Int}(0,2), Vray)
+    extray = SimpleVRepresentation(zeros(Int, 1, 2), Vray)
     poly3 = polyhedron(extray, lib)
     @test_throws ErrorException chebyshevcenter(poly3)
     Acut = [1 1]
