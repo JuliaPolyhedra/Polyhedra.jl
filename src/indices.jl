@@ -1,29 +1,29 @@
 # Index of representation element of type ElemT
 """
-    RepElementIndex{N, T, ElemT}
+    Index{N, T, ElemT}
 
 Index of an element of type `ElemT` in a `Rep{N, T}`.
 """
-struct RepElementIndex{N, T, ElemT}
+struct Index{N, T, ElemT}
     value::Int
 end
 
 # Type of the value associated to this index
-valuetype(::RepElementIndex{N, T, ElemT}) where {N, T, ElemT} = ElemT
+valuetype(::Index{N, T, ElemT}) where {N, T, ElemT} = ElemT
 
-const HyperPlaneIndex{N, T} = RepElementIndex{N, T, <:HyperPlane{N, T}}
-const HalfSpaceIndex{N, T} = RepElementIndex{N, T, <:HalfSpace{N, T}}
+const HyperPlaneIndex{N, T} = Index{N, T, <:HyperPlane{N, T}}
+const HalfSpaceIndex{N, T} = Index{N, T, <:HalfSpace{N, T}}
 const HIndex{N, T} = Union{HyperPlaneIndex{N, T}, HalfSpaceIndex{N, T}}
 
-const SymPointIndex{N, T} = RepElementIndex{N, T, <:SymPoint{N, T}}
-const PointIndex{N, T} = RepElementIndex{N, T, <:MyPoint{N, T}}
+const SymPointIndex{N, T} = Index{N, T, <:SymPoint{N, T}}
+const PointIndex{N, T} = Index{N, T, <:MyPoint{N, T}}
 const PIndex{N, T} = Union{SymPointIndex{N, T}, PointIndex{N, T}}
-const LineIndex{N, T} = RepElementIndex{N, T, <:Line{N, T}}
-const RayIndex{N, T} = RepElementIndex{N, T, <:Ray{N, T}}
+const LineIndex{N, T} = Index{N, T, <:Line{N, T}}
+const RayIndex{N, T} = Index{N, T, <:Ray{N, T}}
 const RIndex{N, T} = Union{LineIndex{N, T}, RayIndex{N, T}}
 const VIndex{N, T} = Union{PIndex{N, T}, RIndex{N, T}}
-islin(::Union{RepElementIndex{N, T, ElemT}, Type{RepElementIndex{N, T, ElemT}}}) where {N, T, ElemT} = islin(ElemT)
-ispoint(::Union{RepElementIndex{N, T, ElemT}, Type{RepElementIndex{N, T, ElemT}}}) where {N, T, ElemT} = ispoint(ElemT)
+islin(::Union{Index{N, T, ElemT}, Type{Index{N, T, ElemT}}}) where {N, T, ElemT} = islin(ElemT)
+ispoint(::Union{Index{N, T, ElemT}, Type{Index{N, T, ElemT}}}) where {N, T, ElemT} = ispoint(ElemT)
 
 """
     Indices{N, T, ElemT, RepT<:Rep{N, T}}
@@ -37,7 +37,7 @@ struct Indices{N, T, ElemT, RepT<:Rep{N, T}}
     end
 end
 
-Base.eltype(::Indices{N, T, ElemT}) where {N, T, ElemT} = RepElementIndex{N, T, ElemT}
+Base.eltype(::Indices{N, T, ElemT}) where {N, T, ElemT} = Index{N, T, ElemT}
 
 const HyperPlaneIndices{N, T, RepT} = Indices{N, T, <:HyperPlane{N, T}, RepT}
 const HalfSpaceIndices{N, T, RepT} = Indices{N, T, <:HalfSpace{N, T}, RepT}
@@ -51,7 +51,7 @@ const RayIndices{N, T, RepT} = Indices{N, T, <:Ray{N, T}, RepT}
 const RIndices{N, T, RepT} = Union{LineIndices{N, T, RepT}, RayIndices{N, T, RepT}}
 const VIndices{N, T, RepT} = Union{PIndices{N, T, RepT}, RIndices{N, T, RepT}}
 
-function Base.next(idx::Indices{N, T, ElemT}, state::RepElementIndex{N, T, ElemT}) where {N, T, ElemT}
+function Base.next(idx::Indices{N, T, ElemT}, state::Index{N, T, ElemT}) where {N, T, ElemT}
     nextidx = nextindex(idx.rep, state)
     nextidx, nextidx
 end
@@ -61,9 +61,9 @@ repfor(p, ::Type{<:VRepElement}) = vrep(p)
 Base.length(idxs::Indices{N, T, ElemT, <:Polyhedron{N, T}}) where {N, T, ElemT} = length(Indices{N, T, ElemT}(repfor(idxs.rep, ElemT)))
 Base.isempty(idxs::Indices{N, T, ElemT, <:Polyhedron{N, T}}) where {N, T, ElemT} = isempty(Indices{N, T, ElemT}(repfor(idxs.rep, ElemT)))
 Base.start(idxs::Indices{N, T, ElemT, <:Polyhedron{N, T}}) where {N, T, ElemT} = start(Indices{N, T, ElemT}(repfor(idxs.rep, ElemT)))
-Base.done(idxs::Indices{N, T, ElemT, <:Polyhedron{N, T}}, idx::RepElementIndex{N, T, ElemT}) where {N, T, ElemT} = done(Indices{N, T, ElemT}(repfor(idxs.rep, ElemT)), idx)
-Base.get(p::Polyhedron{N, T}, idx::RepElementIndex{N, T, ElemT}) where {N, T, ElemT} = get(repfor(p, ElemT), idx)
-nextindex(p::Polyhedron{N, T}, idx::RepElementIndex{N, T, ElemT}) where {N, T, ElemT} = nextindex(repfor(p, ElemT), idx)
+Base.done(idxs::Indices{N, T, ElemT, <:Polyhedron{N, T}}, idx::Index{N, T, ElemT}) where {N, T, ElemT} = done(Indices{N, T, ElemT}(repfor(idxs.rep, ElemT)), idx)
+Base.get(p::Polyhedron{N, T}, idx::Index{N, T, ElemT}) where {N, T, ElemT} = get(repfor(p, ElemT), idx)
+nextindex(p::Polyhedron{N, T}, idx::Index{N, T, ElemT}) where {N, T, ElemT} = nextindex(repfor(p, ElemT), idx)
 
 """
 The representation `rep` does not contain any `elem`.

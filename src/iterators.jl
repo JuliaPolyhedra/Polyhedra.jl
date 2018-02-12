@@ -6,9 +6,9 @@ abstract type AbstractRepIterator{N, T, ElemT, PT} end
 const SingleRepIterator{N, T, ElemT, RepT} = AbstractRepIterator{N, T, ElemT, Tuple{RepT}}
 # With MapRepIterator, we could have RepT<:Rep{N', T'} with N' != N or T' != T, with eachindex, we need to replace everything with N', T'
 Base.eachindex(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT}) where {N, T, ElemT, RepT<:Rep{N, T}} = Indices{N, T, similar_type(ElemT, FullDim{N}(), T)}(it.ps[1])
-Base.start(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT})     where {N, T, ElemT, RepT<:Rep{N, T}} = start(eachindex(it))::RepElementIndex{N, T, similar_type(ElemT, FullDim{N}(), T)}
-Base.done(it::SingleRepIterator, idx::RepElementIndex) = done(eachindex(it), idx)
-Base.next(it::SingleRepIterator, idx::RepElementIndex) = mapitem(it, 1, get(it.ps[1], idx)), nextindex(it.ps[1], idx)
+Base.start(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT})     where {N, T, ElemT, RepT<:Rep{N, T}} = start(eachindex(it))::Index{N, T, similar_type(ElemT, FullDim{N}(), T)}
+Base.done(it::SingleRepIterator, idx::Index) = done(eachindex(it), idx)
+Base.next(it::SingleRepIterator, idx::Index) = mapitem(it, 1, get(it.ps[1], idx)), nextindex(it.ps[1], idx)
 
 # If there are multiple representations, we need to iterate.
 # Builds a SingleRepIterator{ElemT} from p

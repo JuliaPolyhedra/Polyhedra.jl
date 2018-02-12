@@ -17,12 +17,12 @@ function Base.length(idxs::Indices{N, T, ElemT, <:MixedRep{N, T}}) where {N, T, 
     count
 end
 
-function mixednext(rep::MixedRep{N, T}, idx::IdxT) where {N, T, ElemT, IdxT<:RepElementIndex{N, T, ElemT}}
+function mixednext(rep::MixedRep{N, T}, idx::IdxT) where {N, T, ElemT, IdxT<:Index{N, T, ElemT}}
     idx = IdxT(idx.value+1)
     while !done(Indices{N, T, ElemT}(rep), idx) && !isvalid(rep, idx)
         idx = IdxT(idx.value+1)
     end
     idx
 end
-Base.start(idx::Indices{N, T, ElemT, <:MixedRep{N, T}}) where {N, T, ElemT} = mixednext(idx.rep, RepElementIndex{N, T, ElemT}(0))
-nextindex(rep::MixedRep{N, T}, idx::RepElementIndex{N, T}) where {N, T} = mixednext(rep, idx)
+Base.start(idx::Indices{N, T, ElemT, <:MixedRep{N, T}}) where {N, T, ElemT} = mixednext(idx.rep, Index{N, T, ElemT}(0))
+nextindex(rep::MixedRep{N, T}, idx::Index{N, T}) where {N, T} = mixednext(rep, idx)
