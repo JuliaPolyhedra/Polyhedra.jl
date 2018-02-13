@@ -41,12 +41,24 @@ end
 
 function computeoffsets(lp::LPHRepresentation)
     coloffset = Vector{Vector{Int}}(size(lp.A, 2))
+    rowoffset = Vector{Vector{Int}}(size(lp.A, 1))
+    # Assumes that hyperplanes are in first indices
+    # and halfspaces in following indices
     curoffset = 0
     for i in 1:size(lp.A, 2)
         if i in lp.coleqs
             curoffset += 1
-            offsets = [curoffset]
-        else
+            coloffset[i] = [curoffset]
+        end
+    end
+    for i in 1:size(lp.A, 1)
+        if i in lp.roweqs
+            curoffset += 1
+            rowoffset[i] = [curoffset]
+        end
+    end
+    for i in 1:size(lp.A, 2)
+        if !(i in lp.coleqs)
             offsets = Int[]
             if i in lp.colleqs
                 curoffset += 1
@@ -56,15 +68,11 @@ function computeoffsets(lp::LPHRepresentation)
                 curoffset += 1
                 push!(offsets, -curoffset)
             end
+            coloffset[i] = offsets
         end
-        coloffset[i] = offsets
     end
-    rowoffset = Vector{Vector{Int}}(size(lp.A, 1))
     for i in 1:size(lp.A, 1)
-        if i in lp.roweqs
-            curoffset += 1
-            offsets = [curoffset]
-        else
+        if !(i in lp.roweqs)
             offsets = Int[]
             if i in lp.rowleqs
                 curoffset += 1
@@ -74,8 +82,8 @@ function computeoffsets(lp::LPHRepresentation)
                 curoffset += 1
                 push!(offsets, -curoffset)
             end
+            rowoffset[i] = offsets
         end
-        rowoffset[i] = offsets
     end
     coloffset, rowoffset
 end
