@@ -255,6 +255,12 @@ function Base.vec(x::FixedVector{N,T}) where {N,T}
 end
 #Base.vec{ElemT::VRepElementContainer}(x::ElemT) = ElemT(vec(x.a))
 
+function pushbefore(a::AbstractSparseVector{T}, β::T) where T
+    b = spzeros(T, length(a)+1)
+    b[1] = β
+    b[2:end] = a
+    b
+end
 pushbefore(a::AbstractVector, β) = [β; a]
 function pushbefore(a::ElemT, β, ElemTout = similar_type(ElemT, FullDim{N+1}())) where {N, ElemT<:FixedVector{N}}
     ElemTout([β; vec(a)])

@@ -9,13 +9,14 @@ const MixedRep{N, T} = Union{MixedHRep{N, T}, MixedVRep{N, T}}
 
 # This could be defined for all types Indices but it is not recommended for reps other than Mixed to use this implementation of length as it is inefficient
 # a MethodError is more helpful than a hidden inefficiency
-function Base.length(idxs::Indices{N, T, ElemT, <:MixedRep{N, T}}) where {N, T, ElemT}
+function mixedlength(idxs::Indices)
     count = 0
     for idx in idxs
         count += 1
     end
     count
 end
+Base.length(idxs::Indices{N, T, ElemT, <:MixedRep{N, T}}) where {N, T, ElemT} = mixedlength(idxs)
 
 function mixednext(rep::MixedRep{N, T}, idx::IdxT) where {N, T, ElemT, IdxT<:Index{N, T, ElemT}}
     idx = IdxT(idx.value+1)

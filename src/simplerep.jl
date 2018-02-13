@@ -78,7 +78,7 @@ mutable struct SimpleVRepresentation{N,T} <: MixedVRep{N,T}
 
     function SimpleVRepresentation{N, T}(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {N, T}
         if iszero(size(V, 1)) && !iszero(size(R, 1))
-            vconcistencyerror()
+            vconsistencyerror()
         end
         if (length(R) > 0 && size(R, 2) != N) || (length(V) > 0 && size(V, 2) != N)
             error("dimension does not match")
