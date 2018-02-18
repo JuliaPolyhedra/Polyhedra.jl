@@ -23,11 +23,11 @@ similar_type(::Type{<:SimplePolyhedron{M, S, HRepT, VRepT}}, d::FullDim{N}, ::Ty
 
 getlibraryfor(p::SimplePolyhedron, N::Int, ::Type{T}) where {T} = SimplePolyhedraLibrary{T}()
 
-function SimplePolyhedron{N, T, HRepT, VRepT}(hyperplanes::ElemIt{<:HyperPlane}, halfspaces::ElemIt{<:HalfSpace}) where {N, T, HRepT, VRepT}
-    SimplePolyhedron{N, T, HRepT, VRepT}(HRepT(hyperplanes, halfspaces))
+function SimplePolyhedron{N, T, HRepT, VRepT}(hits::HIt...) where {N, T, HRepT, VRepT}
+    SimplePolyhedron{N, T, HRepT, VRepT}(HRepT(hits...))
 end
-function SimplePolyhedron{N, T, HRepT, VRepT}(sympoints::ElemIt{<:SymPoint}, points::ElemIt{<:MyPoint}, lines::ElemIt{<:Line}, rays::ElemIt{<:Ray}) where {N, T, HRepT, VRepT}
-    SimplePolyhedron{N, T, HRepT, VRepT}(VRepT(sympoints, points, lines, rays))
+function SimplePolyhedron{N, T, HRepT, VRepT}(vits::VIt...) where {N, T, HRepT, VRepT}
+    SimplePolyhedron{N, T, HRepT, VRepT}(VRepT(vits...))
 end
 
 function SimplePolyhedron{N, T}(rep::HRepresentation{N, T}) where {N, T}

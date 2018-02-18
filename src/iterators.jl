@@ -241,6 +241,17 @@ for (isVrep, singularlin, singular, repexem, listexem) in [(true, :sympoint, :po
 end
 
 const ElemIt{ElemT} = Union{AllRepIterator{<:Any, <:Any, ElemT}, AbstractRepIterator{<:Any, <:Any, ElemT}, AbstractVector{ElemT}}
+const HyperPlaneIt{N, T} = ElemIt{<:HyperPlane{N, T}}
+const HalfSpaceIt{N, T} = ElemIt{<:HalfSpace{N, T}}
+const HIt{N, T} = Union{HyperPlaneIt{N, T}, HalfSpaceIt{N, T}}
+
+const SymPointIt{N, T} = ElemIt{<:SymPoint{N, T}}
+const PointIt{N, T} = ElemIt{<:MyPoint{N, T}}
+const PIt{N, T} = Union{SymPointIt{N, T}, PointIt{N, T}}
+const LineIt{N, T} = ElemIt{<:Line{N, T}}
+const RayIt{N, T} = ElemIt{<:Ray{N, T}}
+const RIt{N, T} = Union{LineIt{N, T}, RayIt{N, T}}
+const VIt{N, T} = Union{PIt{N, T}, RIt{N, T}}
 
 function hreps(p::HRep{N, T}...) where {N, T}
     hyperplanes(p...), halfspaces(p...)
