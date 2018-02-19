@@ -8,6 +8,8 @@ makedocs(
         "Installation" => "installation.md",
         "Representation" => "representation.md",
         "Polyhedron" => "polyhedron.md",
+        "Redundancy" => "redundancy.md",
+        "Projection" => "projection.md",
         "Utilities" => "utilities.md"
     ],
     # The following ensures that we only include the docstrings from

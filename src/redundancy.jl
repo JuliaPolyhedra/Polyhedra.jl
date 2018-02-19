@@ -3,19 +3,31 @@
 ######################
 
 # Redundancy
-export removevredundancy!, removehredundancy!, isvredundant, ishredundant, gethredundantindices, getvredundantindices
-"""
-    removevredundancy!(P::VRep)
+export isredundant, removevredundancy!, removehredundancy!, gethredundantindices, getvredundantindices
 
-Removes the elements of the V-representation of `P` that can be removed without changing the polyhedron represented by `P`. That is, it only keeps the extreme points and rays. This operation is often called "convex hull" as the remaining points are the extreme points of the convex hull of the initial set of points.
 """
-removevredundancy!(p::VRep) = error("removevredundancy! not implemented for $(typeof(p))")
-"""
-    removehredundancy!(P::HRep)
+    isredundant(p::Rep, idx::Index; strongly=false)
 
-Removes the elements of the H-representation of `P` that can be removed without changing the polyhedron represented by `P`. That is, it only keeps the halfspaces corresponding to facets of the polyhedron.
+Return a `Bool` indicating whether the element with index `idx` can be removed without changing the polyhedron represented by `p`.
+If `strongly` is `true`,
+* if `idx` is an H-representation element `h`, it returns `true` only if no V-representation element of `p` is in the hyperplane of `h`.
+* if `idx` is a V-representation element `v`, it returns `true` only if `v` is in the relative interior of `p`.
 """
-removehredundancy!(p::HRep) = error("removehredundancy! not implemented for $(typeof(p))")
+function isredundant end
+
+"""
+    removehredundancy!(p::HRep)
+
+Removes the elements of the H-representation of `p` that can be removed without changing the polyhedron represented by `p`. That is, it only keeps the halfspaces corresponding to facets of the polyhedron.
+"""
+function removehredundancy! end
+
+"""
+    removevredundancy!(p::VRep)
+
+Removes the elements of the V-representation of `p` that can be removed without changing the polyhedron represented by `p`. That is, it only keeps the extreme points and rays. This operation is often called "convex hull" as the remaining points are the extreme points of the convex hull of the initial set of points.
+"""
+function removevredundancy! end
 
 function _filter(f, it)
     # FIXME returns a Vector{Any}
@@ -29,7 +41,7 @@ function _filter(f, it)
     ret
 end
 function removevredundancy(vrepit::ElemIt{<:VRepElement}, hrep::HRep; strongly=true, nl=nlines(hrep))
-    _filter(v -> !isvredundant(hrep, v, strongly=strongly, nl=nl), vrepit)
+    _filter(v -> !isredundant(hrep, v, strongly=strongly, nl=nl), vrepit)
 end
 
 # Remove redundancy in the V-representation using the H-representation
@@ -40,7 +52,7 @@ function removevredundancy(vrep::VRep, hrep::HRep; strongly=true)
 end
 
 function removehredundancy(hrepit::ElemIt{<:HRepElement}, vrep::VRep; strongly=true, d=dim(vrep))
-    _filter(h -> !ishredundant(vrep, h, strongly=strongly, d=d), hrepit)
+    _filter(h -> !isredundant(vrep, h, strongly=strongly, d=d), hrepit)
 end
 
 # Remove redundancy in the H-representation using the V-representation
@@ -52,29 +64,29 @@ function removehredundancy(hrep::HRep, vrep::VRep; strongly=true)
 end
 
 
-function gethredundantindices(hrep::HRep; strongly=false, solver = defaultLPsolverfor(hrep))
-    red = IntSet()
-    for (i, h) in enumerate(hreps(hrep))
-        if ishredundant(hrep, h; strongly=strongly, solver=solver)
-            push!(red, i)
-        end
-    end
-    red
-end
-function getvredundantindices(vrep::VRep; strongly = true, solver = defaultLPsolverfor(vrep))
-    red = IntSet()
-    for (i, v) in enumerate(vreps(vrep))
-        if isvredundant(vrep, v; strongly=strongly, solver=solver)
-            push!(red, i)
-        end
-    end
-    red
-end
+#function gethredundantindices(hrep::HRep; strongly=false, solver = defaultLPsolverfor(hrep))
+#    red = IntSet()
+#    for (i, h) in enumerate(hreps(hrep))
+#        if ishredundant(hrep, h; strongly=strongly, solver=solver)
+#            push!(red, i)
+#        end
+#    end
+#    red
+#end
+#function getvredundantindices(vrep::VRep; strongly = true, solver = defaultLPsolverfor(vrep))
+#    red = IntSet()
+#    for (i, v) in enumerate(vreps(vrep))
+#        if isvredundant(vrep, v; strongly=strongly, solver=solver)
+#            push!(red, i)
+#        end
+#    end
+#    red
+#end
 
 # V-redundancy
 # If p is an H-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 # TODO nlines should be the number of non-redundant lines so something similar to dim
-function isvredundant(p::HRep{N,T}, v::VRepElement; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) where {N,T}
+function isredundant(p::HRep{N,T}, v::VRepElement; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) where {N,T}
     count = nhyperplanes(p) # v is in every hyperplane otherwise it would not be valid
     for h in halfspaces(p)
         if v in hyperplane(h)
@@ -85,11 +97,11 @@ function isvredundant(p::HRep{N,T}, v::VRepElement; strongly = true, nl::Int=nli
     count < (strongly ? strong : min(strong, 1))
 end
 # A line is never redundant but it can be a duplicate
-isvredundant(p::HRep{N,T}, v::Line; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) where {N,T} = false
+isredundant(p::HRep{N,T}, v::Line; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) where {N,T} = false
 
 # H-redundancy
 # If p is a V-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
-function ishredundant(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) where {N,T}
+function isredundant(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) where {N,T}
     checkvconsistency(p)
     pcount = 0
     hp = hyperplane(h)
@@ -107,7 +119,16 @@ function ishredundant(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(
     pcount < min(d, 1) || (strongly && pcount + rcount < d)
 end
 # An hyperplane is never redundant but it can be a duplicate
-ishredundant(p::VRep{N,T}, h::HyperPlane; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) where {N,T} = false
+isredundant(p::VRep{N,T}, h::HyperPlane; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) where {N,T} = false
+
+function ishredundant(args...; kws...)
+    warn("ishredundant is deprecated, use isredundant intead")
+    isredundant(args...; kws...)
+end
+function isvredundant(args...; kws...)
+    warn("isvredundant is deprecated, use isredundant intead")
+    isredundant(args...; kws...)
+end
 
 # H-redundancy
 #function ishredundantaux(p::HRep, a, β, strongly, solver)

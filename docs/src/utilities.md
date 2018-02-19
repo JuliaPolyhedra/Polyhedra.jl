@@ -1,17 +1,5 @@
 # Utilities
 
-## Redundancy
-```@docs
-dim
-removevredundancy!
-removehredundancy!
-```
-
-## Projection/Elimination
-```@docs
-fixandeliminate
-```
-
 ## Operations
 ```@docs
 *

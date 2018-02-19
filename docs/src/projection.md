@@ -1,0 +1,4 @@
+## Projection/Elimination
+```@docs
+fixandeliminate
+```
