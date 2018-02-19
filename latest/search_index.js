@@ -85,7 +85,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Representation",
     "category": "section",
-    "text": "Polyhedra can be described in 2 different ways.H-representation: As the intersection of finitely many halfspaces given by its facets.\nV-representation: As the convex hull of its vertices + the conic hull of its rays where '+' is the Minkowski sum.In Polyhedra.jl, those representations are given the respective abstract types HRepresentation and VRepresentation which are themself subtypes of Representation.For instance, consider the 2-dimensional polyhedron described by the following H-representation:beginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*This set of inequalities can be written in the matrix form Ax leq b whereA = beginpmatrix1  11  -1-1  0endpmatrix b = beginpmatrix100endpmatrixLet's create this H-representation using the concrete subtype SimpleHRepresentation of the abstract type HRepresentation.julia> using Polyhedra\njulia> A = [1 1;1 -1;-1 0]\njulia> b = [1,0,0]\njulia> hrep = SimpleHRepresentation(A, b)\njulia> typeof(hrep)\nPolyhedra.SimpleHRepresentation{2,Int64}This polyhedron has three vertices: (00), (01) and (0505). We can create this V-representation using the concrete subtype SimpleVRepresentation of the abstract type VRepresentation. Because 05 is fractional, have two choices: either use exact rational arithemticjulia> V = [0 0; 0 1; 1//2 1//2]\njulia> vrep = SimpleVRepresentation(V)\njulia> typeof(vrep)\nPolyhedra.SimpleVRepresentation{2,Rational{Int64}}or use floating point arithmeticjulia> Vf = [0 0; 0 1; 1/2 1/2]\njulia> vrepf = SimpleVRepresentation(Vf)\njulia> typeof(vrepf)\nPolyhedra.SimpleVRepresentation{2,Float64}"
+    "text": "Polyhedra can be described in 2 different ways.H-representation: As the intersection of finitely many halfspaces given by its facets.\nV-representation: As the convex hull of its vertices + the conic hull of its rays where \'+\' is the Minkowski sum.In Polyhedra.jl, those representations are given the respective abstract types HRepresentation and VRepresentation which are themself subtypes of Representation.For instance, consider the 2-dimensional polyhedron described by the following H-representation:beginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*This set of inequalities can be written in the matrix form Ax leq b whereA = beginpmatrix1  11  -1-1  0endpmatrix b = beginpmatrix100endpmatrixLet\'s create this H-representation using the concrete subtype SimpleHRepresentation of the abstract type HRepresentation.julia> using Polyhedra\njulia> A = [1 1;1 -1;-1 0]\njulia> b = [1,0,0]\njulia> hrep = SimpleHRepresentation(A, b)\njulia> typeof(hrep)\nPolyhedra.SimpleHRepresentation{2,Int64}This polyhedron has three vertices: (00), (01) and (0505). We can create this V-representation using the concrete subtype SimpleVRepresentation of the abstract type VRepresentation. Because 05 is fractional, have two choices: either use exact rational arithemticjulia> V = [0 0; 0 1; 1//2 1//2]\njulia> vrep = SimpleVRepresentation(V)\njulia> typeof(vrep)\nPolyhedra.SimpleVRepresentation{2,Rational{Int64}}or use floating point arithmeticjulia> Vf = [0 0; 0 1; 1/2 1/2]\njulia> vrepf = SimpleVRepresentation(Vf)\njulia> typeof(vrepf)\nPolyhedra.SimpleVRepresentation{2,Float64}"
 },
 
 {
@@ -389,7 +389,79 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Projecting a polyhedron",
     "category": "section",
-    "text": "Consider the polyhedron created in the beginning of this section. As a reminder, it represents the following H-representation:beginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*One can verify that for any 0 leq x_2 leq 1, there exists a value x_1 such that (x_1 x_2) is in this polyhedron. This means that the H-representation obtained by eliminating x_1 is:beginalign*\n  x_1  leq 1 \n  x_1  geq 0\nendalign*where x_1 in the H-representation above represents x_2 in the previous one. This can be obtained as followsjulia> poly_x2 = eliminate(poly, [1])\njulia> hrep(poly_x2)\nH-representation\nbegin\n 2 2 rational\n 1//1 -1//1\n 0//1 1//1\nendThere is two methods of computing the elimination implemented in CDDLib: Fourier-Motzkin elimination and block elimination. As written by K. Fukuda in CDD's documentation, \"[Block elimination] might be a faster way to eliminate variables than the repeated [Fourier-Motzkin elimination] when the number of variables to eliminate is large\". You can specify the method to use as a third argument, e.g. eliminate(poly, [1], :FourierMotzkin), eliminate(poly, [1], :BlockElimination). A third method can be chosen: :ProjectGenerators. It computes the V-representation and then project each of its elements. This is the method of choice when the V-representation is already computed.If nothing is specified as in the block of code above, the behavior depends on the polyhedral library. If neither Fourier-Motzkin nor block elimination is implemented or if the V-representation is already computed then :ProjectGenerators is chosen. Otherwise, Polyhedra lets the library decide. In CDDLib, :FourierMotzkin is chosen when only the last dimension needs to be eliminated and :BlockElimination is chosen otherwise. Note that CDDLib only supports projecting the last trailing dimensions."
+    "text": "Consider the polyhedron created in the beginning of this section. As a reminder, it represents the following H-representation:beginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*One can verify that for any 0 leq x_2 leq 1, there exists a value x_1 such that (x_1 x_2) is in this polyhedron. This means that the H-representation obtained by eliminating x_1 is:beginalign*\n  x_1  leq 1 \n  x_1  geq 0\nendalign*where x_1 in the H-representation above represents x_2 in the previous one. This can be obtained as followsjulia> poly_x2 = eliminate(poly, [1])\njulia> hrep(poly_x2)\nH-representation\nbegin\n 2 2 rational\n 1//1 -1//1\n 0//1 1//1\nendThere is two methods of computing the elimination implemented in CDDLib: Fourier-Motzkin elimination and block elimination. As written by K. Fukuda in CDD\'s documentation, \"[Block elimination] might be a faster way to eliminate variables than the repeated [Fourier-Motzkin elimination] when the number of variables to eliminate is large\". You can specify the method to use as a third argument, e.g. eliminate(poly, [1], :FourierMotzkin), eliminate(poly, [1], :BlockElimination). A third method can be chosen: :ProjectGenerators. It computes the V-representation and then project each of its elements. This is the method of choice when the V-representation is already computed.If nothing is specified as in the block of code above, the behavior depends on the polyhedral library. If neither Fourier-Motzkin nor block elimination is implemented or if the V-representation is already computed then :ProjectGenerators is chosen. Otherwise, Polyhedra lets the library decide. In CDDLib, :FourierMotzkin is chosen when only the last dimension needs to be eliminated and :BlockElimination is chosen otherwise. Note that CDDLib only supports projecting the last trailing dimensions."
+},
+
+{
+    "location": "redundancy.html#",
+    "page": "Redundancy",
+    "title": "Redundancy",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "redundancy.html#Polyhedra.dim",
+    "page": "Redundancy",
+    "title": "Polyhedra.dim",
+    "category": "Function",
+    "text": "dim(p::Polyhedron)\n\nReturns the dimension of the affine hull of the polyhedron. That is the number of non-redundant hyperplanes that define it.\n\n\n\n"
+},
+
+{
+    "location": "redundancy.html#Polyhedra.isredundant",
+    "page": "Redundancy",
+    "title": "Polyhedra.isredundant",
+    "category": "Function",
+    "text": "isredundant(p::Rep, idx::Index; strongly=false)\n\nReturn a Bool indicating whether the element with index idx can be removed without changing the polyhedron represented by p. If strongly is true,\n\nif idx is an H-representation element h, it returns true only if no V-representation element of p is in the hyperplane of h.\nif idx is a V-representation element v, it returns true only if v is in the relative interior of p.\n\n\n\n"
+},
+
+{
+    "location": "redundancy.html#Polyhedra.removehredundancy!",
+    "page": "Redundancy",
+    "title": "Polyhedra.removehredundancy!",
+    "category": "Function",
+    "text": "removehredundancy!(p::HRep)\n\nRemoves the elements of the H-representation of p that can be removed without changing the polyhedron represented by p. That is, it only keeps the halfspaces corresponding to facets of the polyhedron.\n\n\n\n"
+},
+
+{
+    "location": "redundancy.html#Polyhedra.removevredundancy!",
+    "page": "Redundancy",
+    "title": "Polyhedra.removevredundancy!",
+    "category": "Function",
+    "text": "removevredundancy!(p::VRep)\n\nRemoves the elements of the V-representation of p that can be removed without changing the polyhedron represented by p. That is, it only keeps the extreme points and rays. This operation is often called \"convex hull\" as the remaining points are the extreme points of the convex hull of the initial set of points.\n\n\n\n"
+},
+
+{
+    "location": "redundancy.html#Redundancy-1",
+    "page": "Redundancy",
+    "title": "Redundancy",
+    "category": "section",
+    "text": "dim\nisredundant\nremovehredundancy!\nremovevredundancy!"
+},
+
+{
+    "location": "projection.html#",
+    "page": "Projection",
+    "title": "Projection",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "projection.html#Polyhedra.fixandeliminate",
+    "page": "Projection",
+    "title": "Polyhedra.fixandeliminate",
+    "category": "Function",
+    "text": "fixandeliminate(p::HRep{N, T}, I, v)\n\nFix the variables with indices in I to the corresponding value in v. This is equivalent to doing the following:\n\nfunction ei(i)\n    a = zeros(T, N)\n    a[i] = one(T)\n    a\nend\neliminate(p ∩ HyperPlane(ei(I[1], v[1]) ∩ ... ∩ HyperPlane(ei(I[1], v[1]))\n\nbut it is much more efficient. The code above does a polyhedral projection while this function simply replace each halfspace ⟨a, x⟩ ≤ β (resp. each hyperplane ⟨a, x⟩ = β) by the halfspace ⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩ (resp. the hyperplane ⟨a_J, x⟩ = β - ⟨a_I, v⟩) where J = setdiff(1:N, I).\n\n\n\n"
+},
+
+{
+    "location": "projection.html#Projection/Elimination-1",
+    "page": "Projection",
+    "title": "Projection/Elimination",
+    "category": "section",
+    "text": "fixandeliminate"
 },
 
 {
@@ -406,54 +478,6 @@ var documenterSearchIndex = {"docs": [
     "title": "Utilities",
     "category": "section",
     "text": ""
-},
-
-{
-    "location": "utilities.html#Polyhedra.dim",
-    "page": "Utilities",
-    "title": "Polyhedra.dim",
-    "category": "Function",
-    "text": "dim(p::Polyhedron)\n\nReturns the dimension of the affine hull of the polyhedron. That is the number of non-redundant hyperplanes that define it.\n\n\n\n"
-},
-
-{
-    "location": "utilities.html#Polyhedra.removevredundancy!",
-    "page": "Utilities",
-    "title": "Polyhedra.removevredundancy!",
-    "category": "Function",
-    "text": "removevredundancy!(P::VRep)\n\nRemoves the elements of the V-representation of P that can be removed without changing the polyhedron represented by P. That is, it only keeps the extreme points and rays. This operation is often called \"convex hull\" as the remaining points are the extreme points of the convex hull of the initial set of points.\n\n\n\n"
-},
-
-{
-    "location": "utilities.html#Polyhedra.removehredundancy!",
-    "page": "Utilities",
-    "title": "Polyhedra.removehredundancy!",
-    "category": "Function",
-    "text": "removehredundancy!(P::HRep)\n\nRemoves the elements of the H-representation of P that can be removed without changing the polyhedron represented by P. That is, it only keeps the halfspaces corresponding to facets of the polyhedron.\n\n\n\n"
-},
-
-{
-    "location": "utilities.html#Redundancy-1",
-    "page": "Utilities",
-    "title": "Redundancy",
-    "category": "section",
-    "text": "dim\nremovevredundancy!\nremovehredundancy!"
-},
-
-{
-    "location": "utilities.html#Polyhedra.fixandeliminate",
-    "page": "Utilities",
-    "title": "Polyhedra.fixandeliminate",
-    "category": "Function",
-    "text": "fixandeliminate(p::HRep{N, T}, I, v)\n\nFix the variables with indices in I to the corresponding value in v. This is equivalent to doing the following:\n\nfunction ei(i)\n    a = zeros(T, N)\n    a[i] = one(T)\n    a\nend\neliminate(p ∩ HyperPlane(ei(I[1], v[1]) ∩ ... ∩ HyperPlane(ei(I[1], v[1]))\n\nbut it is much more efficient. The code above does a polyhedral projection while this function simply replace each halfspace ⟨a, x⟩ ≤ β (resp. each hyperplane ⟨a, x⟩ = β) by the halfspace ⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩ (resp. the hyperplane ⟨a_J, x⟩ = β - ⟨a_I, v⟩) where J = setdiff(1:N, I).\n\n\n\n"
-},
-
-{
-    "location": "utilities.html#Projection/Elimination-1",
-    "page": "Utilities",
-    "title": "Projection/Elimination",
-    "category": "section",
-    "text": "fixandeliminate"
 },
 
 {
