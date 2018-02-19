@@ -20,8 +20,7 @@ function arraytype(p::SimplePolyhedron{N, T, HRepT, VRepT}) where{N, T, HRepT, V
 end
 
 similar_type(::Type{<:SimplePolyhedron{M, S, HRepT, VRepT}}, d::FullDim{N}, ::Type{T}) where {M, S, HRepT, VRepT, N, T} = SimplePolyhedron{N, T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
-
-getlibraryfor(p::SimplePolyhedron, N::Int, ::Type{T}) where {T} = SimplePolyhedraLibrary{T}()
+similar_library(p::SimplePolyhedron, d::FullDim, ::Type{T}) where T = default_library(p, d, T) # default_library allows to fallback to Interval if d is FullDim{1}
 
 function SimplePolyhedron{N, T, HRepT, VRepT}(hits::HIt...) where {N, T, HRepT, VRepT}
     SimplePolyhedron{N, T, HRepT, VRepT}(HRepT(hits...))

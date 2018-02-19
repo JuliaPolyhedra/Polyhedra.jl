@@ -28,9 +28,9 @@ function eliminate(p::Polyhedron{N}, delset=IntSet(N)) where N
 end
 
 function eliminate(p::Polyhedron{N}, delset, ::Type{Val{:ProjectGenerators}}) where N
-    ext = vrep(p)
     I = eye(Int, N)
-    polyhedron(I[collect(setdiff(IntSet(1:N), delset)),:] * ext, getlibrary(p))
+    Iproj = I[collect(setdiff(IntSet(1:N), delset)),:]
+    Iproj * p
 end
 
 function project(p::Polyhedron{N,T}, P::AbstractMatrix) where {N,T}

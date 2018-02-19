@@ -2,7 +2,7 @@
 export polyhedron, hrep, vrep, hrepiscomputed, vrepiscomputed, loadpolyhedron!
 export volume, surface
 
-polyhedron(rep::Representation{N, T}) where {N, T} = polyhedron(rep, getlibraryfor(N, T))
+polyhedron(rep::Representation{N, T}) where {N, T} = polyhedron(rep, default_library(FullDim{N}(), T))
 
 """
     volume(p::Polyhedron{N, T}) where {N, T}

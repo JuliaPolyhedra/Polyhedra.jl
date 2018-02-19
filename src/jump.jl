@@ -16,6 +16,6 @@ function LPHRepresentation(model::JuMP.Model)
     LPHRepresentation(A, l, u, lb, ub)
 end
 
-function polyhedron(model::JuMP.Model, lib::PolyhedraLibrary=getlibraryfor(model.numCols, Float64))
+function polyhedron(model::JuMP.Model, lib::PolyhedraLibrary=default_library(FullDim{model.numCols}(), Float64))
     polyhedron(LPHRepresentation(model), lib)
 end

@@ -6,7 +6,7 @@ using GeometryTypes
 
 using MultivariatePolynomials
 
-export PolyhedraLibrary, Polyhedron, getlibrary, getlibraryfor, FullDim
+export PolyhedraLibrary, Polyhedron, FullDim
 
 abstract type PolyhedraLibrary end
 abstract type Polyhedron{N,T} <: GeometryPrimitive{N,T} end

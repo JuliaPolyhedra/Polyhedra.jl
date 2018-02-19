@@ -3,6 +3,7 @@ export IntervalLibrary, Interval
 struct IntervalLibrary{T} <: PolyhedraLibrary
 end
 
+# TODO use vecrep instead of simplerep
 mutable struct Interval{T} <: Polyhedron{1, T}
     hrep::SimpleHRepresentation{1, T}
     vrep::SimpleVRepresentation{1, T}
