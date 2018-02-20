@@ -64,7 +64,7 @@ hrep
 ### Interface
 
 An H-representation is represented as an intersection halfspaces and hyperplanes. The halfspaces can be obtained with `halfspaces` and the hyperplanes with `hyperplane`.
-As an hyperplane ``\langle a, x \rangle = \beta`` is the intersection of the two halfspaces ``\\\\langle a, x \\\\rangle \\\\le \\\\beta`` and ``\\langle a, x \\rangle \\ge \\beta``,
+As an hyperplane ``\langle a, x \rangle = \beta`` is the intersection of the two halfspaces ``\langle a, x \rangle \le \beta`` and ``\langle a, x \rangle \ge \beta``,
 even if the H-representation contains hyperplanes, a list of halfspaces whose intersection is the polyhedron can be obtained with `allhalfspaces`, which has `nhalfspaces(p) + 2nhyperplanes(p)` elements for an H-representation `p` since each hyperplane is split in two halfspaces.
 
 ```@docs
