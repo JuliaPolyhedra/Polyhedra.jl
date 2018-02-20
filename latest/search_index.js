@@ -13,7 +13,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Index",
     "title": "Polyhedra –- Manipulation of Polyhedra in Julia",
     "category": "section",
-    "text": "Polyhedra is a package for polyhedra manipulations in Julia. It provides an unified interface for Polyhedra Manipulation Libraries such as CDDLib.jl and LRSLib.jl.Polyhedra can either be represented by a set of linear inequalities or by vertices and rays. In the first case, the points of the polyhedron are the points which satisfies all the inequalities and in the second case they are the points that can be expressed as a convex combination of the vertices plus a conic combination of the rays. The manipulations that Polyhedra can perform includeProjection: Projection of a polyhedron on a lower dimensional space, e.g. Fourier-Motzkin elimination.\nChanging the Representation\nVertex enumeration problem: Computing the extremal vertices and rays from an inequality representation\nConvex hull problem: Computing a set of linear inequalities describing the polyhedron from a vertex/ray representation\nRemoval of redundant inequalities or redundant vertices/rays.\nDecomposition of 3D/2D polyhedra into a points and triangular faces, enabling easy visualization of 3D/2D polyhedra using DrakeVisualizer or GLVisualize.Depending on the library, those manipulation can either be in floating point or exact rational arithmetic.Polyhedra remains under active development, and we welcome your feedback, suggestions, and bug reports."
+    "text": "Polyhedra is a package for polyhedra manipulations in Julia. It provides an unified interface for Polyhedra Manipulation Libraries such as CDDLib.jl, LRSLib.jl and QHull.Polyhedra can either be represented by a set of linear inequalities or by vertices and rays. In the first case, the points of the polyhedron are the points that satisfies all the inequalities and in the second case they are the points that can be expressed as a convex combination of the vertices plus a conic combination of the rays. The manipulations that Polyhedra can perform includeProjection: Projection of a polyhedron on a lower dimensional space, e.g. Fourier-Motzkin elimination.\nChanging the Representation\nVertex enumeration problem: Computing the extremal vertices and rays from an inequality representation\nConvex hull problem: Computing a set of linear inequalities describing the polyhedron from a vertex/ray representation\nRemoval of redundant inequalities or redundant vertices/rays.\nPlotting of 2D polyhedra using Plots\nDecomposition of 3D polyhedra into vertices and triangular faces, enabling easy visualization of 3D polyhedra using DrakeVisualizer or GLVisualize.Depending on the library, these manipulation can either be in floating point or exact rational arithmetic.Each operation has a default fallback implementation which is used in case the library does not support it. Polyhedra also includes a default library which does not implement anything, hence using every fallback.Polyhedra remains under active development, and we welcome your feedback, suggestions, and bug reports."
 },
 
 {
@@ -29,7 +29,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Index",
     "title": "Contents",
     "category": "section",
-    "text": "Pages = [\"installation.md\", \"representation.md\", \"polyhedron.md\", \"utilities.md\"]\nDepth = 2"
+    "text": "Pages = [\"installation.md\", \"representation.md\", \"polyhedron.md\", \"redundancy.md\", \"projection.md\", \"utilities.md\"]\nDepth = 2"
 },
 
 {
@@ -61,7 +61,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation",
     "title": "Getting Polyhedra",
     "category": "section",
-    "text": "Open a Julia console (e.g. enter julia at the command line) and writejulia> Pkg.add(\"Polyhedra\")To start using Polyhedra, you can now just writejulia> using PolyhedraPolyhedra includes a default implementation for every operation but external library can also be used. See the next section on installing a library."
+    "text": "Open a Julia console (e.g. enter julia at the command line) and writejulia> Pkg.add(\"Polyhedra\")To start using Polyhedra, you can now just writejulia> using PolyhedraPolyhedra includes a default library supporting every operation but external library can also be used. See the next section on installing a library."
 },
 
 {
@@ -85,23 +85,39 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Representation",
     "category": "section",
-    "text": "Polyhedra can be described in 2 different ways.H-representation: As the intersection of finitely many halfspaces given by its facets.\nV-representation: As the convex hull of its vertices + the conic hull of its rays where \'+\' is the Minkowski sum.In Polyhedra.jl, those representations are given the respective abstract types HRepresentation and VRepresentation which are themself subtypes of Representation.For instance, consider the 2-dimensional polyhedron described by the following H-representation:beginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*This set of inequalities can be written in the matrix form Ax leq b whereA = beginpmatrix1  11  -1-1  0endpmatrix b = beginpmatrix100endpmatrixLet\'s create this H-representation using the concrete subtype SimpleHRepresentation of the abstract type HRepresentation.julia> using Polyhedra\njulia> A = [1 1;1 -1;-1 0]\njulia> b = [1,0,0]\njulia> hrep = SimpleHRepresentation(A, b)\njulia> typeof(hrep)\nPolyhedra.SimpleHRepresentation{2,Int64}This polyhedron has three vertices: (00), (01) and (0505). We can create this V-representation using the concrete subtype SimpleVRepresentation of the abstract type VRepresentation. Because 05 is fractional, have two choices: either use exact rational arithemticjulia> V = [0 0; 0 1; 1//2 1//2]\njulia> vrep = SimpleVRepresentation(V)\njulia> typeof(vrep)\nPolyhedra.SimpleVRepresentation{2,Rational{Int64}}or use floating point arithmeticjulia> Vf = [0 0; 0 1; 1/2 1/2]\njulia> vrepf = SimpleVRepresentation(Vf)\njulia> typeof(vrepf)\nPolyhedra.SimpleVRepresentation{2,Float64}"
+    "text": "Polyhedra can be described in 2 different ways.H-representation: As the intersection of finitely many halfspaces given by its facets.\nV-representation: As the convex hull of its vertices + the conic hull of its rays where \'+\' is the Minkowski sum.In Polyhedra.jl, those representations are given the respective abstract types HRepresentation and VRepresentation which are themself subtypes of Representation."
 },
 
 {
-    "location": "representation.html#Polyhedra.fulldim",
+    "location": "representation.html#Polyhedra.HalfSpace",
     "page": "Representation",
-    "title": "Polyhedra.fulldim",
+    "title": "Polyhedra.HalfSpace",
+    "category": "Type",
+    "text": "struct HalfSpace{N, T, AT} <: HRepElement{N, T}\n    a::AT\n    β::T\nend\n\nAn halfspace defined by the set of points x such that langle a x rangle le beta.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.HyperPlane",
+    "page": "Representation",
+    "title": "Polyhedra.HyperPlane",
+    "category": "Type",
+    "text": "struct HyperPlane{N, T, AT} <: HRepElement{N, T}\n    a::AT\n    β::T\nend\n\nAn hyperplane defined by the set of points x such that langle a x rangle = beta.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.hrep",
+    "page": "Representation",
+    "title": "Polyhedra.hrep",
     "category": "Function",
-    "text": "fulldim(rep::Rep)\n\nReturns the dimension of the space in which the representation is defined. That is, a straight line in a 3D space has fulldim 3.\n\n\n\n"
+    "text": "hrep(p::Polyhedron)\n\nReturns an H-representation for the polyhedron p.\n\n\n\nhrep(hyperplanes::ElemIt{<:HyperPlane})\n\nCreates an affine space from the list of hyperplanes hyperplanes.\n\nExamples\n\nhrep([HyperPlane([0, 1, 0], 1), HyperPlane([0, 0, 1], 0)])\n\ncreates the 1-dimensional affine subspace containing all the points (x_1 0 0), i.e. the x_1-axis.\n\nhrep([HyperPlane([1, 1], 1), HyperPlane([1, 0], 0)])\n\ncreates the 0-dimensional affine subspace only containing the point (0 1).\n\n\n\n"
 },
 
 {
-    "location": "representation.html#Representation-interface-1",
+    "location": "representation.html#H-representation-1",
     "page": "Representation",
-    "title": "Representation interface",
+    "title": "H-representation",
     "category": "section",
-    "text": "These functions can be called on both H-representation and V-representationfulldim"
+    "text": "The fundamental element of an H-representation is the halfspaceHalfSpaceAn H-representation can be created as the intersection of several halfspaces. For instance, the polytopebeginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*can be created as follows:HalfSpace([1, 1], 1) ∩ HalfSpace([1, -1], 0) ∩ HalfSpace([-1, 0], 0)Even if HalfSpaces are enough to describe any polyhedron, it is sometimes important to represent the fact that the polyhedron is contained in an affine subspace. For instance, the simplex:beginalign*\n  x_1 + x_2 = 1 \n  x_1 geq 0 \n  x_2 geq 0\nendalign*is 1-dimensional even if it is defined in a 2-dimensional space.The fundamental element of an affine subspace is the hyperplaneHyperPlaneAn affine subspace can be created as the intersection of several hyperplanes. For instanceHyperPlane([1, 1], 1) ∩ HyperPlane([1, 0], 0)represents the 0-dimensional affine subspace only containing the point (0 1).To represent a polyhedron that is not full-dimensional, hyperplanes and halfspaces can be mixed in any order. For instance, the simplex defined above can be obtained as follows:HalfSpace([-1, 0], 0) ∩ HyperPlane([1, 1], 1) ∩ HalfSpace([0, -1], 0)In addition to being created incrementally with intersections, an H-representation can also be created using the hrep functionhrep"
 },
 
 {
@@ -185,11 +201,35 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "representation.html#H-representation-interface-1",
+    "location": "representation.html#Interface-1",
     "page": "Representation",
-    "title": "H-representation interface",
+    "title": "Interface",
     "category": "section",
-    "text": "halfspaces\nnhalfspaces\nhashalfspaces\nhyperplanes\nnhyperplanes\nhashyperplanes\nallhalfspaces\nnallhalfspaces\nhasallhalfspaces\nhrepiscomputed"
+    "text": "An H-representation is represented as an intersection halfspaces and hyperplanes. The halfspaces can be obtained with halfspaces and the hyperplanes with hyperplane. As an hyperplane langle a x rangle = beta is the intersection of the two halfspaces langle a x rangle le beta and langle a x rangle ge beta, even if the H-representation contains hyperplanes, a list of halfspaces whose intersection is the polyhedron can be obtained with allhalfspaces, which has nhalfspaces(p) + 2nhyperplanes(p) elements for an H-representation p since each hyperplane is split in two halfspaces.halfspaces\nnhalfspaces\nhashalfspaces\nhyperplanes\nnhyperplanes\nhashyperplanes\nallhalfspaces\nnallhalfspaces\nhasallhalfspaces\nhrepiscomputed"
+},
+
+{
+    "location": "representation.html#V-representation-1",
+    "page": "Representation",
+    "title": "V-representation",
+    "category": "section",
+    "text": "For instance, consider the 2-dimensional polyhedron described by the following H-representation:beginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*This set of inequalities can be written in the matrix form Ax leq b whereA = beginpmatrix1  11  -1-1  0endpmatrix b = beginpmatrix100endpmatrixLet\'s create this H-representation using the concrete subtype SimpleHRepresentation of the abstract type HRepresentation.julia> using Polyhedra\njulia> A = [1 1;1 -1;-1 0]\njulia> b = [1,0,0]\njulia> hrep = SimpleHRepresentation(A, b)\njulia> typeof(hrep)\nPolyhedra.SimpleHRepresentation{2,Int64}This polyhedron has three vertices: (00), (01) and (0505). We can create this V-representation using the concrete subtype SimpleVRepresentation of the abstract type VRepresentation. Because 05 is fractional, have two choices: either use exact rational arithemticjulia> V = [0 0; 0 1; 1//2 1//2]\njulia> vrep = SimpleVRepresentation(V)\njulia> typeof(vrep)\nPolyhedra.SimpleVRepresentation{2,Rational{Int64}}or use floating point arithmeticjulia> Vf = [0 0; 0 1; 1/2 1/2]\njulia> vrepf = SimpleVRepresentation(Vf)\njulia> typeof(vrepf)\nPolyhedra.SimpleVRepresentation{2,Float64}"
+},
+
+{
+    "location": "representation.html#Polyhedra.fulldim",
+    "page": "Representation",
+    "title": "Polyhedra.fulldim",
+    "category": "Function",
+    "text": "fulldim(rep::Rep)\n\nReturns the dimension of the space in which the representation is defined. That is, a straight line in a 3D space has fulldim 3.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Representation-interface-1",
+    "page": "Representation",
+    "title": "Representation interface",
+    "category": "section",
+    "text": "These functions can be called on both H-representation and V-representationfulldim"
 },
 
 {
@@ -365,7 +405,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedron",
     "category": "section",
-    "text": "As seen in the previous section, a polyhedron can be described in 2 ways: either using the H-representation or the V-representation. A typical problem is: Given the H-(or V-)representation of one or several polyhedra, what is the H-(or V-)representation of some polyhedra obtained after some operations of those initial polyhedra. This description is similar to the description usually given to algorithms except that in that case we talk about numbers given in their binary representation and not polyhedra given in their H-(or V-)representation. This motivates the creation of a type representing polyhedra. Just like the abstract type AbstractArray{N,T} represents an N-dimensional array of elements of type T, the abstract type Polyhedron{N,T} represents an N-dimensional polyhedron of elements of type T.There is typically one concrete subtype of Polyhedron by library. For instance, the CDD library defines CDDPolyhedron and the LRS library defines LRSPolyhedron. It must be said that the type T is not necessarily how the elements are stored internally by the library but the polyhedron will behave just like it is stored that way. For instance, when retreiving an H-(or V-)representation, the representation will be of type T. Therefore Int for T is may result in InexactError. For this reason, by default, the type T chosen is not a subtype of Integer.Consider the representations hrep, vrep and vrepf created in the preceding section. One can use the CDD library, to create an instance of a concrete subtype of Polyhedronjulia> using CDDLib\njulia> polyf = polyhedron(hrep, CDDLibrary())\njulia> typeof(polyhf)\nCDDLib.CDDPolyhedron{2,Float64}We see that the library has choosen to deal with floating point arithmetic. This decision does not depend on the type of hrep but only on the instance of CDDLibrary given. CDDLibrary creates CDDPolyhedron of type either Float64 or Rational{BigInt}. One can choose the first one using CDDLibrary(:float) and the second one using CDDLibrary(:exact), by default it is :float.julia> poly = polyhedron(hrep, CDDLibrary(:exact))\njulia> typeof(poly)\nCDDLib.CDDPolyhedron{2,Rational{BigInt}}The first polyhedron polyf can also be created from its V-representation using either of the 4 following linesjulia> polyf = polyhedron(vrepf, CDDLibrary(:float))\njulia> polyf = polyhedron(vrepf, CDDLibrary())\njulia> polyf = polyhedron(vrep,  CDDLibrary(:float))\njulia> polyf = polyhedron(vrep,  CDDLibrary())and poly using either of those linesjulia> poly = polyhedron(vrepf, CDDLibrary(:exact))\njulia> poly = polyhedron(vrep , CDDLibrary(:exact))of course, creating a representation in floating points with exact arithmetic works here because we have 0.5 which is 0.1 in binary but in general, is not a good idea.julia> Rational{BigInt}(1/2)\n1//2\njulia> Rational{BigInt}(1/3)\n6004799503160661//18014398509481984\njulia> Rational{BigInt}(1/5)\n3602879701896397//18014398509481984"
+    "text": "As seen in the previous section, a polyhedron can be described in 2 ways: either using the H-representation (list of inequalities) or the V-representation (list of points and rays). A typical problem is: Given the H-(or V-)representation of one or several polyhedra, what is the H-(or V-)representation of some polyhedra obtained after some operations on these initial polyhedra. This description is similar to the description usually given to algorithms except that in that case we talk about numbers given in their binary representation and not polyhedra given in their H-(or V-)representation. This motivates the creation of a type representing polyhedra. Just like the abstract type AbstractArray{N,T} represents an N-dimensional array with elements of type T, the abstract type Polyhedron{N,T} represents an N-dimensional polyhedron with elements of coefficient type T.There is typically one concrete subtype of Polyhedron by library. For instance, the CDD library defines CDDPolyhedron and the LRS library defines LRSPolyhedron. It must be said that the type T is not necessarily how the elements are stored internally by the library but the polyhedron will behave just like it is stored that way. For instance, when retreiving an H-(or V-)representation, the representation will be of type T. Therefore using Int for T may result in InexactError. For this reason, by default, the type T chosen is not a subtype of Integer.Consider the representations hrep, vrep and vrepf created in the preceding section. One can use the CDD library, to create an instance of a concrete subtype of Polyhedronjulia> using CDDLib\njulia> polyf = polyhedron(hrep, CDDLibrary())\njulia> typeof(polyhf)\nCDDLib.CDDPolyhedron{2,Float64}We see that the library has choosen to deal with floating point arithmetic. This decision does not depend on the type of hrep but only on the instance of CDDLibrary given. CDDLibrary creates CDDPolyhedron of type either Float64 or Rational{BigInt}. One can choose the first one using CDDLibrary(:float) and the second one using CDDLibrary(:exact), by default it is :float.julia> poly = polyhedron(hrep, CDDLibrary(:exact))\njulia> typeof(poly)\nCDDLib.CDDPolyhedron{2,Rational{BigInt}}The first polyhedron polyf can also be created from its V-representation using either of the 4 following linesjulia> polyf = polyhedron(vrepf, CDDLibrary(:float))\njulia> polyf = polyhedron(vrepf, CDDLibrary())\njulia> polyf = polyhedron(vrep,  CDDLibrary(:float))\njulia> polyf = polyhedron(vrep,  CDDLibrary())and poly using either of those linesjulia> poly = polyhedron(vrepf, CDDLibrary(:exact))\njulia> poly = polyhedron(vrep , CDDLibrary(:exact))of course, creating a representation in floating points with exact arithmetic works here because we have 0.5 which is 0.1 in binary but in general, is not a good idea.julia> Rational{BigInt}(1/2)\n1//2\njulia> Rational{BigInt}(1/3)\n6004799503160661//18014398509481984\njulia> Rational{BigInt}(1/5)\n3602879701896397//18014398509481984"
 },
 
 {
