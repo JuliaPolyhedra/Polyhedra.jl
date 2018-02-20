@@ -2,6 +2,9 @@ using RecipesBase
 
 function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray = nothing) where PT
     hull = PT[]
+    if length(ps) == 0
+        return hull
+    end
     prev = sign_sense == 1 ? first(ps) : last(ps)
     cur = prev
     for j in (sign_sense == 1 ? (2:length(ps)) : ((length(ps)-1):-1:1))
