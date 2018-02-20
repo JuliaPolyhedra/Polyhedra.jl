@@ -21,7 +21,7 @@ To start using Polyhedra, you can now just write
 julia> using Polyhedra
 ```
 
-Polyhedra includes a default implementation for every operation but external library can also be used.
+Polyhedra includes a default library supporting every operation but external library can also be used.
 See the next section on installing a library.
 
 ## Getting Libraries

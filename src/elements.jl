@@ -28,7 +28,14 @@ vecconv{T}(::Type{T}, a::FixedVector) = FixedVector{T}(a)
 
 abstract type HRepElement{N,T} end
 
-# ⟨a, x⟩ ≤ β
+"""
+    struct HalfSpace{N, T, AT} <: HRepElement{N, T}
+        a::AT
+        β::T
+    end
+
+An halfspace defined by the set of points ``x`` such that ``\\langle a, x \\rangle \\le \\beta``.
+"""
 struct HalfSpace{N, T, AT<:MyVec{N, T}} <: HRepElement{N,T}
     a::AT
     β::T
@@ -40,7 +47,14 @@ end
 HalfSpace{N, T}(a::AT, β) where {N, T, AT <: MyVec{N, T}} = HalfSpace{N, T, AT}(a, β)
 HalfSpace{N, T}(a::MyVec, β) where {N, T} = HalfSpace{N, T}(myvec(T, a), T(β))
 
-# ⟨a, x⟩ = β
+"""
+    struct HyperPlane{N, T, AT} <: HRepElement{N, T}
+        a::AT
+        β::T
+    end
+
+An hyperplane defined by the set of points ``x`` such that ``\\langle a, x \\rangle = \\beta``.
+"""
 struct HyperPlane{N, T, AT<:MyVec{N, T}} <: HRepElement{N,T}
     a::AT
     β::T

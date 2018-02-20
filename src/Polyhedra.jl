@@ -40,10 +40,11 @@ end
 similar_type(::Type{<:Point}, ::FullDim{N}, ::Type{T}) where {N, T} = Point{N,T}
 similar_type(::Type{<:Vec}, ::FullDim{N}, ::Type{T}) where {N, T} = Vec{N,T}
 
-# Definitions
+# Interface/Definitions
 include("elements.jl")
 include("mycomp.jl")
 include("representation.jl")
+include("polyhedron.jl")
 include("indices.jl")
 include("iterators.jl")
 
@@ -54,6 +55,7 @@ function similar_type(::Type{ET}, d::FullDim) where {ET<:Union{HRepElement, VRep
     similar_type(ET, d, coefficienttype(ET))
 end
 
+# Operations
 include("repop.jl")
 include("center.jl")
 include("repelemop.jl")
@@ -62,7 +64,7 @@ include("aff.jl")
 include("redundancy.jl")
 include("projection.jl")
 
-# Implementations
+# Implementations of representations
 include("vecrep.jl")
 include("mixedrep.jl")
 include("lphrep.jl")

@@ -1,5 +1,5 @@
 # Mandatory
-export polyhedron, hrep, vrep, hrepiscomputed, vrepiscomputed, loadpolyhedron!
+export polyhedron, hrepiscomputed, vrepiscomputed, loadpolyhedron!
 export volume, surface
 
 polyhedron(rep::Representation{N, T}) where {N, T} = polyhedron(rep, default_library(FullDim{N}(), T))
@@ -27,16 +27,12 @@ Returns whether the H-representation of this polyhedron has been computed.
 """
 function hrepiscomputed end
 
-function hrep end
-
 """
     vrepiscomputed(p::Polyhedron)
 
 Returns whether the V-representation of this polyhedron has been computed.
 """
 function vrepiscomputed(p::Polyhedron) end
-
-function vrep(p::Polyhedron) end
 
 loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ine}}) = error("loadpolyhedron! not implemented for .ine")
 loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("loadpolyhedron! not implemented for .ext") # FIXME ExtFileVRepresentation or just ExtFile

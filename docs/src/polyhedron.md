@@ -1,17 +1,17 @@
 # Polyhedron
 
-As seen in the previous section, a polyhedron can be described in 2 ways: either using the H-representation or the V-representation.
-A typical problem is: Given the H-(or V-)representation of one or several polyhedra, what is the H-(or V-)representation of some polyhedra obtained after some operations of those initial polyhedra.
+As seen in the previous section, a polyhedron can be described in 2 ways: either using the H-representation (list of inequalities) or the V-representation (list of points and rays).
+A typical problem is: Given the H-(or V-)representation of one or several polyhedra, what is the H-(or V-)representation of some polyhedra obtained after some operations on these initial polyhedra.
 This description is similar to the description usually given to algorithms except that in that case we talk about numbers given in their binary representation and not polyhedra given in their H-(or V-)representation.
 This motivates the creation of a type representing polyhedra.
-Just like the abstract type `AbstractArray{N,T}` represents an `N`-dimensional array of elements of type `T`,
-the abstract type `Polyhedron{N,T}` represents an `N`-dimensional polyhedron of elements of type `T`.
+Just like the abstract type `AbstractArray{N,T}` represents an `N`-dimensional array with elements of type `T`,
+the abstract type `Polyhedron{N,T}` represents an `N`-dimensional polyhedron with elements of coefficient type `T`.
 
 There is typically one concrete subtype of `Polyhedron` by library.
 For instance, the CDD library defines `CDDPolyhedron` and the LRS library defines `LRSPolyhedron`.
 It must be said that the type `T` is not necessarily how the elements are stored internally by the library but the polyhedron will behave just like it is stored that way.
 For instance, when retreiving an H-(or V-)representation, the representation will be of type `T`.
-Therefore `Int` for `T` is may result in `InexactError`.
+Therefore using `Int` for `T` may result in `InexactError`.
 For this reason, by default, the type `T` chosen is not a subtype of `Integer`.
 
 Consider the representations `hrep`, `vrep` and `vrepf` created in the preceding section.
