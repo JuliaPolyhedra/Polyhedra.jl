@@ -8,7 +8,7 @@ polytypefor{T}(::Type{T}) = T
 
 function dualfullspace(h::HRepresentation{N, Tin}) where {N, Tin}
     Tout = polytypefor(Tin)
-    SimpleVRepresentation(zeros(Tout, 1, N), eye(Tout, N), IntSet(), IntSet(1:N))
+    MixedMatVRep(zeros(Tout, 1, N), eye(Tout, N), IntSet(), IntSet(1:N))
 end
 
 function doubledescription(h::HRepresentation)
@@ -41,6 +41,6 @@ function doubledescription(v::VRepresentation{N, T}) where {N, T}
     checkvconsistency(v)
     lv = LiftedVRepresentation(v)
     R = -lv.R
-    vl = doubledescription(SimpleHRepresentation(R, zeros(T, size(R, 1)), lv.linset))
+    vl = doubledescription(MixedMatHRep(R, zeros(T, size(R, 1)), lv.linset))
     LiftedHRepresentation(vl.R, vl.Rlinset)
 end

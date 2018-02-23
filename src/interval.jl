@@ -5,8 +5,8 @@ end
 
 # TODO use vecrep instead of simplerep
 mutable struct Interval{T} <: Polyhedron{1, T}
-    hrep::SimpleHRepresentation{1, T}
-    vrep::SimpleVRepresentation{1, T}
+    hrep::MixedMatHRep{1, T}
+    vrep::MixedMatVRep{1, T}
     length::T
 end
 
@@ -59,8 +59,8 @@ function Interval{T}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) wher
         push!(b, -1)
         push!(linset, 1)
     end
-    h = SimpleHRepresentation{1, Float64}(A, b, linset)
-    v = SimpleVRepresentation{1, Float64}(V, R, Vlinset, Rlinset)
+    h = MixedMatHRep{1, Float64}(A, b, linset)
+    v = MixedMatVRep{1, Float64}(V, R, Vlinset, Rlinset)
     volume = haslb && hasub ? max(zero(T), ub - lb) : -one(T)
     Interval{T}(h, v, volume)
 end

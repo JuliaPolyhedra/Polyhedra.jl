@@ -70,7 +70,7 @@ end
 #       for Julia to know them inside the """ ... """ of the docstrings
 HorV = HorVRep = horvrep = singular = singularlin = plural = plurallin = lenp = isnotemptyp = repexem = listexem = :_
 
-for (isVrep, elt, singular) in [(true, :SymPoint, :sympoint), (true, :MyPoint, :point),
+for (isVrep, elt, singular) in [(true, :SymPoint, :sympoint), (true, :AbstractPoint, :point),
                                 (true, :Line, :line), (true, :Ray, :ray),
                                 (false, :HyperPlane, :hyperplane), (false, :HalfSpace, :halfspace)]
     if isVrep
@@ -246,7 +246,7 @@ const HalfSpaceIt{N, T} = ElemIt{<:HalfSpace{N, T}}
 const HIt{N, T} = Union{HyperPlaneIt{N, T}, HalfSpaceIt{N, T}}
 
 const SymPointIt{N, T} = ElemIt{<:SymPoint{N, T}}
-const PointIt{N, T} = ElemIt{<:MyPoint{N, T}}
+const PointIt{N, T} = ElemIt{<:AbstractPoint{N, T}}
 const PIt{N, T} = Union{SymPointIt{N, T}, PointIt{N, T}}
 const LineIt{N, T} = ElemIt{<:Line{N, T}}
 const RayIt{N, T} = ElemIt{<:Ray{N, T}}

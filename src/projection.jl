@@ -102,7 +102,7 @@ end
 #   if length(cut) != N
 #     error("The dimensions of the cut and of the polyhedron do not match")
 #   end
-#   ext = SimpleVRepresentation(getgenerators(p))
+#   ext = MixedMatVRep(getgenerators(p))
 #   V = copy(ext.V)
 #   R = copy(ext.R)
 #   for i in 1:size(V, 1)
@@ -125,6 +125,6 @@ end
 #     R[i,:] = v
 #   end
 #   # no more rays nor linearity since at != 0
-#   ext2 = SimpleVRepresentation([V; R])
+#   ext2 = MixedMatVRep([V; R])
 #   polyhedron(ext2, getlibraryfor(p, eltype(ext2)))
 # end

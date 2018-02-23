@@ -44,7 +44,7 @@ function inaffspace(x, y, L)
     myparallel(x, y)
 end
 
-function inequality_fulltest(ine::SimpleHRepresentation, A, b, linset, aff = ine[collect(linset)])
+function inequality_fulltest(ine::MixedMatHRep, A, b, linset, aff = ine[collect(linset)])
     @test size(ine.A) == size(A)
     @test length(ine.linset) == length(linset)
 
@@ -67,10 +67,10 @@ function inequality_fulltest(p::Polyhedron, A, b, linset)
     A = tomatrix(A)
     detecthlinearities!(p)
     removehredundancy!(p)
-    inequality_fulltest(SimpleHRepresentation(hrep(p)), A, b, linset, SimpleHRepresentation(affinehull(p)))
+    inequality_fulltest(MixedMatHRep(hrep(p)), A, b, linset, MixedMatHRep(affinehull(p)))
 end
 
-function generator_fulltest(ext::SimpleVRepresentation, V, R=Matrix{eltype(V)}(0, size(V, 2)), Vlinset = IntSet(), Rlinset = IntSet())
+function generator_fulltest(ext::MixedMatVRep, V, R=Matrix{eltype(V)}(0, size(V, 2)), Vlinset = IntSet(), Rlinset = IntSet())
     @test size(ext.V) == size(V)
     @test size(ext.R) == size(R)
     @test length(ext.Vlinset) == length(Vlinset)
@@ -104,6 +104,6 @@ function generator_fulltest(p::Polyhedron, V, R=Matrix{eltype(V)}(0, size(V, 2))
     R = tomatrix(R)
     detectvlinearities!(p)
     removevredundancy!(p)
-    generator_fulltest(SimpleVRepresentation(p), V, R, Vlinset, Rlinset)
+    generator_fulltest(MixedMatVRep(p), V, R, Vlinset, Rlinset)
 end
 #generator_fulltest(p::Polyhedron, V) = generator_fulltest(p, V, Matrix{eltype(V)}(0, size(V, 2)))

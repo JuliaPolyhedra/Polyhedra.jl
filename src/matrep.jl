@@ -1,15 +1,22 @@
-export SimpleHRepresentation, SimpleVRepresentation
+export MixedMatHRep, MixedMatVRep
 
 # H-Representation
+"""
+    hrep(A::AbstractMatrix, b::AbstractVector, linset::IntSet=IntSet())
+
+Creates an H-representation for the polyhedron defined by the inequalities ``\\langle A_i, x \\rangle = b_i`` if `i in linset`
+and ``\\langle A_i, x \\rangle \\le b_i`` otherwise where ``A_i`` is the ``i``th row of `A`, i.e. `A[i,:]` and ``b_i`` is `b[i]`.
+"""
+hrep(A::AbstractMatrix, b::AbstractVector, linset::IntSet=IntSet()) = MixedMatHRep(A, b, linset)
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
-mutable struct SimpleHRepresentation{N, T} <: MixedHRep{N, T}
+mutable struct MixedMatHRep{N, T} <: MixedHRep{N, T}
     # Ax <= b
     A::AbstractMatrix{T}
     b::AbstractVector{T}
     linset::IntSet
 
-    function SimpleHRepresentation{N, T}(A::AbstractMatrix, b::AbstractVector, linset::IntSet=IntSet()) where {N, T}
+    function MixedMatHRep{N, T}(A::AbstractMatrix, b::AbstractVector, linset::IntSet=IntSet()) where {N, T}
         if size(A, 1) != length(b)
             error("The length of b must be equal to the number of rows of A")
         end
@@ -23,18 +30,18 @@ mutable struct SimpleHRepresentation{N, T} <: MixedHRep{N, T}
     end
 end
 
-similar_type{N,T}(::Type{<:SimpleHRepresentation}, ::FullDim{N}, ::Type{T}) = SimpleHRepresentation{N,T}
-arraytype(p::Union{SimpleHRepresentation{N, T}, Type{SimpleHRepresentation{N, T}}}) where {N, T} = Vector{T}
+similar_type{N,T}(::Type{<:MixedMatHRep}, ::FullDim{N}, ::Type{T}) = MixedMatHRep{N,T}
+arraytype(p::Union{MixedMatHRep{N, T}, Type{MixedMatHRep{N, T}}}) where {N, T} = Vector{T}
 
-function SimpleHRepresentation(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {S <: Real, T <: Real}
+function MixedMatHRep(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {S <: Real, T <: Real}
     U = promote_type(S, T)
-    SimpleHRepresentation{size(A,2),U}(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
+    MixedMatHRep{size(A,2),U}(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
 end
-SimpleHRepresentation(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {T <: Real} = SimpleHRepresentation{size(A,2),T}(A, b, linset)
+MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {T <: Real} = MixedMatHRep{size(A,2),T}(A, b, linset)
 
-SimpleHRepresentation(h::HRep{N,T}) where {N,T} = SimpleHRepresentation{N,T}(h)
+MixedMatHRep(h::HRep{N,T}) where {N,T} = MixedMatHRep{N,T}(h)
 
-function SimpleHRepresentation{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
+function MixedMatHRep{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
     A = Matrix{T}(nhrep, N)
@@ -48,14 +55,14 @@ function SimpleHRepresentation{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, ha
         A[nhyperplane+i,:] = h.a
         b[nhyperplane+i] = h.β
     end
-    SimpleHRepresentation{N, T}(A, b, linset)
+    MixedMatHRep{N, T}(A, b, linset)
 end
 
-Base.copy(ine::SimpleHRepresentation{N,T}) where {N,T} = SimpleHRepresentation{N,T}(copy(ine.A), copy(ine.b), copy(ine.linset))
+Base.copy(ine::MixedMatHRep{N,T}) where {N,T} = MixedMatHRep{N,T}(copy(ine.A), copy(ine.b), copy(ine.linset))
 
-Base.isvalid(hrep::SimpleHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} = 0 < idx.value <= size(hrep.A, 1) && (idx.value in hrep.linset) == islin(idx)
-Base.done(idxs::HIndices{N, T, <:SimpleHRepresentation{N, T}}, idx::HIndex{N, T}) where {N, T} = idx.value > size(idxs.rep.A, 1)
-Base.get(hrep::SimpleHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(idx)(hrep.A[idx.value,:], hrep.b[idx.value])
+Base.isvalid(hrep::MixedMatHRep{N, T}, idx::HIndex{N, T}) where {N, T} = 0 < idx.value <= size(hrep.A, 1) && (idx.value in hrep.linset) == islin(idx)
+Base.done(idxs::HIndices{N, T, <:MixedMatHRep{N, T}}, idx::HIndex{N, T}) where {N, T} = idx.value > size(idxs.rep.A, 1)
+Base.get(hrep::MixedMatHRep{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(idx)(hrep.A[idx.value,:], hrep.b[idx.value])
 
 function filterintset(J::IntSet, I)
     K = IntSet()
@@ -66,17 +73,17 @@ function filterintset(J::IntSet, I)
     end
     K
 end
-Base.getindex(h::SimpleHRepresentation, I::AbstractArray) = SimpleHRepresentation(h.A[I, :], h.b[I], filterintset(h.linset, I))
+Base.getindex(h::MixedMatHRep, I::AbstractArray) = MixedMatHRep(h.A[I, :], h.b[I], filterintset(h.linset, I))
 
 # V-Representation
 
-mutable struct SimpleVRepresentation{N,T} <: MixedVRep{N,T}
+mutable struct MixedMatVRep{N,T} <: MixedVRep{N,T}
     V::AbstractMatrix{T} # each row is a vertex
     R::AbstractMatrix{T} # each row is a ray
     Vlinset::IntSet
     Rlinset::IntSet
 
-    function SimpleVRepresentation{N, T}(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {N, T}
+    function MixedMatVRep{N, T}(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {N, T}
         if iszero(size(V, 1)) && !iszero(size(R, 1))
             vconsistencyerror()
         end
@@ -93,18 +100,18 @@ mutable struct SimpleVRepresentation{N,T} <: MixedVRep{N,T}
     end
 end
 
-similar_type{N,T}(::Type{<:SimpleVRepresentation}, ::FullDim{N}, ::Type{T}) = SimpleVRepresentation{N,T}
-arraytype(p::Union{SimpleVRepresentation{N, T}, Type{SimpleVRepresentation{N, T}}}) where {N, T} = Vector{T}
+similar_type{N,T}(::Type{<:MixedMatVRep}, ::FullDim{N}, ::Type{T}) = MixedMatVRep{N,T}
+arraytype(p::Union{MixedMatVRep{N, T}, Type{MixedMatVRep{N, T}}}) where {N, T} = Vector{T}
 
-function SimpleVRepresentation(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {S <: Real, T <: Real}
+function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {S <: Real, T <: Real}
     U = promote_type(S, T)
-    SimpleVRepresentation{size(V,2),U}(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Vlinset, Rlinset)
+    MixedMatVRep{size(V,2),U}(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Vlinset, Rlinset)
 end
-SimpleVRepresentation(V::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = SimpleVRepresentation{size(V, 2),T}(V, similar(V, 0, size(V, 2)), linset, IntSet())
+MixedMatVRep(V::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = MixedMatVRep{size(V, 2),T}(V, similar(V, 0, size(V, 2)), linset, IntSet())
 
-SimpleVRepresentation(v::VRep{N,T}) where {N,T} = SimpleVRepresentation{N,T}(v)
+MixedMatVRep(v::VRep{N,T}) where {N,T} = MixedMatVRep{N,T}(v)
 
-function SimpleVRepresentation{N, T}(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:MyPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}) where {N, T}
+function MixedMatVRep{N, T}(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:AbstractPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}) where {N, T}
     nsympoint = length(sympoints)
     npoint = length(points)
     nline = length(lines)
@@ -125,22 +132,33 @@ function SimpleVRepresentation{N, T}(sympoints::ElemIt{<:SymPoint{N, T}}, points
     _fill!(V, Vlinset, nsympoint, points)
     _fill!(R, Rlinset, 0, lines)
     _fill!(R, Rlinset, nline, rays)
-    SimpleVRepresentation{N, T}(V, R, Vlinset, Rlinset)
+    MixedMatVRep{N, T}(V, R, Vlinset, Rlinset)
 end
 
-Base.copy(ext::SimpleVRepresentation{N,T}) where {N,T} = SimpleVRepresentation{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
+Base.copy(ext::MixedMatVRep{N,T}) where {N,T} = MixedMatVRep{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
 
-_mat(hrep::SimpleVRepresentation, ::PIndex) = hrep.V
-_mat(hrep::SimpleVRepresentation, ::RIndex) = hrep.R
-_linset(hrep::SimpleVRepresentation, ::PIndex) = hrep.Vlinset
-_linset(hrep::SimpleVRepresentation, ::RIndex) = hrep.Rlinset
+_mat(hrep::MixedMatVRep, ::PIndex) = hrep.V
+_mat(hrep::MixedMatVRep, ::RIndex) = hrep.R
+_linset(hrep::MixedMatVRep, ::PIndex) = hrep.Vlinset
+_linset(hrep::MixedMatVRep, ::RIndex) = hrep.Rlinset
 
-Base.isvalid(vrep::SimpleVRepresentation{N, T}, idx::VIndex{N, T}) where {N, T} = 0 < idx.value <= size(_mat(vrep, idx), 1) && (idx.value in _linset(vrep, idx)) == islin(idx)
-Base.done(idxs::VIndices{N, T, <:SimpleVRepresentation{N, T}}, idx::VIndex{N, T}) where {N, T} = idx.value > size(_mat(idxs.rep, idx), 1)
-Base.get(vrep::SimpleVRepresentation{N, T}, idx::VIndex{N, T}) where {N, T} = valuetype(idx)(_mat(vrep, idx)[idx.value, :])
+Base.isvalid(vrep::MixedMatVRep{N, T}, idx::VIndex{N, T}) where {N, T} = 0 < idx.value <= size(_mat(vrep, idx), 1) && (idx.value in _linset(vrep, idx)) == islin(idx)
+Base.done(idxs::VIndices{N, T, <:MixedMatVRep{N, T}}, idx::VIndex{N, T}) where {N, T} = idx.value > size(_mat(idxs.rep, idx), 1)
+Base.get(vrep::MixedMatVRep{N, T}, idx::VIndex{N, T}) where {N, T} = valuetype(idx)(_mat(vrep, idx)[idx.value, :])
 
-function Base.getindex(h::SimpleVRepresentation, I::AbstractArray)
+function Base.getindex(h::MixedMatVRep, I::AbstractArray)
     Ir = filter(i -> i <= nrays(h), I)
     Ip = filter(i -> i > nrays(h), I) - nrays(h)
-    SimpleVRepresentation(h.V[Ip,:], h.R[Ir,:], filterintset(h.Vlinset, I), filterintset(h.Rlinset, I))
+    MixedMatVRep(h.V[Ip,:], h.R[Ir,:], filterintset(h.Vlinset, I), filterintset(h.Rlinset, I))
+end
+
+export SimpleHRepresentation, SimpleVRepresentation
+
+function SimpleHRepresentation(args...)
+    warn("`SimpleHRepresentation` is deprecated, it has been renamed to `MixedMatHRep`")
+    MixedMatHRep(args...)
+end
+function SimpleVRepresentation(args...)
+    warn("`SimpleVRepresentation` is deprecated, it has been renamed to `MixedMatVRep`")
+    MixedMatVRep(args...)
 end

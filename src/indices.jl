@@ -16,7 +16,7 @@ const HalfSpaceIndex{N, T} = Index{N, T, <:HalfSpace{N, T}}
 const HIndex{N, T} = Union{HyperPlaneIndex{N, T}, HalfSpaceIndex{N, T}}
 
 const SymPointIndex{N, T} = Index{N, T, <:SymPoint{N, T}}
-const PointIndex{N, T} = Index{N, T, <:MyPoint{N, T}}
+const PointIndex{N, T} = Index{N, T, <:AbstractPoint{N, T}}
 const PIndex{N, T} = Union{SymPointIndex{N, T}, PointIndex{N, T}}
 const LineIndex{N, T} = Index{N, T, <:Line{N, T}}
 const RayIndex{N, T} = Index{N, T, <:Ray{N, T}}
@@ -44,7 +44,7 @@ const HalfSpaceIndices{N, T, RepT} = Indices{N, T, <:HalfSpace{N, T}, RepT}
 const HIndices{N, T, RepT} = Union{HyperPlaneIndices{N, T, RepT}, HalfSpaceIndices{N, T, RepT}}
 
 const SymPointIndices{N, T, RepT} = Indices{N, T, <:SymPoint{N, T}, RepT}
-const PointIndices{N, T, RepT} = Indices{N, T, <:MyPoint{N, T}, RepT}
+const PointIndices{N, T, RepT} = Indices{N, T, <:AbstractPoint{N, T}, RepT}
 const PIndices{N, T, RepT} = Union{SymPointIndices{N, T, RepT}, PointIndices{N, T, RepT}}
 const LineIndices{N, T, RepT} = Indices{N, T, <:Line{N, T}, RepT}
 const RayIndices{N, T, RepT} = Indices{N, T, <:Ray{N, T}, RepT}

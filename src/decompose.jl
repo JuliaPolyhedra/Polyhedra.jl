@@ -2,7 +2,7 @@
 import GeometryTypes.decompose, GeometryTypes.isdecomposable
 
 function fulldecompose(poly::Polyhedron{3,T}) where T
-    ine = SimpleHRepresentation(poly)
+    ine = MixedMatHRep(poly)
 
     # I need to do division so if T is e.g. Integer, I need to use another type
     RT = typeof(one(T)/2)

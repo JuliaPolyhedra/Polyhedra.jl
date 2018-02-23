@@ -163,7 +163,7 @@ function _pushinout!(ins, out, p::SymPoint, h::HalfSpace)
         push!(out, p1)
     end
 end
-function _pushinout!(ins, out, pr::Union{AbstractPoint, AbstractRay}, h::HalfSpace)
+function _pushinout!(ins, out, pr::Union{AbstractPoint, Ray}, h::HalfSpace)
     if pr in h
         push!(ins, pr)
     else

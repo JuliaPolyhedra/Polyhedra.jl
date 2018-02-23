@@ -3,10 +3,10 @@ abstract type VPolytope{N, T, AT} <: VRepresentation{N, T} end
 @norepelem VPolytope Line
 @norepelem VPolytope Ray
 
-mutable struct PointsHull{N, T, PT<:MyPoint{N, T}} <: VRepresentation{N, T}
+mutable struct PointsHull{N, T, PT<:AbstractPoint{N, T}} <: VRepresentation{N, T}
     points::Vector{PT}
 end
-PointsHull{N, T}(ps::ElemIt{PT}) where {N, T, PT<:MyPoint{N, T}} = PointsHull{N, T, PT}(collect(ps))
+PointsHull{N, T}(ps::ElemIt{PT}) where {N, T, PT<:AbstractPoint{N, T}} = PointsHull{N, T, PT}(collect(ps))
 arraytype(::PointsHull{N, T, PT}) where {N, T, PT} = PT
 
 @norepelem PointsHull SymPoint

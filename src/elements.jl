@@ -5,7 +5,6 @@ export HRepElement, HalfSpace, HyperPlane
 export VRepElement, AbstractPoint, SymPoint, AbstractRay, Ray, Line
 export islin, isray, ispoint, ispoint, coord, lift, simplify
 
-const MyPoint{N,T} = Union{Point{N,T},AbstractVector{T}}
 mypoint{T}(::Type{T}, a::AbstractVector) = AbstractArray{T}(a)
 mypoint{T}(::Type{T}, a::AbstractVector{T}) = a
 mypoint{N,T}(::Type{T}, a::Point{N}) = Point{N,T}(a)
@@ -114,15 +113,36 @@ end
 # Linear Ray:
 # Line{N, T}
 
-struct SymPoint{N, T, AT <: MyPoint{N, T}}
+"""
+    const AbstractPoint{N, T} = Union{Point{N, T}, AbstractVector{T}}
+
+A point in dimension `N` and of coefficient type `T`.
+"""
+const AbstractPoint{N, T} = Union{Point{N, T}, AbstractVector{T}}
+
+"""
+    struct SymPoint{N, T, AT <: AbstractPoint{N, T}}
+        a::AT
+    end
+
+The convex hull of `a` and `-a`.
+"""
+struct SymPoint{N, T, AT <: AbstractPoint{N, T}}
     a::AT
-    function SymPoint{N, T}(a::AT) where {N, T, AT<:MyPoint{N, T}}
+    function SymPoint{N, T}(a::AT) where {N, T, AT<:AbstractPoint{N, T}}
         new{N, T, AT}(a)
     end
 end
 SymPoint{N, T, AT}(sympoint::SymPoint) where {N, T, AT} = SymPoint{N, T, AT}(AT(sympoint.a))
-SymPoint{N, T}(a::MyPoint) where {N,T} = SymPoint{N,T}(mypoint(T, a))
+SymPoint{N, T}(a::AbstractPoint) where {N,T} = SymPoint{N,T}(mypoint(T, a))
 
+"""
+    struct Ray{N, T, AT <: MyVec{N, T}}
+        a::AT
+    end
+
+The conic hull of `a`, i.e. the set of points `λa` where `λ` is any nonnegative real number.
+"""
 struct Ray{N, T, AT <: MyVec{N, T}}
     a::AT
     function Ray{N, T, AT}(a::AT) where {N, T, AT<:MyVec{N, T}}
@@ -133,6 +153,13 @@ Ray{N, T, AT}(ray::Ray) where {N, T, AT} = Ray{N, T, AT}(AT(ray.a))
 Ray{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Ray{N, T, AT}(a)
 Ray{N, T}(a::MyVec) where {N,T} = Ray{N,T}(myvec(T, a))
 
+"""
+    struct Line{N, T, AT <: MyVec{N, T}}
+        a::AT
+    end
+
+The conic hull of `a` and `-a`, i.e. the set of points `λa` where `λ` is any real number.
+"""
 struct Line{N, T, AT<:MyVec{N, T}}
     a::AT
     function Line{N, T, AT}(a::AT) where {N, T, AT<:MyVec{N, T}}
@@ -152,7 +179,7 @@ vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 # Ray - Line is done in remproj
 (-)(r::Ray, s::Union{Ray, Line}) = Ray(r.a - s.a)
 (+)(r::Ray, s::Ray) = Ray(r.a + s.a)
-(+)(p::MyPoint, r::Ray) = p + coord(r)
+(+)(p::AbstractPoint, r::Ray) = p + coord(r)
 
 for op in [:dot, :cross]
     @eval begin
@@ -181,7 +208,6 @@ for ElemT in (:SymPoint, :Ray, :Line)
     end
 end
 
-const AbstractPoint{N, T} = Union{Point{N, T}, AbstractVector{T}, SymPoint{N, T}}
 const AbstractRay{N, T} = Union{Ray{N, T}, Line{N, T}}
 const FixedVRepElement{N,T} = Union{Point{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,T}}
 const VRepElement{N,T} = Union{FixedVRepElement{N,T}, AbstractVector{T}}
@@ -192,10 +218,10 @@ FullDim(::Union{FixedRepElement{N}, Type{<:FixedRepElement{N}}}) where {N} = Ful
 MultivariatePolynomials.coefficienttype(::Union{FixedRepElement{N, T}, Type{<:FixedRepElement{N, T}}}) where {N, T} = T
 
 islin(::Union{SymPoint, Line, Type{<:Union{SymPoint, Line}}}) = true
-islin(::Union{MyPoint, Ray, Type{<:Union{MyPoint, Ray}}}) = false
-ispoint(::Union{SymPoint, MyPoint, Type{<:Union{SymPoint, MyPoint}}}) = true
+islin(::Union{AbstractPoint, Ray, Type{<:Union{AbstractPoint, Ray}}}) = false
+ispoint(::Union{SymPoint, AbstractPoint, Type{<:Union{SymPoint, AbstractPoint}}}) = true
 ispoint(::Union{Line, Ray, Type{<:Union{Line, Ray}}}) = false
-isray(::Union{SymPoint, MyPoint, Type{<:Union{SymPoint, MyPoint}}}) = false
+isray(::Union{SymPoint, AbstractPoint, Type{<:Union{SymPoint, AbstractPoint}}}) = false
 isray(::Union{Line, Ray, Type{<:Union{Line, Ray}}}) = true
 
 coord(v::ElemT) where {ElemT<:Union{Point,AbstractVector}} = v

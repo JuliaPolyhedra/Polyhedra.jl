@@ -30,36 +30,36 @@ function SimplePolyhedron{N, T, HRepT, VRepT}(vits::VIt...) where {N, T, HRepT, 
 end
 
 function SimplePolyhedron{N, T}(rep::HRepresentation{N, T}) where {N, T}
-    SimplePolyhedron{N, T, typeof(rep), SimpleVRepresentation{N, T}}(rep)
+    SimplePolyhedron{N, T, typeof(rep), MixedMatVRep{N, T}}(rep)
 end
 function SimplePolyhedron{N, T}(rep::VRepresentation{N, T}) where {N, T}
-    SimplePolyhedron{N, T, SimpleHRepresentation{N, T}, typeof(rep)}(rep)
+    SimplePolyhedron{N, T, MixedMatHRep{N, T}, typeof(rep)}(rep)
 end
 
 #function SimplePolyhedron{N, T}(rep::HRepIterator) where {N, T}
-#    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(rep))
+#    SimplePolyhedron{N, T}(MixedMatHRep{N, T}(rep))
 #end
 function SimplePolyhedron{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
-    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(hyperplanes, halfspaces))
+    SimplePolyhedron{N, T}(MixedMatHRep{N, T}(hyperplanes, halfspaces))
 end
 #function SimplePolyhedron{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}) where {N, T}
-#    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(hyperplanes))
+#    SimplePolyhedron{N, T}(MixedMatHRep{N, T}(hyperplanes))
 #end
 #function SimplePolyhedron{N, T}(halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
-#    SimplePolyhedron{N, T}(SimpleHRepresentation{N, T}(halfspaces))
+#    SimplePolyhedron{N, T}(MixedMatHRep{N, T}(halfspaces))
 #end
 
 #function SimplePolyhedron{N, T}(rep::VRepIterator) where {N, T}
-#    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rep))
+#    SimplePolyhedron{N, T}(MixedMatVRep{N, T}(rep))
 #end
-function SimplePolyhedron{N, T}(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:MyPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}) where {N, T}
-    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(sympoints, points, lines, rays))
+function SimplePolyhedron{N, T}(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:AbstractPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}) where {N, T}
+    SimplePolyhedron{N, T}(MixedMatVRep{N, T}(sympoints, points, lines, rays))
 end
 #function SimplePolyhedron{N, T}(rays::RayIterator) where {N, T}
-#    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(rays))
+#    SimplePolyhedron{N, T}(MixedMatVRep{N, T}(rays))
 #end
 #function SimplePolyhedron{N, T}(points::PointIterator) where {N, T}
-#    SimplePolyhedron{N, T}(SimpleVRepresentation{N, T}(points))
+#    SimplePolyhedron{N, T}(MixedMatVRep{N, T}(points))
 #end
 
 function polyhedron(rep::Representation{N}, ::SimplePolyhedraLibrary{T}) where {N, T}
@@ -71,7 +71,7 @@ end
 function polyhedron(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}, ::SimplePolyhedraLibrary{T}) where {N, T}
     SimplePolyhedron{N, T}(hps, hss)
 end
-function polyhedron(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:MyPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}, ::SimplePolyhedraLibrary{T}) where {N, T}
+function polyhedron(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:AbstractPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}, ::SimplePolyhedraLibrary{T}) where {N, T}
     SimplePolyhedron{N, T}(sympoints, points, lines, rays)
 end
 

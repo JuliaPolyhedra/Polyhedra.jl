@@ -69,7 +69,7 @@ include("vecrep.jl")
 include("mixedrep.jl")
 include("lphrep.jl")
 include("jump.jl")
-include("simplerep.jl")
+include("matrep.jl")
 include("liftedrep.jl")
 include("doubledescription.jl")
 include("interval.jl") # 1D polyhedron

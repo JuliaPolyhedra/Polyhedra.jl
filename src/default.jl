@@ -1,7 +1,7 @@
 export default_type, default_library, similar_library, library, defaultLPsolverfor
 
 # TODO use vecrep instead of simplerep
-default_type(::FullDim{N}, ::Type{T}) where {N, T} = SimplePolyhedron{N, T, SimpleHRepresentation{N, T}, SimpleVRepresentation{N, T}}
+default_type(::FullDim{N}, ::Type{T}) where {N, T} = SimplePolyhedron{N, T, MixedMatHRep{N, T}, MixedMatVRep{N, T}}
 default_type(::FullDim{1}, ::Type{T}) where T = Interval{T}
 
 default_library(::FullDim, ::Type{T}) where T = SimplePolyhedraLibrary{T}()
