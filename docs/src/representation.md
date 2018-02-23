@@ -7,6 +7,12 @@ Polyhedra can be described in 2 different ways.
 
 In `Polyhedra.jl`, those representations are given the respective abstract types `HRepresentation` and `VRepresentation` which are themself subtypes of `Representation`.
 
+These functions can be called on both H-representation and V-representation
+```@docs
+fulldim
+coefficienttype
+```
+
 ## H-representation
 
 The fundamental element of an H-representation is the halfspace
@@ -63,9 +69,9 @@ hrep
 
 ### Interface
 
-An H-representation is represented as an intersection halfspaces and hyperplanes. The halfspaces can be obtained with `halfspaces` and the hyperplanes with `hyperplane`.
+An H-representation is represented as an intersection halfspaces and hyperplanes. The halfspaces can be obtained with [`halfspaces`](@ref) and the hyperplanes with [`hyperplanes`](@ref).
 As an hyperplane ``\langle a, x \rangle = \beta`` is the intersection of the two halfspaces ``\langle a, x \rangle \le \beta`` and ``\langle a, x \rangle \ge \beta``,
-even if the H-representation contains hyperplanes, a list of halfspaces whose intersection is the polyhedron can be obtained with `allhalfspaces`, which has `nhalfspaces(p) + 2nhyperplanes(p)` elements for an H-representation `p` since each hyperplane is split in two halfspaces.
+even if the H-representation contains hyperplanes, a list of halfspaces whose intersection is the polyhedron can be obtained with [`allhalfspaces`](@ref), which has `nhalfspaces(p) + 2nhyperplanes(p)` elements for an H-representation `p` since each hyperplane is split in two halfspaces.
 
 ```@docs
 halfspaces
@@ -77,60 +83,62 @@ hashyperplanes
 allhalfspaces
 nallhalfspaces
 hasallhalfspaces
-hrepiscomputed
 ```
 
 ## V-representation
 
-For instance, consider the 2-dimensional polyhedron described by the following H-representation:
-```math
-\begin{align*}
-  x_1 + x_2 &\leq 1 \\
-  x_1 - x_2 &\leq 0 \\
-  x_1 & \geq 0.
-\end{align*}
-```
-
-This set of inequalities can be written in the matrix form ``Ax \leq b`` where
-```math
-A = \begin{pmatrix}1 & 1\\1 & -1\\-1 & 0\end{pmatrix}, b = \begin{pmatrix}1\\0\\0\end{pmatrix}.
-```
-
-Let's create this H-representation using the concrete subtype `SimpleHRepresentation` of the abstract type `HRepresentation`.
-```julia
-julia> using Polyhedra
-julia> A = [1 1;1 -1;-1 0]
-julia> b = [1,0,0]
-julia> hrep = SimpleHRepresentation(A, b)
-julia> typeof(hrep)
-Polyhedra.SimpleHRepresentation{2,Int64}
-```
-
-This polyhedron has three vertices: ``(0,0)``, ``(0,1)`` and ``(0.5,0.5)``.
-We can create this V-representation using the concrete subtype `SimpleVRepresentation` of the abstract type `VRepresentation`.
-Because ``0.5`` is fractional, have two choices: either use exact rational arithemtic
-```julia
-julia> V = [0 0; 0 1; 1//2 1//2]
-julia> vrep = SimpleVRepresentation(V)
-julia> typeof(vrep)
-Polyhedra.SimpleVRepresentation{2,Rational{Int64}}
-```
-
-or use floating point arithmetic
-```julia
-julia> Vf = [0 0; 0 1; 1/2 1/2]
-julia> vrepf = SimpleVRepresentation(Vf)
-julia> typeof(vrepf)
-Polyhedra.SimpleVRepresentation{2,Float64}
-```
-
-## Representation interface
-These functions can be called on both H-representation and V-representation
+The fundamental elements of an V-representation are the points and rays
 ```@docs
-fulldim
+AbstractPoint
+Ray
 ```
 
-### V-representation interface
+A V-representation can be created as the minkowski sum between a convex hull of points and a conic hull of rays.
+For instance, the positive orthant without the simplex defined in the H-representation section can be created as follows:
+```julia
+convexhull([1, 0], [0, 1]) + Ray([1, 0]) + Ray([0, 1])
+```
+Note that the sum of rays is equivalent to their minkowski sum so we can simply sum the two rays `Ray([1, 0]) + Ray([0, 1])` to get their conic hull.
+
+The V-representation represents the polyhedron as a minkowski sum of a polytope and a polyhedral cone.
+The polytope is represented using a *P-representation* : a convex hull of points.
+The polyhedral cone is represented using an *R-representation* : a conic hull of rays.
+
+Even if rays are enough to describe any polyhedral cone, it is sometimes important to represent the fact that the polyhedron contains an affine subspace.
+For instance, the polyhedron created with
+```julia
+convexhull([1, 0], [0, 1]) + Ray([1, 1]) + Ray([-1, -1])
+```
+contains the line `[1, 1]`.
+
+The fundamental element of an affine subspace is the line
+```@docs
+Line
+```
+
+An affine subspace can be created as the conic hull/minkownski sum of several lines. For instance
+```julia
+Line([1, 0]) + Line([0, 1])
+```
+represents the full space.
+
+Likewise, a *P-representation* can contain symmetric points
+```@docs
+SymPoint
+```
+
+In addition to being created incrementally with convex hull and minkowsky addition, a V-representation can also be created using the `vrep` function
+```@docs
+vrep
+```
+
+### Interface
+
+A P-representation is represented as a convex hull of symmetric points and points.
+The points can be obtained with [`points`](@ref) and the symmetric points with [`sympoints`](@ref).
+As a symmetric point ``p`` is the convex hull of of the two points ``p`` and ``-p``,
+even if the P-representation contains symmetric points, a list of points whose convex hull is the polytope can be obtained with [`allpoints`](@ref), which has `npoints(P) + 2nsympoints(P)` elements for a P-representation `P` since each symmetric point is split in two points.
+
 ```@docs
 points
 npoints
@@ -141,6 +149,14 @@ hassympoints
 allpoints
 nallpoints
 hasallpoints
+```
+
+An R-representation is represented as a conic hull of lines and rays.
+The rays can be obtained with [`rays`](@ref) and the lines with [`lines`](@ref).
+As a line ``r`` is the conic hull of of the two rays ``r`` and ``-r``,
+even if the R-representation contains lines, a list of rays whose conic hull is the polyhedral cone can be obtained with [`allrays`](@ref), which has `nrays(R) + 2nlines(R)` elements for an R-representation `R` since each line is split in two rays.
+
+```@docs
 rays
 nrays
 hasrays
@@ -150,5 +166,4 @@ haslines
 allrays
 nallrays
 hasallrays
-vrepiscomputed
 ```

@@ -4,7 +4,7 @@ function simplextest(lib::PolyhedraLibrary)
     ls = IntSet([1])
     V = [0 1; 1 0]
 
-    ine = SimpleHRepresentation(A, b, ls)
+    ine = hrep(A, b, ls)
     poly1 = polyhedron(ine, lib)
     @test !isempty(poly1, defaultLPsolverfor(poly1, lpsolver))
     center, radius = chebyshevcenter(poly1, defaultLPsolverfor(poly1, lpsolver))
@@ -13,19 +13,19 @@ function simplextest(lib::PolyhedraLibrary)
     inequality_fulltest(poly1, A, b, ls)
     generator_fulltest(poly1, V)
 
-    ext = SimpleVRepresentation(V)
+    ext = vrep(V)
     poly2 = polyhedron(ext, lib)
     @test !isempty(poly2)
     inequality_fulltest(poly2, A, b, ls)
     generator_fulltest(poly2, V)
 
     # x_1 cannot be 2
-    poly = polyhedron(SimpleHRepresentation([A; 1 0], [b; 2], union(ls, IntSet([4]))), lib)
+    poly = polyhedron(hrep([A; 1 0], [b; 2], union(ls, IntSet([4]))), lib)
     @test isempty(poly, defaultLPsolverfor(poly, lpsolver))
 
     # We now add the vertex (0, 0)
     V0 = [0 0]
-    ext0 = SimpleVRepresentation(V0)
+    ext0 = vrep(V0)
     @test translate(ext0, [1, 0]).V == [1 0]
 
     push!(poly1, ext0)
@@ -37,13 +37,13 @@ function simplextest(lib::PolyhedraLibrary)
 
     # nonnegative orthant cut by x_1 + x_2 = 1
     Vray = [1 0; 0 1]
-    extray = SimpleVRepresentation(zeros(Int, 1, 2), Vray)
+    extray = vrep(zeros(Int, 1, 2), Vray)
     poly3 = polyhedron(extray, lib)
     @test_throws ErrorException chebyshevcenter(poly3)
     Acut = [1 1]
     bcut = [1]
     linsetcut = IntSet([1])
-    inecut = SimpleHRepresentation(Acut, bcut, linsetcut)
+    inecut = hrep(Acut, bcut, linsetcut)
     @test !ininterior([1/2, 1/2], inecut)
     @test inrelativeinterior([1/2, 1/2], inecut)
     push!(poly3, inecut)
@@ -65,7 +65,7 @@ function simplextest(lib::PolyhedraLibrary)
     linsetlin = IntSet(1)
     Vlin = [1 0]
     Rlin = [1 -1]
-    inelin = SimpleHRepresentation([1 1; -1 -1], [1, -1], IntSet())
+    inelin = hrep([1 1; -1 -1], [1, -1], IntSet())
     plin = polyhedron(inelin, lib)
     inequality_fulltest(plin, Alin, blin, linsetlin)
     generator_fulltest(plin, Vlin, Rlin, IntSet(), IntSet(1))
@@ -73,10 +73,10 @@ function simplextest(lib::PolyhedraLibrary)
     #@test linset(ineout) == IntSet(1)
     Vlin = [1 0]
     Rlin = [1 -1]
-    extlin = SimpleVRepresentation(Vlin, [1 -1; -1 1])
+    extlin = vrep(Vlin, [1 -1; -1 1])
     plin = polyhedron(extlin, lib)
     inequality_fulltest(plin, Alin, blin, linsetlin)
     generator_fulltest(plin, Vlin, Rlin, IntSet(), IntSet(1))
-    extout = SimpleVRepresentation(plin)
+    extout = vrep(plin)
     #@test linset(extout) == IntSet(1)
 end

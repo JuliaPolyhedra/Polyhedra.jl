@@ -6,8 +6,8 @@ end
 @testset "Testing error for unimplemented method" begin
     Polyhedra.polyhedron{N, T}(h::Representation{N, T}, ::TestLib) = TestPoly{N, T}()
 
-    h = SimpleHRepresentation([1 0; 0 1], [0, 0])
-    v = SimpleVRepresentation([1 0; 0 1], [1 1])
+    h = hrep([1 0; 0 1], [0, 0])
+    v = vrep([1 0; 0 1], [1 1])
     p = polyhedron(h, TestLib())
 
     @test_throws ErrorException push!(p, h)

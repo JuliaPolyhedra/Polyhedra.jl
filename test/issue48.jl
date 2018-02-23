@@ -1,6 +1,6 @@
 function issue48test(lib::PolyhedraLibrary)
     v = [-5 -15; 2 3; -4 2; -2 5]
-    V = SimpleVRepresentation(v)
+    V = vrep(v)
     p = polyhedron(V, lib)
     b = [70, 16, 8, 15]
     A = [-17  1
@@ -19,11 +19,11 @@ function issue48test(lib::PolyhedraLibrary)
            8 -13]
     b = [13, 181, 173, 15, 155]
 
-    V1 = SimpleVRepresentation(v)
+    V1 = vrep(v)
     p = polyhedron(V1, lib)
     inequality_fulltest(p, A, b, IntSet([]))
 
-    V2 = SimpleVRepresentation(v[ind, :])
+    V2 = vrep(v[ind, :])
     p = polyhedron(V2, lib)
     inequality_fulltest(p, A, b, IntSet([]))
 end

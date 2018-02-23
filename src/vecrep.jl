@@ -1,40 +1,152 @@
+# collect(::Vector) does a copy.
+# lazy_collect avoid this copy in case `v` is a Vector
+lazy_collect(v::Vector) = v
+lazy_collect(v) = collect(v)
+
+# H-representation
+
+"""
+    hrep(hyperplanes::HyperPlaneIt, halfspaces::HalfSpaceIt)
+
+Creates a H-representation for the polyhedron equal to the intersection of the hyperplanes `hyperplanes` and halfspaces `halfspaces`.
+
+### Examples
+For instance, the simplex:
+```math
+\\begin{align*}
+  x_1 + x_2 &= 1 \\
+  x_1 &\\geq 0 \\
+  x_2 &\\geq 0
+\\end{align*}
+```
+can be created as follows
+```julia
+hrep([HalfSpace([-1, 0], 0)], [HyperPlane([1, 1], 1), HalfSpace([0, -1], 0)])
+```
+"""
+hrep(hyperplanes::HyperPlaneIt, halfspaces::HalfSpaceIt) = Intersection(hyperplanes, halfspaces)
+
+mutable struct Intersection{N, T, AT} <: HRepresentation{N, T}
+    hyperplanes::HAffineSpace{N, T, AT}
+    halfspaces::Vector{HalfSpace{N, T, AT}}
+    function Intersection{N, T, AT}(hyperplanes::ElemIt{HyperPlane{N, T, AT}}, halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT}
+        new{N, T, AT}(HAffineSpace(hyperplanes), lazy_collect(halfspaces))
+    end
+end
+Intersection(hyperplanes::ElemIt{HyperPlane{N, T, AT}}, halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT} = Intersection{N, T, AT}(hyperplanes, halfspaces)
+arraytype(::Intersection{N, T, AT}) where {N, T, AT} = AT
+
+@subrepelem Intersection HyperPlane hyperplanes
+@subrepelem Intersection HalfSpace halfspaces
+
+# V-representation
+
 abstract type VPolytope{N, T, AT} <: VRepresentation{N, T} end
 
 @norepelem VPolytope Line
 @norepelem VPolytope Ray
 
-mutable struct PointsHull{N, T, PT<:AbstractPoint{N, T}} <: VRepresentation{N, T}
-    points::Vector{PT}
-end
-PointsHull{N, T}(ps::ElemIt{PT}) where {N, T, PT<:AbstractPoint{N, T}} = PointsHull{N, T, PT}(collect(ps))
-arraytype(::PointsHull{N, T, PT}) where {N, T, PT} = PT
+abstract type VSymPolytope{N, T, AT} <: VPolytope{N, T, AT} end
 
-@norepelem PointsHull SymPoint
+@norepelem VSymPolytope Point
+
+"""
+    vrep(sympoints::SymPointIt)
+
+Creates a V-representation for the symmetric polytope equal to the convex hull of the symmetric points `sympoints`.
+
+### Examples
+The following creates a square
+```julia
+vrep([SymPoint([1, 1])], [SymPoint([1, -1])])
+```
+"""
+vrep(sympoints::SymPointIt) = SymPointsHull(sympoints)
+
+mutable struct SymPointsHull{N, T, AT} <: VSymPolytope{N, T, AT}
+    sympoints::Vector{SymPoint{N, T, AT}}
+end
+SymPointsHull(ps::ElemIt{SymPoint{N, T, AT}}) where {N, T, AT<:AbstractPoint{N, T}} = SymPointsHull{N, T, AT}(collect(ps))
+arraytype(::SymPointsHull{N, T, AT}) where {N, T, AT} = AT
+
+"""
+    vrep(sympoints::SymPointIt, points::PointIt)
+
+Creates a V-representation for the polytope equal to the convex hull of the symmetric points `sympoints` and points `points`.
+
+### Examples
+The convex hull of ``(0, 0)``, ``(0, 1)`` and ``(1/2, 1/2)`` can be created as follows using exact arithmetic
+```julia
+vrep([[0, 0], [0, 1], [1//2, 1//2]])
+```
+or as follows using floating point arithmetic
+```julia
+vrep([[0, 0], [0, 1], [1/2, 1/2]])
+```
+"""
+vrep(sympoints::SymPointIt, points::PointIt) = PointsHull(sympoints, points)
+
+mutable struct PointsHull{N, T, AT} <: VPolytope{N, T, AT}
+    sympoints::SymPointsHull{N, T, AT}
+    points::Vector{AT}
+    function PointsHull{N, T, AT}(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}) where {N, T, AT}
+        new{N, T, AT}(SymPointsHull(sympoints), lazy_collect(points))
+    end
+end
+PointsHull(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}) where {N, T, AT} = PointsHull{N, T, AT}(sympoints, points)
+arraytype(::PointsHull{N, T, AT}) where {N, T, AT} = AT
+
 @vecrepelem PointsHull Point points
+@subrepelem PointsHull SymPoint sympoints
+
+"""
+    vrep(lines::LineIt, rays::RayIt)
+
+Creates a V-representation for the polyhedral cone equal to the conic hull of the lines `lines` and rays `rays`.
+
+### Examples
+```julia
+vrep([Line([0, 1])], [Ray([1, 0])])
+```
+creates a V-representation for the halfspace ``x_1 \\ge 0``.
+"""
+vrep(lines::LineIt, rays::RayIt) = RaysHull(lines, rays)
 
 mutable struct RaysHull{N, T, AT} <: VCone{N, T, AT}
     lines::VAffineSpace{N, T, AT}
     rays::Vector{Ray{N, T, AT}}
-    function RaysHull{N, T, AT}(ls::ElemIt{Line{N, T, AT}}, rs::Vector{Ray{N, T, AT}}) where {N, T, AT}
-        new{N, T, AT}(VAffineSpace{N, T, AT}(ls), rs)
+    function RaysHull{N, T, AT}(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
+        new{N, T, AT}(VAffineSpace(ls), lazy_collect(rs))
     end
 end
-function RaysHull{N, T, AT}(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
-    RaysHull{N, T, AT}(ls, collect(rs))
-end
-function RaysHull{N, T}(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
+function RaysHull(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
     RaysHull{N, T, AT}(ls, rs)
 end
 arraytype(::RaysHull{N, T, AT}) where {N, T, AT} = AT
 
 @vecrepelem RaysHull Ray rays
+@subrepelem RaysHull Line lines
 
-for op in (:nlines, :startline, :doneline, :nextline)
-    @eval begin
-        $op(p::RaysHull, args...) = $op(p.ls, args...)
+"""
+    vrep(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt)
+
+Creates a V-representation for the polyhedron equal to the minkowski sum of the convex hull of `sympoints` and `points` with the conic hull of `lines` and `rays`.
+"""
+vrep(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt)
+
+mutable struct Hull{N, T, AT} <: VRepresentation{N, T}
+    points::PointsHull{N, T, AT}
+    rays::RaysHull{N, T, AT}
+    function Hull{N, T, AT}(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
+        new{N, T, AT}(PointsHull(sympoints, points), RaysHull(lines, rays))
     end
 end
-nrays(p::RaysHull) = length(p.rs)
-startray(p::RaysHull) = start(p.rs)
-nextray(p::RaysHull, state) = next(p.rs, state)
-doneray(p::RaysHull, state) = done(p.rs, state)
+function Hull(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
+    Hull{N, T, AT}(sympoints, points, lines, rays)
+end
+arraytype(::Hull{N, T, AT}) where {N, T, AT} = AT
+
+@subrepelem Hull SymPoint points
+@subrepelem Hull Point points
+@subrepelem Hull Line rays
+@subrepelem Hull Ray rays

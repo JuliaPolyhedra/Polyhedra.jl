@@ -2,8 +2,8 @@ function doctest(lib::PolyhedraLibrary)
     A = [1 1;1 -1;-1 0]
     b = [1,0,0]
     V = [1//2 1//2; 0 1; 0 0]
-    hrep = SimpleHRepresentation(A, b)
-    p = polyhedron(hrep, lib)
+    hr = hrep(A, b)
+    p = polyhedron(hr, lib)
     solver = defaultLPsolverfor(p, lpsolver)
     @test issubset(p, HalfSpace([1, -1], 0), solver)
     @test !(issubset(p, HalfSpace([1, 1], 0), solver))

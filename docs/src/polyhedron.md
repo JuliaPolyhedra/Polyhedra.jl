@@ -170,3 +170,10 @@ If nothing is specified as in the block of code above, the behavior depends on t
 If neither Fourier-Motzkin nor block elimination is implemented or if the V-representation is already computed then `:ProjectGenerators` is chosen.
 Otherwise, Polyhedra lets the library decide. In CDDLib, `:FourierMotzkin` is chosen when only the last dimension needs to be eliminated and `:BlockElimination` is chosen otherwise.
 Note that CDDLib only supports projecting the last trailing dimensions.
+
+# TODO
+
+```@docs
+hrepiscomputed
+vrepiscomputed
+```
