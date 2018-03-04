@@ -107,7 +107,11 @@
                          (vrep(ps), Vector{Int}),
                          ((@inferred vrep(sps)), SVector{2, Int}),
                          ((@inferred vrep(symps, ps)), Vector{Int}),
+                         ((@inferred convexhull(symps..., ps...)), Vector{Int}),
+                         ((@inferred convexhull(ps..., symps...)), Vector{Int}),
                          ((@inferred vrep(ssymps, sps)), SVector{2, Int}),
+                         ((@inferred convexhull(ssymps..., sps...)), SVector{2, Int}),
+                         ((@inferred convexhull(sps..., ssymps...)), SVector{2, Int}),
                          ((@inferred vrep(ls)), Vector{Int}),
                          ((@inferred vrep(sls)), SVector{2, Int}),
                          ((@inferred vrep(rs)), Vector{Int}),
@@ -263,5 +267,8 @@
         c, r = chebyshevcenter(p, lpsolver)
         @test c ≈ [0, 0] atol=1e-6
         @test r ≈ 0.4472135955 atol=1e-6
+
+        p = convexhull([0, 0], [0, 1], [1, 0])
+        @test_throws ErrorException chebyshevcenter(p) # Not yet implemented
     end
 end
