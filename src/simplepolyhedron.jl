@@ -68,12 +68,12 @@ end
 #function polyhedron(repit::Union{HRepIterator{N}, VRepIterator{N}}, lib::SimplePolyhedraLibrary{T}) where {N, T}
 #    SimplePolyhedron{N, T}(repit)
 #end
-function polyhedron(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}, ::SimplePolyhedraLibrary{T}) where {N, T}
-    SimplePolyhedron{N, T}(hps, hss)
-end
-function polyhedron(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:AbstractPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}, ::SimplePolyhedraLibrary{T}) where {N, T}
-    SimplePolyhedron{N, T}(sympoints, points, lines, rays)
-end
+#function polyhedron(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}, ::SimplePolyhedraLibrary{T}) where {N, T}
+#    SimplePolyhedron{N, T}(hps, hss)
+#end
+#function polyhedron(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:AbstractPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}, ::SimplePolyhedraLibrary{T}) where {N, T}
+#    SimplePolyhedron{N, T}(sympoints, points, lines, rays)
+#end
 
 function Base.copy(p::SimplePolyhedron{N, T}) where {N, T}
     if !isnull(p.hrep)
