@@ -54,6 +54,7 @@ function convexhull(p1::RepTin, p2::VRep{N, T2}) where {N, T1, T2, RepTin<:VRep{
     RepTout = similar_type(RepTin, Tout)
     RepTout(vmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)
 end
+convexhull(p::Rep, el::Union{SymPoint, AbstractPoint}) = convexhull(p, convexhull(el))
 
 convexhull(ps::SymPoint...) = vrep([ps...])
 convexhull(ps::AbstractPoint...) = vrep([ps...])

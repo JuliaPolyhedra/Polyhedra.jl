@@ -121,10 +121,6 @@ creates the 2-dimensional affine subspace containing all the points ``(x_1, x_2,
 """
 vrep(lines::LineIt) = VAffineSpace(lines)
 
-abstract type VCone{N, T, AT} <: VRepresentation{N, T} end
-
-@norepelem VCone SymPoint
-
 # See issue #28
 Base.length(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = hasallrays(idxs.rep) ? 1 : 0
 Base.isempty(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = !hasallrays(idxs.rep)

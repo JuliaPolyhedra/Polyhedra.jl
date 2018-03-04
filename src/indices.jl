@@ -80,6 +80,16 @@ macro norepelem(rep, elem)
     end
 end
 
+abstract type VPolytope{N, T, AT} <: VRepresentation{N, T} end
+@norepelem VPolytope Line
+@norepelem VPolytope Ray
+
+abstract type VSymPolytope{N, T, AT} <: VPolytope{N, T, AT} end
+@norepelem VSymPolytope Point
+
+abstract type VCone{N, T, AT} <: VRepresentation{N, T} end
+@norepelem VCone SymPoint
+
 """
 The representation `rep` contain the elements `elem` inside a vector in the field `field`.
 """
