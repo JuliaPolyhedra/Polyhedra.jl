@@ -151,6 +151,19 @@ creates a V-representation for the halfspace ``x_1 \\ge 0``.
 """
 vrep(lines::LineIt, rays::RayIt) = RaysHull(lines, rays)
 
+"""
+    vrep(rays::RayIt)
+
+Creates a V-representation for the polyhedral cone equal to the conic hull of the rays `rays`.
+
+### Examples
+```julia
+vrep([Ray([1, 0]), Ray([0, 1])])
+```
+creates a V-representation for positive orthant.
+"""
+vrep(rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT} = vrep(Line{N, T, AT}[], rays)
+
 mutable struct RaysHull{N, T, AT} <: VCone{N, T, AT}
     lines::VAffineSpace{N, T, AT}
     rays::Vector{Ray{N, T, AT}}
@@ -171,7 +184,7 @@ arraytype(::RaysHull{N, T, AT}) where {N, T, AT} = AT
 
 Creates a V-representation for the polyhedron equal to the minkowski sum of the convex hull of `sympoints` and `points` with the conic hull of `lines` and `rays`.
 """
-vrep(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt)
+vrep(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) = Hull(sympoints, points, lines, rays)
 
 mutable struct Hull{N, T, AT} <: VRepresentation{N, T}
     points::PointsHull{N, T, AT}

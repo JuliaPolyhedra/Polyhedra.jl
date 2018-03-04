@@ -91,6 +91,10 @@
         ssymps = [SymPoint(@SVector [0, 1])]
         ps = [[1, 2], [3, 4]]
         sps = [(@SVector [1, 2]), (@SVector [3, 4])]
+        rs = [Ray([0, 1])]
+        srs = [Ray(@SVector [0, 1])]
+        ls = [Line([0, 1])]
+        sls = [Line(@SVector [0, 1])]
         @test eltype(sps) == SVector{2, Int}
         for (vr, AT) in (((@inferred vrep(symps)), Vector{Int}),
                          ((@inferred vrep(ssymps)), SVector{2, Int}),
@@ -98,6 +102,14 @@
                          ((@inferred vrep(sps)), SVector{2, Int}),
                          ((@inferred vrep(symps, ps)), Vector{Int}),
                          ((@inferred vrep(ssymps, sps)), SVector{2, Int}),
+                         ((@inferred vrep(ls)), Vector{Int}),
+                         ((@inferred vrep(sls)), SVector{2, Int}),
+                         ((@inferred vrep(rs)), Vector{Int}),
+                         ((@inferred vrep(srs)), SVector{2, Int}),
+                         ((@inferred vrep(ls, rs)), Vector{Int}),
+                         ((@inferred vrep(sls, srs)), SVector{2, Int}),
+                         ((@inferred vrep(symps, ps, ls, rs)), Vector{Int}),
+                         ((@inferred vrep(ssymps, sps, sls, srs)), SVector{2, Int}),
                          (vrep([1 2; 3 4]), Vector{Int}))
             @test (@inferred coefficienttype(vr)) == Int
             @test                                           (@inferred eltype(allpoints(vr))) == AT
