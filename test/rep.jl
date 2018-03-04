@@ -69,18 +69,44 @@
             a = collect(it)
             @test typeof(a) = Vector{exp_type}
         end
-        for hr in (hrep([HyperPlane([1, 2, 3], 7.)], [HalfSpace([4, 5, 6.], 8)]), hrep([1 2 3; 4 5 6], [7., 8], IntSet([1])))
-            @test MP.coefficienttype(hr) == Float64
-            @test eltype(allhalfspaces(hr)) == HalfSpace{3, Float64, Vector{Float64}}
-            @test Polyhedra.halfspacetype(hr) == eltype(halfspaces(hr)) == HalfSpace{3, Float64, Vector{Float64}}
-            @test Polyhedra.hyperplanetype(hr) == eltype(hyperplanes(hr)) == HyperPlane{3, Float64, Vector{Float64}}
+        hps = [HyperPlane([1, 2, 3], 7.)]
+        shps = [@inferred HyperPlane((@SVector [1, 2, 3]), 7.)]
+        @test eltype(shps) == HyperPlane{3, Float64, SVector{3, Float64}}
+        hss = [HalfSpace([4, 5, 6.], 8)]
+        shss = [@inferred HalfSpace((@SVector [4., 5., 6.]), 8)]
+        @test eltype(shss) == HalfSpace{3, Float64, SVector{3, Float64}}
+        for (hr, AT) in (((@inferred hrep(hps)), Vector{Float64}),
+                         ((@inferred hrep(shps)), SVector{3, Float64}),
+                         ((@inferred hrep(hss)), Vector{Float64}),
+                         ((@inferred hrep(shss)), SVector{3, Float64}),
+                         ((@inferred hrep(hps, hss)), Vector{Float64}),
+                         ((@inferred hrep(shps, shss)), SVector{3, Float64}),
+                         (hrep([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}))
+            @test (@inferred coefficienttype(hr)) == Float64
+            @test                                               (@inferred eltype(allhalfspaces(hr))) == HalfSpace{3, Float64, AT}
+            @test (@inferred Polyhedra.halfspacetype(hr))    == (@inferred eltype(halfspaces(hr)))    == HalfSpace{3, Float64, AT}
+            @test (@inferred Polyhedra.hyperplanetype(hr))   == (@inferred eltype(hyperplanes(hr)))   == HyperPlane{3, Float64, AT}
         end
-        vr = vrep([1 2; 3 4])
-        @test eltype(allpoints(vr)) == Vector{Int}
-        @test Polyhedra.sympointtype(vr) == eltype(sympoints(vr)) == SymPoint{2, Int, Vector{Int}}
-        @test Polyhedra.pointtype(vr) == eltype(points(vr)) == Vector{Int}
-        @test Polyhedra.linetype(vr) == eltype(lines(vr)) == Line{2, Int, Vector{Int}}
-        @test Polyhedra.raytype(vr) == eltype(rays(vr)) == Ray{2, Int, Vector{Int}}
+        symps = [SymPoint([0, 1])]
+        ssymps = [SymPoint(@SVector [0, 1])]
+        ps = [[1, 2], [3, 4]]
+        sps = [(@SVector [1, 2]), (@SVector [3, 4])]
+        @test eltype(sps) == SVector{2, Int}
+        for (vr, AT) in (((@inferred vrep(symps)), Vector{Int}),
+                         ((@inferred vrep(ssymps)), SVector{2, Int}),
+                         (vrep(ps), Vector{Int}),
+                         ((@inferred vrep(sps)), SVector{2, Int}),
+                         ((@inferred vrep(symps, ps)), Vector{Int}),
+                         ((@inferred vrep(ssymps, sps)), SVector{2, Int}),
+                         (vrep([1 2; 3 4]), Vector{Int}))
+            @test (@inferred coefficienttype(vr)) == Int
+            @test                                           (@inferred eltype(allpoints(vr))) == AT
+            @test (@inferred Polyhedra.sympointtype(vr)) == (@inferred eltype(sympoints(vr))) == SymPoint{2, Int, AT}
+            @test (@inferred Polyhedra.pointtype(vr))    == (@inferred eltype(points(vr)))    == AT
+            @test                                           (@inferred eltype(allrays(vr)))   == Ray{2, Int, AT}
+            @test (@inferred Polyhedra.linetype(vr))     == (@inferred eltype(lines(vr)))     == Line{2, Int, AT}
+            @test (@inferred Polyhedra.raytype(vr))      == (@inferred eltype(rays(vr)))      == Ray{2, Int, AT}
+        end
     end
 
     @testset "Iterating over halfspaces of a MixedMatHRep broken #9" begin
@@ -184,10 +210,10 @@
     end
 
     @testset "Building rep with different type" begin
-        @test MP.coefficienttype(MixedMatHRep{2, Float64}([1 2; 3 4], [1, 2], IntSet())) == Float64
-        @test MP.coefficienttype(MixedMatVRep{2, Float64}([1 2; 3 4], [1 2; 3 4], IntSet(), IntSet())) == Float64
-        @test MP.coefficienttype(LiftedHRepresentation{1, Float64}([1 2; 3 4])) == Float64
-        @test MP.coefficienttype(LiftedVRepresentation{1, Float64}([1 2; 3 4])) == Float64
+        @test coefficienttype(MixedMatHRep{2, Float64}([1 2; 3 4], [1, 2], IntSet())) == Float64
+        @test coefficienttype(MixedMatVRep{2, Float64}([1 2; 3 4], [1 2; 3 4], IntSet(), IntSet())) == Float64
+        @test coefficienttype(LiftedHRepresentation{1, Float64}([1 2; 3 4])) == Float64
+        @test coefficienttype(LiftedVRepresentation{1, Float64}([1 2; 3 4])) == Float64
     end
 
     @testset "Chebyshev center" begin

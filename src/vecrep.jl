@@ -8,10 +8,10 @@ lazy_collect(v) = collect(v)
 """
     hrep(hyperplanes::HyperPlaneIt, halfspaces::HalfSpaceIt)
 
-Creates a H-representation for the polyhedron equal to the intersection of the hyperplanes `hyperplanes` and halfspaces `halfspaces`.
+Creates an H-representation for the polyhedron equal to the intersection of the hyperplanes `hyperplanes` and halfspaces `halfspaces`.
 
 ### Examples
-For instance, the simplex:
+For instance, the simplex
 ```math
 \\begin{align*}
   x_1 + x_2 &= 1 \\
@@ -19,12 +19,33 @@ For instance, the simplex:
   x_2 &\\geq 0
 \\end{align*}
 ```
-can be created as follows
+can be created as follows:
 ```julia
 hrep([HalfSpace([-1, 0], 0)], [HyperPlane([1, 1], 1), HalfSpace([0, -1], 0)])
 ```
 """
 hrep(hyperplanes::HyperPlaneIt, halfspaces::HalfSpaceIt) = Intersection(hyperplanes, halfspaces)
+
+"""
+    hrep(halfspaces::HalfSpaceIt)
+
+Creates an H-representation for the polyhedron equal to the intersection of the halfspaces `halfspaces`.
+
+### Examples
+For instance, the polytope
+```math
+\begin{align*}
+  x_1 + x_2 &\leq 1 \\
+  x_1 - x_2 &\leq 0 \\
+  x_1 & \geq 0.
+\end{align*}
+```
+can be created as follows:
+```julia
+hrep([HalfSpace([1, 1], 1), HalfSpace([1, -1], 0), HalfSpace([-1, 0], 0)])
+```
+"""
+hrep(halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT} = hrep(HyperPlane{N, T, AT}[], halfspaces)
 
 mutable struct Intersection{N, T, AT} <: HRepresentation{N, T}
     hyperplanes::HAffineSpace{N, T, AT}
@@ -75,6 +96,19 @@ arraytype(::SymPointsHull{N, T, AT}) where {N, T, AT} = AT
 Creates a V-representation for the polytope equal to the convex hull of the symmetric points `sympoints` and points `points`.
 
 ### Examples
+The convex hull of ``(0, -1)``, ``(0, 1)`` and ``(1/2, 1/2)`` can be created as follows:
+```julia
+vrep([SymPoint([0, 1])], [[1/2, 1/2]])
+```
+"""
+vrep(sympoints::SymPointIt, points::PointIt) = PointsHull(sympoints, points)
+
+"""
+    vrep(points::PointIt)
+
+Creates a V-representation for the polytope equal to the convex hull of the points `points`.
+
+### Examples
 The convex hull of ``(0, 0)``, ``(0, 1)`` and ``(1/2, 1/2)`` can be created as follows using exact arithmetic
 ```julia
 vrep([[0, 0], [0, 1], [1//2, 1//2]])
@@ -84,7 +118,12 @@ or as follows using floating point arithmetic
 vrep([[0, 0], [0, 1], [1/2, 1/2]])
 ```
 """
-vrep(sympoints::SymPointIt, points::PointIt) = PointsHull(sympoints, points)
+vrep(points::PointIt) = vrep(sympointtype(points)[], points)
+sympointtype(points::ElemIt{StaticArrays.SVector{N, T}}) where {N, T} = SymPoint{N, T, StaticArrays.SVector{N, T}}
+function sympointtype(points::PointIt)
+    isempty(points) && throw(ArgumentError("Cannot create a V-representation from an empty collection of points represented by $(eltype(points)) as the dimension cannot be computed. Use StaticArrays.SVector to represent points instead"))
+    SymPoint{length(first(points)), coefficienttype(eltype(points)), eltype(points)}
+end
 
 mutable struct PointsHull{N, T, AT} <: VPolytope{N, T, AT}
     sympoints::SymPointsHull{N, T, AT}

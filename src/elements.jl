@@ -12,6 +12,10 @@ mypoint{N,T}(::Type{T}, a::Point{N,T}) = a
 const MyVec{N,T} = Union{Vec{N,T},AbstractVector{T}}
 myvec{T}(::Type{T}, a::AbstractVector) = AbstractArray{T}(a)
 myvec{T}(::Type{T}, a::AbstractVector{T}) = a
+function myvec{N,T}(::Type{T}, a::StaticArrays.SVector{N})
+    StaticArrays.SVector{N,T}(a)
+end
+myvec{N,T}(::Type{T}, a::StaticArrays.SVector{N,T}) = a
 myvec{N,T}(::Type{T}, a::Vec{N}) = Vec{N,T}(a)
 myvec{N,T}(::Type{T}, a::Vec{N,T}) = a
 

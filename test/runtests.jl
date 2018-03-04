@@ -4,6 +4,8 @@ using Base.Test
 import MultivariatePolynomials
 MP = MultivariatePolynomials
 
+using StaticArrays
+
 include("alltests.jl")
 
 include("default.jl")

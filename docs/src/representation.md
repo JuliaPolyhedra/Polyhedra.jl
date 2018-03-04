@@ -35,7 +35,7 @@ HalfSpace([1, 1], 1) ∩ HalfSpace([1, -1], 0) ∩ HalfSpace([-1, 0], 0)
 ```
 
 Even if `HalfSpace`s are enough to describe any polyhedron, it is sometimes important to represent the fact that the polyhedron is contained in an affine subspace.
-For instance, the simplex:
+For instance, the simplex
 ```math
 \begin{align*}
   x_1 + x_2 &= 1 \\
