@@ -15,6 +15,7 @@
 
         V = [0 1; 1 0]
         @test_throws ErrorException MixedMatVRep{3, Int}(V, [1 0], IntSet(), IntSet())
+        @test_throws ErrorException vrep(zeros(0, 2), [1 0]) # V-consistency
         @test_throws ErrorException vrep(V, [1 0 0], IntSet(), IntSet())
         @test_throws ErrorException vrep(V, [1 1], IntSet(), IntSet([2]))
         @test_throws ErrorException vrep(V, [1 1], IntSet([4]), IntSet())
@@ -107,7 +108,11 @@
                          (vrep(ps), Vector{Int}),
                          ((@inferred vrep(sps)), SVector{2, Int}),
                          ((@inferred vrep(symps, ps)), Vector{Int}),
+                         (convexhull(symps..., ps...), Vector{Int}),
+                         (convexhull(ps..., symps...), Vector{Int}),
                          ((@inferred vrep(ssymps, sps)), SVector{2, Int}),
+                         ((@inferred convexhull(ssymps..., sps...)), SVector{2, Int}),
+                         ((@inferred convexhull(sps..., ssymps...)), SVector{2, Int}),
                          ((@inferred vrep(ls)), Vector{Int}),
                          ((@inferred vrep(sls)), SVector{2, Int}),
                          ((@inferred vrep(rs)), Vector{Int}),
@@ -263,5 +268,8 @@
         c, r = chebyshevcenter(p, lpsolver)
         @test c ≈ [0, 0] atol=1e-6
         @test r ≈ 0.4472135955 atol=1e-6
+
+        p = convexhull([0, 0], [0, 1], [1, 0])
+        @test_throws ErrorException chebyshevcenter(p) # Not yet implemented
     end
 end

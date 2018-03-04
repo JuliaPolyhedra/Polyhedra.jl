@@ -140,12 +140,13 @@ The convex hull of `a` and `-a`.
 """
 struct SymPoint{N, T, AT <: AbstractPoint{N, T}}
     a::AT
-    function SymPoint{N, T}(a::AT) where {N, T, AT<:AbstractPoint{N, T}}
+    function SymPoint{N, T, AT}(a::AT) where {N, T, AT<:AbstractPoint{N, T}}
         new{N, T, AT}(a)
     end
 end
 SymPoint{N, T, AT}(sympoint::SymPoint) where {N, T, AT} = SymPoint{N, T, AT}(AT(sympoint.a))
-SymPoint{N, T}(a::AbstractPoint) where {N,T} = SymPoint{N,T}(mypoint(T, a))
+SymPoint{N, T}(a::AbstractPoint{N, T}) where {N, T} = SymPoint{N, T, typeof(a)}(a)
+SymPoint{N, T}(a::AbstractPoint{N}) where {N, T} = SymPoint{N, T}(mypoint(T, a))
 
 """
     struct Ray{N, T, AT <: MyVec{N, T}}
