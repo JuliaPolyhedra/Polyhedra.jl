@@ -26,12 +26,12 @@ function boardtest(lib::Lib) where Lib<:PolyhedraLibrary
     end
     A = [A1; A2; A3]
     b = [b1; b2; b3]
-    ine = SimpleHRepresentation(A, b)
+    ine = hrep(A, b)
     poly = polyhedron(ine, lib)
     @test nrays(poly) == 0
     @test npoints(poly) == 614
     @test !isempty(poly)
-    ext  = SimpleVRepresentation(poly)
+    ext  = vrep(poly)
     target = ones(Int, 9) * (3 // 4)
     ok = false
     for i = 1:size(ext.V, 1)
@@ -47,7 +47,7 @@ function boardtest(lib::Lib) where Lib<:PolyhedraLibrary
     cutb = 6
     Acut = [cutA; A]
     bcut = [cutb; b]
-    inecut = SimpleHRepresentation(Acut, bcut)
+    inecut = hrep(Acut, bcut)
     polycut = polyhedron(inecut, lib)
     @test !isempty(polycut, defaultLPsolverfor(polycut, lpsolver))
     #(isredundant, certificate) = isredundantinequality(polycut, 1)

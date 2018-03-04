@@ -26,15 +26,15 @@ fulldim(::FullDim{N}) where N = N
 +(d1::FullDim{N1}, d2::FullDim{N2}) where {N1, N2} = FullDim{N1+N2}()
 
 FullDim(v::AbstractVector) = FullDim{length(v)}()
-FullDim(v::StaticArrays.StaticArray{S, T, 1}) where {S, T} = FullDim{S[1]}()
+FullDim(v::StaticArrays.SVector{N}) where N = FullDim{N}()
 MultivariatePolynomials.coefficienttype(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
 similar_type(::Type{<:Vector}, ::FullDim, ::Type{T}) where T = Vector{T}
 similar_type(::Type{SparseVector{S, IT}}, ::FullDim, ::Type{T}) where {S, IT, T} = SparseVector{T, IT}
 # We define the following method to avoid the fallback to call FullDim(Vector{...})
 similar_type(::Type{<:Vector}, ::Type{T}) where T = Vector{T}
 similar_type(::Type{SparseVector{S, IT}}, ::Type{T}) where {S, IT, T} = SparseVector{T, IT}
-function similar_type(::Type{SAT}, ::FullDim{D}, ::Type{Tout}) where {SAT <: StaticArrays.StaticArray, D, Tout}
-    StaticArrays..similar_type(SAT, Tout, Size(D))
+function similar_type(::Type{SAT}, ::FullDim{D}, ::Type{Tout}) where {SAT <: StaticArrays.SVector, D, Tout}
+    StaticArrays.similar_type(SAT, Tout, StaticArrays.Size(D))
 end
 
 similar_type(::Type{<:Point}, ::FullDim{N}, ::Type{T}) where {N, T} = Point{N,T}

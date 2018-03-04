@@ -12,6 +12,10 @@ mypoint{N,T}(::Type{T}, a::Point{N,T}) = a
 const MyVec{N,T} = Union{Vec{N,T},AbstractVector{T}}
 myvec{T}(::Type{T}, a::AbstractVector) = AbstractArray{T}(a)
 myvec{T}(::Type{T}, a::AbstractVector{T}) = a
+function myvec{N,T}(::Type{T}, a::StaticArrays.SVector{N})
+    StaticArrays.SVector{N,T}(a)
+end
+myvec{N,T}(::Type{T}, a::StaticArrays.SVector{N,T}) = a
 myvec{N,T}(::Type{T}, a::Vec{N}) = Vec{N,T}(a)
 myvec{N,T}(::Type{T}, a::Vec{N,T}) = a
 
@@ -43,7 +47,7 @@ struct HalfSpace{N, T, AT<:MyVec{N, T}} <: HRepElement{N,T}
     end
 end
 
-HalfSpace{N, T}(a::AT, β) where {N, T, AT <: MyVec{N, T}} = HalfSpace{N, T, AT}(a, β)
+HalfSpace{N, T}(a::AT, β::T) where {N, T, AT <: MyVec{N, T}} = HalfSpace{N, T, AT}(a, β)
 HalfSpace{N, T}(a::MyVec, β) where {N, T} = HalfSpace{N, T}(myvec(T, a), T(β))
 
 """
@@ -65,9 +69,12 @@ end
 HyperPlane{N, T}(a::AT, β::T) where {N, T, AT <: MyVec{N, T}} = HyperPlane{N, T, AT}(a, β)
 HyperPlane{N, T}(a::MyVec, β) where {N, T} = HyperPlane{N, T}(myvec(T, a), T(β))
 
-# FIXME should promote between a and β
-HalfSpace(a, β) = HalfSpace{fulldim(a), eltype(a)}(a, eltype(a)(β))
-HyperPlane(a, β) = HyperPlane{fulldim(a), eltype(a)}(a, eltype(a)(β))
+_HalfSpace(a::MyVec{N, T}, β::T, d::FullDim{N}) where {N, T} = HalfSpace{N, T}(a, β)
+_HalfSpace(a::MyVec{N, S}, β::T, d::FullDim{N}) where {N, S, T} = HalfSpace{N, promote_type(S, T)}(a, β)
+HalfSpace(a, β) = _HalfSpace(a, β, FullDim(a))
+_HyperPlane(a::MyVec{N, T}, β::T, d::FullDim{N}) where {N, T} = HyperPlane{N, T}(a, β)
+_HyperPlane(a::MyVec{N, S}, β::T, d::FullDim{N}) where {N, S, T} = HyperPlane{N, promote_type(S, T)}(a, β)
+HyperPlane(a, β) = _HyperPlane(a, β, FullDim(a))
 
 Base.convert(::Type{HalfSpace{N, T, AT}}, h::HalfSpace{N}) where {N, T, AT} = HalfSpace{N, T, AT}(AT(h.a), T(h.β))
 Base.convert(::Type{HyperPlane{N, T, AT}}, h::HyperPlane{N}) where {N, T, AT} = HyperPlane{N, T, AT}(AT(h.a), T(h.β))

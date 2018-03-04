@@ -16,7 +16,7 @@ mutable struct MixedMatHRep{N, T} <: MixedHRep{N, T}
     b::AbstractVector{T}
     linset::IntSet
 
-    function MixedMatHRep{N, T}(A::AbstractMatrix, b::AbstractVector, linset::IntSet=IntSet()) where {N, T}
+    function MixedMatHRep{N, T}(A::AbstractMatrix, b::AbstractVector, linset::IntSet) where {N, T}
         if size(A, 1) != length(b)
             error("The length of b must be equal to the number of rows of A")
         end
@@ -33,11 +33,11 @@ end
 similar_type{N,T}(::Type{<:MixedMatHRep}, ::FullDim{N}, ::Type{T}) = MixedMatHRep{N,T}
 arraytype(p::Union{MixedMatHRep{N, T}, Type{MixedMatHRep{N, T}}}) where {N, T} = Vector{T}
 
-function MixedMatHRep(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {S <: Real, T <: Real}
+function MixedMatHRep(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet) where {S <: Real, T <: Real}
     U = promote_type(S, T)
     MixedMatHRep{size(A,2),U}(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
 end
-MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet=IntSet()) where {T <: Real} = MixedMatHRep{size(A,2),T}(A, b, linset)
+MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet) where T <: Real = MixedMatHRep{size(A,2),T}(A, b, linset)
 
 MixedMatHRep(h::HRep{N,T}) where {N,T} = MixedMatHRep{N,T}(h)
 
@@ -76,6 +76,15 @@ end
 Base.getindex(h::MixedMatHRep, I::AbstractArray) = MixedMatHRep(h.A[I, :], h.b[I], filterintset(h.linset, I))
 
 # V-Representation
+"""
+    vrep(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet())
+
+Creates a V-representation for the polyhedron defined by the symmetric points ``V_i`` if `i in Vlinset`,
+points ``V_i`` otherwise, lines ``R_i`` if `i in Rlinset` and rays ``R_i`` otherwise
+where ``V_i`` (resp. ``R_i``) is the ``i``th row of `V` (resp. `R`), i.e. `V[i,:]` (resp. `R[i,:]`).
+"""
+vrep(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) = MixedMatVRep(V, R, Vlinset, Rlinset)
+vrep(V::AbstractMatrix, linset::IntSet=IntSet()) = vrep(V, similar(V, 0, size(V, 2)), linset)
 
 mutable struct MixedMatVRep{N,T} <: MixedVRep{N,T}
     V::AbstractMatrix{T} # each row is a vertex
@@ -83,7 +92,7 @@ mutable struct MixedMatVRep{N,T} <: MixedVRep{N,T}
     Vlinset::IntSet
     Rlinset::IntSet
 
-    function MixedMatVRep{N, T}(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {N, T}
+    function MixedMatVRep{N, T}(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet, Rlinset::IntSet) where {N, T}
         if iszero(size(V, 1)) && !iszero(size(R, 1))
             vconsistencyerror()
         end
@@ -103,11 +112,10 @@ end
 similar_type{N,T}(::Type{<:MixedMatVRep}, ::FullDim{N}, ::Type{T}) = MixedMatVRep{N,T}
 arraytype(p::Union{MixedMatVRep{N, T}, Type{MixedMatVRep{N, T}}}) where {N, T} = Vector{T}
 
-function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) where {S <: Real, T <: Real}
+function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Vlinset::IntSet, Rlinset::IntSet) where {S <: Real, T <: Real}
     U = promote_type(S, T)
     MixedMatVRep{size(V,2),U}(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Vlinset, Rlinset)
 end
-MixedMatVRep(V::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = MixedMatVRep{size(V, 2),T}(V, similar(V, 0, size(V, 2)), linset, IntSet())
 
 MixedMatVRep(v::VRep{N,T}) where {N,T} = MixedMatVRep{N,T}(v)
 

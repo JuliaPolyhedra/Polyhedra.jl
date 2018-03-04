@@ -1,4 +1,4 @@
-export Representation, HRepresentation, VRepresentation, fulldim
+export Representation, HRepresentation, VRepresentation, coefficienttype, fulldim
 export RepIterator
 export Rep
 
@@ -14,7 +14,13 @@ const VRep{N,T} = Union{VRepresentation{N,T}, Polyhedron{N,T}}
 
 Base.copy(rep::Rep)            = error("copy not implemented for $(typeof(rep))")
 
+"""
+    coefficienttype(rep::Rep)
+
+Returns the type of the coefficients used in the representation of `rep`.
+"""
 MultivariatePolynomials.coefficienttype(rep::Union{Rep{N,T}, Type{<:Rep{N,T}}}) where {N,T} = T
+
 """
     fulldim(rep::Rep)
 

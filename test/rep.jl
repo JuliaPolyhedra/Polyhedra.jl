@@ -1,25 +1,25 @@
 @testset "Representation tests" begin
-    @testset "Simple Representation with bad arguments" begin
+    @testset "MixMatRep with bad arguments" begin
         A = [1 1; -1 0; 0 -1]
         b = [1, 0, 0]
         linset = IntSet([1])
 
-        @test_throws ErrorException MixedMatHRep(A, [0, 0], linset)
-        @test_throws ErrorException MixedMatHRep(A, b, IntSet([4]))
-        @test_throws ErrorException MixedMatHRep{3, Int}(A, b)
-        ine = MixedMatHRep(A, b, linset)
+        @test_throws ErrorException hrep(A, [0, 0], linset)
+        @test_throws ErrorException hrep(A, b, IntSet([4]))
+        @test_throws ErrorException MixedMatHRep{3, Int}(A, b, IntSet())
+        ine = hrep(A, b, linset)
         @test fulldim(ine) == 2
         @test (@inferred FullDim(ine)) == FullDim{2}()
-        @test MP.coefficienttype(ine) == Int
+        @test coefficienttype(ine) == Int
         @test translate(ine, [1, 0]).b == [2, -1, 0]
 
         V = [0 1; 1 0]
         @test_throws ErrorException MixedMatVRep{3, Int}(V, [1 0], IntSet(), IntSet())
-        @test_throws ErrorException MixedMatVRep(V, [1 0 0], IntSet(), IntSet())
-        @test_throws ErrorException MixedMatVRep(V, [1 1], IntSet(), IntSet([2]))
-        @test_throws ErrorException MixedMatVRep(V, [1 1], IntSet([4]), IntSet())
-        @test_throws ErrorException MixedMatVRep(V, IntSet([4]))
-        ext = MixedMatVRep(V)
+        @test_throws ErrorException vrep(V, [1 0 0], IntSet(), IntSet())
+        @test_throws ErrorException vrep(V, [1 1], IntSet(), IntSet([2]))
+        @test_throws ErrorException vrep(V, [1 1], IntSet([4]), IntSet())
+        @test_throws ErrorException vrep(V, IntSet([4]))
+        ext = vrep(V)
         @test fulldim(ext) == 2
         @test (@inferred FullDim(ine)) == FullDim{2}()
         @test MP.coefficienttype(ext) == Int
@@ -43,7 +43,7 @@
         A2 = [1 1; -1 0; 0 -1]
         b2 = [1, 0, 0]
         linset2 = IntSet([1])
-        ine2 = MixedMatHRep(A2, b2, linset2)
+        ine2 = hrep(A2, b2, linset2)
 
         ine = LiftedHRepresentation(ine2)
         @test ine.A == A
@@ -69,17 +69,44 @@
             a = collect(it)
             @test typeof(a) = Vector{exp_type}
         end
-        hr = MixedMatHRep([1 2 3; 4 5 6], [7., 8], IntSet([1]))
-        @test MP.coefficienttype(hr) == Float64
-        @test eltype(allhalfspaces(hr)) == HalfSpace{3, Float64, Vector{Float64}}
-        @test Polyhedra.halfspacetype(hr) == eltype(halfspaces(hr)) == HalfSpace{3, Float64, Vector{Float64}}
-        @test Polyhedra.hyperplanetype(hr) == eltype(hyperplanes(hr)) == HyperPlane{3, Float64, Vector{Float64}}
-        vr = MixedMatVRep([1 2; 3 4])
-        @test eltype(allpoints(vr)) == Vector{Int}
-        @test Polyhedra.sympointtype(vr) == eltype(sympoints(vr)) == SymPoint{2, Int, Vector{Int}}
-        @test Polyhedra.pointtype(vr) == eltype(points(vr)) == Vector{Int}
-        @test Polyhedra.linetype(vr) == eltype(lines(vr)) == Line{2, Int, Vector{Int}}
-        @test Polyhedra.raytype(vr) == eltype(rays(vr)) == Ray{2, Int, Vector{Int}}
+        hps = [HyperPlane([1, 2, 3], 7.)]
+        shps = [@inferred HyperPlane((@SVector [1, 2, 3]), 7.)]
+        @test eltype(shps) == HyperPlane{3, Float64, SVector{3, Float64}}
+        hss = [HalfSpace([4, 5, 6.], 8)]
+        shss = [@inferred HalfSpace((@SVector [4., 5., 6.]), 8)]
+        @test eltype(shss) == HalfSpace{3, Float64, SVector{3, Float64}}
+        for (hr, AT) in (((@inferred hrep(hps)), Vector{Float64}),
+                         ((@inferred hrep(shps)), SVector{3, Float64}),
+                         ((@inferred hrep(hss)), Vector{Float64}),
+                         ((@inferred hrep(shss)), SVector{3, Float64}),
+                         ((@inferred hrep(hps, hss)), Vector{Float64}),
+                         ((@inferred hrep(shps, shss)), SVector{3, Float64}),
+                         (hrep([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}))
+            @test (@inferred coefficienttype(hr)) == Float64
+            @test                                               (@inferred eltype(allhalfspaces(hr))) == HalfSpace{3, Float64, AT}
+            @test (@inferred Polyhedra.halfspacetype(hr))    == (@inferred eltype(halfspaces(hr)))    == HalfSpace{3, Float64, AT}
+            @test (@inferred Polyhedra.hyperplanetype(hr))   == (@inferred eltype(hyperplanes(hr)))   == HyperPlane{3, Float64, AT}
+        end
+        symps = [SymPoint([0, 1])]
+        ssymps = [SymPoint(@SVector [0, 1])]
+        ps = [[1, 2], [3, 4]]
+        sps = [(@SVector [1, 2]), (@SVector [3, 4])]
+        @test eltype(sps) == SVector{2, Int}
+        for (vr, AT) in (((@inferred vrep(symps)), Vector{Int}),
+                         ((@inferred vrep(ssymps)), SVector{2, Int}),
+                         (vrep(ps), Vector{Int}),
+                         ((@inferred vrep(sps)), SVector{2, Int}),
+                         ((@inferred vrep(symps, ps)), Vector{Int}),
+                         ((@inferred vrep(ssymps, sps)), SVector{2, Int}),
+                         (vrep([1 2; 3 4]), Vector{Int}))
+            @test (@inferred coefficienttype(vr)) == Int
+            @test                                           (@inferred eltype(allpoints(vr))) == AT
+            @test (@inferred Polyhedra.sympointtype(vr)) == (@inferred eltype(sympoints(vr))) == SymPoint{2, Int, AT}
+            @test (@inferred Polyhedra.pointtype(vr))    == (@inferred eltype(points(vr)))    == AT
+            @test                                           (@inferred eltype(allrays(vr)))   == Ray{2, Int, AT}
+            @test (@inferred Polyhedra.linetype(vr))     == (@inferred eltype(lines(vr)))     == Line{2, Int, AT}
+            @test (@inferred Polyhedra.raytype(vr))      == (@inferred eltype(rays(vr)))      == Ray{2, Int, AT}
+        end
     end
 
     @testset "Iterating over halfspaces of a MixedMatHRep broken #9" begin
@@ -88,20 +115,20 @@
         halfspace = [1, 3]
         hyperplane = [2]
         linset = IntSet(2)
-        hrep = MixedMatHRep(A, b, linset)
+        hr = hrep(A, b, linset)
         Aall = [3 4; -3 -4; 1 2; 5 6]
         ball = [2, -2, 1, 3]
-        for (i, h) in enumerate(allhalfspaces(hrep))
+        for (i, h) in enumerate(allhalfspaces(hr))
             @test h.a == Aall[i, :]
             @test h.β == ball[i]
             @test isa(h, HalfSpace{2, Int})
         end
-        for (i, h) in enumerate(halfspaces(hrep))
+        for (i, h) in enumerate(halfspaces(hr))
             @test h.a == A[halfspace[i], :]
             @test h.β == b[halfspace[i]]
             @test isa(h, HalfSpace{2, Int})
         end
-        for (i, h) in enumerate(hyperplanes(hrep))
+        for (i, h) in enumerate(hyperplanes(hr))
             @test h.a == A[hyperplane[i], :]
             @test h.β == b[hyperplane[i]]
             @test isa(h, HyperPlane{2, Int})
@@ -126,8 +153,8 @@
         a = [7, 8, 9]
         B = [10 11 12; 13 14 15]
         b = [16, 17]
-        p1 = MixedMatHRep(A, a, IntSet([2]))
-        p2 = MixedMatHRep(B, b, IntSet([1]))
+        p1 = hrep(A, a, IntSet([2]))
+        p2 = hrep(B, b, IntSet([1]))
         p = p1 * p2
         @test p.A == [A[2,:]' zeros(1, 3)
                       zeros(1, 2) B[1, :]'
@@ -154,10 +181,10 @@
             @test haslines(vr) == !isempty(lines(vr)) == false
             @test hasrays(vr) == !isempty(rays(vr)) == hasr
         end
-        vtest(MixedMatVRep(zeros(0, 3)), 0, 0)
-        vtest(MixedMatVRep(zeros(1, 2)), 0, 1)
-        vtest(MixedMatVRep(zeros(1, 4), ones(2, 4)), 2, 1)
-        vtest(MixedMatVRep(zeros(2, 1), ones(1, 1)), 1, 2)
+        vtest(vrep(zeros(0, 3)), 0, 0)
+        vtest(vrep(zeros(1, 2)), 0, 1)
+        vtest(vrep(zeros(1, 4), ones(2, 4)), 2, 1)
+        vtest(vrep(zeros(2, 1), ones(1, 1)), 1, 2)
         vtest(LiftedVRepresentation(zeros(0, 2)), 0, 0)
         vtest(LiftedVRepresentation([1 0; 1 1]), 0, 2)
         vtest(LiftedVRepresentation([0 1; 0 2]), 2, 0)
@@ -172,10 +199,10 @@
             @test hashyperplanes(hr) == !isempty(hyperplanes(hr)) == hase
             @test hashalfspaces(hr) == !isempty(halfspaces(hr)) == hasi
         end
-        htest(MixedMatHRep(ones(0, 3), zeros(0)), 0, 0)
-        htest(MixedMatHRep(ones(1, 2), zeros(1)), 0, 1)
-        htest(MixedMatHRep(ones(2, 4), zeros(2), IntSet(1:2)), 2, 0)
-        htest(MixedMatHRep(ones(3, 1), zeros(3), IntSet([2])), 1, 2)
+        htest(hrep(ones(0, 3), zeros(0)), 0, 0)
+        htest(hrep(ones(1, 2), zeros(1)), 0, 1)
+        htest(hrep(ones(2, 4), zeros(2), IntSet(1:2)), 2, 0)
+        htest(hrep(ones(3, 1), zeros(3), IntSet([2])), 1, 2)
         htest(LiftedHRepresentation(ones(0, 2)), 0, 0)
         htest(LiftedHRepresentation([0 1; 0 2]), 0, 2)
         htest(LiftedHRepresentation([0 1; 0 2], IntSet(1:2)), 2, 0)
@@ -183,17 +210,17 @@
     end
 
     @testset "Building rep with different type" begin
-        @test MP.coefficienttype(MixedMatHRep{2, Float64}([1 2; 3 4], [1, 2])) == Float64
-        @test MP.coefficienttype(MixedMatVRep{2, Float64}([1 2; 3 4], [1 2; 3 4])) == Float64
-        @test MP.coefficienttype(LiftedHRepresentation{1, Float64}([1 2; 3 4])) == Float64
-        @test MP.coefficienttype(LiftedVRepresentation{1, Float64}([1 2; 3 4])) == Float64
+        @test coefficienttype(MixedMatHRep{2, Float64}([1 2; 3 4], [1, 2], IntSet())) == Float64
+        @test coefficienttype(MixedMatVRep{2, Float64}([1 2; 3 4], [1 2; 3 4], IntSet(), IntSet())) == Float64
+        @test coefficienttype(LiftedHRepresentation{1, Float64}([1 2; 3 4])) == Float64
+        @test coefficienttype(LiftedVRepresentation{1, Float64}([1 2; 3 4])) == Float64
     end
 
     @testset "Chebyshev center" begin
-        p = MixedMatHRep(eye(2), zeros(2))
+        p = hrep(eye(2), zeros(2))
         @test_throws ErrorException chebyshevcenter(p, lpsolver) # unbounded
 
-        p = MixedMatHRep([1 1; -1 -1], [0, -1])
+        p = hrep([1 1; -1 -1], [0, -1])
         @test_throws ErrorException chebyshevcenter(p, lpsolver) # empty
 
         # examples/chebyshevcenter.ipynb
@@ -202,7 +229,7 @@
              -1  2
              -1 -2]
         b = ones(4)
-        p = MixedMatHRep(A, b)
+        p = hrep(A, b)
         c, r = chebyshevcenter(p, lpsolver)
         @test c ≈ [0, 0] atol=1e-6
         @test r ≈ 0.4472135955 atol=1e-6

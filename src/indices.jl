@@ -9,7 +9,7 @@ struct Index{N, T, ElemT}
 end
 
 # Type of the value associated to this index
-valuetype(::Index{N, T, ElemT}) where {N, T, ElemT} = ElemT
+valuetype(::Union{Index{N, T, ElemT}, Type{Index{N, T, ElemT}}}) where {N, T, ElemT} = ElemT
 
 const HyperPlaneIndex{N, T} = Index{N, T, <:HyperPlane{N, T}}
 const HalfSpaceIndex{N, T} = Index{N, T, <:HalfSpace{N, T}}
@@ -38,6 +38,7 @@ struct Indices{N, T, ElemT, RepT<:Rep{N, T}}
 end
 
 Base.eltype(::Indices{N, T, ElemT}) where {N, T, ElemT} = Index{N, T, ElemT}
+valuetype(idxs::Indices) = valuetype(eltype(idxs))
 
 const HyperPlaneIndices{N, T, RepT} = Indices{N, T, <:HyperPlane{N, T}, RepT}
 const HalfSpaceIndices{N, T, RepT} = Indices{N, T, <:HalfSpace{N, T}, RepT}
@@ -90,7 +91,24 @@ macro vecrepelem(rep, elem, field)
         Base.isempty(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = isempty(idxs.rep.$field)
         Base.start(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = eltype(idxs)(1)
         Base.done(idxs::$idxs{N, T, <:$rep{N, T}}, idx::$idx{N, T}) where {N, T} = idx.value > length(idxs)
-        Base.get(L::$rep{N, T}, idx::$idx{N, T}) where {N, T} = L.$field[idx.value]
-        nextindex(L::$rep{N, T}, idx::$idx{N, T}) where {N, T} = typeof(idx)(idx.value + 1)
+        Base.get(rep::$rep{N, T}, idx::$idx{N, T}) where {N, T} = rep.$field[idx.value]
+        nextindex(::$rep{N, T}, idx::$idx{N, T}) where {N, T} = typeof(idx)(idx.value + 1)
+    end)
+end
+
+"""
+The representation `rep` contain the elements `elem` inside a representation in the field `field`.
+"""
+macro subrepelem(rep, elem, field)
+    idxs = Symbol(string(elem) * "Indices")
+    idx = Symbol(string(elem) * "Index")
+    subidxs = :(Indices{N, T, valuetype(idxs)}(idxs.rep.$field))
+    esc(quote
+        Base.length(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = length($subidxs)
+        Base.isempty(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = isempty($subidxs)
+        Base.start(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = isempty($subidxs)
+        Base.done(idxs::$idxs{N, T, <:$rep{N, T}}, idx::$idx{N, T}) where {N, T} = done($subidxs)
+        Base.get(rep::$rep{N, T}, idx::$idx{N, T}) where {N, T} = get(rep.$field, idx)
+        nextindex(rep::$rep{N, T}, idx::$idx{N, T}) where {N, T} = nextindex(rep.$field, idx)
     end)
 end

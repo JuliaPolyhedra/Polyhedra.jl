@@ -24,7 +24,7 @@ end
 # H-representation
 
 """
-    hrep(hyperplanes::ElemIt{<:HyperPlane})
+    hrep(hyperplanes::HyperPlaneIt)
 
 Creates an affine space from the list of hyperplanes `hyperplanes`.
 
@@ -32,14 +32,14 @@ Creates an affine space from the list of hyperplanes `hyperplanes`.
 ```julia
 hrep([HyperPlane([0, 1, 0], 1), HyperPlane([0, 0, 1], 0)])
 ```
-creates the 1-dimensional affine subspace containing all the points ``(x_1, 0, 0)``, i.e. the `x_1`-axis.
+creates the 1-dimensional affine subspace containing all the points ``(x_1, 0, 0)``, i.e. the ``x_1``-axis.
 
 ```julia
 hrep([HyperPlane([1, 1], 1), HyperPlane([1, 0], 0)])
 ```
 creates the 0-dimensional affine subspace only containing the point ``(0, 1)``.
 """
-hrep(hyperplanes::ElemIt{<:HyperPlane}) = HAffineSpace(hyperplanes)
+hrep(hyperplanes::HyperPlaneIt) = HAffineSpace(hyperplanes)
 
 abstract type HAffineRep{N, T} <: HRepresentation{N, T} end
 
@@ -107,6 +107,19 @@ function removeduplicates(L::HAffineSpace{N, T, AT}) where {N, T, AT}
 end
 
 # V-representation
+
+"""
+    vrep(lines::LineIt)
+
+Creates an affine space from the list of lines `lines`.
+
+### Examples
+```julia
+vrep([Line([1, 0, 0]), Line([0, 1, 0])])
+```
+creates the 2-dimensional affine subspace containing all the points ``(x_1, x_2, 0)``, i.e. the ``x_1````x_2``-plane.
+"""
+vrep(lines::LineIt) = VAffineSpace(lines)
 
 abstract type VCone{N, T, AT} <: VRepresentation{N, T} end
 
