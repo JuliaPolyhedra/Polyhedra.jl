@@ -85,10 +85,13 @@
             @test (@inferred coefficienttype(hr)) == Float64
             @test                                               (@inferred eltype(allhalfspaces(hr)))  == HalfSpace{3, Float64, AT}
             @test                                               (@inferred collect(allhalfspaces(hr))) isa Vector{HalfSpace{3, Float64, AT}}
+            @test isempty(allhalfspaces(hr)) == iszero(nallhalfspaces(hr))
             @test (@inferred Polyhedra.halfspacetype(hr))    == (@inferred eltype(halfspaces(hr)))     == HalfSpace{3, Float64, AT}
             @test                                               (@inferred collect(halfspaces(hr)))    isa Vector{HalfSpace{3, Float64, AT}}
+            @test isempty(halfspaces(hr)) == iszero(nhalfspaces(hr))
             @test (@inferred Polyhedra.hyperplanetype(hr))   == (@inferred eltype(hyperplanes(hr)))    == HyperPlane{3, Float64, AT}
             @test                                               (@inferred collect(hyperplanes(hr)))   isa Vector{HyperPlane{3, Float64, AT}}
+            @test isempty(hyperplanes(hr)) == iszero(nhyperplanes(hr))
         end
         symps = [SymPoint([0, 1])]
         ssymps = [SymPoint(@SVector [0, 1])]
@@ -117,16 +120,22 @@
             @test (@inferred coefficienttype(vr)) == Int
             @test                                           (@inferred eltype(allpoints(vr)))  == AT
             @test                                           (@inferred collect(allpoints(vr))) isa Vector{AT}
+            @test isempty(allpoints(vr)) == iszero(nallpoints(vr))
             @test (@inferred Polyhedra.sympointtype(vr)) == (@inferred eltype(sympoints(vr)))  == SymPoint{2, Int, AT}
             @test                                           (@inferred collect(sympoints(vr))) isa Vector{SymPoint{2, Int, AT}}
+            @test isempty(sympoints(vr)) == iszero(nsympoints(vr))
             @test (@inferred Polyhedra.pointtype(vr))    == (@inferred eltype(points(vr)))     == AT
             @test                                           (@inferred collect(points(vr)))    isa Vector{AT}
+            @test isempty(points(vr)) == iszero(npoints(vr))
             @test                                           (@inferred eltype(allrays(vr)))    == Ray{2, Int, AT}
             @test                                           (@inferred collect(allrays(vr)))   isa Vector{Ray{2, Int, AT}}
+            @test isempty(allrays(vr)) == iszero(nallrays(vr))
             @test (@inferred Polyhedra.linetype(vr))     == (@inferred eltype(lines(vr)))      == Line{2, Int, AT}
             @test                                           (@inferred collect(lines(vr)))     isa Vector{Line{2, Int, AT}}
+            @test isempty(lines(vr)) == iszero(nlines(vr))
             @test (@inferred Polyhedra.raytype(vr))      == (@inferred eltype(rays(vr)))       == Ray{2, Int, AT}
             @test                                           (@inferred collect(rays(vr)))      isa Vector{Ray{2, Int, AT}}
+            @test isempty(rays(vr)) == iszero(nrays(vr))
         end
     end
 
