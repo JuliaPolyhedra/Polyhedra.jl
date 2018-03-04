@@ -58,7 +58,7 @@ Intersection(hyperplanes::ElemIt{HyperPlane{N, T, AT}}, halfspaces::ElemIt{HalfS
 arraytype(::Intersection{N, T, AT}) where {N, T, AT} = AT
 
 @subrepelem Intersection HyperPlane hyperplanes
-@subrepelem Intersection HalfSpace halfspaces
+@vecrepelem Intersection HalfSpace halfspaces
 
 # V-representation
 
@@ -89,6 +89,8 @@ mutable struct SymPointsHull{N, T, AT} <: VSymPolytope{N, T, AT}
 end
 SymPointsHull(ps::ElemIt{SymPoint{N, T, AT}}) where {N, T, AT<:AbstractPoint{N, T}} = SymPointsHull{N, T, AT}(collect(ps))
 arraytype(::SymPointsHull{N, T, AT}) where {N, T, AT} = AT
+
+@vecrepelem SymPointsHull SymPoint sympoints
 
 """
     vrep(sympoints::SymPointIt, points::PointIt)

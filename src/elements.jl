@@ -127,6 +127,10 @@ A point in dimension `N` and of coefficient type `T`.
 """
 const AbstractPoint{N, T} = Union{Point{N, T}, AbstractVector{T}}
 
+_zeros(::Type{<:SparseVector{T}}, ::FullDim{N}) where {N, T} = spzeros(T, N)
+_zeros(::Type{Vector{T}}, ::FullDim{N}) where {N, T} = zeros(T, N)
+_zeros(VT::Type{<:AbstractVector}, ::FullDim) = zeros(VT)
+
 """
     struct SymPoint{N, T, AT <: AbstractPoint{N, T}}
         a::AT

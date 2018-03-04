@@ -83,9 +83,12 @@
                          ((@inferred hrep(shps, shss)), SVector{3, Float64}),
                          (hrep([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}))
             @test (@inferred coefficienttype(hr)) == Float64
-            @test                                               (@inferred eltype(allhalfspaces(hr))) == HalfSpace{3, Float64, AT}
-            @test (@inferred Polyhedra.halfspacetype(hr))    == (@inferred eltype(halfspaces(hr)))    == HalfSpace{3, Float64, AT}
-            @test (@inferred Polyhedra.hyperplanetype(hr))   == (@inferred eltype(hyperplanes(hr)))   == HyperPlane{3, Float64, AT}
+            @test                                               (@inferred eltype(allhalfspaces(hr)))  == HalfSpace{3, Float64, AT}
+            @test                                               (@inferred collect(allhalfspaces(hr))) isa Vector{HalfSpace{3, Float64, AT}}
+            @test (@inferred Polyhedra.halfspacetype(hr))    == (@inferred eltype(halfspaces(hr)))     == HalfSpace{3, Float64, AT}
+            @test                                               (@inferred collect(halfspaces(hr)))    isa Vector{HalfSpace{3, Float64, AT}}
+            @test (@inferred Polyhedra.hyperplanetype(hr))   == (@inferred eltype(hyperplanes(hr)))    == HyperPlane{3, Float64, AT}
+            @test                                               (@inferred collect(hyperplanes(hr)))   isa Vector{HyperPlane{3, Float64, AT}}
         end
         symps = [SymPoint([0, 1])]
         ssymps = [SymPoint(@SVector [0, 1])]
@@ -112,12 +115,18 @@
                          ((@inferred vrep(ssymps, sps, sls, srs)), SVector{2, Int}),
                          (vrep([1 2; 3 4]), Vector{Int}))
             @test (@inferred coefficienttype(vr)) == Int
-            @test                                           (@inferred eltype(allpoints(vr))) == AT
-            @test (@inferred Polyhedra.sympointtype(vr)) == (@inferred eltype(sympoints(vr))) == SymPoint{2, Int, AT}
-            @test (@inferred Polyhedra.pointtype(vr))    == (@inferred eltype(points(vr)))    == AT
-            @test                                           (@inferred eltype(allrays(vr)))   == Ray{2, Int, AT}
-            @test (@inferred Polyhedra.linetype(vr))     == (@inferred eltype(lines(vr)))     == Line{2, Int, AT}
-            @test (@inferred Polyhedra.raytype(vr))      == (@inferred eltype(rays(vr)))      == Ray{2, Int, AT}
+            @test                                           (@inferred eltype(allpoints(vr)))  == AT
+            @test                                           (@inferred collect(allpoints(vr))) isa Vector{AT}
+            @test (@inferred Polyhedra.sympointtype(vr)) == (@inferred eltype(sympoints(vr)))  == SymPoint{2, Int, AT}
+            @test                                           (@inferred collect(sympoints(vr))) isa Vector{SymPoint{2, Int, AT}}
+            @test (@inferred Polyhedra.pointtype(vr))    == (@inferred eltype(points(vr)))     == AT
+            @test                                           (@inferred collect(points(vr)))    isa Vector{AT}
+            @test                                           (@inferred eltype(allrays(vr)))    == Ray{2, Int, AT}
+            @test                                           (@inferred collect(allrays(vr)))   isa Vector{Ray{2, Int, AT}}
+            @test (@inferred Polyhedra.linetype(vr))     == (@inferred eltype(lines(vr)))      == Line{2, Int, AT}
+            @test                                           (@inferred collect(lines(vr)))     isa Vector{Line{2, Int, AT}}
+            @test (@inferred Polyhedra.raytype(vr))      == (@inferred eltype(rays(vr)))       == Ray{2, Int, AT}
+            @test                                           (@inferred collect(rays(vr)))      isa Vector{Ray{2, Int, AT}}
         end
     end
 
