@@ -62,15 +62,6 @@ arraytype(::Intersection{N, T, AT}) where {N, T, AT} = AT
 
 # V-representation
 
-abstract type VPolytope{N, T, AT} <: VRepresentation{N, T} end
-
-@norepelem VPolytope Line
-@norepelem VPolytope Ray
-
-abstract type VSymPolytope{N, T, AT} <: VPolytope{N, T, AT} end
-
-@norepelem VSymPolytope Point
-
 """
     vrep(sympoints::SymPointIt)
 
@@ -135,7 +126,8 @@ mutable struct PointsHull{N, T, AT} <: VPolytope{N, T, AT}
     end
 end
 PointsHull(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}) where {N, T, AT} = PointsHull{N, T, AT}(sympoints, points)
-arraytype(::PointsHull{N, T, AT}) where {N, T, AT} = AT
+arraytype(::Union{PointsHull{N, T, AT}, Type{PointsHull{N, T, AT}}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:PointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = PointsHull{N, T, similar_type(arraytype(PT), d, T)}
 
 @vecrepelem PointsHull Point points
 @subrepelem PointsHull SymPoint sympoints

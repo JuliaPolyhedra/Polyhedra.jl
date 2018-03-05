@@ -15,6 +15,7 @@
 
         V = [0 1; 1 0]
         @test_throws ErrorException MixedMatVRep{3, Int}(V, [1 0], IntSet(), IntSet())
+        @test_throws ErrorException vrep(zeros(0, 2), [1 0]) # V-consistency
         @test_throws ErrorException vrep(V, [1 0 0], IntSet(), IntSet())
         @test_throws ErrorException vrep(V, [1 1], IntSet(), IntSet([2]))
         @test_throws ErrorException vrep(V, [1 1], IntSet([4]), IntSet())
@@ -107,8 +108,8 @@
                          (vrep(ps), Vector{Int}),
                          ((@inferred vrep(sps)), SVector{2, Int}),
                          ((@inferred vrep(symps, ps)), Vector{Int}),
-                         ((@inferred convexhull(symps..., ps...)), Vector{Int}),
-                         ((@inferred convexhull(ps..., symps...)), Vector{Int}),
+                         (convexhull(symps..., ps...), Vector{Int}),
+                         (convexhull(ps..., symps...), Vector{Int}),
                          ((@inferred vrep(ssymps, sps)), SVector{2, Int}),
                          ((@inferred convexhull(ssymps..., sps...)), SVector{2, Int}),
                          ((@inferred convexhull(sps..., ssymps...)), SVector{2, Int}),

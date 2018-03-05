@@ -26,7 +26,7 @@ fulldim(::FullDim{N}) where N = N
 +(d1::FullDim{N1}, d2::FullDim{N2}) where {N1, N2} = FullDim{N1+N2}()
 
 FullDim(v::AbstractVector) = FullDim{length(v)}()
-FullDim(v::StaticArrays.SVector{N}) where N = FullDim{N}()
+FullDim(::Union{StaticArrays.SVector{N}, Type{<:StaticArrays.SVector{N}}}) where N = FullDim{N}()
 MultivariatePolynomials.coefficienttype(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
 similar_type(::Type{<:Vector}, ::FullDim, ::Type{T}) where T = Vector{T}
 similar_type(::Type{SparseVector{S, IT}}, ::FullDim, ::Type{T}) where {S, IT, T} = SparseVector{T, IT}

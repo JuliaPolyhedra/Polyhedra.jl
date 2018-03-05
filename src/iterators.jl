@@ -278,6 +278,9 @@ function rreps(p::VRep{N, T}...) where {N, T}
     lines(p...), rays(p...)
 end
 
+function vmap(f, d::FullDim, ::Type{T}, p::VPolytope...) where T
+    mapsympoints(f, d, T, p...), mappoints(f, d, T, p...)
+end
 function vmap(f, d::FullDim, ::Type{T}, p::VRep...) where T
     mapsympoints(f, d, T, p...), mappoints(f, d, T, p...), maplines(f, d, T, p...), maprays(f, d, T, p...)
 end
