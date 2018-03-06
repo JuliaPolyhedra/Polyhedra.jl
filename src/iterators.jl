@@ -1,18 +1,24 @@
-# Subtyping AbstractVector{ElemT} make Base think that RepIterator implements indexing e.g. for copy!
-abstract type AbstractRepIterator{N, T, ElemT, PT} end
+abstract type AbstractRepIterator{N, T, ElemT, PT} <: AbstractVector{ElemT} end
+# Subtyping AbstractVector{ElemT} makes Base think that RepIterator implements indexing e.g. for copy!
+abstract type AbstractMultiRepIterator{N, T, ElemT, PT} end
 
-# For a RepIterator with only one representation, we fallback to the indexing interface, the index being the iterator state
-# A representation can overwrite this if it can do something more efficient or if it simply does not support indexing
-const SingleRepIterator{N, T, ElemT, RepT} = AbstractRepIterator{N, T, ElemT, Tuple{RepT}}
+Base.iteratorsize(::Type{<:AbstractRepIterator}) = HasLength()
+Base.iteratoreltype(::Type{<:AbstractRepIterator}) = HasEltype()
+Base.IndexStyle(::Type{<:AbstractRepIterator}) = IndexLinear()
+Base.getindex(it::AbstractRepIterator, idx::Index) = mapitem(it, 1, get(it.p, idx))
+Base.getindex(it::AbstractRepIterator, i...) = (@show typeof(i); @show i)
 # With MapRepIterator, we could have RepT<:Rep{N', T'} with N' != N or T' != T, with eachindex, we need to replace everything with N', T'
-Base.eachindex(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT}) where {N, T, ElemT, RepT<:Rep{N, T}} = Indices{N, T, similar_type(ElemT, FullDim{N}(), T)}(it.ps[1])
-Base.start(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT})     where {N, T, ElemT, RepT<:Rep{N, T}} = start(eachindex(it))::Index{N, T, similar_type(ElemT, FullDim{N}(), T)}
-Base.done(it::SingleRepIterator, idx::Index) = done(eachindex(it), idx)
-Base.next(it::SingleRepIterator, idx::Index) = mapitem(it, 1, get(it.ps[1], idx)), nextindex(it.ps[1], idx)
+Base.eachindex(it::AbstractRepIterator{<:Any, <:Any, ElemT, RepT}) where {N, T, ElemT, RepT<:Rep{N, T}} = Indices{N, T, similar_type(ElemT, FullDim{N}(), T)}(it.p)
+Base.eachindex(::IndexLinear, it::AbstractRepIterator) = eachindex(it)
+Base.eachindex(::IndexCartesian, it::AbstractRepIterator) = eachindex(it)
+#Base.start(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT})     where {N, T, ElemT, RepT<:Rep{N, T}} = start(eachindex(it))::Index{N, T, similar_type(ElemT, FullDim{N}(), T)}
+#Base.done(it::SingleRepIterator, idx::Index) = done(eachindex(it), idx)
+#Base.next(it::SingleRepIterator, idx::Index) = mapitem(it, 1, get(it.ps[1], idx)), nextindex(it.ps[1], idx)
+Base.size(it::AbstractRepIterator) = (length(eachindex(it)),)
 
 # If there are multiple representations, we need to iterate.
 # Builds a SingleRepIterator{ElemT} from p
-function checknext(it::AbstractRepIterator, i::Int, state)
+function checknext(it::AbstractMultiRepIterator, i::Int, state)
     while i <= length(it.ps) && (i == 0 || done(repit(it, i), state))
         i += 1
         if i <= length(it.ps)
@@ -21,10 +27,9 @@ function checknext(it::AbstractRepIterator, i::Int, state)
     end
     i > length(it.ps) ? (i, nothing) : (i, state)
 end
-Base.start(it::AbstractRepIterator) = checknext(it, 0, nothing)
-Base.done(it::AbstractRepIterator, state) = state[1] > length(it.ps)
-
-function Base.next(it::AbstractRepIterator, state)
+Base.start(it::AbstractMultiRepIterator) = checknext(it, 0, nothing)
+Base.done(it::AbstractMultiRepIterator, state) = state[1] > length(it.ps)
+function Base.next(it::AbstractMultiRepIterator, state)
     i, substate = state
     item, newsubstate = next(repit(it, i), substate)
     newstate = checknext(it, i, newsubstate)
@@ -32,37 +37,53 @@ function Base.next(it::AbstractRepIterator, state)
 end
 
 # RepIterator
-struct RepIterator{N, T, ElemT, PT<:Tuple{Vararg{Rep{N, T}}}} <: AbstractRepIterator{N, T, ElemT, PT}
+struct RepIterator{N, T, ElemT, PT<:Rep{N, T}} <: AbstractRepIterator{N, T, ElemT, PT}
+    p::PT
+    function RepIterator{N, T, ElemT}(p::PT) where {N, T, ElemT, PT<:Rep{N, T}}
+        new{N, T, ElemT, PT}(p)
+    end
+end
+mapitem(it::RepIterator, i, item) = item
+struct MultiRepIterator{N, T, ElemT, PT<:Tuple{Vararg{Rep{N, T}}}} <: AbstractMultiRepIterator{N, T, ElemT, PT}
     ps::PT
-    function RepIterator{N, T, ElemT}(ps::PT) where {N, T, ElemT, PT<:Tuple{Vararg{Rep{N, T}}}}
+    function MultiRepIterator{N, T, ElemT}(ps::PT) where {N, T, ElemT, PT<:Tuple{Vararg{Rep{N, T}}}}
         new{N, T, ElemT, PT}(ps)
     end
 end
-repit(it::RepIterator{N, T, ElemT}, i::Int) where {N, T, ElemT} = RepIterator{N, T, ElemT}((it.ps[i],))
-mapitem(it::RepIterator, i, item) = item
+repit(it::MultiRepIterator{N, T, ElemT}, i::Int) where {N, T, ElemT} = RepIterator{N, T, ElemT}(it.ps[i])
 
 # MapRepIterator
-struct MapRepIterator{N, T, ElemT, PT} <: AbstractRepIterator{N, T, ElemT, PT}
+struct MapRepIterator{N, T, ElemT, PT<:Rep} <: AbstractRepIterator{N, T, ElemT, PT}
+    p::PT
+    f::Function
+    function MapRepIterator{N, T, ElemT}(p::PT, f::Function) where {N, T, ElemT, PT<:Rep}
+        new{N, T, ElemT, PT}(p, f)
+    end
+end
+mapitem(it::MapRepIterator, i, item) = it.f(i, item)
+struct MapMultiRepIterator{N, T, ElemT, PT} <: AbstractMultiRepIterator{N, T, ElemT, PT}
     ps::PT
     f::Function
-    function MapRepIterator{N, T, ElemT}(ps::PT, f::Function) where {N, T, ElemT, PT<:Tuple}
+    function MapMultiRepIterator{N, T, ElemT}(ps::PT, f::Function) where {N, T, ElemT, PT<:Tuple}
         new{N, T, ElemT, PT}(ps, f)
     end
 end
 # N, T are the output dim and coeftype, it can be different that the ones of is.ps[i]
-repit(it::MapRepIterator{N, T, ElemT}, i::Int) where {N, T, ElemT} = MapRepIterator{N, T, ElemT}((it.ps[i],), (j, item) -> it.f(i, item)) # j should be 1
-mapitem(it::MapRepIterator, i, item) = it.f(i, item)
+repit(it::MapMultiRepIterator{N, T, ElemT}, i::Int) where {N, T, ElemT} = MapRepIterator{N, T, ElemT}(it.ps[i], (j, item) -> it.f(i, item)) # j should be 1
 
-function Base.first(it::AbstractRepIterator)
+function Base.first(it::AbstractMultiRepIterator)
     next(it, start(it))[1]
 end
 FullDim(it::AbstractRepIterator{N}) where N = FullDim{N}()
-Base.eltype(it::AbstractRepIterator{N, T, ElemT}) where {N, T, ElemT} = ElemT
+Base.eltype(it::AbstractMultiRepIterator{N, T, ElemT}) where {N, T, ElemT} = ElemT
 function typed_map(f, d::FullDim{N}, ::Type{T}, it::RepIterator{Nin, Tin, ElemT}) where {N, T, Nin, Tin, ElemT}
-    MapRepIterator{N, T, similar_type(ElemT, d, T)}(it.ps, f)
+    MapRepIterator{N, T, similar_type(ElemT, d, T)}(it.p, f)
+end
+function typed_map(f, d::FullDim{N}, ::Type{T}, it::MultiRepIterator{Nin, Tin, ElemT}) where {N, T, Nin, Tin, ElemT}
+    MapMultiRepIterator{N, T, similar_type(ElemT, d, T)}(it.ps, f)
 end
 
-function RepIterator{N, T}(it::RepIterator) where {N, T}
+function RepIterator{N, T}(it::Union{RepIterator, MultiRepIterator}) where {N, T}
     typed_map((i,x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, it)
 end
 
@@ -83,6 +104,7 @@ for (isVrep, elt, singular) in [(true, :SymPoint, :sympoint), (true, :AbstractPo
         horvrep = :hrep
     end
     typename = :(AbstractRepIterator{N, T, <:$elt})
+    multitypename = :(AbstractMultiRepIterator{N, T, <:$elt})
     singularstr = string(singular)
     elemtype = Symbol(singularstr * "type")
     donep = Symbol("done" * singularstr)
@@ -125,18 +147,26 @@ for (isVrep, elt, singular) in [(true, :SymPoint, :sympoint), (true, :AbstractPo
             $elemtype(p::$HorVRep{N, T}) where {N, T} = $elt{N, T, arraytype(p)}
         end
 
+        function $plural(p::$HorVRep{N, T}) where {N, T}
+            RepIterator{N, T, $elemtype(p)}(p)
+        end
         function $plural(p::$HorVRep{N, T}...) where {N, T}
             ElemT = promote_type($elemtype.(p)...)
-            RepIterator{N, T, ElemT}(p)
+            MultiRepIterator{N, T, ElemT}(p)
         end
 
+        function $mapit(f::Function, d::FullDim{N}, ::Type{T}, p::$HorVRep) where {N, T}
+            MapRepIterator{N, T, similar_type($elemtype(p), d, T)}(p, f)
+        end
         function $mapit(f::Function, d::FullDim{N}, ::Type{T}, p::$HorVRep...) where {N, T}
             ElemT = promote_type(similar_type.($elemtype.(p), d, T)...)
-            MapRepIterator{N, T, ElemT}(p, f)
+            MapMultiRepIterator{N, T, ElemT}(p, f)
         end
 
-        Base.length(it::$typename) where {N, T} = sum($lenp, it.ps)
-        Base.isempty(it::$typename) where {N, T} = !any($isnotemptyp.(it.ps))
+        Base.length(it::$typename) where {N, T} = $lenp(it.p)
+        Base.length(it::$multitypename) where {N, T} = sum($lenp, it.ps)
+        Base.isempty(it::$typename) where {N, T} = !$isnotemptyp(it.p)
+        Base.isempty(it::$multitypename) where {N, T} = !any($isnotemptyp.(it.ps))
     end
 end
 
