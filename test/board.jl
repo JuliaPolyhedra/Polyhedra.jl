@@ -31,7 +31,7 @@ function boardtest(lib::Lib) where Lib<:PolyhedraLibrary
     @test nrays(poly) == 0
     @test npoints(poly) == 614
     @test !isempty(poly)
-    ext  = vrep(poly)
+    ext  = MixedMatVRep(vrep(poly))
     target = ones(Int, 9) * (3 // 4)
     ok = false
     for i = 1:size(ext.V, 1)

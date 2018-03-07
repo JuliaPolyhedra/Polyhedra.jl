@@ -1,10 +1,40 @@
-function decompose(lib::PolyhedraLibrary)
+function cubedecompose(lib::PolyhedraLibrary)
+    p = polyhedron(convexhull([ 1.,  1,   1],
+                              [ 1., -1,   1],
+                              [ 1.,  1,  -1],
+                              [ 1., -1,  -1],
+                              [-1.,  1,  1],
+                              [-1., -1,  1],
+                              [-1.,  1, -1],
+                              [-1., -1, -1]))
+    # FIXME failing
+    #p = polyhedron(convexhull(SymPoint([1., 1, 1]),
+    #                          SymPoint([1., -1, 1]),
+    #                          SymPoint([1., 1, -1]),
+    #                          SymPoint([1., -1, -1])))
+    points = GeometryTypes.decompose(GeometryTypes.Point{3, Float32}, p)
+    faces = GeometryTypes.decompose(GeometryTypes.Face{3, Int}, p)
+    normals = GeometryTypes.decompose(GeometryTypes.Normal{3,Float64}, p)
+    @test length(points) == 36
+    @test length(faces) == 12
+    @test length(normals) == 36
+#    Dict([0, 0, -1] => [[[-1.0, -1.0, -1.0], [1.0, -1.0, -1.0], [1.0, 1.0, -1.0]],
+#                        [[1.0, 1.0, -1.0], [-1.0, 1.0, -1.0], [-1.0, -1.0, -1.0]]
+end
+function largedecompose(lib::PolyhedraLibrary)
     isa(lib, SimplePolyhedraLibrary) && return
     contains(string(typeof(lib)),"LRSLibrary") && return
-    V = [-1 -1 1; -1 1 1; 1 -1 1; 1 1 1; 0 1 -1; 1 0 -1; -1 0 -1; 0 -1 -1]
+    V = [-1 -1  1;
+         -1  1  1;
+          1 -1  1;
+          1  1  1;
+          0  1 -1;
+          1  0 -1;
+         -1  0 -1;
+          0 -1 -1]
     R = [0 0 1]
-    vrep = SimpleVRepresentation(V, R)
-    p = polyhedron(vrep, lib)
+    v = vrep(V, R)
+    p = polyhedron(v, lib)
     @test GeometryTypes.decompose(GeometryTypes.Point{3, Float32}, p) ==
     [GeometryTypes.Point(1.0,1.0,1.0),
      GeometryTypes.Point(1.0,-1.0,1.0),
@@ -137,5 +167,9 @@ function decompose(lib::PolyhedraLibrary)
      GeometryTypes.Normal(0.0,0.0,-1.0),
      GeometryTypes.Normal(0.0,0.0,-1.0),
      GeometryTypes.Normal(0.0,0.0,-1.0)]
+end
 
+function decompose(lib::PolyhedraLibrary)
+    cubedecompose(lib)
+    largedecompose(lib)
 end

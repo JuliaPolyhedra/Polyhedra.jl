@@ -2,7 +2,7 @@
 import GeometryTypes.decompose, GeometryTypes.isdecomposable
 
 function fulldecompose(poly::Polyhedron{3,T}) where T
-    ine = MixedMatHRep(poly)
+    ine = MixedMatHRep(hrep(poly))
 
     # I need to do division so if T is e.g. Integer, I need to use another type
     RT = typeof(one(T)/2)
@@ -11,7 +11,7 @@ function fulldecompose(poly::Polyhedron{3,T}) where T
     #rayinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(r)
     #vertinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(r)
 
-    ps = haspoints(poly) ? points(poly) : [zeros(T, 3)]
+    ps = allpoints(poly)
 
     # Intersection of rays with the limits of the scene
     (xmin, xmax) = extrema(map((x)->x[1], ps))
