@@ -60,14 +60,6 @@ convexhull(ps::SymPoint...) = vrep([ps...])
 convexhull(ps::AbstractPoint...) = vrep([ps...])
 convexhull(p1::SymPoint, p2::AbstractPoint) = vrep([p1], [p2])
 convexhull(p1::AbstractPoint, p2::SymPoint) = convexhull(p2, p1)
-function convexhull(p1::Union{VRep{N}, SymPoint{N}, AbstractPoint{N}}, p2::Union{VRep{N}, SymPoint{N}, AbstractPoint{N}}, ps::Union{VRep{N}, SymPoint{N}, AbstractPoint{N}}...) where N
-    convexhull(convexhull(p1, p2), ps...)
-end
-
-convexhull(ps::SymPoint...) = vrep([ps...])
-convexhull(ps::AbstractPoint...) = vrep([ps...])
-convexhull(p1::SymPoint, p2::AbstractPoint) = vrep([p1], [p2])
-convexhull(p1::AbstractPoint, p2::SymPoint) = convexhull(p2, p1)
 convexhull(p1::Union{VRep{N}, SymPoint{N}, AbstractPoint{N}}, p2::Union{VRep{N}, SymPoint{N}, AbstractPoint{N}}, ps::Union{VRep{N}, SymPoint{N}, AbstractPoint{N}}...) where N = convexhull(convexhull(p1, p2), ps...)
 
 """
