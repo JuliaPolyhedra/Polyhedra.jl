@@ -20,6 +20,7 @@ end
 include("element.jl")
 include("rep.jl")
 include("interval.jl")
+include("polyhedra_to_lpqp.jl")
 include("show.jl")
 
 for lib in libraries

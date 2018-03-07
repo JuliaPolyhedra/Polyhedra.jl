@@ -1,5 +1,13 @@
 using JuMP
 
+"""
+    hrep(model::JuMP.Model)
+
+Builds an H-representation from the feasibility set of the JuMP model `model`.
+Note that if non-linear constraint are present in the model, they are ignored.
+"""
+hrep(model::JuMP.Model) = LPHRepresentation(model)
+
 function LPHRepresentation(model::JuMP.Model)
     # Inspired from Joey Huchette's code in ConvexHull.jl
     A = JuMP.prepConstrMatrix(model)
