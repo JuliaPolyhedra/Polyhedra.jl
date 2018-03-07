@@ -52,9 +52,9 @@ const RayIndices{N, T, RepT} = Indices{N, T, <:Ray{N, T}, RepT}
 const RIndices{N, T, RepT} = Union{LineIndices{N, T, RepT}, RayIndices{N, T, RepT}}
 const VIndices{N, T, RepT} = Union{PIndices{N, T, RepT}, RIndices{N, T, RepT}}
 
-function Base.next(idx::Indices{N, T, ElemT}, state::Index{N, T, ElemT}) where {N, T, ElemT}
-    nextidx = nextindex(idx.rep, state)
-    nextidx, nextidx
+function Base.next(idxs::Indices{N, T, ElemT}, idx::Index{N, T, ElemT}) where {N, T, ElemT}
+    nextidx = nextindex(idxs.rep, idx)
+    idx, nextidx
 end
 
 repfor(p, ::Type{<:HRepElement}) = hrep(p)
