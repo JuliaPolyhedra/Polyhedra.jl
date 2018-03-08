@@ -8,7 +8,6 @@ using StaticArrays
 
 include("alltests.jl")
 
-include("default.jl")
 
 include("redundancy.jl")
 
@@ -17,6 +16,7 @@ if !isempty(lp_solvers)
     lpsolver = first(lp_solvers)
 end
 
+include("default.jl")
 include("element.jl")
 include("rep.jl")
 include("interval.jl")
