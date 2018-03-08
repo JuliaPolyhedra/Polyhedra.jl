@@ -8,7 +8,6 @@ using StaticArrays
 
 include("alltests.jl")
 
-
 include("redundancy.jl")
 
 include("libraries.jl")

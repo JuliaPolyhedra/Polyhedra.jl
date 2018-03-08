@@ -168,6 +168,7 @@ Line{N, T, AT}(line::Line) where {N, T, AT} = Line{N, T, AT}(AT(line.a))
 Line{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Line{N, T, AT}(a)
 Line(a::MyVec) = Line{fulldim(a), eltype(a)}(a)
 
+Base.:(==)(a::T, b::T) where {T<:Union{SymPoint,Ray,Line}} = coord(a) == coord(b)
 Base.getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
 Base.vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 
@@ -286,14 +287,14 @@ function pushbefore(a::ElemT, β, ElemTout = similar_type(ElemT, FullDim{N+1}())
     ElemTout([β; vec(a)])
 end
 
-function lift(h::ElemT) where {N, T, ElemT <: HRepElement{N, T}}
-    ElemT(pushbefore(h.a, -h.β), zero(T))
+function lift(h::HRepElement{N, T}) where {N, T}
+    similar_type(typeof(h), FullDim{N+1}(), T)(pushbefore(h.a, -h.β), zero(T))
 end
 lift(h::Ray{N,T}) where {N,T} = Ray{N+1,T}(pushbefore(h.a, zero(T)))
 lift(h::Line{N,T}) where {N,T} = Line{N+1,T}(pushbefore(h.a, zero(T)))
 lift(h::Point{N,T}) where {N,T} = pushbefore(h, one(T))
-lift(h::AbstractVector{T}) where {T} = Ray{length(h)+1,T}(pushbefore(h, one(T)))
-lift(h::SymPoint{N,T}) where {N,T} = Line{N+1,T}(pushbefore(h.a, one(T)))
+lift(h::AbstractVector{T}) where {T} = pushbefore(h, one(T))
+lift(h::SymPoint{N,T}) where {N,T} = SymPoint{N+1,T}(pushbefore(h.a, one(T)))
 
 translate(p::Union{Point,AbstractVector,SymPoint}, v) = p + v
 translate(r::Union{Ray,Line}, v) = r
