@@ -189,7 +189,7 @@ Base.done(idxs::HIndices{N, T, <:LPHRepresentation{N, T}}, idx::HIndex{N, T}) wh
 function getaβ(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T}
     colrow, i, lgeq = _index2state(lp, idx)
     if colrow == 1
-        a = _zeros(arraytype(lp), FullDim{N}())
+        a = origin(arraytype(lp), FullDim{N}())
         a[i] = lgeq == 2 ? -one(T) : one(T)
         β = lgeq == 2 ? -lp.l[i] : lp.u[i]
     else

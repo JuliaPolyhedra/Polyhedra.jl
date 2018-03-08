@@ -126,7 +126,7 @@ Base.length(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = hasallrays(i
 Base.isempty(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = !hasallrays(idxs.rep)
 Base.start(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = eltype(idxs)(hasallrays(idxs.rep) ? 1 : 2)
 Base.done(idxs::PointIndices{N, T, <:VCone{N, T}}, idx::PointIndex{N, T}) where {N, T} = idx.value > 1
-Base.get(L::VCone{N, T, AT}, idx::PointIndex{N, T}) where {N, T, AT} = _zeros(AT, FullDim{N}())
+Base.get(L::VCone{N, T, AT}, idx::PointIndex{N, T}) where {N, T, AT} = origin(AT, FullDim{N}())
 nextindex(L::VCone{N, T}, idx::PointIndex{N, T}) where {N, T} = typeof(idx)(idx.value + 1)
 
 # Representation of an affine space containing the origin by the minkowsky sum of lines

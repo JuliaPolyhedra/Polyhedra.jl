@@ -8,8 +8,6 @@ using StaticArrays
 
 include("alltests.jl")
 
-include("redundancy.jl")
-
 include("libraries.jl")
 if !isempty(lp_solvers)
     lpsolver = first(lp_solvers)
@@ -17,9 +15,15 @@ end
 
 include("elements.jl")
 include("representation.jl")
-include("default.jl")
+
+include("redundancy.jl")
+include("doubledescription.jl")
+
 include("interval.jl")
+
 include("polyhedra_to_lpqp.jl")
+include("default.jl")
+
 include("show.jl")
 
 for lib in libraries

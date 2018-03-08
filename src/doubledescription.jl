@@ -6,9 +6,11 @@ polytypefor{T <: Integer}(::Type{T}) = Rational{BigInt}
 polytypefor(::Type{Float32}) = Float64
 polytypefor{T}(::Type{T}) = T
 
-function dualfullspace(h::HRepresentation{N, Tin}) where {N, Tin}
-    Tout = polytypefor(Tin)
-    MixedMatVRep(zeros(Tout, 1, N), eye(Tout, N), IntSet(), IntSet(1:N))
+function dualfullspace(rep::Representation, d::FullDim, ::Type{T}) where T
+    dualfullspace(rep, d, T, similar_type(arraytype(rep), d, T))
+end
+function dualfullspace(rep::Representation{N, T}) where {N, T}
+    dualfullspace(rep, FullDim{N}(), polytypefor(T))
 end
 
 function doubledescription(h::HRepresentation)

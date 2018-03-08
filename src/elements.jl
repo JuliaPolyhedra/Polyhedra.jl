@@ -113,9 +113,18 @@ A point in dimension `N` and of coefficient type `T`.
 """
 const AbstractPoint{N, T} = Union{Point{N, T}, AbstractVector{T}}
 
-_zeros(::Type{<:SparseVector{T}}, ::FullDim{N}) where {N, T} = spzeros(T, N)
-_zeros(::Type{Vector{T}}, ::FullDim{N}) where {N, T} = zeros(T, N)
-_zeros(VT::Type{<:AbstractVector}, ::FullDim) = zeros(VT)
+origin(::Type{<:SparseVector{T}}, ::FullDim{N}) where {N, T} = spzeros(T, N)
+origin(::Type{Vector{T}}, ::FullDim{N}) where {N, T} = zeros(T, N)
+origin(VT::Type{<:AbstractVector}, ::FullDim) = zeros(VT)
+# Canonical basis vector
+function basis(::Type{Vector{T}}, ::FullDim{N}, i::Int) where {N, T}
+    v = zeros(T, N)
+    v[i] = one(T)
+    v
+end
+function basis(::Type{SVector{N, T}}, ::FullDim{N}, i::Int) where {N, T}
+    SVector{N, T}(ntuple(j -> j == i ? one(T) : zero(T), Val{N}))
+end
 
 """
     struct SymPoint{N, T, AT <: AbstractPoint{N, T}}

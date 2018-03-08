@@ -196,3 +196,10 @@ arraytype(::Hull{N, T, AT}) where {N, T, AT} = AT
 @subrepelem Hull Point points
 @subrepelem Hull Line rays
 @subrepelem Hull Ray rays
+
+function dualfullspace(h::Intersection, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT}
+    Hull{N, T, AT}(SymPoint{N, T, AT}[],
+                   [origin(AT, d)],
+                   Line{N, T, AT}.(basis.(AT, d, 1:N)),
+                   Ray{N, T, AT}[])
+end
