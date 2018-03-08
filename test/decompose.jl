@@ -19,8 +19,11 @@ end
 nfaces(d::Dict{<:Any, Face}) = length(d)
 nfaces(d::Dict{<:Any, <:Vector}) = sum(map(length, values(d)))
 function test_decompose(p::Polyhedron, d::Dict)
+    @test GeometryTypes.isdecomposable(GeometryTypes.Point{3, Float32}, typeof(p))
     points = GeometryTypes.decompose(GeometryTypes.Point{3, Float32}, p)
+    @test GeometryTypes.isdecomposable(GeometryTypes.Face{3, Int}, typeof(p))
     faces = GeometryTypes.decompose(GeometryTypes.Face{3, Int}, p)
+    @test GeometryTypes.isdecomposable(GeometryTypes.Normal{3,Float64}, typeof(p))
     normals = GeometryTypes.decompose(GeometryTypes.Normal{3,Float64}, p)
     nf = nfaces(d)
     @test length(points) == 3nf
@@ -68,6 +71,7 @@ function orthantdecompose(lib::PolyhedraLibrary)
 end
 
 function cubedecompose(lib::PolyhedraLibrary)
+    contains(string(typeof(lib)),"LRSLibrary") && return
     p = polyhedron(convexhull([ 1.,  1,   1],
                               [ 1., -1,   1],
                               [ 1.,  1,  -1],
@@ -96,6 +100,7 @@ function cubedecompose(lib::PolyhedraLibrary)
     test_decompose(p, d)
 end
 function largedecompose(lib::PolyhedraLibrary)
+    contains(string(typeof(lib)),"LRSLibrary") && return
     V = [-1 -1  1;
          -1  1  1;
           1 -1  1;
