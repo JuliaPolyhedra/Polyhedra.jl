@@ -1,13 +1,10 @@
 # I only import it and do not use "using" so that Datastructures.status does not conflict with MathProgBase.status
 import GeometryTypes.decompose, GeometryTypes.isdecomposable
 
-function fulldecompose(poly::Polyhedron{3,T}) where T
-    ine = MixedMatHRep(hrep(poly))
-
+function fulldecompose(poly::Polyhedron{3, T}) where T
     # I need to do division so if T is e.g. Integer, I need to use another type
     RT = typeof(one(T)/2)
 
-    A = ine.A
     #rayinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(r)
     #vertinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(r)
 
@@ -29,27 +26,28 @@ function fulldecompose(poly::Polyhedron{3,T}) where T
         start + time * ray
     end
 
-    triangles = Tuple{Tuple{Vector{Float64},Vector{Float64},Vector{Float64}},Int64}[]
-    for i in 1:size(A, 1)
+    hr = hrep(poly)
+    triangles = Tuple{Tuple{Vector{Float64},Vector{Float64},Vector{Float64}}, HIndex{3, T}}[]
+
+    function decomposeplane(hidx)
+        # xray should be the rightmost ray
         xray = nothing
+        # xray should be the leftmost ray
         yray = nothing
-        zray = A[i,:]
-        if myeqzero(zray)
-            continue
-        end
-        newface = true
-        for j in 1:i-1
-            if myeqzero(cross(zray, A[j,:])) && (i in ine.linset || dot(zray, A[j,:]) > 0) # If A[j,:] is almost 0, it is always true...
-                # parallel and equality or inequality and same sense
-                # TODO is it possible that A[i,:] is stronger than A[j,:] ?
-                newface = false
+        h = get(hr, hidx)
+        zray = h.a
+        myeqzero(zray) && return
+        # Check if new face
+        for hs in hreps(hr)
+            for hjdx in eachindex(hs)
+                hjdx == hidx && break
+                hj = get(hr, hjdx)
+                if myeqzero(cross(zray, hj.a)) && (islin(h) || dot(zray, hj.a) > 0) # If A[j,:] is almost 0, it is always true...
+                    # parallel and equality or inequality and same sense
+                    # TODO is it possible that A[i,:] is stronger than A[j,:] ?
+                    return
+                end
             end
-        end
-        if !newface
-            continue
-        end
-        if i > 1 && A[i,:] == A[i-1,:] # Same row, only need to check i-1 since the rows are sorted
-            continue
         end
 
         # Checking rays
@@ -57,37 +55,37 @@ function fulldecompose(poly::Polyhedron{3,T}) where T
         line = nothing
         lineleft = false
         lineright = false
-        function checkleftright(r::Vector, lin::Bool)
+        function checkleftright(r::Union{Ray, Line})
             cc = counterclockwise(r, line)
             if !myeqzero(cc)
-                if cc < 0 || lin
+                if cc < 0 || islin(r)
                     lineleft = true
                 end
-                if cc > 0 || lin
+                if cc > 0 || islin(r)
                     lineright = true
+                end
+            end
+        end
+        for l in lines(poly)
+            if myeqzero(dot(l, zray)) && !myeqzero(l)
+                if line === nothing
+                    line = l
+                else
+                    checkleftright(l)
                 end
             end
         end
         for r in rays(poly)
             if myeqzero(dot(r, zray)) && !myeqzero(r)
-                if line != nothing
-                    checkleftright(r, islin(r))
+                if line === nothing
+                    if xray === nothing || counterclockwise(r, xray) > 0
+                        xray = coord(r) # r is more right than xray
+                    end
+                    if yray === nothing || counterclockwise(r, yray) < 0
+                        yray = coord(r) # r is more left than xray
+                    end
                 else
-                    if islin(r)
-                        line = vec(r)
-                        if xray != nothing
-                            checkleftright(xray, false) # false otherwise line wouldn't be nothing
-                        end
-                        if yray != nothing
-                            checkleftright(yray, false)
-                        end
-                    end
-                    if xray == nothing || counterclockwise(r, xray) > 0
-                        xray = vec(r)
-                    end
-                    if yray == nothing || counterclockwise(r, yray)  < 0
-                        yray = vec(r)
-                    end
+                    checkleftright(r)
                 end
             end
         end
@@ -95,7 +93,7 @@ function fulldecompose(poly::Polyhedron{3,T}) where T
         # Checking vertices
         face_vert = []
         for x in ps
-            if myeq(dot(x, zray), ine.b[i])
+            if myeq(dot(x, zray), h.β)
                 push!(face_vert, x)
             end
         end
@@ -121,7 +119,7 @@ function fulldecompose(poly::Polyhedron{3,T}) where T
             #  error("Not enough vertices and rays to form a face, it may be because of numerical rounding. Otherwise, please report this bug.")
             #end
             if length(face_vert) < 3 && (xray == nothing || (length(face_vert) < 2 && (yray == xray || length(face_vert) < 1)))
-                continue
+                return
             end
             if xray == nothing
                 sweep_norm = cross(zray, [1,0,0])
@@ -152,26 +150,33 @@ function fulldecompose(poly::Polyhedron{3,T}) where T
                 b = pop!(hull)
                 while !isempty(hull)
                     c = pop!(hull)
-                    push!(triangles, ((a,b,c), i))
+                    push!(triangles, ((a,b,c), hidx))
                     b = c
                 end
             end
         end
-
     end
+
+    for hidx in eachindex(hyperplanes(hr))
+        decomposeplane(hidx)
+    end
+    for hidx in eachindex(halfspaces(hr))
+        decomposeplane(hidx)
+    end
+
     ntri = length(triangles)
     pts  = Vector{GeometryTypes.Point{3,RT}}(3*ntri)
     faces   = Vector{GeometryTypes.Face{3,Int}}(ntri)
     ns = Vector{GeometryTypes.Normal{3,RT}}(3*ntri)
     for i in 1:ntri
         tri = pop!(triangles)
-        normal = vec(A[tri[2],:])
+        normal = get(hr, tri[2]).a
         for j = 1:3
             idx = 3*(i-1)+j
             #ns[idx] = -normal
             ns[idx] = normal
         end
-        faces[i] = Array(3*(i-1)+(1:3))
+        faces[i] = collect(3*(i-1)+(1:3))
         k = 1
         for k = 1:3
             # reverse order of the 3 vertices so that if I compute the
