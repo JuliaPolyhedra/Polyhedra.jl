@@ -1,17 +1,6 @@
 export convexhull, convexhull!
 
 """
-    dim(p::Polyhedron)
-
-Returns the dimension of the affine hull of the polyhedron.
-That is the number of non-redundant hyperplanes that define it.
-"""
-function dim(p::Polyhedron)
-    detecthlinearities!(p)
-    fulldim(p) - neqs(p)
-end
-
-"""
     intersect(P1::HRep, P2::HRep)
 
 Takes the intersection of `P1` and `P2` ``\\{\\, x : x \\in P_1, x \\in P_2 \\,\\}``.

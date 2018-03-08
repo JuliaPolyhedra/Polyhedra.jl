@@ -95,6 +95,7 @@ function fixandeliminate(p::HRep{N, T}, I, v) where {N, T}
 end
 
 # TODO rewrite, it is just cutting a cone with a half-space, nothing more
+# export radialprojectoncut
 # function radialprojectoncut{N}(p::Polyhedron{N}, cut::Vector, at)
 #   if myeqzero(at)
 #     error("at is zero")

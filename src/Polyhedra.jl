@@ -59,7 +59,6 @@ end
 include("repop.jl")
 include("center.jl")
 include("repelemop.jl")
-include("operations.jl")
 include("aff.jl")
 include("redundancy.jl")
 include("projection.jl")
