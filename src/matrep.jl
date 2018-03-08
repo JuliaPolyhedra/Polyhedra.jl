@@ -41,7 +41,7 @@ MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet) where T
 
 MixedMatHRep(h::HRep{N,T}) where {N,T} = MixedMatHRep{N,T}(h)
 
-function MixedMatHRep{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
+function MixedMatHRep{N, T}(hyperplanes::HyperPlaneIt{N, T}, halfspaces::HalfSpaceIt{N, T}) where {N, T}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
     A = Matrix{T}(nhrep, N)

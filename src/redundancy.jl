@@ -285,7 +285,7 @@ end
 function removeduplicates(hrep::HRepresentation{N, T}) where {N, T}
     aff = affinehull(hrep, true)
     newlin = true
-    hs = HalfSpace{N, T}[]
+    hs = halfspacetype(hrep)[]
     while newlin
         newlin = false
         aff = removeduplicates(aff)
