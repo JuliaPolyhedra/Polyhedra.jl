@@ -10,11 +10,13 @@ function simplextest(lib::PolyhedraLibrary)
     center, radius = chebyshevcenter(poly1, defaultLPsolverfor(poly1, lpsolver))
     @test center ≈ [1/2, 1/2]
     @test radius ≈ 1/2
+    @test dim(poly1) == 1 # FIXME doing dim earlier makes chebyshevcenter fail
     inequality_fulltest(poly1, A, b, ls)
     generator_fulltest(poly1, V)
 
     ext = vrep(V)
     poly2 = polyhedron(ext, lib)
+    @test dim(poly2) == 1
     @test !isempty(poly2)
     inequality_fulltest(poly2, A, b, ls)
     generator_fulltest(poly2, V)
@@ -40,6 +42,7 @@ function simplextest(lib::PolyhedraLibrary)
     extray = vrep(zeros(Int, 1, 2), Vray)
     poly3 = polyhedron(extray, lib)
     @test_throws ErrorException chebyshevcenter(poly3)
+    @test dim(poly3) == 2
     Acut = [1 1]
     bcut = [1]
     linsetcut = IntSet([1])
@@ -47,6 +50,7 @@ function simplextest(lib::PolyhedraLibrary)
     @test !ininterior([1/2, 1/2], inecut)
     @test inrelativeinterior([1/2, 1/2], inecut)
     push!(poly3, inecut)
+    @test dim(poly3) == 1
     inequality_fulltest(poly3, A, b, ls)
     generator_fulltest(poly3, V)
 
@@ -67,6 +71,7 @@ function simplextest(lib::PolyhedraLibrary)
     Rlin = [1 -1]
     inelin = hrep([1 1; -1 -1], [1, -1], IntSet())
     plin = polyhedron(inelin, lib)
+    @test dim(plin) == 1
     inequality_fulltest(plin, Alin, blin, linsetlin)
     generator_fulltest(plin, Vlin, Rlin, IntSet(), IntSet(1))
     ineout = hrep(plin)
