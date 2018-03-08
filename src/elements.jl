@@ -1,4 +1,4 @@
-import Base: getindex, vec, dot, cross, -, +, /
+import Base: -, +, /
 import GeometryTypes.Point
 export Point
 export HRepElement, HalfSpace, HyperPlane
@@ -168,8 +168,8 @@ Line{N, T, AT}(line::Line) where {N, T, AT} = Line{N, T, AT}(AT(line.a))
 Line{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Line{N, T, AT}(a)
 Line(a::MyVec) = Line{fulldim(a), eltype(a)}(a)
 
-getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
-vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
+Base.getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
+Base.vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 
 (-)(h::ElemT) where {ElemT<:Union{HyperPlane, HalfSpace}} = ElemT(-h.a, -h.β)
 (-)(elem::ElemT) where {ElemT<:Union{SymPoint,Ray,Line}} = ElemT(-coord(elem))
@@ -182,9 +182,9 @@ vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 
 for op in [:dot, :cross]
     @eval begin
-        $op(x::Union{SymPoint,Ray,Line}, y) = $op(x.a, y)
-        $op(x, y::Union{SymPoint,Ray,Line}) = $op(x, y.a)
-        $op(x::Union{SymPoint,Ray,Line}, y::Union{SymPoint,Ray,Line}) = $op(x.a, y.a)
+        Base.$op(x::Union{SymPoint,Ray,Line}, y) = $op(x.a, y)
+        Base.$op(x, y::Union{SymPoint,Ray,Line}) = $op(x, y.a)
+        Base.$op(x::Union{SymPoint,Ray,Line}, y::Union{SymPoint,Ray,Line}) = $op(x.a, y.a)
     end
 end
 
@@ -243,8 +243,6 @@ for ElemT in [:HalfSpace, :HyperPlane, :SymPoint, :Ray, :Line]
     end
 end
 
-Base.dot(a::AbstractVector, r::Union{Ray, Line}) = a ⋅ r.a
-
 ininterior{N}(r::Ray{N}, h::HalfSpace{N}) = myneg(h.a ⋅ r)
 ininterior{N}(l::Line{N}, h::HalfSpace{N}) = myneg(h.a ⋅ l)
 ininterior{N}(p::Point{N}, h::HalfSpace{N}) = mylt(h.a ⋅ p, h.β)
@@ -268,7 +266,6 @@ Base.in(p::Point{N}, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p, h.β)
 Base.in(p::AbstractVector, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p, h.β)
 Base.in(p::SymPoint{N}, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p.p, h.β)
 
-import Base.vec
 function Base.vec(x::FixedVector{N,T}) where {N,T}
     y = Vector{T}(N)
     for i in 1:N
