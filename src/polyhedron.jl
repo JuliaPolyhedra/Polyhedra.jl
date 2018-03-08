@@ -46,7 +46,7 @@ That is the number of non-redundant hyperplanes that define it.
 """
 function dim(p::Polyhedron)
     detecthlinearities!(p)
-    fulldim(p) - neqs(p)
+    fulldim(p) - nhyperplanes(p)
 end
 
 """

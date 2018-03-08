@@ -215,9 +215,9 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
     #   \  In CDD and ConvexHull.jl, they only consider segments that
     #    \ belongs to the boundary which is way faster than what we do here
     for p in pins
-        ap = mydot(h.a, p)
+        ap = h.a ⋅ p
         for q in pout
-            aq = mydot(h.a, q)
+            aq = h.a ⋅ q
             λ = (aq - h.β) / (aq - ap)
             @assert 0 <= λ <= 1
             push!(pinp, simplify(λ * p + (1 - λ) * q))
@@ -225,9 +225,9 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
     end
     # Similar but with rays
     for r in rins
-        ar = mydot(h.a, r)
+        ar = h.a ⋅ r
         for s in rout
-            as = mydot(h.a, s)
+            as = h.a ⋅ s
             # should take
             # λ = as / (as - ar)
             @assert 0 <= as / (as - ar) <= 1
@@ -246,9 +246,9 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
     # Similar but with one point and one ray
     for (ps, rs) in ((pins, rout), (pout, rins))
         for p in ps
-            ap = mydot(h.a, p)
+            ap = h.a ⋅ p
             for r in rs
-                ar = mydot(h.a, r)
+                ar = h.a ⋅ r
                 λ = (h.β - ap) / ar
                 push!(pinp, p + λ * r)
             end

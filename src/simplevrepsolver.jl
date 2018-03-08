@@ -31,18 +31,6 @@ function loadproblem!(lpm::SimpleVRepPolyhedraModel, vrep::VRep, obj, sense)
     end
 end
 
-function myobjval(obj, v::VRepElement)
-    if islin(r)
-        if lpm.sense == :Min
-            objval = min(mydot(lpm.obj, coord(r)), -mydot(lpm.obj, coord(r)))
-        else
-            objval = max(mydot(lpm.obj, coord(r)), -mydot(lpm.obj, coord(r)))
-        end
-    else
-        objval = mydot(lpm.obj, coord(r))
-    end
-end
-
 function optimize!(lpm::SimpleVRepPolyhedraModel)
     if isnull(lpm.vrep)
         error("No problem loaded")
@@ -57,8 +45,8 @@ function optimize!(lpm::SimpleVRepPolyhedraModel)
             better(a, b) = (lpm.sense == :Max ? a > b : a < b)
             mybetter(a, b) = (lpm.sense == :Max ? mygt(a, b) : mylt(a, b))
             lpm.status = :Infeasible
-            for r in rays(prob)
-                objval = myobjval(lpm.obj, r)
+            for r in allrays(prob)
+                objval = lpm.obj ⋅ r
                 if lpm.status != :Unbounded && mybetter(objval, zero(T))
                     lpm.status = :Unbounded
                     lpm.objval = lpm.sense == :Max ? typemax(T) : typemin(T)
@@ -66,8 +54,8 @@ function optimize!(lpm::SimpleVRepPolyhedraModel)
                 end
             end
             if status != :Unbounded
-                for p in points(prob)
-                    objval = myobjval(lpm.obj, p)
+                for p in allpoints(prob)
+                    objval = lpm.obj ⋅ p
                     if lpm.status == :Undecided || (lpm.status == :Optimal && better(objval, get(lpm.objval)))
                         lpm.status = :Optimal
                         lpm.objval = objval

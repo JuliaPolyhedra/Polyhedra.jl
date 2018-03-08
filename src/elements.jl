@@ -5,10 +5,6 @@ export HRepElement, HalfSpace, HyperPlane
 export VRepElement, AbstractPoint, SymPoint, AbstractRay, Ray, Line
 export islin, isray, ispoint, ispoint, coord, lift, simplify
 
-mypoint{T}(::Type{T}, a::AbstractVector) = AbstractArray{T}(a)
-mypoint{T}(::Type{T}, a::AbstractVector{T}) = a
-mypoint{N,T}(::Type{T}, a::Point{N}) = Point{N,T}(a)
-mypoint{N,T}(::Type{T}, a::Point{N,T}) = a
 const MyVec{N,T} = Union{Vec{N,T},AbstractVector{T}}
 myvec{T}(::Type{T}, a::AbstractVector) = AbstractArray{T}(a)
 myvec{T}(::Type{T}, a::AbstractVector{T}) = a
@@ -18,13 +14,6 @@ end
 myvec{N,T}(::Type{T}, a::StaticArrays.SVector{N,T}) = a
 myvec{N,T}(::Type{T}, a::Vec{N}) = Vec{N,T}(a)
 myvec{N,T}(::Type{T}, a::Vec{N,T}) = a
-
-mydot(a, b) = sum(a .* b)
-mydot(a::AbstractVector, b::AbstractVector) = dot(a, b)
-mydot(f::FixedVector, v::FixedVector) = dot(f, v)
-#mydot{T<:Union{Ray,Line}}(a::T, b::T) = mydot(a.r, b.r)
-#mydot{T<:Union{Ray,Line}}(a, b::T) = mydot(a, b.r)
-#mydot{T<:Union{Ray,Line}}(a::T, b) = mydot(a.r, b)
 
 vecconv{T}(::Type{T}, a::AbstractVector) = AbstractVector{T}(a)
 vecconv{T}(::Type{T}, a::FixedVector) = FixedVector{T}(a)
@@ -146,7 +135,7 @@ struct SymPoint{N, T, AT <: AbstractPoint{N, T}}
 end
 SymPoint{N, T, AT}(sympoint::SymPoint) where {N, T, AT} = SymPoint{N, T, AT}(AT(sympoint.a))
 SymPoint{N, T}(a::AbstractPoint{N, T}) where {N, T} = SymPoint{N, T, typeof(a)}(a)
-SymPoint{N, T}(a::AbstractPoint{N}) where {N, T} = SymPoint{N, T}(mypoint(T, a))
+SymPoint(a::AbstractPoint) = SymPoint{fulldim(a), eltype(a)}(a)
 
 """
     struct Ray{N, T, AT <: MyVec{N, T}}
@@ -163,7 +152,7 @@ struct Ray{N, T, AT <: MyVec{N, T}}
 end
 Ray{N, T, AT}(ray::Ray) where {N, T, AT} = Ray{N, T, AT}(AT(ray.a))
 Ray{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Ray{N, T, AT}(a)
-Ray{N, T}(a::MyVec) where {N,T} = Ray{N,T}(myvec(T, a))
+Ray(a::MyVec) = Ray{fulldim(a), eltype(a)}(a)
 
 """
     struct Line{N, T, AT <: MyVec{N, T}}
@@ -180,6 +169,7 @@ struct Line{N, T, AT<:MyVec{N, T}}
 end
 Line{N, T, AT}(line::Line) where {N, T, AT} = Line{N, T, AT}(AT(line.a))
 Line{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Line{N, T, AT}(a)
+Line(a::MyVec) = Line{fulldim(a), eltype(a)}(a)
 
 getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
 vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
@@ -204,21 +194,6 @@ end
 (*)(α, r::T) where {T<:Union{SymPoint,Ray,Line}} = T(α * r.a)
 (*)(r::T, α) where {T<:Union{SymPoint,Ray,Line}} = T(r.a * α)
 /(r::T, α) where {T<:Union{SymPoint,Ray,Line}} = T(r.a / α)
-
-Base.convert{T}(::Type{Vector{T}}, x::Union{SymPoint,Ray,Line}) = convert(Vector{T}, x.a)
-
-Line{N,T}(a::MyVec) where {N,T} = Line{N,T}(myvec(T, a))
-
-SymPoint(a::Union{Point,AbstractVector}) = SymPoint{fulldim(a), eltype(a)}(a)
-Ray(a::Union{Vec,AbstractVector}) = Ray{fulldim(a), eltype(a)}(a)
-Line(a::Union{Vec,AbstractVector}) = Line{fulldim(a), eltype(a)}(a)
-
-for ElemT in (:SymPoint, :Ray, :Line)
-    @eval begin
-        $ElemT{N,Tout}(v::SymPoint{N,Tin}) where {N,Tin,Tout} = $ElemT{N,Tout}(vecconv(Tout, v.a))
-        $ElemT{N,T}(v::SymPoint{N,T}) = v
-    end
-end
 
 const AbstractRay{N, T} = Union{Ray{N, T}, Line{N, T}}
 const FixedVRepElement{N,T} = Union{Point{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,T}}
@@ -271,31 +246,30 @@ for ElemT in [:HalfSpace, :HyperPlane, :SymPoint, :Ray, :Line]
     end
 end
 
-mydot(a::AbstractVector, r::Ray) = mydot(a, r.a)
-mydot(a::AbstractVector, l::Line) = mydot(a, l.a)
+Base.dot(a::AbstractVector, r::Union{Ray, Line}) = a ⋅ r.a
 
-ininterior{N}(r::Ray{N}, h::HalfSpace{N}) = myneg(mydot(h.a, r))
-ininterior{N}(l::Line{N}, h::HalfSpace{N}) = myneg(mydot(h.a, l))
-ininterior{N}(p::Point{N}, h::HalfSpace{N}) = mylt(mydot(h.a, p), h.β)
-ininterior{N}(p::AbstractVector, h::HalfSpace{N}) = mylt(mydot(h.a, p), h.β)
-ininterior{N}(p::SymPoint{N}, h::HalfSpace{N}) = mylt(mydot(h.a, p.p), h.β)
+ininterior{N}(r::Ray{N}, h::HalfSpace{N}) = myneg(h.a ⋅ r)
+ininterior{N}(l::Line{N}, h::HalfSpace{N}) = myneg(h.a ⋅ l)
+ininterior{N}(p::Point{N}, h::HalfSpace{N}) = mylt(h.a ⋅ p, h.β)
+ininterior{N}(p::AbstractVector, h::HalfSpace{N}) = mylt(h.a ⋅ p, h.β)
+ininterior{N}(p::SymPoint{N}, h::HalfSpace{N}) = mylt(h.a ⋅ p.p, h.β)
 
 inrelativeinterior(p::VRepElement, h::HalfSpace) = ininterior(p, h)
 
-Base.in(r::Ray{N}, h::HalfSpace{N}) where {N} = mynonpos(mydot(h.a, r))
-Base.in(l::Line{N}, h::HalfSpace{N}) where {N} = mynonpos(mydot(h.a, l))
-Base.in(p::Point{N}, h::HalfSpace{N}) where {N} = myleq(mydot(h.a, p), h.β)
-Base.in(p::AbstractVector, h::HalfSpace{N}) where {N} = myleq(mydot(h.a, p), h.β)
-Base.in(p::SymPoint{N}, h::HalfSpace{N}) where {N} = myleq(mydot(h.a, p.p), h.β)
+Base.in(r::Ray{N}, h::HalfSpace{N}) where {N} = mynonpos(h.a ⋅ r)
+Base.in(l::Line{N}, h::HalfSpace{N}) where {N} = mynonpos(h.a ⋅ l)
+Base.in(p::Point{N}, h::HalfSpace{N}) where {N} = myleq(h.a ⋅ p, h.β)
+Base.in(p::AbstractVector, h::HalfSpace{N}) where {N} = myleq(h.a ⋅ p, h.β)
+Base.in(p::SymPoint{N}, h::HalfSpace{N}) where {N} = myleq(h.a ⋅ p.p, h.β)
 
 ininterior(p::VRepElement, h::HyperPlane) = false
 inrelativeinterior(p::VRepElement, h::HyperPlane) = p in h
 
-Base.in(r::Ray{N}, h::HyperPlane{N}) where {N} = myeqzero(mydot(h.a, r))
-Base.in(l::Line{N}, h::HyperPlane{N}) where {N} = myeqzero(mydot(h.a, l))
-Base.in(p::Point{N}, h::HyperPlane{N}) where {N} = myeq(mydot(h.a, p), h.β)
-Base.in(p::AbstractVector, h::HyperPlane{N}) where {N} = myeq(mydot(h.a, p), h.β)
-Base.in(p::SymPoint{N}, h::HyperPlane{N}) where {N} = myeq(mydot(h.a, p.p), h.β)
+Base.in(r::Ray{N}, h::HyperPlane{N}) where {N} = myeqzero(h.a ⋅ r)
+Base.in(l::Line{N}, h::HyperPlane{N}) where {N} = myeqzero(h.a ⋅ l)
+Base.in(p::Point{N}, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p, h.β)
+Base.in(p::AbstractVector, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p, h.β)
+Base.in(p::SymPoint{N}, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p.p, h.β)
 
 import Base.vec
 function Base.vec(x::FixedVector{N,T}) where {N,T}
@@ -330,7 +304,7 @@ lift(h::SymPoint{N,T}) where {N,T} = Line{N+1,T}(pushbefore(h.a, one(T)))
 translate(p::Union{Point,AbstractVector,SymPoint}, v) = p + v
 translate(r::Union{Ray,Line}, v) = r
 
-translate(h::ElemT, p) where {ElemT<:HRepElement} = ElemT(h.a, h.β + mydot(h.a, p))
+translate(h::ElemT, p) where {ElemT<:HRepElement} = ElemT(h.a, h.β + h.a ⋅ p)
 
 _simplify(a::AbstractVector) = a
 _simplify(a::AbstractVector, β) = a, β
