@@ -15,8 +15,8 @@ if !isempty(lp_solvers)
     lpsolver = first(lp_solvers)
 end
 
+include("elements.jl")
 include("default.jl")
-include("element.jl")
 include("rep.jl")
 include("interval.jl")
 include("polyhedra_to_lpqp.jl")
