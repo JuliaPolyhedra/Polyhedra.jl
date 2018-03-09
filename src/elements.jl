@@ -1,4 +1,3 @@
-import Base: -, +, /
 import GeometryTypes.Point
 export Point
 export HRepElement, HalfSpace, HyperPlane
@@ -70,15 +69,15 @@ Base.convert(::Type{HyperPlane{N, T, AT}}, h::HyperPlane{N, T, AT}) where {N, T,
 islin(::Union{HalfSpace, Type{<:HalfSpace}}) = false
 islin(::Union{HyperPlane, Type{<:HyperPlane}}) = true
 
-(-)(h1::HRepElement, h2::HRepElement) = HalfSpace(h1.a - h2.a, h1.β - h2.β)
-(-)(h1::HyperPlane, h2::HyperPlane) = HyperPlane(h1.a - h2.a, h1.β - h2.β)
+Base.:(-)(h1::HRepElement, h2::HRepElement) = HalfSpace(h1.a - h2.a, h1.β - h2.β)
+Base.:(-)(h1::HyperPlane, h2::HyperPlane) = HyperPlane(h1.a - h2.a, h1.β - h2.β)
 
-(*)(h::HyperPlane, α::Real) = HyperPlane(h.a * α, h.β * α)
-(*)(α::Real, h::HyperPlane) = HyperPlane(α * h.a, α * h.β)
-(*)(h::HalfSpace, α::Real) = HalfSpace(h.a * α, h.β * α)
-(*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
+Base.:(*)(h::HyperPlane, α::Real) = HyperPlane(h.a * α, h.β * α)
+Base.:(*)(α::Real, h::HyperPlane) = HyperPlane(α * h.a, α * h.β)
+Base.:(*)(h::HalfSpace, α::Real) = HalfSpace(h.a * α, h.β * α)
+Base.:(*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
 
-function (/)(h::ElemT, P::Matrix) where {N, T, ElemT<:HRepElement{N, T}}
+function Base.:(/)(h::ElemT, P::Matrix) where {N, T, ElemT<:HRepElement{N, T}}
     Tout = mypromote_type(T, eltype(P))
     ElemTout = similar_type(ElemT, FullDim{size(P, 2)}(), Tout)
     ElemTout(Matrix{Tout}(P) * _vec(Tout, h.a), Tout(h.β))
@@ -181,14 +180,14 @@ Base.:(==)(a::T, b::T) where {T<:Union{SymPoint,Ray,Line}} = coord(a) == coord(b
 Base.getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
 Base.vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 
-(-)(h::ElemT) where {ElemT<:Union{HyperPlane, HalfSpace}} = ElemT(-h.a, -h.β)
-(-)(elem::ElemT) where {ElemT<:Union{SymPoint,Ray,Line}} = ElemT(-coord(elem))
+Base.:(-)(h::ElemT) where {ElemT<:Union{HyperPlane, HalfSpace}} = ElemT(-h.a, -h.β)
+Base.:(-)(elem::ElemT) where {ElemT<:Union{SymPoint,Ray,Line}} = ElemT(-coord(elem))
 # Used in remproj
-(-)(p::AbstractVector, l::Line) = p - coord(l)
+Base.:(-)(p::AbstractVector, l::Line) = p - coord(l)
 # Ray - Line is done in remproj
-(-)(r::Ray, s::Union{Ray, Line}) = Ray(r.a - s.a)
-(+)(r::Ray, s::Ray) = Ray(r.a + s.a)
-(+)(p::AbstractPoint, r::Ray) = p + coord(r)
+Base.:(-)(r::Ray, s::Union{Ray, Line}) = Ray(r.a - s.a)
+Base.:(+)(r::Ray, s::Ray) = Ray(r.a + s.a)
+Base.:(+)(p::AbstractPoint, r::Ray) = p + coord(r)
 
 for op in [:dot, :cross]
     @eval begin
@@ -198,9 +197,9 @@ for op in [:dot, :cross]
     end
 end
 
-(*)(α, r::T) where {T<:Union{SymPoint,Ray,Line}} = T(α * r.a)
-(*)(r::T, α) where {T<:Union{SymPoint,Ray,Line}} = T(r.a * α)
-/(r::T, α) where {T<:Union{SymPoint,Ray,Line}} = T(r.a / α)
+Base.:(*)(α, r::T) where {T<:Union{SymPoint,Ray,Line}} = T(α * r.a)
+Base.:(*)(r::T, α) where {T<:Union{SymPoint,Ray,Line}} = T(r.a * α)
+Base.:(/)(r::T, α) where {T<:Union{SymPoint,Ray,Line}} = T(r.a / α)
 
 const AbstractRay{N, T} = Union{Ray{N, T}, Line{N, T}}
 const FixedVRepElement{N,T} = Union{Point{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,T}}
@@ -223,7 +222,7 @@ coord(v::ElemT) where {ElemT<:Union{HRepElement,SymPoint,Ray,Line}} = v.a
 
 const VRepElementContainer{N,T} = Union{Ray{N,T}, Line{N,T}, SymPoint{N,T}}
 
-function (*)(P::AbstractMatrix, v::ElemT) where {N, T, ElemT<:VRepElementContainer{N, T}}
+function Base.:*(P::AbstractMatrix, v::ElemT) where {N, T, ElemT<:VRepElementContainer{N, T}}
       Tout = mypromote_type(T, eltype(P))
       ElemTout = similar_type(ElemT, FullDim{size(P, 1)}(), Tout)
       return ElemTout(P * v.a)
@@ -265,7 +264,7 @@ Base.in(r::Ray{N}, h::HalfSpace{N}) where {N} = mynonpos(h.a ⋅ r)
 Base.in(l::Line{N}, h::HalfSpace{N}) where {N} = mynonpos(h.a ⋅ l)
 Base.in(p::Point{N}, h::HalfSpace{N}) where {N} = myleq(h.a ⋅ p, h.β)
 Base.in(p::AbstractVector, h::HalfSpace{N}) where {N} = myleq(h.a ⋅ p, h.β)
-Base.in(p::SymPoint{N}, h::HalfSpace{N}) where {N} = myleq(h.a ⋅ p.p, h.β)
+Base.in(p::SymPoint{N}, h::HalfSpace{N}) where {N} = myleq(h.a ⋅ p.p, h.β) # FIXME
 
 ininterior(p::VRepElement, h::HyperPlane) = false
 inrelativeinterior(p::VRepElement, h::HyperPlane) = p in h
@@ -274,7 +273,7 @@ Base.in(r::Ray{N}, h::HyperPlane{N}) where {N} = myeqzero(h.a ⋅ r)
 Base.in(l::Line{N}, h::HyperPlane{N}) where {N} = myeqzero(h.a ⋅ l)
 Base.in(p::Point{N}, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p, h.β)
 Base.in(p::AbstractVector, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p, h.β)
-Base.in(p::SymPoint{N}, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p.p, h.β)
+Base.in(p::SymPoint{N}, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p.a, h.β) # FIXME
 
 function Base.vec(x::FixedVector{N,T}) where {N,T}
     y = Vector{T}(N)

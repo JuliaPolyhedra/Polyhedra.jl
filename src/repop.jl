@@ -58,14 +58,22 @@ Same as [`convexhull`](@ref) except that `p1` is modified to be equal to the con
 """
 convexhull!(p::VRep{N}, ine::HRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
 
-function (+)(p1::RepTin, p2::VRep{N, T2}) where {N, T1, T2, RepTin<:VRep{N, T1}}
+function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {N, T}
+    _tout(p) = similar_type(typeof(p), T)(p)
+    ps = [_tout(po1 + po2) for po1 in allpoints(p1) for po2 in allpoints(p2)]
+    SymPoint{N, T, eltype(ps)}[], ps
+end
+sumpoints(::FullDim{N}, ::Type{T}, p1::Rep, p2::VCone) where {N, T} = RepIterator{N, T}.(preps(p1))
+sumpoints(::FullDim{N}, ::Type{T}, p1::VCone, p2::Rep) where {N, T} = RepIterator{N, T}.(preps(p2))
+
+function Base.:+(p1::RepTin, p2::VRep{N, T2}) where {N, T1, T2, RepTin<:VRep{N, T1}}
     Tout = promote_type(T1, T2)
     # Always type of first arg
     RepTout = similar_type(RepTin, Tout)
-    _tout(p) = similar_type(typeof(p), Tout)(p)
-    ps = [_tout(po1 + po2) for po1 in allpoints(p1) for po2 in allpoints(p2)]
-    RepTout(SymPoint{N, Tout, eltype(ps)}[], ps, RepIterator{N, Tout}.(rreps(p1, p2))...)
+    RepTout(sumpoints(FullDim{N}(), Tout, p1, p2)..., RepIterator{N, Tout}.(rreps(p1, p2))...)
 end
+Base.:+(p::Rep, el::Union{Line, Ray}) = p + vrep([el])
+Base.:+(el::Union{Line, Ray}, p::Rep) = p + el
 
 # p1 has priority
 function usehrep(p1::Polyhedron, p2::Polyhedron)
@@ -107,21 +115,21 @@ end
 
 Cartesian product between the polyhedra `p1` and `p2`.
 """
-*(p1::Rep, p2::Rep) = cartesianproduct(p1, p2)
+Base.:(*)(p1::Rep, p2::Rep) = cartesianproduct(p1, p2)
 
 """
     \\(P::AbstractMatrix, p::HRep)
 
 Transform the polyhedron represented by ``p`` into ``P^{-1} p`` by transforming each halfspace ``\\langle a, x \\rangle \\le \\beta`` into ``\\langle P^\\top a, x \\rangle \\le \\beta`` and each hyperplane ``\\langle a, x \\rangle = \\beta`` into ``\\langle P^\\top a, x \\rangle = \\beta``.
 """
-(\)(P::AbstractMatrix, rep::HRep) = rep / P'
+Base.:(\)(P::AbstractMatrix, rep::HRep) = rep / P'
 
 """
     /(p::HRep, P::AbstractMatrix)
 
 Transform the polyhedron represented by ``p`` into ``P^{-T} p`` by transforming each halfspace ``\\langle a, x \\rangle \\le \\beta`` into ``\\langle P a, x \\rangle \\le \\beta`` and each hyperplane ``\\langle a, x \\rangle = \\beta`` into ``\\langle P a, x \\rangle = \\beta``.
 """
-function (/)(p::RepT, P::AbstractMatrix) where {Nin, Tin, RepT<:HRep{Nin, Tin}}
+function Base.:(/)(p::RepT, P::AbstractMatrix) where {Nin, Tin, RepT<:HRep{Nin, Tin}}
     if size(P, 2) != Nin
         error("The number of rows of P must match the dimension of the H-representation")
     end
@@ -133,7 +141,7 @@ function (/)(p::RepT, P::AbstractMatrix) where {Nin, Tin, RepT<:HRep{Nin, Tin}}
     RepTout(hmap(f, dout, Tout, p)...)
 end
 
-function (*)(rep::HRep, P::AbstractMatrix)
+function Base.:(*)(rep::HRep, P::AbstractMatrix)
     warn("`*(p::HRep, P::AbstractMatrix)` is deprecated. Use `P \\ p` or `p / P'` instead.")
     P \ rep
 end
@@ -143,7 +151,7 @@ end
 
 Transform the polyhedron represented by ``p`` into ``P p`` by transforming each element of the V-representation (points, symmetric points, rays and lines) `x` into ``P x``.
 """
-function (*)(P::AbstractMatrix, p::RepT) where {Nin, Tin, RepT<:VRep{Nin, Tin}}
+function Base.:(*)(P::AbstractMatrix, p::RepT) where {Nin, Tin, RepT<:VRep{Nin, Tin}}
     if size(P, 2) != Nin
         error("The number of rows of P must match the dimension of the V-representation")
     end

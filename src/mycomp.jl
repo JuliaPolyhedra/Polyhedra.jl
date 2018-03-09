@@ -28,7 +28,7 @@ function _scalehp(h1, h2)
     s2 = sum(abs.(h2.a)) + abs(h2.β)
     (h1.a*s2, h1.β*s2), (h2.a*s1, h2.β*s1)
 end
-function (==)(h1::HyperPlane, h2::HyperPlane)
+function Base.:(==)(h1::HyperPlane, h2::HyperPlane)
     (a1, β1), (a2, β2) = _scalehp(h1, h2)
     (a1 == a2 && β1 == β2) || (a1 == -a2 && β1 == -β2)
 end
@@ -36,7 +36,7 @@ function Base.isapprox(h1::HyperPlane, h2::HyperPlane)
     (a1, β1), (a2, β2) = _scalehp(h1, h2)
     (myeq(a1, a2) && myeq(β1, β2)) || (myeq(a1, -a2) && myeq(β1, -β2))
 end
-function (==)(h1::HalfSpace, h2::HalfSpace)
+function Base.:(==)(h1::HalfSpace, h2::HalfSpace)
     (a1, β1), (a2, β2) = _scalehp(h1, h2)
     a1 == a2 && β1 == β2
 end

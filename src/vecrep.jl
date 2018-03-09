@@ -129,6 +129,8 @@ PointsHull(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}) where {N, 
 arraytype(::Union{PointsHull{N, T, AT}, Type{PointsHull{N, T, AT}}}) where {N, T, AT} = AT
 similar_type(PT::Type{<:PointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = PointsHull{N, T, similar_type(arraytype(PT), d, T)}
 
+PointsHull{N, T, AT}(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(sympoints, points, lines, rays)
+
 @vecrepelem PointsHull Point points
 @subrepelem PointsHull SymPoint sympoints
 
@@ -159,10 +161,10 @@ creates a V-representation for positive orthant.
 vrep(rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT} = vrep(Line{N, T, AT}[], rays)
 
 mutable struct RaysHull{N, T, AT} <: VCone{N, T, AT}
-    lines::VAffineSpace{N, T, AT}
+    lines::LinesHull{N, T, AT}
     rays::Vector{Ray{N, T, AT}}
     function RaysHull{N, T, AT}(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
-        new{N, T, AT}(VAffineSpace(ls), lazy_collect(rs))
+        new{N, T, AT}(LinesHull(ls), lazy_collect(rs))
     end
 end
 function RaysHull(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}

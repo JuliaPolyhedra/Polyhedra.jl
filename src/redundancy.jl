@@ -183,9 +183,20 @@ function vpupdatedup!(aff, points, sympoints, p::SymPoint)
         push!(sympoints, p)
     end
 end
-function vpupdatedup!(aff, points, sympoints, p)
+function vpupdatedup!(aff, points, sympoints, p::AbstractPoint)
     if !any(point -> (point - p) in aff, points) && !any(sp -> (coord(sp) - p) in aff || (coord(sp) + p) in aff, sympoints)
-        push!(points, p)
+        found = false
+        for (i, q) in enumerate(points)
+            if p + q in aff
+                found = true
+                deleteat!(points, i)
+                push!(sympoints, SymPoint(p))
+                break
+            end
+        end
+        if !found
+            push!(points, p)
+        end
     end
 end
 #function vrupdatedup!(rays, lines, l::Line)
@@ -222,7 +233,21 @@ function vrupdatedup!(aff::VAffineSpace, rays::Vector{<:Ray}, r)
         false
     end
 end
-function removeduplicates(vrep::VRepresentation{N, T}) where {N, T}
+function premovedups(vrep::VRepresentation, aff::VAffineSpace)
+    ps = pointtype(vrep)[]
+    sps = sympointtype(vrep)[]
+    for p in sympoints(vrep)
+        vpupdatedup!(aff, ps, sps, p)
+    end
+    for p in points(vrep)
+        vpupdatedup!(aff, ps, sps, p)
+    end
+    sps, ps
+end
+function removeduplicates(vrep::VPolytope)
+    typeof(vrep)(premovedups(vrep, emptyspace(vrep))...)
+end
+function removeduplicates(vrep::VRepresentation)
     aff = linespace(vrep, true)
     newlin = true
     rs = raytype(vrep)[]
@@ -233,15 +258,7 @@ function removeduplicates(vrep::VRepresentation{N, T}) where {N, T}
             newlin |= vrupdatedup!(aff, rs, r)
         end
     end
-    ps = pointtype(vrep)[]
-    sps = sympointtype(vrep)[]
-    for p in sympoints(vrep)
-        vpupdatedup!(aff, ps, sps, p)
-    end
-    for p in points(vrep)
-        vpupdatedup!(aff, ps, sps, p)
-    end
-    typeof(vrep)(sps, ps, aff.lines, rs)
+    typeof(vrep)(premovedups(vrep, aff)..., aff.lines, rs)
 end
 
 # H-duplicates

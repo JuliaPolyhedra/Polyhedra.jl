@@ -160,7 +160,7 @@ function Base.getindex(h::MixedMatVRep, I::AbstractArray)
     MixedMatVRep(h.V[Ip,:], h.R[Ir,:], filterintset(h.Vlinset, I), filterintset(h.Rlinset, I))
 end
 
-function dualfullspace(h::MixedMatHRep{N, Tin}) where {N, Tin}
+function dualfullspace(h::Union{MixedMatHRep{N, Tin}, LPHRepresentation{N, Tin}}) where {N, Tin}
     Tout = polytypefor(Tin)
     MixedMatVRep{N, Tout}(zeros(Tout, 1, N), eye(Tout, N), IntSet(), IntSet(1:N))
 end

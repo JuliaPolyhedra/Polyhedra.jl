@@ -89,6 +89,16 @@ abstract type VSymPolytope{N, T, AT} <: VPolytope{N, T, AT} end
 
 abstract type VCone{N, T, AT} <: VRepresentation{N, T} end
 @norepelem VCone SymPoint
+# See issue #28
+Base.length(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = hasallrays(idxs.rep) ? 1 : 0
+Base.isempty(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = !hasallrays(idxs.rep)
+Base.start(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = eltype(idxs)(hasallrays(idxs.rep) ? 1 : 2)
+Base.done(idxs::PointIndices{N, T, <:VCone{N, T}}, idx::PointIndex{N, T}) where {N, T} = idx.value > 1
+Base.get(L::VCone{N, T, AT}, idx::PointIndex{N, T}) where {N, T, AT} = origin(AT, FullDim{N}())
+nextindex(L::VCone{N, T}, idx::PointIndex{N, T}) where {N, T} = typeof(idx)(idx.value + 1)
+
+abstract type VAffineSpace{N, T, AT} <: VCone{N, T, AT} end
+@norepelem VAffineSpace Ray
 
 """
 The representation `rep` contain the elements `elem` inside a vector in the field `field`.
