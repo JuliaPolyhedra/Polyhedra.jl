@@ -40,7 +40,7 @@ function _filter(f, it)
     end
     ret
 end
-function removevredundancy(vrepit::ElemIt{<:VRepElement}, hrep::HRep; strongly=true, nl=nlines(hrep))
+function removevredundancy(vrepit::VIt, hrep::HRep; strongly=true, nl=nlines(hrep))
     _filter(v -> !isredundant(hrep, v, strongly=strongly, nl=nl), vrepit)
 end
 
@@ -51,7 +51,7 @@ function removevredundancy(vrep::VRep, hrep::HRep; strongly=true)
     typeof(vrep)(removevredundancy.(vreps(vrep), hrep, strongly=strongly, nl=nl)...)
 end
 
-function removehredundancy(hrepit::ElemIt{<:HRepElement}, vrep::VRep; strongly=true, d=dim(vrep))
+function removehredundancy(hrepit::HIt, vrep::VRep; strongly=true, d=dim(vrep))
     _filter(h -> !isredundant(vrep, h, strongly=strongly, d=d), hrepit)
 end
 
