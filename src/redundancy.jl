@@ -48,7 +48,7 @@ end
 # There shouldn't be any duplicates in hrep for this to work
 function removevredundancy(vrep::VRep, hrep::HRep; strongly=true)
     nl = nlines(vrep)
-    typeof(vrep)(removevredundancy.(vreps(vrep), hrep, strongly=strongly, nl=nl)...)
+    typeof(vrep)(removevredundancy.(vreps(vrep), hrep, strongly=strongly, nl=nl)...)::typeof(vrep) # FIXME return type annotation needed in Julia v0.6.2
 end
 
 function removehredundancy(hrepit::HIt, vrep::VRep; strongly=true, d=dim(vrep))
