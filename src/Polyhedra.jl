@@ -40,7 +40,7 @@ similar_type(::Type{<:Vec}, ::FullDim{N}, ::Type{T}) where {N, T} = Vec{N,T}
 
 # Interface/Definitions
 include("elements.jl")
-include("mycomp.jl")
+include("comp.jl")
 include("representation.jl")
 include("polyhedron.jl")
 include("indices.jl")
