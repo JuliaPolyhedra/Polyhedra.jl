@@ -89,8 +89,8 @@ function _hinterval(rep::HRep{1, T}) where T
     end
     for hp in hyperplanes(rep)
         α = hp.a[1]
-        if myeqzero(α)
-            if !myeqzero(hp.β)
+        if isapproxzero(α)
+            if !isapproxzero(hp.β)
                 empty = true
             end
         else
@@ -100,7 +100,7 @@ function _hinterval(rep::HRep{1, T}) where T
     end
     for hs in halfspaces(rep)
         α = hs.a[1]
-        if myeqzero(α)
+        if isapproxzero(α)
             if hs.β < 0
                 lb = Inf
                 ub = -Inf

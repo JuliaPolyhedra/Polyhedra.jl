@@ -93,7 +93,7 @@ function remproj(h::HRepElement, L::HAffineSpace)
 end
 function Base.in(h::HRepElement, L::HAffineSpace)
     h = remproj(h, L)
-    myeqzero(h)
+    isapproxzero(h)
 end
 
 function removeduplicates(L::HAffineSpace{N, T, AT}) where {N, T, AT}
@@ -110,7 +110,7 @@ end
 struct VEmptySpace{N, T, AT} <: VAffineSpace{N, T, AT} end
 emptyspace(v::VRep{N, T}) where {N, T} = VEmptySpace{N, T, arraytype(v)}()
 
-Base.in(v::VRepElement, L::VEmptySpace) = myeqzero(v)
+Base.in(v::VRepElement, L::VEmptySpace) = isapproxzero(v)
 
 """
     vrep(lines::LineIt)
@@ -161,7 +161,7 @@ function remproj(v::VRepElement, L::LinesHull)
 end
 function Base.in(v::VRepElement, L::LinesHull)
     v = remproj(v, L)
-    myeqzero(v)
+    isapproxzero(v)
 end
 
 function removeduplicates(L::LinesHull{N, T, AT}) where {N, T, AT}

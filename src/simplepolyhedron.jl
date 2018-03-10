@@ -29,18 +29,19 @@ function SimplePolyhedron{N, T, HRepT, VRepT}(vits::VIt...) where {N, T, HRepT, 
     SimplePolyhedron{N, T, HRepT, VRepT}(VRepT(vits...))
 end
 
+SimplePolyhedron{N, T}(rep::Representation{N}) where {N, T} = SimplePolyhedron{N, T}(MultivariatePolynomials.changecoefficienttype(rep, T))
 function SimplePolyhedron{N, T}(rep::HRepresentation{N, T}) where {N, T}
-    SimplePolyhedron{N, T, typeof(rep), MixedMatVRep{N, T}}(rep)
+    SimplePolyhedron{N, T, typeof(rep), Hull{N, T, polyarraytype(rep)}}(rep)
 end
 function SimplePolyhedron{N, T}(rep::VRepresentation{N, T}) where {N, T}
-    SimplePolyhedron{N, T, MixedMatHRep{N, T}, typeof(rep)}(rep)
+    SimplePolyhedron{N, T, Intersection{N, T, polyarraytype(rep)}, typeof(rep)}(rep)
 end
 
 #function SimplePolyhedron{N, T}(rep::HRepIterator) where {N, T}
 #    SimplePolyhedron{N, T}(MixedMatHRep{N, T}(rep))
 #end
 function SimplePolyhedron{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
-    SimplePolyhedron{N, T}(MixedMatHRep{N, T}(hyperplanes, halfspaces))
+    SimplePolyhedron{N, T}(hrep(hyperplanes, halfspaces))
 end
 #function SimplePolyhedron{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}) where {N, T}
 #    SimplePolyhedron{N, T}(MixedMatHRep{N, T}(hyperplanes))
@@ -53,7 +54,7 @@ end
 #    SimplePolyhedron{N, T}(MixedMatVRep{N, T}(rep))
 #end
 function SimplePolyhedron{N, T}(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:AbstractPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}) where {N, T}
-    SimplePolyhedron{N, T}(MixedMatVRep{N, T}(sympoints, points, lines, rays))
+    SimplePolyhedron{N, T}(vrep(sympoints, points, lines, rays))
 end
 #function SimplePolyhedron{N, T}(rays::RayIterator) where {N, T}
 #    SimplePolyhedron{N, T}(MixedMatVRep{N, T}(rays))
@@ -63,7 +64,7 @@ end
 #end
 
 function polyhedron(rep::Representation{N}, ::SimplePolyhedraLibrary{T}) where {N, T}
-    SimplePolyhedron{N, T}(rep)
+    SimplePolyhedron{N, polytypefor(T)}(rep)
 end
 #function polyhedron(repit::Union{HRepIterator{N}, VRepIterator{N}}, lib::SimplePolyhedraLibrary{T}) where {N, T}
 #    SimplePolyhedron{N, T}(repit)

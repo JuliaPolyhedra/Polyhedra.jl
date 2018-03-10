@@ -36,6 +36,51 @@ function Base.show(io::IO, ::MIME"text/plain", it::Polyhedra.AbstractRepIterator
     end
 end
 
+Base.summary(io::IO, v::VRepresentation) = "V-representation $(typeof(v))"
+Base.summary(io::IO, h::HRepresentation) = "H-representation $(typeof(h))"
+Base.summary(io::IO, p::Polyhedron) = "Polyhedron $(typeof(p))"
+
+show_reps(args::Tuple, first::Bool) = first
+function show_reps(args::Tuple, first::Bool, rep, reps...)
+    if !isempty(rep)
+        io = args[1]
+        if first
+            println(io, ":")
+            first = false
+        else
+            println(io, ",")
+        end
+        show(args..., rep)
+    end
+    show_reps(args, first, reps...)
+end
+
+function show_vreps(rep::HRepresentation, args...) end
+show_vreps(rep::VRepresentation, args...) = show_reps(args, true, vreps(rep)...)
+function show_vreps(rep::Polyhedron, args...)
+    if vrepiscomputed(rep)
+        show_reps(args, true, vreps(rep)...)
+    end
+end
+function show_hreps(rep::VRepresentation, args...) end
+show_hreps(rep::HRepresentation, args...) = show_reps(args, true, hreps(rep)...)
+function show_hreps(rep::Polyhedron, args...)
+    if hrepiscomputed(rep)
+        show_reps(args, true, hreps(rep)...)
+    end
+end
+
+function Base.show(io::IO, rep::Rep)
+    print(io, summary(rep))
+    show_hreps(rep, io)
+    show_vreps(rep, io)
+end
+function Base.show(io::IO, mime::MIME"text/plain", rep::Rep)
+    print(io, summary(rep))
+    show_hreps(rep, io, mime)
+    show_vreps(rep, io, mime)
+end
+
 #_length(hrep::HRepresentation) = nhyperplanes(hrep) + nhalfspaces(hrep)
 #_length(vrep::VRepresentation) = nsympoints(vrep) + npoints(vrep) + nlines(vrep) + nrays(vrep)
 #

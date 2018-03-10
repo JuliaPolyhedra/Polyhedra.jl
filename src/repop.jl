@@ -1,4 +1,4 @@
-export convexhull, convexhull!
+export convexhull, convexhull!, conichull
 
 """
     intersect(P1::HRep, P2::HRep)
@@ -18,6 +18,9 @@ function Base.intersect(p1::RepTin, p2::HRep{N, T2}) where {N, T1, T2, RepTin<:H
     RepTout = similar_type(RepTin, Tout)
     RepTout(hmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)
 end
+Base.intersect(p::Rep, el::HRepElement) = p ∩ intersect(el)
+
+Base.intersect(hss::HalfSpace...) = hrep([hss...])
 
 """
     intersect!(p1::VRep, p2::VRep)
@@ -57,6 +60,8 @@ convexhull(p1::Union{VRep{N}, SymPoint{N}, AbstractPoint{N}}, p2::Union{VRep{N},
 Same as [`convexhull`](@ref) except that `p1` is modified to be equal to the convex hull.
 """
 convexhull!(p::VRep{N}, ine::HRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
+
+conichull(rs::Ray...) = vrep([rs...])
 
 function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {N, T}
     _tout(p) = similar_type(typeof(p), T)(p)

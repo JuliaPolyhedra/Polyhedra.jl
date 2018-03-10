@@ -6,8 +6,13 @@ polytypefor{T <: Integer}(::Type{T}) = Rational{BigInt}
 polytypefor(::Type{Float32}) = Float64
 polytypefor{T}(::Type{T}) = T
 
+polyarraytype(a) = a
+# TODO sparse halfspaces does not mean sparse points
+polyarraytype(::Type{<:SparseVector{T}}) where T = Vector{T}
+polyarraytype(p::Rep) = polyarraytype(arraytype(p))
+
 function dualfullspace(rep::Representation, d::FullDim, ::Type{T}) where T
-    dualfullspace(rep, d, T, similar_type(arraytype(rep), d, T))
+    dualfullspace(rep, d, T, polyarraytype(similar_type(arraytype(rep), d, T)))
 end
 function dualfullspace(rep::Representation{N, T}) where {N, T}
     dualfullspace(rep, FullDim{N}(), polytypefor(T))
@@ -19,6 +24,9 @@ function doubledescription(h::HRepresentation)
     # redundant hyperplanes, it does not matter since no point
     # will be inside them but if there are duplicates it is a problem
 
+    # FIXME Note that removevredundancy, uses `h` which contains all hyperplanes and halfspaces
+    # already taken into account but also all the other ones. We should check that this
+    # is the right idea.
     h = removeduplicates(h)
     v = dualfullspace(h)
     checkvconsistency(v)

@@ -71,7 +71,10 @@ function LPHRepresentation(A::AbstractMatrix, l::AbstractVector, u::AbstractVect
     LPHRepresentation{size(A,2), T, typeof(AT)}(AT, AbstractVector{T}(l), AbstractVector{T}(u), AbstractVector{T}(lb), AbstractVector{T}(ub))
 end
 
+similar_type(::Type{<:Matrix}, ::Type{T}) where T = Matrix{T}
+similar_type(::Type{SparseMatrixCSC{S, I}}, ::Type{T}) where {S, I, T} = SparseMatrixCSC{T, I}
 arraytype(::Union{LPHRepresentation{N, T, MT}, Type{LPHRepresentation{N, T, MT}}}) where {N, T, MT} = MT <: AbstractSparseArray ? SparseVector{T, Int} : Vector{T}
+similar_type(::Type{LPHRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = LPHRepresentation{N, T, similar_type(MT, T)}
 
 LPHRepresentation(rep::LPHRepresentation) = rep
 _mattype(::Type{<:AbstractVector{T}}) where T = Matrix{T}
@@ -200,3 +203,6 @@ function getaβ(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T}
     a, β
 end
 Base.get(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(idx)(getaβ(lp, idx)...)
+
+dualfullspace(h::LPHRepresentation, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT} = dualfullspace(Intersection{N, T, AT}, d, T, AT)
+dualfullspace(h::LPHRepresentation, d::FullDim, ::Type{T}) where T = dualfullspace(h, d, T, Vector{T})

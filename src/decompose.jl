@@ -2,8 +2,8 @@ function fulldecompose(poly::Polyhedron{3, T}) where T
     # I need to do division so if T is e.g. Integer, I need to use another type
     RT = typeof(one(T)/2)
 
-    #rayinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(r)
-    #vertinface{T<:Real}(r::Vector{T}, i::Integer) = myeqzero(dot(r, A[i,:])) && !myeqzero(r)
+    #rayinface{T<:Real}(r::Vector{T}, i::Integer) = isapproxzero(dot(r, A[i,:])) && !isapproxzero(r)
+    #vertinface{T<:Real}(r::Vector{T}, i::Integer) = isapproxzero(dot(r, A[i,:])) && !isapproxzero(r)
 
     ps = allpoints(poly)
 
@@ -33,13 +33,13 @@ function fulldecompose(poly::Polyhedron{3, T}) where T
         yray = nothing
         h = get(hr, hidx)
         zray = h.a
-        myeqzero(zray) && return
+        isapproxzero(zray) && return
         # Check if new face
         for hs in hreps(hr)
             for hjdx in eachindex(hs)
                 hjdx == hidx && break
                 hj = get(hr, hjdx)
-                if myeqzero(cross(zray, hj.a)) && (islin(h) || dot(zray, hj.a) > 0) # If A[j,:] is almost 0, it is always true...
+                if isapproxzero(cross(zray, hj.a)) && (islin(h) || dot(zray, hj.a) > 0) # If A[j,:] is almost 0, it is always true...
                     # parallel and equality or inequality and same sense
                     # TODO is it possible that A[i,:] is stronger than A[j,:] ?
                     return
@@ -54,7 +54,7 @@ function fulldecompose(poly::Polyhedron{3, T}) where T
         lineright = false
         function checkleftright(r::Union{Ray, Line})
             cc = counterclockwise(r, line)
-            if !myeqzero(cc)
+            if !isapproxzero(cc)
                 if cc < 0 || islin(r)
                     lineleft = true
                 end
@@ -64,7 +64,7 @@ function fulldecompose(poly::Polyhedron{3, T}) where T
             end
         end
         for l in lines(poly)
-            if myeqzero(dot(l, zray)) && !myeqzero(l)
+            if isapproxzero(dot(l, zray)) && !isapproxzero(l)
                 if line === nothing
                     line = l
                 else
@@ -73,7 +73,7 @@ function fulldecompose(poly::Polyhedron{3, T}) where T
             end
         end
         for r in rays(poly)
-            if myeqzero(dot(r, zray)) && !myeqzero(r)
+            if isapproxzero(dot(r, zray)) && !isapproxzero(r)
                 if line === nothing
                     if xray === nothing || counterclockwise(r, xray) > 0
                         xray = coord(r) # r is more right than xray

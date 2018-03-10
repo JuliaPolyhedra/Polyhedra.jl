@@ -238,7 +238,7 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
             newr = (as * r - ar * s) / (as - ar)
             # In CDD, it does as * r - ar * s but then it normalize the ray
             # by dividing it by its smallest nonzero entry (see dd_CreateNewRay)
-            if !myeqzero(coord(newr))
+            if !isapproxzero(coord(newr))
                 push!(rinp, simplify(newr))
             end
         end

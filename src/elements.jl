@@ -69,8 +69,8 @@ Base.convert(::Type{HyperPlane{N, T, AT}}, h::HyperPlane{N, T, AT}) where {N, T,
 islin(::Union{HalfSpace, Type{<:HalfSpace}}) = false
 islin(::Union{HyperPlane, Type{<:HyperPlane}}) = true
 
-Base.:(-)(h1::HRepElement, h2::HRepElement) = HalfSpace(h1.a - h2.a, h1.β - h2.β)
-Base.:(-)(h1::HyperPlane, h2::HyperPlane) = HyperPlane(h1.a - h2.a, h1.β - h2.β)
+Base.:-(h1::HRepElement, h2::HRepElement) = HalfSpace(h1.a - h2.a, h1.β - h2.β)
+Base.:-(h1::HyperPlane, h2::HyperPlane) = HyperPlane(h1.a - h2.a, h1.β - h2.β)
 
 Base.:(*)(h::HyperPlane, α::Real) = HyperPlane(h.a * α, h.β * α)
 Base.:(*)(α::Real, h::HyperPlane) = HyperPlane(α * h.a, α * h.β)
@@ -180,14 +180,14 @@ Base.:(==)(a::T, b::T) where {T<:Union{SymPoint,Ray,Line}} = coord(a) == coord(b
 Base.getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
 Base.vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
 
-Base.:(-)(h::ElemT) where {ElemT<:Union{HyperPlane, HalfSpace}} = ElemT(-h.a, -h.β)
-Base.:(-)(elem::ElemT) where {ElemT<:Union{SymPoint,Ray,Line}} = ElemT(-coord(elem))
+Base.:-(h::ElemT) where {ElemT<:Union{HyperPlane, HalfSpace}} = ElemT(-h.a, -h.β)
+Base.:-(elem::ElemT) where {ElemT<:Union{SymPoint,Ray,Line}} = ElemT(-coord(elem))
 # Used in remproj
-Base.:(-)(p::AbstractVector, l::Line) = p - coord(l)
+Base.:-(p::AbstractVector, l::Line) = p - coord(l)
 # Ray - Line is done in remproj
-Base.:(-)(r::Ray, s::Union{Ray, Line}) = Ray(r.a - s.a)
-Base.:(+)(r::Ray, s::Ray) = Ray(r.a + s.a)
-Base.:(+)(p::AbstractPoint, r::Ray) = p + coord(r)
+Base.:-(r::Ray, s::Union{Ray, Line}) = Ray(r.a - s.a)
+Base.:+(r::Ray, s::Ray) = Ray(r.a + s.a)
+Base.:+(p::AbstractPoint, r::Ray) = p + coord(r)
 
 for op in [:dot, :cross]
     @eval begin
@@ -260,20 +260,23 @@ ininterior{N}(p::SymPoint{N}, h::HalfSpace{N}) = mylt(h.a ⋅ p.p, h.β)
 
 inrelativeinterior(p::VRepElement, h::HalfSpace) = ininterior(p, h)
 
-Base.in(r::Ray{N}, h::HalfSpace{N}) where {N} = mynonpos(h.a ⋅ r)
-Base.in(l::Line{N}, h::HalfSpace{N}) where {N} = mynonpos(h.a ⋅ l)
-Base.in(p::Point{N}, h::HalfSpace{N}) where {N} = myleq(h.a ⋅ p, h.β)
-Base.in(p::AbstractVector, h::HalfSpace{N}) where {N} = myleq(h.a ⋅ p, h.β)
-Base.in(p::SymPoint{N}, h::HalfSpace{N}) where {N} = myleq(h.a ⋅ p.p, h.β) # FIXME
+Base.in(r::Ray{N}, h::HalfSpace{N}) where N = mynonpos(h.a ⋅ r)
+Base.in(l::Line{N}, h::HalfSpace{N}) where N = mynonpos(h.a ⋅ l)
+Base.in(p::Point{N}, h::HalfSpace{N}) where N = myleq(h.a ⋅ p, h.β)
+Base.in(p::AbstractVector, h::HalfSpace{N}) where N = myleq(h.a ⋅ p, h.β)
+function Base.in(p::SymPoint{N}, h::HalfSpace{N}) where N
+    ap = h.a ⋅ p.p
+    myleq(ap, h.β) && myleq(-ap, h.β)
+end
 
 ininterior(p::VRepElement, h::HyperPlane) = false
 inrelativeinterior(p::VRepElement, h::HyperPlane) = p in h
 
-Base.in(r::Ray{N}, h::HyperPlane{N}) where {N} = myeqzero(h.a ⋅ r)
-Base.in(l::Line{N}, h::HyperPlane{N}) where {N} = myeqzero(h.a ⋅ l)
+Base.in(r::Ray{N}, h::HyperPlane{N}) where {N} = isapproxzero(h.a ⋅ r)
+Base.in(l::Line{N}, h::HyperPlane{N}) where {N} = isapproxzero(h.a ⋅ l)
 Base.in(p::Point{N}, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p, h.β)
 Base.in(p::AbstractVector, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p, h.β)
-Base.in(p::SymPoint{N}, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p.a, h.β) # FIXME
+Base.in(p::SymPoint{N}, h::HyperPlane{N}) where {N} = isapproxzero(h.β) && isapproxzero(h.a ⋅ p.a)
 
 function Base.vec(x::FixedVector{N,T}) where {N,T}
     y = Vector{T}(N)

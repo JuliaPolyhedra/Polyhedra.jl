@@ -105,8 +105,8 @@ function generator_fulltest(ext::MixedMatVRep, V, R=Matrix{eltype(V)}(0, size(V,
         @test found
     end
 end
-function generator_fulltest(v::VRepresentation, V, R=Matrix{eltype(V)}(0, size(V, 2)), Vlinset = IntSet(), Rlinset = IntSet())
-    generator_fulltest(MixedMatVRep(v), V, R, Vlinset, Rlinset)
+function generator_fulltest(v::VRepresentation{N, T}, V, R=Matrix{eltype(V)}(0, size(V, 2)), Vlinset = IntSet(), Rlinset = IntSet()) where {N, T}
+    generator_fulltest(MixedMatVRep{N, T}(sympointtype(v)[], allpoints(v), lines(v), rays(v)), V, R, Vlinset, Rlinset)
 end
 function generator_fulltest(p::Polyhedron, V, R=Matrix{eltype(V)}(0, size(V, 2)), Vlinset = IntSet(), Rlinset = IntSet())
     V = tomatrix(V)

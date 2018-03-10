@@ -68,7 +68,7 @@ function project(p::Polyhedron{N,T}, P::AbstractMatrix) where {N,T}
     eliminate(basis \ p, IntSet(m+1:N))
 end
 
-_fixelim(h::ElemT, I, J, v) where {ElemT<:HRepElement} = ElemT(h.a[J], h.β - dot(h.a[I], v))
+_fixelim(h::ElemT, I, J, v, dout::FullDim) where ElemT<:HRepElement = similar_type(ElemT, dout)(h.a[J], h.β - dot(h.a[I], v))
 
 """
     fixandeliminate(p::HRep{N, T}, I, v)
@@ -88,8 +88,8 @@ each halfspace `⟨a, x⟩ ≤ β` (resp. each hyperplane `⟨a, x⟩ = β`) by 
 """
 function fixandeliminate(p::HRep{N, T}, I, v) where {N, T}
     J = setdiff(1:N, I)
-    f = (i, h) -> _fixelim(h, I, J, v)
     dout = FullDim{length(J)}()
+    f = (i, h) -> _fixelim(h, I, J, v, dout)
     Tout = promote_type(T, eltype(v))
     similar_type(typeof(p), dout, Tout)(hmap(f, dout, Tout, p)...)
 end
@@ -97,7 +97,7 @@ end
 # TODO rewrite, it is just cutting a cone with a half-space, nothing more
 # export radialprojectoncut
 # function radialprojectoncut{N}(p::Polyhedron{N}, cut::Vector, at)
-#   if myeqzero(at)
+#   if isapproxzero(at)
 #     error("at is zero")
 #   end
 #   if length(cut) != N
@@ -114,11 +114,11 @@ end
 #   end
 #   for i in 1:size(R, 1)
 #     v = vec(ext.R[i,:])
-#     if myeqzero(v)
+#     if isapproxzero(v)
 #       # It can happen since I do not necessarily have removed redundancy
 #       v = zeros(eltype(v), length(v))
 #     elseif !myeq(dot(cut, v), at)
-#       if myeqzero(dot(cut, v))
+#       if isapproxzero(dot(cut, v))
 #         error("A ray is parallel to the cut") # FIXME is ok if some vertices are on the cut ? (i.e. at == 0, cut is not needed)
 #       end
 #       v = v * at / dot(cut, v)
