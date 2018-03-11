@@ -61,6 +61,8 @@ similar_type(PT::Type{<:Intersection}, d::FullDim{N}, ::Type{T}) where {N, T} = 
 @subrepelem Intersection HyperPlane hyperplanes
 @vecrepelem Intersection HalfSpace halfspaces
 
+fulltype(::Type{<:Union{Intersection{N, T, AT}, HAffineSpace{N, T, AT}}}) where {N, T, AT} = Intersection{N, T, AT}
+
 # V-representation
 
 """
@@ -194,9 +196,18 @@ vrep(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) = Hull(
 mutable struct Hull{N, T, AT} <: VRepresentation{N, T}
     points::PointsHull{N, T, AT}
     rays::RaysHull{N, T, AT}
-    function Hull{N, T, AT}(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
+    function Hull{N, T, AT}(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}=Line{N, T, AT}[], rays::ElemIt{Ray{N, T, AT}}=Ray{N, T, AT}[]) where {N, T, AT}
         new{N, T, AT}(PointsHull(sympoints, points), RaysHull(lines, rays))
     end
+end
+function Hull{N, T, AT}(lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
+    sps = SymPoint{N, T, AT}[]
+    if isempty(lines) && isempty(rays)
+        ps = AT[]
+    else
+        ps = [origin(AT, FullDim{N}())]
+    end
+    Hull{N, T, AT}(sps, ps, lines, rays)
 end
 function Hull(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
     Hull{N, T, AT}(sympoints, points, lines, rays)
@@ -208,6 +219,8 @@ similar_type(PT::Type{<:Hull}, d::FullDim{N}, ::Type{T}) where {N, T} = Hull{N, 
 @subrepelem Hull Point points
 @subrepelem Hull Line rays
 @subrepelem Hull Ray rays
+
+fulltype(::Type{<:Union{Hull{N, T, AT}, SymPointsHull{N, T, AT}, PointsHull{N, T, AT}, LinesHull{N, T, AT}, RaysHull{N, T, AT}}}) where {N, T, AT} = Hull{N, T, AT}
 
 function dualfullspace(h::Union{Intersection, Type{<:Intersection}}, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT}
     Hull{N, T, AT}(SymPoint{N, T, AT}[],

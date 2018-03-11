@@ -14,6 +14,7 @@ if !isempty(lp_solvers)
 end
 
 include("elements.jl")
+include("comp.jl")
 include("representation.jl")
 
 include("redundancy.jl")

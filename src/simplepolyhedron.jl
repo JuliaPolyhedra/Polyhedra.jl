@@ -29,12 +29,13 @@ function SimplePolyhedron{N, T, HRepT, VRepT}(vits::VIt...) where {N, T, HRepT, 
     SimplePolyhedron{N, T, HRepT, VRepT}(VRepT(vits...))
 end
 
+# Need fulltype in case the use does `intersect!` with another element
 SimplePolyhedron{N, T}(rep::Representation{N}) where {N, T} = SimplePolyhedron{N, T}(MultivariatePolynomials.changecoefficienttype(rep, T))
 function SimplePolyhedron{N, T}(rep::HRepresentation{N, T}) where {N, T}
-    SimplePolyhedron{N, T, typeof(rep), Hull{N, T, polyarraytype(rep)}}(rep)
+    SimplePolyhedron{N, T, fulltype(typeof(rep)), Hull{N, T, polyarraytype(rep)}}(rep)
 end
 function SimplePolyhedron{N, T}(rep::VRepresentation{N, T}) where {N, T}
-    SimplePolyhedron{N, T, Intersection{N, T, polyarraytype(rep)}, typeof(rep)}(rep)
+    SimplePolyhedron{N, T, Intersection{N, T, polyarraytype(rep)}, fulltype(typeof(rep))}(rep)
 end
 
 #function SimplePolyhedron{N, T}(rep::HRepIterator) where {N, T}

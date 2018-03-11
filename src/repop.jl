@@ -20,6 +20,7 @@ function Base.intersect(p1::RepTin, p2::HRep{N, T2}) where {N, T1, T2, RepTin<:H
 end
 Base.intersect(p::Rep, el::HRepElement) = p ∩ intersect(el)
 
+Base.intersect(hps::HyperPlane...) = hrep([hps...])
 Base.intersect(hss::HalfSpace...) = hrep([hss...])
 
 """
@@ -61,6 +62,7 @@ Same as [`convexhull`](@ref) except that `p1` is modified to be equal to the con
 """
 convexhull!(p::VRep{N}, ine::HRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
 
+conichull(ls::Line...) = vrep([ls...])
 conichull(rs::Ray...) = vrep([rs...])
 
 function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {N, T}

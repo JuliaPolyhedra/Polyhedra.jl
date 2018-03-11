@@ -75,6 +75,7 @@ similar_type(::Type{<:Matrix}, ::Type{T}) where T = Matrix{T}
 similar_type(::Type{SparseMatrixCSC{S, I}}, ::Type{T}) where {S, I, T} = SparseMatrixCSC{T, I}
 arraytype(::Union{LPHRepresentation{N, T, MT}, Type{LPHRepresentation{N, T, MT}}}) where {N, T, MT} = MT <: AbstractSparseArray ? SparseVector{T, Int} : Vector{T}
 similar_type(::Type{LPHRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = LPHRepresentation{N, T, similar_type(MT, T)}
+fulltype(::Type{LPHRepresentation{N, T, MT}}) where {N, T, MT} = LPHRepresentation{N, T, MT}
 
 LPHRepresentation(rep::LPHRepresentation) = rep
 _mattype(::Type{<:AbstractVector{T}}) where T = Matrix{T}

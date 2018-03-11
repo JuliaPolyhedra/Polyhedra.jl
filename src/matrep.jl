@@ -32,6 +32,7 @@ end
 
 similar_type{N,T}(::Type{<:MixedMatHRep}, ::FullDim{N}, ::Type{T}) = MixedMatHRep{N,T}
 arraytype(p::Union{MixedMatHRep{N, T}, Type{MixedMatHRep{N, T}}}) where {N, T} = Vector{T}
+fulltype(::Type{MixedMatHRep{N, T}}) where {N, T} = MixedMatHRep{N, T}
 
 function MixedMatHRep(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet) where {S <: Real, T <: Real}
     U = promote_type(S, T)
@@ -111,6 +112,7 @@ end
 
 similar_type{N,T}(::Type{<:MixedMatVRep}, ::FullDim{N}, ::Type{T}) = MixedMatVRep{N,T}
 arraytype(p::Union{MixedMatVRep{N, T}, Type{MixedMatVRep{N, T}}}) where {N, T} = Vector{T}
+fulltype(::Type{MixedMatVRep{N, T}}) where {N, T} = MixedMatVRep{N, T}
 
 function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Vlinset::IntSet, Rlinset::IntSet) where {S <: Real, T <: Real}
     U = promote_type(S, T)

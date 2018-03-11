@@ -74,5 +74,23 @@
         end
     end
     @testset "V-representation -> H-representation" begin
+        @testset "Hull" begin
+            @testset "Vector" begin
+                @testset "Exact" begin
+                    v = conichull(Ray([1, 0]),
+                                  Ray([0, 1]))
+                    h = @inferred doubledescription(v)
+                    @test !hashyperplanes(h)
+                    @test collect(halfspaces(h)) == [HalfSpace([0, -1], 0), HalfSpace([-1, 0], 0), HalfSpace([0, 0], 1)] # FIXME get rid of (0, 0) 1
+                end
+                @testset "Numerical" begin
+                    v = conichull(Ray([1., 0.]),
+                                  Ray([0., 1.]))
+                    h = @inferred doubledescription(v)
+                    @test !hashyperplanes(h)
+                    @test collect(halfspaces(h)) == [HalfSpace([0, -1], 0), HalfSpace([-1, 0], 0), HalfSpace([0, 0], 1)] # FIXME get rid of (0, 0) 1
+                end
+            end
+        end
     end
 end

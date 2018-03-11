@@ -49,8 +49,8 @@ end
 
 function doubledescription(v::VRepresentation{N, T}) where {N, T}
     checkvconsistency(v)
-    lv = LiftedVRepresentation(v)
+    lv = LiftedVRepresentation{N, T}(v)
     R = -lv.R
-    vl = doubledescription(MixedMatHRep(R, zeros(T, size(R, 1)), lv.linset))
-    LiftedHRepresentation(vl.R, vl.Rlinset)
+    vl = doubledescription(MixedMatHRep{N+1, T}(R, zeros(T, size(R, 1)), lv.linset))
+    LiftedHRepresentation{N, T}(vl.R, vl.Rlinset)
 end

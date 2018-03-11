@@ -1,58 +1,52 @@
 function simplextest(lib::PolyhedraLibrary)
-    A = [1 1; -1 0; 0 -1]
-    b = [1, 0, 0]
-    ls = IntSet([1])
-    V = [0 1; 1 0]
-
-    ine = hrep(A, b, ls)
-    poly1 = polyhedron(ine, lib)
+    hsim = HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0) ∩ HyperPlane([1, 1], 1)
+    vsim = convexhull([0, 1], [1, 0])
+    poly1 = polyhedron(hsim, lib)
     @test !isempty(poly1, defaultLPsolverfor(poly1, lpsolver))
     center, radius = chebyshevcenter(poly1, defaultLPsolverfor(poly1, lpsolver))
     @test center ≈ [1/2, 1/2]
     @test radius ≈ 1/2
     @test dim(poly1) == 1 # FIXME doing dim earlier makes chebyshevcenter fail
-    inequality_fulltest(poly1, A, b, ls)
-    generator_fulltest(poly1, V)
+    inequality_fulltest(poly1, hsim)
+    generator_fulltest(poly1, vsim)
 
-    ext = vrep(V)
-    poly2 = polyhedron(ext, lib)
+    poly2 = polyhedron(vsim, lib)
     @test dim(poly2) == 1
     @test !isempty(poly2)
-    inequality_fulltest(poly2, A, b, ls)
-    generator_fulltest(poly2, V)
+    inequality_fulltest(poly2, hsim)
+    generator_fulltest(poly2, vsim)
 
     # x_1 cannot be 2
-    poly = polyhedron(hrep([A; 1 0], [b; 2], union(ls, IntSet([4]))), lib)
+    hempty = hsim ∩ HyperPlane([1, 0], 2)
+    poly = polyhedron(hempty, lib)
     @test isempty(poly, defaultLPsolverfor(poly, lpsolver))
 
     # We now add the vertex (0, 0)
-    V0 = [0 0]
-    ext0 = vrep(V0)
-    @test translate(ext0, [1, 0]).V == [1 0]
+    ext0 = convexhull([0, 0])
+    @test collect(points(translate(ext0, [1, 0]))) == [[1, 0]]
 
+    htri = HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0) ∩ HalfSpace([1, 1], 1)
+    vtri = convexhull(vsim, ext0)
     push!(poly1, ext0)
-    inequality_fulltest(poly1, A, b, IntSet([]))
-    generator_fulltest(poly1, [V0; V])
+    inequality_fulltest(poly1, htri)
+    generator_fulltest(poly1, vtri)
     push!(poly2, ext0)
-    inequality_fulltest(poly2, A, b, IntSet([]))
-    generator_fulltest(poly2, [V0; V])
+    inequality_fulltest(poly2, htri)
+    generator_fulltest(poly2, vtri)
 
     # nonnegative orthant cut by x_1 + x_2 = 1
-    Vray = [1 0; 0 1]
-    extray = vrep(zeros(Int, 1, 2), Vray)
+    extray = conichull(Ray([1, 0]), Ray([0, 1])) # TODO pass the test without "convexhull([0, 0]) + "
     poly3 = polyhedron(extray, lib)
     @test_throws ErrorException chebyshevcenter(poly3)
     @test dim(poly3) == 2
-    Acut = [1 1]
-    bcut = [1]
-    linsetcut = IntSet([1])
-    inecut = hrep(Acut, bcut, linsetcut)
-    @test !ininterior([1/2, 1/2], inecut)
-    @test inrelativeinterior([1/2, 1/2], inecut)
-    push!(poly3, inecut)
+    hcut = intersect(HyperPlane([1, 1], 1))
+    vcut = convexhull([1, 0]) + conichull(Line([1, -1]))
+    @test !ininterior([1/2, 1/2], hcut)
+    @test inrelativeinterior([1/2, 1/2], hcut)
+    push!(poly3, hcut)
     @test dim(poly3) == 1
-    inequality_fulltest(poly3, A, b, ls)
-    generator_fulltest(poly3, V)
+    inequality_fulltest(poly3, hsim)
+    generator_fulltest(poly3, vsim)
 
     # FIXME needs float currently but should be updated
     # poly4 = project(poly1, [1; 0])
@@ -64,24 +58,17 @@ function simplextest(lib::PolyhedraLibrary)
     # |\
     # |_\
     #    \
-    Alin = [1 1]
-    blin = [1]
-    linsetlin = IntSet(1)
-    Vlin = [1 0]
-    Rlin = [1 -1]
-    inelin = hrep([1 1; -1 -1], [1, -1], IntSet())
-    plin = polyhedron(inelin, lib)
+    hlin = HalfSpace([1, 1], 1) ∩ HalfSpace([-1, -1], -1)
+    plin = polyhedron(hlin, lib)
     @test dim(plin) == 1
-    inequality_fulltest(plin, Alin, blin, linsetlin)
-    generator_fulltest(plin, Vlin, Rlin, IntSet(), IntSet(1))
-    ineout = hrep(plin)
+    inequality_fulltest(plin, hcut)
+    generator_fulltest(plin, vcut)
+    #ineout = hrep(plin)
     #@test linset(ineout) == IntSet(1)
-    Vlin = [1 0]
-    Rlin = [1 -1]
-    extlin = vrep(Vlin, [1 -1; -1 1])
-    plin = polyhedron(extlin, lib)
-    inequality_fulltest(plin, Alin, blin, linsetlin)
-    generator_fulltest(plin, Vlin, Rlin, IntSet(), IntSet(1))
-    extout = vrep(plin)
+    vlin = convexhull([1, 0]) + conichull(Ray([1, -1]), Ray([-1, 1]))
+    plin = polyhedron(vlin, lib)
+    inequality_fulltest(plin, hcut)
+    generator_fulltest(plin, vcut)
+    #extout = vrep(plin)
     #@test linset(extout) == IntSet(1)
 end
