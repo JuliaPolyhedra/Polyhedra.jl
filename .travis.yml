@@ -5,9 +5,9 @@ os:
   - osx
 julia:
   - 0.6
-addons:
-  apt_packages:
-    - libgmp-dev # For CDDLib and LRSLib
+#addons:
+#  apt_packages:
+#    - libgmp-dev # For CDDLib and LRSLib
 notifications:
   email: false
 # uncomment the following lines to override the default test script
