@@ -22,9 +22,9 @@ showstr(x) = sprint((io,x) -> show(IOContext(io, :limit => true, :displaysize =>
     end
     h = hrep(p)
     @testset "V-Representation" begin
-        @test replstr(v) == "Polyhedra.Hull{2,Int64,Array{Int64,1}}:\n3-element iterator of Array{Int64,1}:\n [1, -1]\n [2, -2]\n [3, -3],\n1-element iterator of Polyhedra.Ray{2,Int64,Array{Int64,1}}:\n Polyhedra.Ray{2,Int64,Array{Int64,1}}([1, 0])"
-        @test replstr(v, false) == "Polyhedra.Hull{2,Int64,Array{Int64,1}}:\n3-element iterator of Array{Int64,1}:\n [1, -1]\n [2, -2]\n [3, -3],\n1-element iterator of Polyhedra.Ray{2,Int64,Array{Int64,1}}:\n Polyhedra.Ray{2,Int64,Array{Int64,1}}([1, 0])"
-        @test showstr(v) == "Polyhedra.Hull{2,Int64,Array{Int64,1}}:\nArray{Int64,1}[[1, -1], [2, -2], [3, -3]],\nPolyhedra.Ray{2,Int64,Array{Int64,1}}[Polyhedra.Ray{2,Int64,Array{Int64,1}}([1, 0])]"
+        @test replstr(v) == "Polyhedra.Hull{2,$Int,Array{$Int,1}}:\n3-element iterator of Array{$Int,1}:\n [1, -1]\n [2, -2]\n [3, -3],\n1-element iterator of Polyhedra.Ray{2,$Int,Array{$Int,1}}:\n Polyhedra.Ray{2,$Int,Array{$Int,1}}([1, 0])"
+        @test replstr(v, false) == "Polyhedra.Hull{2,$Int,Array{$Int,1}}:\n3-element iterator of Array{$Int,1}:\n [1, -1]\n [2, -2]\n [3, -3],\n1-element iterator of Polyhedra.Ray{2,$Int,Array{$Int,1}}:\n Polyhedra.Ray{2,$Int,Array{$Int,1}}([1, 0])"
+        @test showstr(v) == "Polyhedra.Hull{2,$Int,Array{$Int,1}}:\nArray{$Int,1}[[1, -1], [2, -2], [3, -3]],\nPolyhedra.Ray{2,$Int,Array{$Int,1}}[Polyhedra.Ray{2,$Int,Array{$Int,1}}([1, 0])]"
     end
     @testset "H-Representation" begin
         @test replstr(h) == "Polyhedra.Intersection{2,Rational{BigInt},Array{Rational{BigInt},1}}:\n3-element iterator of Polyhedra.HalfSpace{2,Rational{BigInt},Array{Rational{BigInt},1}}:\n Polyhedra.HalfSpace{2,Rational{BigInt},Array{Rational{BigInt},1}}(Rational{BigInt}[-1//2, -1//2], 0//1)\n Polyhedra.HalfSpace{2,Rational{BigInt},Array{Rational{BigInt},1}}(Rational{BigInt}[0//1, -1//4], 3//4)\n Polyhedra.HalfSpace{2,Rational{BigInt},Array{Rational{BigInt},1}}(Rational{BigInt}[0//1, 1//2], -1//2)"
