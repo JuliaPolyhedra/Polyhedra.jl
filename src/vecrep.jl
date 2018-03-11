@@ -55,7 +55,8 @@ mutable struct Intersection{N, T, AT} <: HRepresentation{N, T}
     end
 end
 Intersection(hyperplanes::ElemIt{HyperPlane{N, T, AT}}, halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT} = Intersection{N, T, AT}(hyperplanes, halfspaces)
-arraytype(::Intersection{N, T, AT}) where {N, T, AT} = AT
+arraytype(::Union{Intersection{N, T, AT}, Type{Intersection{N, T, AT}}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:Intersection}, d::FullDim{N}, ::Type{T}) where {N, T} = Intersection{N, T, similar_type(arraytype(PT), d, T)}
 
 @subrepelem Intersection HyperPlane hyperplanes
 @vecrepelem Intersection HalfSpace halfspaces
@@ -79,9 +80,16 @@ mutable struct SymPointsHull{N, T, AT} <: VSymPolytope{N, T, AT}
     sympoints::Vector{SymPoint{N, T, AT}}
 end
 SymPointsHull(ps::ElemIt{SymPoint{N, T, AT}}) where {N, T, AT<:AbstractPoint{N, T}} = SymPointsHull{N, T, AT}(collect(ps))
-arraytype(::SymPointsHull{N, T, AT}) where {N, T, AT} = AT
+arraytype(::Union{SymPointsHull{N, T, AT}, Type{SymPointsHull{N, T, AT}}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:SymPointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = SymPointsHull{N, T, similar_type(arraytype(PT), d, T)}
+
+SymPointsHull{N, T, AT}(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(sympoints, points, lines, rays)
+SymPointsHull{N, T, AT}(sympoints::SymPointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(sympoints, AT[], lines, rays)
 
 @vecrepelem SymPointsHull SymPoint sympoints
+
+# SymPoint's can be split
+removevredundancy(vrep::SymPointsHull, hrep::HRep; kws...) = removevredundancy(PointsHull(sympoints(vrep), points(vrep)), hrep; kws...)
 
 """
     vrep(sympoints::SymPointIt, points::PointIt)
@@ -129,6 +137,8 @@ PointsHull(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}) where {N, 
 arraytype(::Union{PointsHull{N, T, AT}, Type{PointsHull{N, T, AT}}}) where {N, T, AT} = AT
 similar_type(PT::Type{<:PointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = PointsHull{N, T, similar_type(arraytype(PT), d, T)}
 
+PointsHull{N, T, AT}(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(sympoints, points, lines, rays)
+
 @vecrepelem PointsHull Point points
 @subrepelem PointsHull SymPoint sympoints
 
@@ -159,16 +169,17 @@ creates a V-representation for positive orthant.
 vrep(rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT} = vrep(Line{N, T, AT}[], rays)
 
 mutable struct RaysHull{N, T, AT} <: VCone{N, T, AT}
-    lines::VAffineSpace{N, T, AT}
+    lines::LinesHull{N, T, AT}
     rays::Vector{Ray{N, T, AT}}
     function RaysHull{N, T, AT}(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
-        new{N, T, AT}(VAffineSpace(ls), lazy_collect(rs))
+        new{N, T, AT}(LinesHull(ls), lazy_collect(rs))
     end
 end
 function RaysHull(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
     RaysHull{N, T, AT}(ls, rs)
 end
-arraytype(::RaysHull{N, T, AT}) where {N, T, AT} = AT
+arraytype(::Union{RaysHull{N, T, AT}, Type{RaysHull{N, T, AT}}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:RaysHull}, d::FullDim{N}, ::Type{T}) where {N, T} = RaysHull{N, T, similar_type(arraytype(PT), d, T)}
 
 @vecrepelem RaysHull Ray rays
 @subrepelem RaysHull Line lines
@@ -190,14 +201,15 @@ end
 function Hull(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
     Hull{N, T, AT}(sympoints, points, lines, rays)
 end
-arraytype(::Hull{N, T, AT}) where {N, T, AT} = AT
+arraytype(::Union{Hull{N, T, AT}, Type{Hull{N, T, AT}}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:Hull}, d::FullDim{N}, ::Type{T}) where {N, T} = Hull{N, T, similar_type(arraytype(PT), d, T)}
 
 @subrepelem Hull SymPoint points
 @subrepelem Hull Point points
 @subrepelem Hull Line rays
 @subrepelem Hull Ray rays
 
-function dualfullspace(h::Intersection, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT}
+function dualfullspace(h::Union{Intersection, Type{<:Intersection}}, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT}
     Hull{N, T, AT}(SymPoint{N, T, AT}[],
                    [origin(AT, d)],
                    Line{N, T, AT}.(basis.(AT, d, 1:N)),

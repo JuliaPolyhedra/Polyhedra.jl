@@ -119,7 +119,7 @@ end
 
 MixedMatVRep(v::VRep{N,T}) where {N,T} = MixedMatVRep{N,T}(v)
 
-function MixedMatVRep{N, T}(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:AbstractPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}) where {N, T}
+function MixedMatVRep{N, T}(sympoints::SymPointIt{N, T}, points::PointIt{N, T}, lines::LineIt{N, T}, rays::RayIt{N, T}) where {N, T}
     nsympoint = length(sympoints)
     npoint = length(points)
     nline = length(lines)
@@ -160,9 +160,8 @@ function Base.getindex(h::MixedMatVRep, I::AbstractArray)
     MixedMatVRep(h.V[Ip,:], h.R[Ir,:], filterintset(h.Vlinset, I), filterintset(h.Rlinset, I))
 end
 
-function dualfullspace(h::MixedMatHRep{N, Tin}) where {N, Tin}
-    Tout = polytypefor(Tin)
-    MixedMatVRep{N, Tout}(zeros(Tout, 1, N), eye(Tout, N), IntSet(), IntSet(1:N))
+function dualfullspace(h::MixedMatHRep, ::FullDim{N}, ::Type{T}) where {N, T}
+    MixedMatVRep{N, T}(zeros(T, 1, N), eye(T, N), IntSet(), IntSet(1:N))
 end
 
 export SimpleHRepresentation, SimpleVRepresentation

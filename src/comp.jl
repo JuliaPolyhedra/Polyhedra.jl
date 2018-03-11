@@ -1,13 +1,13 @@
-myeqzero(x::T; kws...) where {T<:Real} = x == zero(T)
-myeqzero(x::T; ztol=Base.rtoldefault(Float64)) where {T<:AbstractFloat} = abs(x) < ztol
-myeqzero(x::AbstractVector{T}; kws...) where {T<:Real} = myeqzero(maximum(abs.(x)); kws...)
-myeqzero(x::Union{SymPoint, Ray, Line}; kws...) = myeqzero(coord(x); kws...)
-myeqzero(h::HRepElement; kws...) = myeqzero(h.a; kws...) && myeqzero(h.β; kws...)
+isapproxzero(x::T; kws...) where {T<:Real} = x == zero(T)
+isapproxzero(x::T; ztol=Base.rtoldefault(Float64)) where {T<:AbstractFloat} = abs(x) < ztol
+isapproxzero(x::AbstractVector{T}; kws...) where {T<:Real} = isapproxzero(maximum(abs.(x)); kws...)
+isapproxzero(x::Union{SymPoint, Ray, Line}; kws...) = isapproxzero(coord(x); kws...)
+isapproxzero(h::HRepElement; kws...) = isapproxzero(h.a; kws...) && isapproxzero(h.β; kws...)
 
 myeq(x::Union{T, AbstractArray{T}}, y::Union{T, AbstractArray{T}}) where {T<:Union{Integer, Rational}} = x == y
 # I check with zero because isapprox(0, 1e-100) is false...
 # but isapprox(1e-100, 2e-100) should be false
-myeq(x, y) = (myeqzero(x) ? myeqzero(y) : (myeqzero(y) ? myeqzero(x) : isapprox(x, y)))
+myeq(x, y) = (isapproxzero(x) ? isapproxzero(y) : (isapproxzero(y) ? isapproxzero(x) : isapprox(x, y)))
 
 Base.isapprox(r::SymPoint, s::SymPoint) = myeq(coord(r), coord(s)) || myeq(coord(r), -coord(s))
 function _scaleray(r::Union{Line, Ray}, s::Union{Line, Ray})
@@ -28,7 +28,7 @@ function _scalehp(h1, h2)
     s2 = sum(abs.(h2.a)) + abs(h2.β)
     (h1.a*s2, h1.β*s2), (h2.a*s1, h2.β*s1)
 end
-function (==)(h1::HyperPlane, h2::HyperPlane)
+function Base.:(==)(h1::HyperPlane, h2::HyperPlane)
     (a1, β1), (a2, β2) = _scalehp(h1, h2)
     (a1 == a2 && β1 == β2) || (a1 == -a2 && β1 == -β2)
 end
@@ -36,7 +36,7 @@ function Base.isapprox(h1::HyperPlane, h2::HyperPlane)
     (a1, β1), (a2, β2) = _scalehp(h1, h2)
     (myeq(a1, a2) && myeq(β1, β2)) || (myeq(a1, -a2) && myeq(β1, -β2))
 end
-function (==)(h1::HalfSpace, h2::HalfSpace)
+function Base.:(==)(h1::HalfSpace, h2::HalfSpace)
     (a1, β1), (a2, β2) = _scalehp(h1, h2)
     a1 == a2 && β1 == β2
 end

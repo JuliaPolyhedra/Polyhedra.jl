@@ -40,15 +40,29 @@ function _filter(f, it)
     end
     ret
 end
-function removevredundancy(vrepit::VIt, hrep::HRep; strongly=true, nl=nlines(hrep))
-    _filter(v -> !isredundant(hrep, v, strongly=strongly, nl=nl), vrepit)
+function removevredundancy(vrepit::VIt, hrep::HRep; nl=nlines(hrep), kws...)
+    _filter(v -> !isredundant(hrep, v; nl=nl, kws...), vrepit)
 end
 
 # Remove redundancy in the V-representation using the H-representation
 # There shouldn't be any duplicates in hrep for this to work
-function removevredundancy(vrep::VRep, hrep::HRep; strongly=true)
+function removevredundancy(vrep::VRep, hrep::HRep; kws...)
     nl = nlines(vrep)
-    typeof(vrep)(removevredundancy.(vreps(vrep), hrep, strongly=strongly, nl=nl)...)::typeof(vrep) # FIXME return type annotation needed in Julia v0.6.2
+    ps = removevredundancy(points(vrep), hrep; nl=nl, kws...)
+    sps = sympointtype(vrep)[]
+    for sp in sympoints(vrep)
+        p1 = coord(sp)
+        p2 = -coord(sp)
+        red1, red2 = isredundant.(hrep, (p1, p2); nl=nl, kws...)
+        if !red1 && !red2
+            push!(sps, sp)
+        elseif !red1
+            push!(ps, p1)
+        elseif !red2
+            push!(ps, p2)
+        end
+    end
+    typeof(vrep)(sps, ps, removevredundancy.(rreps(vrep), hrep; nl=nl, kws...)...)::typeof(vrep)
 end
 
 function removehredundancy(hrepit::HIt, vrep::VRep; strongly=true, d=dim(vrep))
@@ -86,7 +100,7 @@ end
 # V-redundancy
 # If p is an H-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 # TODO nlines should be the number of non-redundant lines so something similar to dim
-function isredundant(p::HRep{N,T}, v::VRepElement; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) where {N,T}
+function isredundant(p::HRep{N,T}, v::Union{AbstractPoint, Line, Ray}; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) where {N,T}
     count = nhyperplanes(p) # v is in every hyperplane otherwise it would not be valid
     for h in halfspaces(p)
         if v in hyperplane(h)
@@ -179,13 +193,24 @@ function vpupdatedup!(aff, points, sympoints, p::SymPoint)
             break
         end
     end
-    if !found && !any(sp -> (sp - p) in aff || (sp + p) in aff, sympoints)
+    if !found && !any(sp -> (coord(sp) - coord(p)) in aff || (coord(sp) + coord(p)) in aff, sympoints)
         push!(sympoints, p)
     end
 end
-function vpupdatedup!(aff, points, sympoints, p)
+function vpupdatedup!(aff, points, sympoints, p::AbstractPoint)
     if !any(point -> (point - p) in aff, points) && !any(sp -> (coord(sp) - p) in aff || (coord(sp) + p) in aff, sympoints)
-        push!(points, p)
+        found = false
+        for (i, q) in enumerate(points)
+            if p + q in aff
+                found = true
+                deleteat!(points, i)
+                push!(sympoints, SymPoint(p))
+                break
+            end
+        end
+        if !found
+            push!(points, p)
+        end
     end
 end
 #function vrupdatedup!(rays, lines, l::Line)
@@ -202,7 +227,7 @@ end
 #end
 function vrupdatedup!(aff::VAffineSpace, rays::Vector{<:Ray}, r)
     r = remproj(r, aff)
-    if !myeqzero(r) && !any(ray -> remproj(ray, aff) ≈ r, rays)
+    if !isapproxzero(r) && !any(ray -> remproj(ray, aff) ≈ r, rays)
         l = line(r)
         found = false
         for (i, s) in enumerate(rays)
@@ -222,7 +247,21 @@ function vrupdatedup!(aff::VAffineSpace, rays::Vector{<:Ray}, r)
         false
     end
 end
-function removeduplicates(vrep::VRepresentation{N, T}) where {N, T}
+function premovedups(vrep::VRepresentation, aff::VAffineSpace)
+    ps = pointtype(vrep)[]
+    sps = sympointtype(vrep)[]
+    for p in sympoints(vrep)
+        vpupdatedup!(aff, ps, sps, p)
+    end
+    for p in points(vrep)
+        vpupdatedup!(aff, ps, sps, p)
+    end
+    sps, ps
+end
+function removeduplicates(vrep::VPolytope)
+    typeof(vrep)(premovedups(vrep, emptyspace(vrep))...)
+end
+function removeduplicates(vrep::VRepresentation)
     aff = linespace(vrep, true)
     newlin = true
     rs = raytype(vrep)[]
@@ -233,15 +272,7 @@ function removeduplicates(vrep::VRepresentation{N, T}) where {N, T}
             newlin |= vrupdatedup!(aff, rs, r)
         end
     end
-    ps = pointtype(vrep)[]
-    sps = sympointtype(vrep)[]
-    for p in sympoints(vrep)
-        vpupdatedup!(aff, ps, sps, p)
-    end
-    for p in points(vrep)
-        vpupdatedup!(aff, ps, sps, p)
-    end
-    typeof(vrep)(sps, ps, aff.lines, rs)
+    typeof(vrep)(premovedups(vrep, aff)..., aff.lines, rs)
 end
 
 # H-duplicates
@@ -258,7 +289,7 @@ end
 #end
 function hupdatedup!(aff::HAffineSpace, hss, h::HalfSpace)
     h = remproj(h, aff)
-    if !myeqzero(h) && !any(hs -> myeq(remproj(hs, aff), h), hss)
+    if !isapproxzero(h) && !any(hs -> myeq(remproj(hs, aff), h), hss)
         hp = hyperplane(h)
         found = false
         for (i, hs) in enumerate(hss)

@@ -25,7 +25,7 @@ function loadproblem!(lpm::SimpleVRepPolyhedraModel, vrep::VRep, obj, sense)
         error("sense should be :Max or :Min")
     end
     lpm.vrep = vrep
-    if !myeqzero(obj)
+    if !isapproxzero(obj)
         lpm.obj = copy(obj)
         lpm.sense = sense
     end

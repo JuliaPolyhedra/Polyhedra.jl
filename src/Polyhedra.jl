@@ -11,8 +11,6 @@ export PolyhedraLibrary, Polyhedron, FullDim
 abstract type PolyhedraLibrary end
 abstract type Polyhedron{N,T} <: GeometryPrimitive{N,T} end
 
-import Base: intersect, ==, +, *, \, /, isempty, copy, push!, length, eltype, start, done, next
-
 using StaticArrays
 using StaticArrays.FixedSizeArrays: FixedVector
 
@@ -23,7 +21,7 @@ struct FullDim{N}
     end
 end
 fulldim(::FullDim{N}) where N = N
-+(d1::FullDim{N1}, d2::FullDim{N2}) where {N1, N2} = FullDim{N1+N2}()
+Base.:+(d1::FullDim{N1}, d2::FullDim{N2}) where {N1, N2} = FullDim{N1+N2}()
 
 FullDim(v::AbstractVector) = FullDim{length(v)}()
 FullDim(::Union{StaticArrays.SVector{N}, Type{<:StaticArrays.SVector{N}}}) where N = FullDim{N}()
@@ -42,7 +40,7 @@ similar_type(::Type{<:Vec}, ::FullDim{N}, ::Type{T}) where {N, T} = Vec{N,T}
 
 # Interface/Definitions
 include("elements.jl")
-include("mycomp.jl")
+include("comp.jl")
 include("representation.jl")
 include("polyhedron.jl")
 include("indices.jl")

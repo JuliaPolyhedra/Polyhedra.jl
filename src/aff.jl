@@ -1,4 +1,4 @@
-export HAffineSpace, VAffineSpace, affinehull, linespace, detecthlinearities!, detectvlinearities!
+export HAffineSpace, LinesHull, affinehull, linespace, detecthlinearities!, detectvlinearities!
 
 # Linearity
 detectvlinearities!(p::VRep) = error("detectvlinearities! not implemented for $(typeof(p))")
@@ -12,7 +12,7 @@ end
 
 
 # It is easy to go from H-rep of affine space to V-rep of affine space by computing the kernel of a matrix using RowEchelon
-# However, it is really worth it since Base.in for an HRepElement in HAffineSpace and Base.in for an VRepElement in VAffineSpace are false already.
+# However, it is really worth it since Base.in for an HRepElement in HAffineSpace and Base.in for an VRepElement in LinesHull are false already.
 function remproj(x::RepElement{N, <:Integer}, l::RepElement{N, <:Integer}) where N
     # generates large numbers but keeps the type integer
     x * dot(coord(l), coord(l)) - l * dot(coord(x), coord(l))
@@ -93,7 +93,7 @@ function remproj(h::HRepElement, L::HAffineSpace)
 end
 function Base.in(h::HRepElement, L::HAffineSpace)
     h = remproj(h, L)
-    myeqzero(h)
+    isapproxzero(h)
 end
 
 function removeduplicates(L::HAffineSpace{N, T, AT}) where {N, T, AT}
@@ -107,6 +107,10 @@ function removeduplicates(L::HAffineSpace{N, T, AT}) where {N, T, AT}
 end
 
 # V-representation
+struct VEmptySpace{N, T, AT} <: VAffineSpace{N, T, AT} end
+emptyspace(v::VRep{N, T}) where {N, T} = VEmptySpace{N, T, arraytype(v)}()
+
+Base.in(v::VRepElement, L::VEmptySpace) = isapproxzero(v)
 
 """
     vrep(lines::LineIt)
@@ -119,60 +123,51 @@ vrep([Line([1, 0, 0]), Line([0, 1, 0])])
 ```
 creates the 2-dimensional affine subspace containing all the points ``(x_1, x_2, 0)``, i.e. the ``x_1````x_2``-plane.
 """
-vrep(lines::LineIt) = VAffineSpace(lines)
-
-# See issue #28
-Base.length(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = hasallrays(idxs.rep) ? 1 : 0
-Base.isempty(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = !hasallrays(idxs.rep)
-Base.start(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = eltype(idxs)(hasallrays(idxs.rep) ? 1 : 2)
-Base.done(idxs::PointIndices{N, T, <:VCone{N, T}}, idx::PointIndex{N, T}) where {N, T} = idx.value > 1
-Base.get(L::VCone{N, T, AT}, idx::PointIndex{N, T}) where {N, T, AT} = origin(AT, FullDim{N}())
-nextindex(L::VCone{N, T}, idx::PointIndex{N, T}) where {N, T} = typeof(idx)(idx.value + 1)
+vrep(lines::LineIt) = LinesHull(lines)
 
 # Representation of an affine space containing the origin by the minkowsky sum of lines
-struct VAffineSpace{N, T, AT} <: VCone{N, T, AT}
+struct LinesHull{N, T, AT} <: VAffineSpace{N, T, AT}
     lines::Vector{Line{N, T, AT}}
-    function VAffineSpace{N, T, AT}(lines::Vector{Line{N, T, AT}}) where {N, T, AT}
+    function LinesHull{N, T, AT}(lines::Vector{Line{N, T, AT}}) where {N, T, AT}
         new{N, T, AT}(lines)
     end
 end
-arraytype(L::VAffineSpace{N, T, AT}) where {N, T, AT} = AT
+arraytype(L::LinesHull{N, T, AT}) where {N, T, AT} = AT
 
-VAffineSpace{N, T, AT}() where {N, T, AT} = VAffineSpace{N, T, AT}(Line{N, T, AT}[])
-function VAffineSpace{N, T, AT}(it::ElemIt{Line{N, T, AT}}) where {N, T, AT}
-    VAffineSpace{N, T, AT}(collect(it))
+LinesHull{N, T, AT}() where {N, T, AT} = LinesHull{N, T, AT}(Line{N, T, AT}[])
+function LinesHull{N, T, AT}(it::ElemIt{Line{N, T, AT}}) where {N, T, AT}
+    LinesHull{N, T, AT}(collect(it))
 end
-VAffineSpace(it::ElemIt{Line{N, T, AT}}) where {N, T, AT} = VAffineSpace{N, T, AT}(it)
+LinesHull(it::ElemIt{Line{N, T, AT}}) where {N, T, AT} = LinesHull{N, T, AT}(it)
 
-convexhull!(L::VAffineSpace{N}, l::Line{N}) where {N} = push!(L.lines, l)
+convexhull!(L::LinesHull{N}, l::Line{N}) where {N} = push!(L.lines, l)
 
-@norepelem VAffineSpace Ray
-@vecrepelem VAffineSpace Line lines
+@vecrepelem LinesHull Line lines
 
-# Returns a VAffineSpace representing the following set (TODO does it have a name?, does someone has a reference talking about it ?)
-# {x | ⟨a, x⟩ = 0 ∀ a such that (α, β) is a valid inhyperplaneuality for p}
+# Returns a LinesHull representing the following set (TODO does it have a name?, does someone has a reference talking about it ?)
+# {x | ⟨a, x⟩ = 0 ∀ a such that (α, β) is a valid hyperplane for p}
 function linespace(v::VRep, current=false)
     if !current
         detectvlinearities!(v)
     end
-    VAffineSpace(lines(v))
+    LinesHull(lines(v))
 end
 
-function remproj(v::VRepElement, L::VAffineSpace)
+function remproj(v::VRepElement, L::LinesHull)
     for l in lines(L)
         v = remproj(v, l)
     end
     v
 end
-function Base.in(v::VRepElement, L::VAffineSpace)
+function Base.in(v::VRepElement, L::LinesHull)
     v = remproj(v, L)
-    myeqzero(coord(v))
+    isapproxzero(v)
 end
 
-function removeduplicates(L::VAffineSpace{N, T, AT}) where {N, T, AT}
-    V = VAffineSpace{N, T, AT}()
-    for h in hyperplanes(L)
-        if !(h in H)
+function removeduplicates(L::LinesHull{N, T, AT}) where {N, T, AT}
+    V = LinesHull{N, T, AT}()
+    for l in lines(L)
+        if !(l in H)
             convexhull!(H, h)
         end
     end

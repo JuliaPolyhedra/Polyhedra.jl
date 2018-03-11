@@ -95,7 +95,7 @@ for (isVrep, elt, singular) in [(true, :SymPoint, :sympoint), (true, :AbstractPo
     mapit = Symbol("map" * pluralstr)
 
     @eval begin
-        export $plural, $lenp, $isnotemptyp, $startp, $donep, $nextp
+        export $plural, $lenp, $isnotemptyp, $startp, $donep, $nextp, $elemtype
 
         """
             $plural($horvrep::$HorVRep)
@@ -268,15 +268,13 @@ function hconvert(::Type{RepTout}, p::HRep{N}) where {N, T, RepTout<:HRep{N, T}}
     RepTout(RepIterator{N, T}.(hreps(p))...)
 end
 
-function vreps(p...)
-    preps(p...)..., rreps(p...)...
-end
-function preps(p::VRep{N, T}...) where {N, T}
-    sympoints(p...), points(p...)
-end
-function rreps(p::VRep{N, T}...) where {N, T}
-    lines(p...), rays(p...)
-end
+vreps(p::VPolytope...) = preps(p...)
+vreps(p::VCone...) = rreps(p...)
+vreps(p...) = preps(p...)..., rreps(p...)...
+preps(p::VSymPolytope...) = tuple(sympoints(p...))
+preps(p::VRep...) = sympoints(p...), points(p...)
+rreps(p::VPolytope...) = tuple()
+rreps(p::VRep...) = lines(p...), rays(p...)
 
 function vmap(f, d::FullDim, ::Type{T}, p::VPolytope...) where T
     mapsympoints(f, d, T, p...), mappoints(f, d, T, p...)
