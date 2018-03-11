@@ -90,7 +90,7 @@ function fulldecompose(poly::Polyhedron{3, T}) where T
         # Checking vertices
         face_vert = []
         for x in ps
-            if myeq(dot(x, zray), h.β)
+            if _isapprox(dot(x, zray), h.β)
                 push!(face_vert, x)
             end
         end

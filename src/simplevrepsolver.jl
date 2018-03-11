@@ -43,11 +43,11 @@ function optimize!(lpm::SimpleVRepPolyhedraModel)
     else
         if lpm.sense in [:Max, :Min]
             better(a, b) = (lpm.sense == :Max ? a > b : a < b)
-            mybetter(a, b) = (lpm.sense == :Max ? mygt(a, b) : mylt(a, b))
+            _better(a, b) = (lpm.sense == :Max ? _gt(a, b) : _lt(a, b))
             lpm.status = :Infeasible
             for r in allrays(prob)
                 objval = lpm.obj ⋅ r
-                if lpm.status != :Unbounded && mybetter(objval, zero(T))
+                if lpm.status != :Unbounded && _better(objval, zero(T))
                     lpm.status = :Unbounded
                     lpm.objval = lpm.sense == :Max ? typemax(T) : typemin(T)
                     lpm.solution = r

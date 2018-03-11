@@ -105,7 +105,7 @@ function _hinh(h::HalfSpace{N}, hr::HRep{N}, solver) where N
     elseif sol.status == :Infeasible
         true
     elseif sol.status == :Optimal
-        myleq(-sol.objval, h.β)
+        _leq(-sol.objval, h.β)
     else
         error("Solver returned with status $(sol.status)")
     end

@@ -78,7 +78,7 @@ Base.:(*)(h::HalfSpace, α::Real) = HalfSpace(h.a * α, h.β * α)
 Base.:(*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
 
 function Base.:(/)(h::ElemT, P::Matrix) where {N, T, ElemT<:HRepElement{N, T}}
-    Tout = mypromote_type(T, eltype(P))
+    Tout = _promote_type(T, eltype(P))
     ElemTout = similar_type(ElemT, FullDim{size(P, 2)}(), Tout)
     ElemTout(Matrix{Tout}(P) * _vec(Tout, h.a), Tout(h.β))
 end
@@ -223,7 +223,7 @@ coord(v::ElemT) where {ElemT<:Union{HRepElement,SymPoint,Ray,Line}} = v.a
 const VRepElementContainer{N,T} = Union{Ray{N,T}, Line{N,T}, SymPoint{N,T}}
 
 function Base.:*(P::AbstractMatrix, v::ElemT) where {N, T, ElemT<:VRepElementContainer{N, T}}
-      Tout = mypromote_type(T, eltype(P))
+      Tout = _promote_type(T, eltype(P))
       ElemTout = similar_type(ElemT, FullDim{size(P, 1)}(), Tout)
       return ElemTout(P * v.a)
 end
@@ -252,21 +252,21 @@ for ElemT in [:HalfSpace, :HyperPlane, :SymPoint, :Ray, :Line]
     end
 end
 
-ininterior{N}(r::Ray{N}, h::HalfSpace{N}) = myneg(h.a ⋅ r)
-ininterior{N}(l::Line{N}, h::HalfSpace{N}) = myneg(h.a ⋅ l)
-ininterior{N}(p::Point{N}, h::HalfSpace{N}) = mylt(h.a ⋅ p, h.β)
-ininterior{N}(p::AbstractVector, h::HalfSpace{N}) = mylt(h.a ⋅ p, h.β)
-ininterior{N}(p::SymPoint{N}, h::HalfSpace{N}) = mylt(h.a ⋅ p.p, h.β)
+ininterior{N}(r::Ray{N}, h::HalfSpace{N}) = _neg(h.a ⋅ r)
+ininterior{N}(l::Line{N}, h::HalfSpace{N}) = _neg(h.a ⋅ l)
+ininterior{N}(p::Point{N}, h::HalfSpace{N}) = _lt(h.a ⋅ p, h.β)
+ininterior{N}(p::AbstractVector, h::HalfSpace{N}) = _lt(h.a ⋅ p, h.β)
+ininterior{N}(p::SymPoint{N}, h::HalfSpace{N}) = _lt(h.a ⋅ p.p, h.β)
 
 inrelativeinterior(p::VRepElement, h::HalfSpace) = ininterior(p, h)
 
-Base.in(r::Ray{N}, h::HalfSpace{N}) where N = mynonpos(h.a ⋅ r)
-Base.in(l::Line{N}, h::HalfSpace{N}) where N = mynonpos(h.a ⋅ l)
-Base.in(p::Point{N}, h::HalfSpace{N}) where N = myleq(h.a ⋅ p, h.β)
-Base.in(p::AbstractVector, h::HalfSpace{N}) where N = myleq(h.a ⋅ p, h.β)
+Base.in(r::Ray{N}, h::HalfSpace{N}) where N = _nonpos(h.a ⋅ r)
+Base.in(l::Line{N}, h::HalfSpace{N}) where N = _nonpos(h.a ⋅ l)
+Base.in(p::Point{N}, h::HalfSpace{N}) where N = _leq(h.a ⋅ p, h.β)
+Base.in(p::AbstractVector, h::HalfSpace{N}) where N = _leq(h.a ⋅ p, h.β)
 function Base.in(p::SymPoint{N}, h::HalfSpace{N}) where N
     ap = h.a ⋅ p.p
-    myleq(ap, h.β) && myleq(-ap, h.β)
+    _leq(ap, h.β) && _leq(-ap, h.β)
 end
 
 ininterior(p::VRepElement, h::HyperPlane) = false
@@ -274,8 +274,8 @@ inrelativeinterior(p::VRepElement, h::HyperPlane) = p in h
 
 Base.in(r::Ray{N}, h::HyperPlane{N}) where {N} = isapproxzero(h.a ⋅ r)
 Base.in(l::Line{N}, h::HyperPlane{N}) where {N} = isapproxzero(h.a ⋅ l)
-Base.in(p::Point{N}, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p, h.β)
-Base.in(p::AbstractVector, h::HyperPlane{N}) where {N} = myeq(h.a ⋅ p, h.β)
+Base.in(p::Point{N}, h::HyperPlane{N}) where {N} = _isapprox(h.a ⋅ p, h.β)
+Base.in(p::AbstractVector, h::HyperPlane{N}) where {N} = _isapprox(h.a ⋅ p, h.β)
 Base.in(p::SymPoint{N}, h::HyperPlane{N}) where {N} = isapproxzero(h.β) && isapproxzero(h.a ⋅ p.a)
 
 function Base.vec(x::FixedVector{N,T}) where {N,T}

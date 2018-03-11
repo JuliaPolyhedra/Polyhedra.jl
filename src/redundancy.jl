@@ -150,9 +150,9 @@ end
 #    if sol.status == :Unbounded
 #        false
 #    elseif sol.status == :Optimal
-#        if mygt(sol.objval, β)
+#        if _gt(sol.objval, β)
 #            false
-#        elseif mygeq(sol.objval, β)
+#        elseif _geq(sol.objval, β)
 #            if strongly
 #                false
 #            else
@@ -289,7 +289,7 @@ end
 #end
 function hupdatedup!(aff::HAffineSpace, hss, h::HalfSpace)
     h = remproj(h, aff)
-    if !isapproxzero(h) && !any(hs -> myeq(remproj(hs, aff), h), hss)
+    if !isapproxzero(h) && !any(hs -> _isapprox(remproj(hs, aff), h), hss)
         hp = hyperplane(h)
         found = false
         for (i, hs) in enumerate(hss)

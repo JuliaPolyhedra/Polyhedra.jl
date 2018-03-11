@@ -141,7 +141,7 @@ function Base.:(/)(p::RepT, P::AbstractMatrix) where {Nin, Tin, RepT<:HRep{Nin, 
     f = (i, h) -> h / P
     # For a matrix P of StaticArrays, `dout` should be type stable
     dout = FullDim{size(P, 1)}()
-    Tout = mypromote_type(Tin, eltype(P))
+    Tout = _promote_type(Tin, eltype(P))
     RepTout = similar_type(RepT, dout, Tout)
     RepTout(hmap(f, dout, Tout, p)...)
 end
@@ -163,7 +163,7 @@ function Base.:(*)(P::AbstractMatrix, p::RepT) where {Nin, Tin, RepT<:VRep{Nin, 
     f = (i, v) -> P * v
     # For a matrix P of StaticArrays, `dout` should be type stable
     dout = FullDim{size(P, 1)}()
-    Tout = mypromote_type(Tin, eltype(P))
+    Tout = _promote_type(Tin, eltype(P))
     RepTout = similar_type(RepT, dout, Tout)
     RepTout(vmap(f, dout, Tout, p)...)
 end

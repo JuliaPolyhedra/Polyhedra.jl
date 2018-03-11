@@ -17,7 +17,7 @@ volume(p::Interval) = p.length
 Base.isempty(p::Interval) = isempty(p.vrep)
 
 function Interval{T}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) where T
-    if haslb && hasub && mygt(lb, ub)
+    if haslb && hasub && _gt(lb, ub)
         isempty = true
     end
     A = Matrix{Float64}(0, 1)
@@ -36,12 +36,12 @@ function Interval{T}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) wher
             R = [R; 1]
         end
         if haslb
-            if myeq(lb, ub)
+            if _isapprox(lb, ub)
                 push!(linset, 1)
             else
                 A = [A; -1]
                 push!(b, -lb)
-                if myeq(lb, -ub)
+                if _isapprox(lb, -ub)
                     push!(Vlinset, 1)
                 else
                     V = [V; lb]

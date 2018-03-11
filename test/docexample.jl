@@ -24,7 +24,7 @@ function doctest(lib::PolyhedraLibrary)
     @test !(Ray([0, 1]) in p)
     @test !ininterior(Ray([0, 1]), p)
     @test !inrelativeinterior(Ray([0, 1]), p)
-    Ap = [1; -1]
+    Ap = reshape([1, -1], 2, 1)
     bp = [1, 0]
     inequality_fulltest(eliminate(p, [1]), Ap, bp, IntSet())
     inequality_fulltest(project(p, [2]), Ap, bp, IntSet())

@@ -1,31 +1,24 @@
-myeq(x::Real, y::Real) = myeq(promote(x, y)...)
-myeq(x::T, y::T) where {T<:Real} = x == y
-myeq(x::T, y::T) where {T<:AbstractFloat} = y < x+1024*eps(T) && x < y+1024*eps(T)
-myeq(x::Vector{S}, y::Vector{T}) where {S<:Real,T<:Real} = myeq(promote(x, y)...)
-myeq(x::Vector{T}, y::Vector{T}) where {T<:Real} = x == y
-myeq(x::Vector{T}, y::Vector{T}) where {T<:AbstractFloat} = myeq(norm(x - y), zero(T))
-myeqzero(x::T) where {T<:Real} = myeq(x, zero(T))
+_isapprox(x::Real, y::Real) = _isapprox(promote(x, y)...)
+_isapprox(x::T, y::T) where {T<:Real} = x == y
+_isapprox(x::T, y::T) where {T<:AbstractFloat} = y < x+1024*eps(T) && x < y+1024*eps(T)
+_isapprox(x::Vector{S}, y::Vector{T}) where {S<:Real,T<:Real} = _isapprox(promote(x, y)...)
+_isapprox(x::Vector{T}, y::Vector{T}) where {T<:Real} = x == y
+_isapprox(x::Vector{T}, y::Vector{T}) where {T<:AbstractFloat} = _isapprox(norm(x - y), zero(T))
+_isapproxzero(x::T) where {T<:Real} = _isapprox(x, zero(T))
 
-tomatrix(M::Matrix) = M
-function tomatrix(v::Vector)
-    M = Matrix{eltype(v)}(length(v), 1)
-    M[:,1] = v
-    M
-end
-
-function myparallel(x, y)
+function _parallel(x, y)
     @assert length(x) == length(y)
     cstchosen = false
     cst = zero(Base.promote_op(/, eltype(y), eltype(x)))
     for i in 1:length(x)
-        if myeqzero(x[i])
-            myeqzero(y[i]) || return false
-        elseif myeqzero(y[i])
-            myeqzero(x[i]) || return false
+        if _isapproxzero(x[i])
+            _isapproxzero(y[i]) || return false
+        elseif _isapproxzero(y[i])
+            _isapproxzero(x[i]) || return false
         else
             c = y[i] / x[i]
             if cstchosen
-                myeq(cst, c) || return false
+                _isapprox(cst, c) || return false
             else
                 cst = c
             end
@@ -34,85 +27,65 @@ function myparallel(x, y)
     return true
 end
 
-function inaffspace(x, y, L)
-    for i in 1:size(L, 1)
-        z = @view L[i, :]
+function inaffspace(r, s, L, par::Bool=true)
+    x = Polyhedra.coord(r)
+    y = Polyhedra.coord(s)
+    for l in L
+        z = Polyhedra.coord(l)
         # remove component
         x = x * dot(z, z) - z * dot(z, x)
         y = y * dot(z, z) - z * dot(z, y)
     end
-    myparallel(x, y)
+    par ? _parallel(x, y) : _isapprox(r, s)
 end
 
-function inequality_fulltest(ine::MixedMatHRep, A, b, linset, aff::MixedMatHRep = ine[collect(linset)])
-    @test size(ine.A) == size(A)
-    @test length(ine.linset) == length(linset)
+function inequality_fulltest(hr::HRepresentation, exp::HRepresentation)
+    @test nhyperplanes(hr) == nhyperplanes(exp)
+    @test nhalfspaces(hr) == nhalfspaces(exp)
 
-    affAb = [aff.b aff.A]
-    inaff(x, y) = inaffspace(x, y, affAb)
+    _lift(h::Polyhedra.HRepElement) = [h.β; h.a]
+    aff = map(_lift, hyperplanes(hr))
+    inaff(x, y) = inaffspace(x, y, aff)
 
-    for i in 1:size(A, 1)
-        found = false
-        for j in 1:size(ine.A, 1)
-            # vec for julia 0.4
-            if !((i in linset) ⊻ (j in ine.linset)) && inaff([b[i]; A[i,:]], [ine.b[j]; ine.A[j,:]])
-                found = true
-                break
-            end
-        end
-        @test found
+    for h in hyperplanes(exp)
+        hl = _lift(h)
+        @test any(hp -> inaff(hl, _lift(hp)), hyperplanes(hr))
+    end
+    for h in halfspaces(exp)
+        hl = _lift(h)
+        @test any(hs -> inaff(hl, _lift(hs)), halfspaces(hr))
     end
 end
-function inequality_fulltest(h::HRepresentation, A, b, linset)
-    inequality_fulltest(MixedMatHRep(h), A, b, linset)
+function inequality_fulltest(h::HRepresentation, hrepargs...)
+    inequality_fulltest(h, hrep(hrepargs...))
 end
-function inequality_fulltest(h::HRepresentation, A, b, linset, aff::HRepresentation)
-    inequality_fulltest(MixedMatHRep(h), A, b, linset, MixedMatHRep(aff))
-end
-function inequality_fulltest(p::Polyhedron, A, b, linset)
-    A = tomatrix(A)
+function inequality_fulltest(p::Polyhedron, hrepargs...)
     detecthlinearities!(p)
     removehredundancy!(p)
-    inequality_fulltest(hrep(p), A, b, linset, affinehull(p))
+    inequality_fulltest(hrep(p), hrepargs...)
 end
 
-function generator_fulltest(ext::MixedMatVRep, V, R=Matrix{eltype(V)}(0, size(V, 2)), Vlinset = IntSet(), Rlinset = IntSet())
-    @test size(ext.V) == size(V)
-    @test size(ext.R) == size(R)
-    @test length(ext.Vlinset) == length(Vlinset)
-    @test length(ext.Rlinset) == length(Rlinset)
-    for i in 1:size(V, 1)
-        found = false
-        for j in 1:size(ext.V, 1)
-            if myeq(V[i, :], ext.V[j, :])
-                found = true
-                break
-            end
-        end
-        @test found
+function generator_fulltest(vr::VRepresentation, exp::VRepresentation)
+    @test nallpoints(vr) == nallpoints(exp)
+    @test nlines(vr) == nlines(exp)
+    @test nrays(vr) == nrays(exp)
+    linspace = collect(lines(vr))
+    inaff(x, y, args...) = inaffspace(x, y, linspace, args...)
+    for l in lines(exp)
+        @test any(ll -> inaff(l, ll), lines(vr))
     end
-    linspace = ext.R[collect(ext.Rlinset),:]
-    inaff(x, y) = inaffspace(x, y, linspace)
-    for i in 1:size(R, 1)
-        found = false
-        for j in 1:size(ext.R, 1)
-            if !((i in Rlinset) ⊻ (j in ext.Rlinset)) && inaff(R[i,:], ext.R[j,:])
-                #if parallel(vec(R[i, :]), vec(ext.R[j, :]), (i in Rlinset) || (j in ext.Rlinset))
-                found = true
-                break
-            end
-        end
-        @test found
+    for r in rays(exp)
+        @test any(s -> inaff(r, s), rays(vr))
+    end
+    for p in allpoints(exp)
+        @test any(q -> inaff(p, q, false), allpoints(vr))
     end
 end
-function generator_fulltest(v::VRepresentation{N, T}, V, R=Matrix{eltype(V)}(0, size(V, 2)), Vlinset = IntSet(), Rlinset = IntSet()) where {N, T}
-    generator_fulltest(MixedMatVRep{N, T}(sympointtype(v)[], allpoints(v), lines(v), rays(v)), V, R, Vlinset, Rlinset)
+function generator_fulltest(v::VRepresentation, vrepargs...)
+    generator_fulltest(v, vrep(vrepargs...))
 end
-function generator_fulltest(p::Polyhedron, V, R=Matrix{eltype(V)}(0, size(V, 2)), Vlinset = IntSet(), Rlinset = IntSet())
-    V = tomatrix(V)
-    R = tomatrix(R)
+function generator_fulltest(p::Polyhedron, vrepargs...)
     detectvlinearities!(p)
     removevredundancy!(p)
-    generator_fulltest(vrep(p), V, R, Vlinset, Rlinset)
+    generator_fulltest(vrep(p), vrepargs...)
 end
-#generator_fulltest(p::Polyhedron, V) = generator_fulltest(p, V, Matrix{eltype(V)}(0, size(V, 2)))

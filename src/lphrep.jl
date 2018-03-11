@@ -32,7 +32,7 @@ mutable struct LPHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
         for i in 1:N
             leq = u[i] < typemax(T)
             geq = l[i] > typemin(T)
-            if leq && geq && myeq(l[i], u[i])
+            if leq && geq && _isapprox(l[i], u[i])
                 push!(coleqs, i)
             else
                 if leq
@@ -49,7 +49,7 @@ mutable struct LPHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
         for i in 1:size(A, 1)
             leq = ub[i] < typemax(T)
             geq = lb[i] > typemin(T)
-            if leq && geq && myeq(lb[i], ub[i])
+            if leq && geq && _isapprox(lb[i], ub[i])
                 push!(roweqs, i)
             else
                 if leq
