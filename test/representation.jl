@@ -307,6 +307,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test_throws ErrorException VRepType(SymPoint{2, T, AT}[], AT[], Line{2, T, AT}[], [Ray([1, 2])])
             @test_throws ErrorException VRepType(SymPoint{2, T, AT}[], AT[], [Line([1, 2])], [Ray([1, 2])])
             @test isempty(VRepType(SymPoint{2, T, AT}[], AT[], Line{2, T, AT}[], Ray{2, T, AT}[]))
+            @test isempty(VRepType(Line{2, T, AT}[], Ray{2, T, AT}[]))
             v = VRepType([Line([1, 2])])
             @test !hassympoints(v)
             @test collect(points(v)) == [[0, 0]]

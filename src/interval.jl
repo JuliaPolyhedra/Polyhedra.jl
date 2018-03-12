@@ -44,6 +44,7 @@ function Interval{T, AT}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) 
             if haslb
                 push!(rs, Ray(SVector(one(T))))
             else
+                push!(ps, origin(AT, FullDim{1}()))
                 push!(ls, Line(SVector(one(T))))
             end
         end
@@ -62,7 +63,7 @@ function Interval{T, AT}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) 
     end
     h = hrep(hps, hss)
     v = vrep(sps, ps, ls, rs)
-    volume = haslb && hasub ? max(zero(T), ub - lb) : -one(T)
+    volume = isempty ? zero(T) : (haslb && hasub ? max(zero(T), ub - lb) : -one(T))
     Interval{T, AT}(h, v, volume)
 end
 
@@ -103,8 +104,7 @@ function _hinterval(rep::HRep{1, T}, ::Type{AT}) where {T, AT}
         α = hs.a[1]
         if isapproxzero(α)
             if hs.β < 0
-                lb = T(Inf)
-                ub = T(-Inf)
+                empty = true
             end
         elseif α < 0
             _setlb(hs.β / α)

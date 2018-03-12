@@ -67,7 +67,7 @@
     inequality_fulltest(p, h)
     generator_fulltest(p, v)
 
-    p = polyhedron(h)
+    p = polyhedron(HalfSpace([1.], 3) ∩ HalfSpace([5.], 10) ∩ HalfSpace([2.], 6))
     @test p isa Interval{Float64}
     @test !isempty(p)
     @test iszero(surface(p))
@@ -87,6 +87,7 @@
     inequality_fulltest(p, h)
     generator_fulltest(p, v)
 
+    p = polyhedron(HalfSpace([-3.], -6) ∩ HalfSpace([-2.], -2))
     p = polyhedron(h)
     @test p isa Interval{Float64}
     @test !isempty(p)
@@ -114,6 +115,66 @@
     @test iszero(surface(p))
     @test iszero(volume(p))
     @test dim(p) == -1
+    generator_fulltest(p, v)
+    inequality_fulltest(p, h)
+
+    p = polyhedron(intersect(HyperPlane([0], 1)))
+    @test p isa Interval{Int}
+    @test isempty(p)
+    @test iszero(surface(p))
+    @test iszero(volume(p))
+    @test dim(p) == -1
+    generator_fulltest(p, v)
+    inequality_fulltest(p, h)
+
+    p = polyhedron(intersect(HalfSpace([0], -1)))
+    @test p isa Interval{Int}
+    @test isempty(p)
+    @test iszero(surface(p))
+    @test iszero(volume(p))
+    @test dim(p) == -1
+    generator_fulltest(p, v)
+    inequality_fulltest(p, h)
+
+    # Line
+    h = hrep(HyperPlane{1, Int, Vector{Int}}[])
+    v = conichull(Line([1]))
+
+    p = polyhedron(v)
+    @test p isa Interval{Int}
+    @test !isempty(p)
+    @test iszero(surface(p))
+    @test dim(p) == 1
+    inequality_fulltest(p, h)
+    generator_fulltest(p, v)
+
+    p = polyhedron(h)
+    @test p isa Interval{Int}
+    @test !isempty(p)
+    @test iszero(surface(p))
+    @test dim(p) == 1
+    generator_fulltest(p, v)
+    inequality_fulltest(p, h)
+
+    # Symmetric interval
+    h = HalfSpace([1], 1) ∩ HalfSpace([-1], 1)
+    v = convexhull(SymPoint([1]))
+
+    p = polyhedron(convexhull([-1], [1], [0]))
+    @test p isa Interval{Int}
+    @test !isempty(p)
+    @test iszero(surface(p))
+    @test volume(p) == 2
+    @test dim(p) == 1
+    inequality_fulltest(p, h)
+    generator_fulltest(p, v)
+
+    p = polyhedron(h)
+    @test p isa Interval{Int}
+    @test !isempty(p)
+    @test iszero(surface(p))
+    @test volume(p) == 2
+    @test dim(p) == 1
     generator_fulltest(p, v)
     inequality_fulltest(p, h)
 end
