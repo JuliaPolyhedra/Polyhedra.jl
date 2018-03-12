@@ -1,3 +1,17 @@
+struct InconsistentVRep{N, T, AT} <: VRepresentation{N, T}
+    points::Polyhedra.PointsHull{N, T, AT}
+    rays::Polyhedra.RaysHull{N, T, AT}
+    function InconsistentVRep{N, T, AT}(sympoints, points, lines, rays) where {N, T, AT}
+        new{N, T, AT}(Polyhedra.PointsHull(sympoints, points), Polyhedra.RaysHull(lines, rays))
+    end
+end
+Polyhedra.arraytype(::Union{InconsistentVRep{N, T, AT}, Type{InconsistentVRep{N, T, AT}}}) where {N, T, AT} = AT
+Polyhedra.similar_type(PT::Type{<:InconsistentVRep}, d::FullDim{N}, ::Type{T}) where {N, T} = InconsistentVRep{N, T, Polyhedra.similar_type(Polyhedra.arraytype(PT), d, T)}
+Polyhedra.fulltype(::Type{InconsistentVRep{N, T, AT}}) where {N, T, AT} = InconsistentVRep{N, T, AT}
+Polyhedra.@subrepelem InconsistentVRep SymPoint points
+Polyhedra.@subrepelem InconsistentVRep Point points
+Polyhedra.@subrepelem InconsistentVRep Line rays
+Polyhedra.@subrepelem InconsistentVRep Ray rays
 @testset "Representation tests" begin
     @testset "MixMatRep with bad arguments" begin
         A = [1 1; -1 0; 0 -1]
@@ -93,6 +107,7 @@
             @test (@inferred Polyhedra.hyperplanetype(hr))   == (@inferred eltype(hyperplanes(hr)))    == HyperPlane{3, Float64, AT}
             @test                                               (@inferred collect(hyperplanes(hr)))   isa Vector{HyperPlane{3, Float64, AT}}
             @test isempty(hyperplanes(hr)) == iszero(nhyperplanes(hr))
+            @test_throws DimensionMismatch ones(2, 3) \ hr
         end
         symps = [SymPoint([0, 1])]
         ssymps = [SymPoint(@SVector [0, 1])]
@@ -141,6 +156,7 @@
             @test (@inferred Polyhedra.raytype(vr))      == (@inferred eltype(rays(vr)))       == Ray{2, Int, AT}
             @test                                           (@inferred collect(rays(vr)))      isa Vector{Ray{2, Int, AT}}
             @test isempty(rays(vr)) == iszero(nrays(vr))
+            @test_throws DimensionMismatch ones(2, 1) * vr
         end
     end
 
@@ -288,6 +304,13 @@
             @test collect(points(v)) == [[0, 0]]
             @test collect(lines(v)) == [Line([1, 2])]
             @test !hasrays(v)
+        end
+        for vinc in (InconsistentVRep{2, T, AT}(SymPoint{2, T, AT}[], AT[], Line{2, T, AT}[], [Ray([1, 2])]),
+                     InconsistentVRep{2, T, AT}(SymPoint{2, T, AT}[], AT[], [Line([1, 2])], Ray{2, T, AT}[]),
+                     InconsistentVRep{2, T, AT}(SymPoint{2, T, AT}[], AT[], [Line([1, 2])], [Ray([1, 2])]))
+            @test_throws ErrorException Polyhedra.checkvconsistency(vinc)
+            pinc = polyhedron(vinc)
+            @test_throws ErrorException Polyhedra.checkvconsistency(pinc)
         end
     end
 end

@@ -1,33 +1,36 @@
-export implementseliminationmethod, eliminate, project, fixandeliminate
+export supportselimination, eliminate, project, fixandeliminate
+export FourierMotzkin, BlockElimination, ProjectGenerators
+
+abstract type EliminationAlgorithm end
+struct FourierMotzkin <: EliminationAlgorithm end
+struct BlockElimination <: EliminationAlgorithm end
+struct ProjectGenerators <: EliminationAlgorithm end
 
 project(p::Polyhedron{N}, pset) where {N} = eliminate(p, setdiff(1:N, pset))
-project(p::Polyhedron{N}, pset, method) where {N} = eliminate(p, setdiff(1:N, pset), method)
+project(p::Polyhedron{N}, pset, algo) where {N} = eliminate(p, setdiff(1:N, pset), algo)
 
-implementseliminationmethod(p::Polyhedron, ::Type{Val{:FourierMotzkin}})   = false
-eliminate(p::Polyhedron, delset, ::Type{Val{:FourierMotzkin}})             = error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
-implementseliminationmethod(p::Polyhedron, ::Type{Val{:BlockElimination}}) = false
-eliminate(p::Polyhedron, delset, ::Type{Val{:BlockElimination}})           = error("Block elimination not implemented for $(typeof(p))")
+supportselimination(p::Polyhedron, ::FourierMotzkin)   = false
+eliminate(p::Polyhedron, delset, ::FourierMotzkin)     = error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
+supportselimination(p::Polyhedron, ::BlockElimination) = false
+eliminate(p::Polyhedron, delset, ::BlockElimination)   = error("Block elimination not implemented for $(typeof(p))")
 
-eliminate(p::Polyhedron, method::Symbol) = eliminate(p, Val{method})
-eliminate(p::Polyhedron, delset, method::Symbol) = eliminate(p, delset, Val{method})
-
-eliminate(p::Polyhedron{N}, method::Type{Val{:ProjectGenerators}}) where {N} = eliminate(p, IntSet(N), method)
+eliminate(p::Polyhedron{N}, algo::EliminationAlgorithm) where {N} = eliminate(p, IntSet(N), algo)
 
 # eliminate the last dimension by default
 function eliminate(p::Polyhedron{N}, delset=IntSet(N)) where N
-    fm = implementseliminationmethod(p, Val{:FourierMotzkin})
-    be = implementseliminationmethod(p, Val{:BlockElimination})
+    fm = supportselimination(p, FourierMotzkin())
+    be = supportselimination(p, BlockElimination())
     if (!fm && !be) || vrepiscomputed(p)
-        method = :ProjectGenerators
+        algo = ProjectGenerators()
     elseif fm && (!be || (length(delset) == 1 && N in delset))
-        method = :FourierMotzkin
+        algo = FourierMotzkin()
     else
-        method = :BlockElimination
+        algo = BlockElimination()
     end
-    eliminate(p, delset, Val{method})
+    eliminate(p, delset, algo)
 end
 
-function eliminate(p::Polyhedron{N}, delset, ::Type{Val{:ProjectGenerators}}) where N
+function eliminate(p::Polyhedron{N}, delset, ::ProjectGenerators) where N
     I = eye(Int, N)
     Iproj = I[collect(setdiff(IntSet(1:N), delset)),:]
     Iproj * p
@@ -37,11 +40,11 @@ function project(p::Polyhedron{N,T}, P::AbstractMatrix) where {N,T}
     # Function to make x orthogonal to an orthonormal basis in Q
     # We first make the columns of P orthonormal
     if size(P, 1) != N
-        error("The columns of P should have the same dimension than the polyhedron")
+        throw(DimensionMismatch("The columns of P should have the same dimension than the polyhedron"))
     end
     m = size(P, 2)
     if m > N
-        error("P should have more columns than rows")
+        throw(DimensionMismatch("P should have more rows than columns"))
     end
     Q = Array{Float64}(P) # normalize will make it nonrational
     Proj = zeros(eltype(P), N, N)

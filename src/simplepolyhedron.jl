@@ -38,44 +38,9 @@ function SimplePolyhedron{N, T}(rep::VRepresentation{N, T}) where {N, T}
     SimplePolyhedron{N, T, Intersection{N, T, polyarraytype(rep)}, fulltype(typeof(rep))}(rep)
 end
 
-#function SimplePolyhedron{N, T}(rep::HRepIterator) where {N, T}
-#    SimplePolyhedron{N, T}(MixedMatHRep{N, T}(rep))
-#end
-function SimplePolyhedron{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
-    SimplePolyhedron{N, T}(hrep(hyperplanes, halfspaces))
-end
-#function SimplePolyhedron{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}) where {N, T}
-#    SimplePolyhedron{N, T}(MixedMatHRep{N, T}(hyperplanes))
-#end
-#function SimplePolyhedron{N, T}(halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
-#    SimplePolyhedron{N, T}(MixedMatHRep{N, T}(halfspaces))
-#end
-
-#function SimplePolyhedron{N, T}(rep::VRepIterator) where {N, T}
-#    SimplePolyhedron{N, T}(MixedMatVRep{N, T}(rep))
-#end
-function SimplePolyhedron{N, T}(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:AbstractPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}) where {N, T}
-    SimplePolyhedron{N, T}(vrep(sympoints, points, lines, rays))
-end
-#function SimplePolyhedron{N, T}(rays::RayIterator) where {N, T}
-#    SimplePolyhedron{N, T}(MixedMatVRep{N, T}(rays))
-#end
-#function SimplePolyhedron{N, T}(points::PointIterator) where {N, T}
-#    SimplePolyhedron{N, T}(MixedMatVRep{N, T}(points))
-#end
-
 function polyhedron(rep::Representation{N}, ::SimplePolyhedraLibrary{T}) where {N, T}
     SimplePolyhedron{N, polytypefor(T)}(rep)
 end
-#function polyhedron(repit::Union{HRepIterator{N}, VRepIterator{N}}, lib::SimplePolyhedraLibrary{T}) where {N, T}
-#    SimplePolyhedron{N, T}(repit)
-#end
-#function polyhedron(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}, ::SimplePolyhedraLibrary{T}) where {N, T}
-#    SimplePolyhedron{N, T}(hps, hss)
-#end
-#function polyhedron(sympoints::ElemIt{<:SymPoint{N, T}}, points::ElemIt{<:AbstractPoint{N, T}}, lines::ElemIt{<:Line{N, T}}, rays::ElemIt{<:Ray{N, T}}, ::SimplePolyhedraLibrary{T}) where {N, T}
-#    SimplePolyhedron{N, T}(sympoints, points, lines, rays)
-#end
 
 function Base.copy(p::SimplePolyhedron{N, T}) where {N, T}
     if !isnull(p.hrep)

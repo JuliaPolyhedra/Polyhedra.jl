@@ -36,9 +36,9 @@ function Base.show(io::IO, ::MIME"text/plain", it::Polyhedra.AbstractRepIterator
     end
 end
 
-Base.summary(io::IO, v::VRepresentation) = "V-representation $(typeof(v))"
-Base.summary(io::IO, h::HRepresentation) = "H-representation $(typeof(h))"
-Base.summary(io::IO, p::Polyhedron) = "Polyhedron $(typeof(p))"
+Base.summary(v::VRepresentation) = "V-representation $(typeof(v))"
+Base.summary(h::HRepresentation) = "H-representation $(typeof(h))"
+Base.summary(p::Polyhedron) = "Polyhedron $(typeof(p))"
 
 show_reps(args::Tuple, first::Bool) = first
 function show_reps(args::Tuple, first::Bool, rep, reps...)

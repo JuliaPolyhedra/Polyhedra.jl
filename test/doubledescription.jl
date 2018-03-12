@@ -1,4 +1,5 @@
 @testset "Double Description" begin
+    @test polytypefor(Float32) == Float64
     @testset "H-representation -> V-representation" begin
         @testset "Intersection" begin
             @testset "Vector" begin

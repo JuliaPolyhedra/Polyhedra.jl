@@ -120,15 +120,17 @@ end
 The representation `rep` contain the elements `elem` inside a representation in the field `field`.
 """
 macro subrepelem(rep, elem, field)
-    idxs = Symbol(string(elem) * "Indices")
-    idx = Symbol(string(elem) * "Index")
-    subidxs = :(Indices{N, T, valuetype(idxs)}(idxs.rep.$field))
+    idxst = Symbol(string(elem) * "Indices")
+    idxs = :(Polyhedra.$idxst)
+    idxt = Symbol(string(elem) * "Index")
+    idx = :(Polyhedra.$idxt)
+    subidxs = :(Polyhedra.Indices{N, T, Polyhedra.valuetype(idxs)}(idxs.rep.$field))
     esc(quote
         Base.length(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = length($subidxs)
         Base.isempty(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = isempty($subidxs)
         Base.start(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = start($subidxs)
         Base.done(idxs::$idxs{N, T, <:$rep{N, T}}, idx::$idx{N, T}) where {N, T} = done($subidxs, idx)
         Base.get(rep::$rep{N, T}, idx::$idx{N, T}) where {N, T} = get(rep.$field, idx)
-        nextindex(rep::$rep{N, T}, idx::$idx{N, T}) where {N, T} = nextindex(rep.$field, idx)
+        Polyhedra.nextindex(rep::$rep{N, T}, idx::$idx{N, T}) where {N, T} = Polyhedra.nextindex(rep.$field, idx)
     end)
 end

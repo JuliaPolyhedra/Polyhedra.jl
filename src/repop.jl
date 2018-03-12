@@ -138,7 +138,7 @@ Transform the polyhedron represented by ``p`` into ``P^{-T} p`` by transforming 
 """
 function Base.:(/)(p::RepT, P::AbstractMatrix) where {Nin, Tin, RepT<:HRep{Nin, Tin}}
     if size(P, 2) != Nin
-        error("The number of rows of P must match the dimension of the H-representation")
+        throw(DimensionMismatch("The number of rows of P must match the dimension of the H-representation"))
     end
     f = (i, h) -> h / P
     # For a matrix P of StaticArrays, `dout` should be type stable
@@ -160,7 +160,7 @@ Transform the polyhedron represented by ``p`` into ``P p`` by transforming each 
 """
 function Base.:(*)(P::AbstractMatrix, p::RepT) where {Nin, Tin, RepT<:VRep{Nin, Tin}}
     if size(P, 2) != Nin
-        error("The number of rows of P must match the dimension of the V-representation")
+        throw(DimensionMismatch("The number of rows of P must match the dimension of the V-representation"))
     end
     f = (i, v) -> P * v
     # For a matrix P of StaticArrays, `dout` should be type stable

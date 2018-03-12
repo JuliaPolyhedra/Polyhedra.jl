@@ -12,8 +12,6 @@ const  Rep{N,T} = Union{ Representation{N,T}, Polyhedron{N,T}}
 const HRep{N,T} = Union{HRepresentation{N,T}, Polyhedron{N,T}}
 const VRep{N,T} = Union{VRepresentation{N,T}, Polyhedron{N,T}}
 
-Base.copy(rep::Rep)            = error("copy not implemented for $(typeof(rep))")
-
 """
     coefficienttype(rep::Rep)
 
@@ -37,7 +35,7 @@ function checkvconsistency(vrep::VRep)
         vconsistencyerror()
     end
 end
-checkvconsistency(p::Polyhedron) = vrepiscomputed(p) && checkvconsistency(p)
+checkvconsistency(p::Polyhedron) = vrepiscomputed(p) && checkvconsistency(vrep(p))
 
 # This method solves the ambiguity with the following methods and the general method
 # Base.convert{T}(::Type{T}, p::T) = p

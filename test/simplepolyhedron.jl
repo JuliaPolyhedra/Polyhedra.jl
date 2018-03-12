@@ -3,7 +3,7 @@ end
 mutable struct TestPoly{N, T} <: Polyhedron{N, T}
 end
 
-@testset "Testing error for unimplemented method" begin
+@testset "Testing error for unimplemented algo" begin
     Polyhedra.polyhedron{N, T}(h::Representation{N, T}, ::TestLib) = TestPoly{N, T}()
 
     h = hrep([1 0; 0 1], [0, 0])
@@ -18,8 +18,8 @@ end
     @test_throws ErrorException vrep(p)
     @test_throws ErrorException loadpolyhedron!(p, "test", "ine")
     @test_throws ErrorException loadpolyhedron!(p, "test", "ext")
-    for method in (Val{:FourierMotzkin}, Val{:BlockElimination})
-        @test !implementseliminationmethod(p, method)
-        @test_throws ErrorException eliminate(p, [1], method)
+    for algo in (FourierMotzkin(), BlockElimination())
+        @test !supportselimination(p, algo)
+        @test_throws ErrorException eliminate(p, [1], algo)
     end
 end

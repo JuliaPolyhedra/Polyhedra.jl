@@ -141,28 +141,30 @@ end
 _intres(h::HyperPlane, ins, inp) = inp
 _intres(h::HalfSpace, ins, inp) = [ins; inp]
 
-function _pushinout!(ins, out, l::Line, h::HalfSpace)
-    r1 = Ray(l.a)
-    r2 = Ray(-l.a)
-    if r1 in h
-        push!(ins, r1)
-        push!(out, r2)
-    else
-        push!(ins, r2)
-        push!(out, r1)
-    end
-end
-function _pushinout!(ins, out, p::SymPoint, h::HalfSpace)
-    p1 = Point(p.a)
-    p2 = Point(-p.a)
-    if p1 in h
-        push!(ins, p1)
-        push!(out, p2)
-    else
-        push!(ins, p2)
-        push!(out, p1)
-    end
-end
+# Unused as allpoints and allrays are used
+#function _pushinout!(ins, out, l::Line, h::HalfSpace)
+#    r1 = Ray(l.a)
+#    r2 = Ray(-l.a)
+#    if r1 in h
+#        push!(ins, r1)
+#        push!(out, r2)
+#    else
+#        push!(ins, r2)
+#        push!(out, r1)
+#    end
+#end
+#function _pushinout!(ins, out, p::SymPoint, h::HalfSpace)
+#    p1 = Point(p.a)
+#    p2 = Point(-p.a)
+#    if p1 in h
+#        push!(ins, p1)
+#        push!(out, p2)
+#    else
+#        push!(ins, p2)
+#        push!(out, p1)
+#    end
+#end
+
 function _pushinout!(ins, out, pr::Union{AbstractPoint, Ray}, h::HalfSpace)
     if pr in h
         push!(ins, pr)
