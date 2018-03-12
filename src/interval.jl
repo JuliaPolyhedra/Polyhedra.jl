@@ -3,69 +3,68 @@ export IntervalLibrary, Interval
 struct IntervalLibrary{T} <: PolyhedraLibrary
 end
 
-# TODO use vecrep instead of simplerep
-mutable struct Interval{T} <: Polyhedron{1, T}
-    hrep::MixedMatHRep{1, T}
-    vrep::MixedMatVRep{1, T}
+mutable struct Interval{T, AT} <: Polyhedron{1, T}
+    hrep::Intersection{1, T, AT}
+    vrep::Hull{1, T, AT}
     length::T
 end
 
-arraytype(p::Interval) = arraytype(p.hrep)
+arraytype(p::Interval{T, AT}) where {T, AT} = AT
 
 area{T}(::Interval{T}) = zero(T)
 volume(p::Interval) = p.length
 Base.isempty(p::Interval) = isempty(p.vrep)
 
-function Interval{T}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) where T
+function Interval{T, AT}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) where {T, AT}
     if haslb && hasub && _gt(lb, ub)
         isempty = true
     end
-    A = Matrix{Float64}(0, 1)
-    b = Float64[]
-    linset = IntSet()
-    V = Matrix{Float64}(0, 1)
-    Vlinset = IntSet()
-    R = Matrix{Float64}(0, 1)
-    Rlinset = IntSet()
+    hps = HyperPlane{1, T, AT}[]
+    hss = HalfSpace{1, T, AT}[]
+    sps = SymPoint{1, T, AT}[]
+    ps = AT[]
+    ls = Line{1, T, AT}[]
+    rs = Ray{1, T, AT}[]
     if !isempty
         if hasub
-            A = [A; 1]
-            push!(b, ub)
-            V = [V; ub]
-        else
-            R = [R; 1]
-        end
-        if haslb
-            if _isapprox(lb, ub)
-                push!(linset, 1)
+            if haslb && _isapprox(lb, -ub)
+                push!(sps, SymPoint(SVector(ub)))
             else
-                A = [A; -1]
-                push!(b, -lb)
-                if _isapprox(lb, -ub)
-                    push!(Vlinset, 1)
-                else
-                    V = [V; lb]
-                end
+                push!(ps, SVector(ub))
+            end
+            if haslb && _isapprox(lb, ub)
+                push!(hps, HyperPlane(SVector(one(T)), ub))
+            else
+                push!(hss, HalfSpace(SVector(one(T)), ub))
+            end
+            if !haslb
+                push!(rs, Ray(SVector(-one(T))))
             end
         else
-            if hasub
-                R = [R; -1]
+            if haslb
+                push!(rs, Ray(SVector(one(T))))
             else
-                push!(Rlinset, 1)
+                push!(ls, Line(SVector(one(T))))
+            end
+        end
+        if haslb
+            if !_isapprox(lb, ub)
+                push!(hss, HalfSpace(SVector(-one(T)), -lb))
+            end
+            if !_isapprox(lb, -ub)
+                push!(ps, SVector(lb))
             end
         end
     else
-        A = [A; 0]
-        push!(b, -1)
-        push!(linset, 1)
+        push!(hps, HyperPlane(SVector(zero(T)), one(T)))
     end
-    h = MixedMatHRep{1, Float64}(A, b, linset)
-    v = MixedMatVRep{1, Float64}(V, R, Vlinset, Rlinset)
+    h = hrep(hps, hss)
+    v = vrep(sps, ps, ls, rs)
     volume = haslb && hasub ? max(zero(T), ub - lb) : -one(T)
-    Interval{T}(h, v, volume)
+    Interval{T, AT}(h, v, volume)
 end
 
-function _hinterval(rep::HRep{1, T}) where T
+function _hinterval(rep::HRep{1, T}, ::Type{AT}) where {T, AT}
     haslb = false
     lb = zero(T)
     hasub = false
@@ -111,10 +110,10 @@ function _hinterval(rep::HRep{1, T}) where T
             _setub(hs.β / α)
         end
     end
-    Interval{T}(haslb, lb, hasub, ub, empty)
+    Interval{T, AT}(haslb, lb, hasub, ub, empty)
 end
 
-function _vinterval(v::VRep{1, T}) where T
+function _vinterval(v::VRep{1, T}, ::Type{AT}) where {T, AT}
     haslb = true
     lb = zero(T)
     hasub = true
@@ -151,7 +150,7 @@ function _vinterval(v::VRep{1, T}) where T
           ub = max(ub, -x)
         end
     end
-    Interval{T}(haslb, lb, hasub, ub, isempty)
+    Interval{T, AT}(haslb, lb, hasub, ub, isempty)
 end
 
 Interval{T}(p::HRepresentation{1, T}) where T = _hinterval(p)
@@ -164,8 +163,8 @@ function Interval{T}(p::Polyhedron{1, T}) where T
     end
 end
 
-function polyhedron{T}(rep::Rep{1, T}, ::IntervalLibrary{T})
-    Interval{T}(rep)
+function polyhedron(rep::Rep{1, T}, ::IntervalLibrary{T}) where T
+    Interval{T, SVector{1, T}}(rep)
 end
 
 hrep(p::Interval) = p.hrep
@@ -174,6 +173,7 @@ vrep(p::Interval) = p.vrep
 hrepiscomputed(::Interval) = true
 vrepiscomputed(::Interval) = true
 
+# Nothing to do
 function detecthlinearities!(::Interval) end
 function detectvlinearities!(::Interval) end
 function removehredundancy!(::Interval) end

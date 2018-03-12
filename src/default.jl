@@ -2,7 +2,7 @@ export default_type, default_library, similar_library, library, defaultLPsolverf
 
 # TODO use vecrep instead of simplerep
 default_type(::FullDim{N}, ::Type{T}) where {N, T} = SimplePolyhedron{N, T, Intersection{N, T, Vector{T}}, Hull{N, T, Vector{T}}}
-default_type(::FullDim{1}, ::Type{T}) where T = Interval{T}
+default_type(::FullDim{1}, ::Type{T}) where T = Interval{T, SVector{1, T}}
 
 default_library(::FullDim, ::Type{T}) where T = SimplePolyhedraLibrary{T}()
 default_library(::FullDim{1}, ::Type{T}) where T = IntervalLibrary{T}()
