@@ -4,6 +4,7 @@
 
 # Redundancy
 export isredundant, removevredundancy!, removehredundancy!, gethredundantindices, getvredundantindices
+export isvredundant, ishredundant # deprecated
 
 """
     isredundant(p::Rep, idx::Index; strongly=false)
@@ -185,14 +186,16 @@ export removeduplicates
 # Separate function so that it is compiled with a concrete type for p
 function vpupdatedup!(aff, points, sympoints, p::SymPoint)
     found = false
-    for (i, q) in enumerate(points)
-        if (coord(p) - q) in aff || (coord(p) + q) in aff
-            found = true
-            deleteat!(points, i)
-            push!(sympoints, p)
-            break
-        end
-    end
+    # sympoints are treated before points so there shouldn't be any
+    @assert isempty(points)
+#    for (i, q) in enumerate(points)
+#        if (coord(p) - q) in aff || (coord(p) + q) in aff
+#            found = true
+#            deleteat!(points, i)
+#            push!(sympoints, p)
+#            break
+#        end
+#    end
     if !found && !any(sp -> (coord(sp) - coord(p)) in aff || (coord(sp) + coord(p)) in aff, sympoints)
         push!(sympoints, p)
     end

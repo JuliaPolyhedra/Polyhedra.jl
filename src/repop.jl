@@ -22,6 +22,9 @@ Base.intersect(p::Rep, el::HRepElement) = p ∩ intersect(el)
 
 Base.intersect(hps::HyperPlane...) = hrep([hps...])
 Base.intersect(hss::HalfSpace...) = hrep([hss...])
+Base.intersect(h1::HyperPlane, h2::HalfSpace) = hrep([h1], [h2])
+Base.intersect(h1::HalfSpace, h2::HyperPlane) = h2 ∩ h1
+Base.intersect(h1::Union{HRep{N}, HRepElement{N}}, h2::Union{HRep{N}, HRepElement{N}}, hs::Union{HRep{N}, HRepElement{N}}...) where N = intersect(h1 ∩ h2, hs...)
 
 """
     intersect!(p1::VRep, p2::VRep)

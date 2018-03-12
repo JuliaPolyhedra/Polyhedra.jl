@@ -1,4 +1,10 @@
 @testset "Redundancy removal" begin
+    @testset "isredundant" begin
+        @test isvredundant(HyperPlane([0, 1], 0) ∩ HalfSpace([1, 1], 1), [0, 0], nl=0)
+        @test !isredundant(HalfSpace([1, 1], 1) ∩ HyperPlane([0, 1], 0) ∩ HalfSpace([-1, -1], 1), [1, 0], nl=0)
+        @test !ishredundant(convexhull(SymPoint([1, 0])), HyperPlane([0, 1], 0), d=1)
+        @test isredundant(convexhull(SymPoint([1, 0])), HalfSpace([0, 1], 1), d=1)
+    end
     @testset "Non-redundant SymPoint" begin
         vr = convexhull(SymPoint([-1, 0]), SymPoint([0, 1]))
         hr = HalfSpace([-1, -1], 1) ∩ HalfSpace([1, -1], 1) ∩ HalfSpace([1, 1], 1) ∩ HalfSpace([-1, 1], 1)

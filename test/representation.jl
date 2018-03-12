@@ -114,7 +114,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test (@inferred Polyhedra.hyperplanetype(hr))   == (@inferred eltype(hyperplanes(hr)))    == HyperPlane{3, Float64, AT}
             @test                                               (@inferred collect(hyperplanes(hr)))   isa Vector{HyperPlane{3, Float64, AT}}
             @test isempty(hyperplanes(hr)) == iszero(nhyperplanes(hr))
-            @test_throws DimensionMismatch ones(2, 3) \ hr
+            @test_throws DimensionMismatch hr * ones(2, 3) # TODO replace by ones(2, 3) \ hr
         end
         symps = [SymPoint([0, 1])]
         ssymps = [SymPoint(@SVector [0, 1])]
