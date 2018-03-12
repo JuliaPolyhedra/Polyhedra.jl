@@ -253,6 +253,22 @@ const RayIt{N, T} = ElemIt{<:Ray{N, T}}
 const RIt{N, T} = Union{LineIt{N, T}, RayIt{N, T}}
 const VIt{N, T} = Union{PIt{N, T}, RIt{N, T}}
 
+function fillvits(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}=AT[], lines::ElemIt{Line{N, T, AT}}=Line{N, T, AT}[], rays::ElemIt{Ray{N, T, AT}}=Ray{N, T, AT}[]) where {N, T, AT}
+    if isempty(sympoints) && isempty(points) && !(isempty(lines) && isempty(rays))
+        vconsistencyerror()
+    end
+    sympoints, points, lines, rays
+end
+function fillvits(lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}=Ray{N, T, AT}[]) where {N, T, AT}
+    sps = SymPoint{N, T, AT}[]
+    if isempty(lines) && isempty(rays)
+        ps = AT[]
+    else
+        ps = [origin(AT, FullDim{N}())]
+    end
+    sps, ps, lines, rays
+end
+
 function hreps(p::HRep{N, T}...) where {N, T}
     hyperplanes(p...), halfspaces(p...)
 end

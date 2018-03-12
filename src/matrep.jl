@@ -121,7 +121,8 @@ end
 
 MixedMatVRep(v::VRep{N,T}) where {N,T} = MixedMatVRep{N,T}(v)
 
-function MixedMatVRep{N, T}(sympoints::SymPointIt{N, T}, points::PointIt{N, T}, lines::LineIt{N, T}, rays::RayIt{N, T}) where {N, T}
+function MixedMatVRep{N, T}(vits::VIt{N, T}...) where {N, T}
+    sympoints, points, lines, rays = fillvits(vits...)
     nsympoint = length(sympoints)
     npoint = length(points)
     nline = length(lines)

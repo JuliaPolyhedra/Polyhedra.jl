@@ -76,8 +76,8 @@ linset(rep::LiftedVRepresentation) = copy(rep.linset)
 LiftedVRepresentation(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = LiftedVRepresentation{size(R,2)-1,T}(R, linset)
 LiftedVRepresentation(v::VRepresentation{N,T}) where {N,T} = LiftedVRepresentation{N,T}(v)
 
-LiftedVRepresentation{N, T}(lines::LineIt{N, T}, rays::RayIt{N, T} = Ray{N, T, Vector{T}}[]) where {N, T} = LiftedVRepresentation{N, T}(SymPoint{N, T, Vector{T}}[], Vector{T}[origin(Vector{T}, FullDim{N}())], lines, rays)
-function LiftedVRepresentation{N, T}(sympoints::SymPointIt{N, T}, points::PointIt{N, T}, lines::LineIt{N, T} = Line{N, T, Vector{T}}[], rays::RayIt{N, T} = Ray{N, T, Vector{T}}[]) where {N, T}
+function LiftedVRepresentation{N, T}(vits::VIt{N, T}...) where {N, T}
+    sympoints, points, lines, rays = fillvits(vits...)
     nsympoint = length(sympoints)
     npoint = length(points)
     nline = length(lines)

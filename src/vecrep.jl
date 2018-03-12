@@ -196,18 +196,10 @@ vrep(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) = Hull(
 mutable struct Hull{N, T, AT} <: VRepresentation{N, T}
     points::PointsHull{N, T, AT}
     rays::RaysHull{N, T, AT}
-    function Hull{N, T, AT}(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}=Line{N, T, AT}[], rays::ElemIt{Ray{N, T, AT}}=Ray{N, T, AT}[]) where {N, T, AT}
+    function Hull{N, T, AT}(vits::VIt{N, T}...) where {N, T, AT}
+        sympoints, points, lines, rays = fillvits(vits...)
         new{N, T, AT}(PointsHull(sympoints, points), RaysHull(lines, rays))
     end
-end
-function Hull{N, T, AT}(lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
-    sps = SymPoint{N, T, AT}[]
-    if isempty(lines) && isempty(rays)
-        ps = AT[]
-    else
-        ps = [origin(AT, FullDim{N}())]
-    end
-    Hull{N, T, AT}(sps, ps, lines, rays)
 end
 function Hull(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
     Hull{N, T, AT}(sympoints, points, lines, rays)

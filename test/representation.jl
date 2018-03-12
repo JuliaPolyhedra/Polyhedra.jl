@@ -272,4 +272,22 @@
         p = convexhull([0, 0], [0, 1], [1, 0])
         @test_throws ErrorException chebyshevcenter(p) # Not yet implemented
     end
+
+    @testset "V-consistency with iterator constructor" begin
+        T = Int
+        AT = Vector{Int}
+        for VRepType in (Polyhedra.LiftedVRepresentation{2, T},
+                         Polyhedra.MixedMatVRep{2, T},
+                         Polyhedra.Hull{2, T, AT})
+            @test_throws ErrorException VRepType(SymPoint{2, T, AT}[], AT[], [Line([1, 2])])
+            @test_throws ErrorException VRepType(SymPoint{2, T, AT}[], AT[], Line{2, T, AT}[], [Ray([1, 2])])
+            @test_throws ErrorException VRepType(SymPoint{2, T, AT}[], AT[], [Line([1, 2])], [Ray([1, 2])])
+            #@test isempty(VRepType(SymPoint{2, T, AT}[], AT[], Line{2, T, AT}[], Ray{2, T, AT}[])) # TODO
+            v = VRepType([Line([1, 2])])
+            @test !hassympoints(v)
+            @test collect(points(v)) == [[0, 0]]
+            @test collect(lines(v)) == [Line([1, 2])]
+            @test !hasrays(v)
+        end
+    end
 end
