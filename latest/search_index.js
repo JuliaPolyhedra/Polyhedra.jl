@@ -449,14 +449,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "polyhedron.html#Projecting-a-polyhedron-1",
-    "page": "Polyhedron",
-    "title": "Projecting a polyhedron",
-    "category": "section",
-    "text": "Consider the polyhedron created in the beginning of this section. As a reminder, it represents the following H-representation:beginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*One can verify that for any 0 leq x_2 leq 1, there exists a value x_1 such that (x_1 x_2) is in this polyhedron. This means that the H-representation obtained by eliminating x_1 is:beginalign*\n  x_1  leq 1 \n  x_1  geq 0\nendalign*where x_1 in the H-representation above represents x_2 in the previous one. This can be obtained as followsjulia> poly_x2 = eliminate(poly, [1])\njulia> hrep(poly_x2)\nH-representation\nbegin\n 2 2 rational\n 1//1 -1//1\n 0//1 1//1\nendThere is two methods of computing the elimination implemented in CDDLib: Fourier-Motzkin elimination and block elimination. As written by K. Fukuda in CDD\'s documentation, \"[Block elimination] might be a faster way to eliminate variables than the repeated [Fourier-Motzkin elimination] when the number of variables to eliminate is large\". You can specify the method to use as a third argument, e.g. eliminate(poly, [1], :FourierMotzkin), eliminate(poly, [1], :BlockElimination). A third method can be chosen: :ProjectGenerators. It computes the V-representation and then project each of its elements. This is the method of choice when the V-representation is already computed.If nothing is specified as in the block of code above, the behavior depends on the polyhedral library. If neither Fourier-Motzkin nor block elimination is implemented or if the V-representation is already computed then :ProjectGenerators is chosen. Otherwise, Polyhedra lets the library decide. In CDDLib, :FourierMotzkin is chosen when only the last dimension needs to be eliminated and :BlockElimination is chosen otherwise. Note that CDDLib only supports projecting the last trailing dimensions."
-},
-
-{
     "location": "polyhedron.html#Polyhedra.hrepiscomputed",
     "page": "Polyhedron",
     "title": "Polyhedra.hrepiscomputed",
@@ -473,24 +465,72 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "polyhedron.html#TODO-1",
+    "location": "polyhedron.html#Checking-if-a-representation-has-been-computed-1",
     "page": "Polyhedron",
-    "title": "TODO",
+    "title": "Checking if a representation has been computed",
     "category": "section",
     "text": "hrepiscomputed\nvrepiscomputed"
 },
 
 {
     "location": "redundancy.html#",
-    "page": "Redundancy",
-    "title": "Redundancy",
+    "page": "Containment/Redundancy",
+    "title": "Containment/Redundancy",
     "category": "page",
     "text": ""
 },
 
 {
+    "location": "redundancy.html#Containment/Redundancy-1",
+    "page": "Containment/Redundancy",
+    "title": "Containment/Redundancy",
+    "category": "section",
+    "text": ""
+},
+
+{
+    "location": "redundancy.html#Base.in",
+    "page": "Containment/Redundancy",
+    "title": "Base.in",
+    "category": "function",
+    "text": "in(p::VRepElement, h::HRepElement)\n\nReturns whether p is in h. If h is an hyperplane, it returns whether langle a x rangle approx beta. If h is an halfspace, it returns whether langle a x rangle le beta.\n\nin(p::VRepElement, h::HRep)\n\nReturns whether p is in h, e.g. in all the hyperplanes and halfspaces supporting h.\n\n\n\n"
+},
+
+{
+    "location": "redundancy.html#Base.issubset",
+    "page": "Containment/Redundancy",
+    "title": "Base.issubset",
+    "category": "function",
+    "text": "issubset(p::Rep, h::HRepElement)\n\nReturns whether p is a subset of h, i.e. whether h supports the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "redundancy.html#Polyhedra.ininterior",
+    "page": "Containment/Redundancy",
+    "title": "Polyhedra.ininterior",
+    "category": "function",
+    "text": "ininterior(p::VRepElement, h::HRepElement)\n\nReturns whether p is in the interior of h. If h is an hyperplane, it always returns false. If h is an halfspace langle a x rangle leq beta, it returns whether p is in the open halfspace langle a x rangle  beta\n\nininterior(p::VRepElement, h::HRep)\n\nReturns whether p is in the interior of h, e.g. in the interior of all the hyperplanes and halfspaces supporting h.\n\n\n\n"
+},
+
+{
+    "location": "redundancy.html#Polyhedra.inrelativeinterior",
+    "page": "Containment/Redundancy",
+    "title": "Polyhedra.inrelativeinterior",
+    "category": "function",
+    "text": "inrelativeinterior(p::VRepElement, h::HRepElement)\n\nReturns whether p is in the relative interior of h. If h is an hyperplane, it is equivalent to p in h since the relative interior of an hyperplane is itself. If h is an halfspace, it is equivalent to ininterior(p, h).\n\ninrelativeinterior(p::VRepElement, h::HRep)\n\nReturns whether p is in the relative interior of h, e.g. in the relative interior of all the hyperplanes and halfspaces supporting h.\n\n\n\n"
+},
+
+{
+    "location": "redundancy.html#Containment-1",
+    "page": "Containment/Redundancy",
+    "title": "Containment",
+    "category": "section",
+    "text": "in\nissubset\nininterior\ninrelativeinterior"
+},
+
+{
     "location": "redundancy.html#Polyhedra.dim",
-    "page": "Redundancy",
+    "page": "Containment/Redundancy",
     "title": "Polyhedra.dim",
     "category": "function",
     "text": "dim(p::Polyhedron)\n\nReturns the dimension of the affine hull of the polyhedron. That is the number of non-redundant hyperplanes that define it.\n\n\n\n"
@@ -498,7 +538,7 @@ var documenterSearchIndex = {"docs": [
 
 {
     "location": "redundancy.html#Polyhedra.isredundant",
-    "page": "Redundancy",
+    "page": "Containment/Redundancy",
     "title": "Polyhedra.isredundant",
     "category": "function",
     "text": "isredundant(p::Rep, idx::Index; strongly=false)\n\nReturn a Bool indicating whether the element with index idx can be removed without changing the polyhedron represented by p. If strongly is true,\n\nif idx is an H-representation element h, it returns true only if no V-representation element of p is in the hyperplane of h.\nif idx is a V-representation element v, it returns true only if v is in the relative interior of p.\n\n\n\n"
@@ -506,7 +546,7 @@ var documenterSearchIndex = {"docs": [
 
 {
     "location": "redundancy.html#Polyhedra.removehredundancy!",
-    "page": "Redundancy",
+    "page": "Containment/Redundancy",
     "title": "Polyhedra.removehredundancy!",
     "category": "function",
     "text": "removehredundancy!(p::HRep)\n\nRemoves the elements of the H-representation of p that can be removed without changing the polyhedron represented by p. That is, it only keeps the halfspaces corresponding to facets of the polyhedron.\n\n\n\n"
@@ -514,7 +554,7 @@ var documenterSearchIndex = {"docs": [
 
 {
     "location": "redundancy.html#Polyhedra.removevredundancy!",
-    "page": "Redundancy",
+    "page": "Containment/Redundancy",
     "title": "Polyhedra.removevredundancy!",
     "category": "function",
     "text": "removevredundancy!(p::VRep)\n\nRemoves the elements of the V-representation of p that can be removed without changing the polyhedron represented by p. That is, it only keeps the extreme points and rays. This operation is often called \"convex hull\" as the remaining points are the extreme points of the convex hull of the initial set of points.\n\n\n\n"
@@ -522,7 +562,7 @@ var documenterSearchIndex = {"docs": [
 
 {
     "location": "redundancy.html#Redundancy-1",
-    "page": "Redundancy",
+    "page": "Containment/Redundancy",
     "title": "Redundancy",
     "category": "section",
     "text": "dim\nisredundant\nremovehredundancy!\nremovevredundancy!"
@@ -530,15 +570,15 @@ var documenterSearchIndex = {"docs": [
 
 {
     "location": "projection.html#",
-    "page": "Projection",
-    "title": "Projection",
+    "page": "Projection/Elimination",
+    "title": "Projection/Elimination",
     "category": "page",
     "text": ""
 },
 
 {
     "location": "projection.html#Polyhedra.fixandeliminate",
-    "page": "Projection",
+    "page": "Projection/Elimination",
     "title": "Polyhedra.fixandeliminate",
     "category": "function",
     "text": "fixandeliminate(p::HRep{N, T}, I, v)\n\nFix the variables with indices in I to the corresponding value in v. This is equivalent to doing the following:\n\nfunction ei(i)\n    a = zeros(T, N)\n    a[i] = one(T)\n    a\nend\neliminate(p ∩ HyperPlane(ei(I[1], v[1]) ∩ ... ∩ HyperPlane(ei(I[1], v[1]))\n\nbut it is much more efficient. The code above does a polyhedral projection while this function simply replace each halfspace ⟨a, x⟩ ≤ β (resp. each hyperplane ⟨a, x⟩ = β) by the halfspace ⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩ (resp. the hyperplane ⟨a_J, x⟩ = β - ⟨a_I, v⟩) where J = setdiff(1:N, I).\n\n\n\n"
@@ -546,10 +586,10 @@ var documenterSearchIndex = {"docs": [
 
 {
     "location": "projection.html#Projection/Elimination-1",
-    "page": "Projection",
+    "page": "Projection/Elimination",
     "title": "Projection/Elimination",
     "category": "section",
-    "text": "fixandeliminate"
+    "text": "Consider the polyhedron created in the beginning of this section. As a reminder, it represents the following H-representation:beginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*One can verify that for any 0 leq x_2 leq 1, there exists a value x_1 such that (x_1 x_2) is in this polyhedron. This means that the H-representation obtained by eliminating x_1 is:beginalign*\n  x_1  leq 1 \n  x_1  geq 0\nendalign*where x_1 in the H-representation above represents x_2 in the previous one. This can be obtained as followsjulia> poly_x2 = eliminate(poly, [1])\njulia> hrep(poly_x2)\nH-representation\nbegin\n 2 2 rational\n 1//1 -1//1\n 0//1 1//1\nendThere is two methods of computing the elimination implemented in CDDLib: Fourier-Motzkin elimination and block elimination. As written by K. Fukuda in CDD\'s documentation, \"[Block elimination] might be a faster way to eliminate variables than the repeated [Fourier-Motzkin elimination] when the number of variables to eliminate is large\". You can specify the method to use as a third argument, e.g. eliminate(poly, [1], :FourierMotzkin), eliminate(poly, [1], :BlockElimination). A third method can be chosen: :ProjectGenerators. It computes the V-representation and then project each of its elements. This is the method of choice when the V-representation is already computed.If nothing is specified as in the block of code above, the behavior depends on the polyhedral library. If neither Fourier-Motzkin nor block elimination is implemented or if the V-representation is already computed then :ProjectGenerators is chosen. Otherwise, Polyhedra lets the library decide. In CDDLib, :FourierMotzkin is chosen when only the last dimension needs to be eliminated and :BlockElimination is chosen otherwise. Note that CDDLib only supports projecting the last trailing dimensions.fixandeliminate"
 },
 
 {
@@ -630,46 +670,6 @@ var documenterSearchIndex = {"docs": [
     "title": "Operations",
     "category": "section",
     "text": "*\n\\\n/\nintersect\nintersect!\nconvexhull\nconvexhull!"
-},
-
-{
-    "location": "utilities.html#Base.in",
-    "page": "Utilities",
-    "title": "Base.in",
-    "category": "function",
-    "text": "in(p::VRepElement, h::HRepElement)\n\nReturns whether p is in h. If h is an hyperplane, it returns whether langle a x rangle approx beta. If h is an halfspace, it returns whether langle a x rangle le beta.\n\nin(p::VRepElement, h::HRep)\n\nReturns whether p is in h, e.g. in all the hyperplanes and halfspaces supporting h.\n\n\n\n"
-},
-
-{
-    "location": "utilities.html#Base.issubset",
-    "page": "Utilities",
-    "title": "Base.issubset",
-    "category": "function",
-    "text": "issubset(p::Rep, h::HRepElement)\n\nReturns whether p is a subset of h, i.e. whether h supports the polyhedron p.\n\n\n\n"
-},
-
-{
-    "location": "utilities.html#Polyhedra.ininterior",
-    "page": "Utilities",
-    "title": "Polyhedra.ininterior",
-    "category": "function",
-    "text": "ininterior(p::VRepElement, h::HRepElement)\n\nReturns whether p is in the interior of h. If h is an hyperplane, it always returns false. If h is an halfspace langle a x rangle leq beta, it returns whether p is in the open halfspace langle a x rangle  beta\n\nininterior(p::VRepElement, h::HRep)\n\nReturns whether p is in the interior of h, e.g. in the interior of all the hyperplanes and halfspaces supporting h.\n\n\n\n"
-},
-
-{
-    "location": "utilities.html#Polyhedra.inrelativeinterior",
-    "page": "Utilities",
-    "title": "Polyhedra.inrelativeinterior",
-    "category": "function",
-    "text": "inrelativeinterior(p::VRepElement, h::HRepElement)\n\nReturns whether p is in the relative interior of h. If h is an hyperplane, it is equivalent to p in h since the relative interior of an hyperplane is itself. If h is an halfspace, it is equivalent to ininterior(p, h).\n\ninrelativeinterior(p::VRepElement, h::HRep)\n\nReturns whether p is in the relative interior of h, e.g. in the relative interior of all the hyperplanes and halfspaces supporting h.\n\n\n\n"
-},
-
-{
-    "location": "utilities.html#Containment-1",
-    "page": "Utilities",
-    "title": "Containment",
-    "category": "section",
-    "text": "in\nissubset\nininterior\ninrelativeinterior"
 },
 
 {
