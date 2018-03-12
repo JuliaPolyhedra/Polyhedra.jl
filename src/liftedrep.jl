@@ -22,8 +22,6 @@ end
 similar_type{N,T}(::Type{<:LiftedHRepresentation}, ::FullDim{N}, ::Type{T}) = LiftedHRepresentation{N,T}
 arraytype(p::Union{LiftedHRepresentation{N, T}, Type{LiftedHRepresentation{N, T}}}) where {N, T} = Vector{T}
 
-linset(rep::LiftedHRepresentation) = copy(rep.linset)
-
 LiftedHRepresentation(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = LiftedHRepresentation{size(A,2)-1,T}(A, linset)
 LiftedHRepresentation(h::HRepresentation{N,T}) where {N,T} = LiftedHRepresentation{N,T}(h)
 
@@ -49,8 +47,6 @@ Base.isvalid(hrep::LiftedHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} 
 Base.done(idxs::HIndices{N, T, <:LiftedHRepresentation{N, T}}, idx::HIndex{N, T}) where {N, T} = idx.value > size(idxs.rep.A, 1)
 Base.get(hrep::LiftedHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(idx)(-hrep.A[idx.value,2:end], hrep.A[idx.value,1])
 
-Base.getindex(h::LiftedHRepresentation, I::AbstractArray) = LiftedHRepresentation(h.A[I, :], filterintset(h.linset, I))
-
 # V-Represenation
 
 mutable struct LiftedVRepresentation{N,T} <: MixedVRep{N,T}
@@ -70,8 +66,6 @@ end
 
 similar_type{N,T}(::Type{<:LiftedVRepresentation}, ::FullDim{N}, ::Type{T}) = LiftedVRepresentation{N,T}
 arraytype(p::Union{LiftedVRepresentation{N, T}, Type{LiftedVRepresentation{N, T}}}) where {N, T} = Vector{T}
-
-linset(rep::LiftedVRepresentation) = copy(rep.linset)
 
 LiftedVRepresentation(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = LiftedVRepresentation{size(R,2)-1,T}(R, linset)
 LiftedVRepresentation(v::VRepresentation{N,T}) where {N,T} = LiftedVRepresentation{N,T}(v)
@@ -116,5 +110,3 @@ function Base.isvalid(vrep::LiftedVRepresentation{N, T}, idx::VIndex{N, T}) wher
 end
 Base.done(idxs::VIndices{N, T, <:LiftedVRepresentation{N, T}}, idx::VIndex{N, T}) where {N, T} = idx.value > size(idxs.rep.R, 1)
 Base.get(vrep::LiftedVRepresentation{N, T}, idx::VIndex{N, T}) where {N, T} = valuetype(idx)(vrep.R[idx.value,2:end])
-
-Base.getindex(v::LiftedVRepresentation, I::AbstractArray) = LiftedVRepresentation(v.R[I, :], filterintset(v.linset, I))

@@ -42,6 +42,6 @@ function MathProgBase.linprog(c::AbstractVector, p::Rep{N}, solver::MathProgBase
     end
 end
 
-function Base.isempty(p::Polyhedron{N,T}, solver::MathProgBase.AbstractMathProgSolver = defaultLPsolverfor(p)) where {N,T}
+function Base.isempty(p::Rep{N,T}, solver::MathProgBase.AbstractMathProgSolver = defaultLPsolverfor(p)) where {N,T}
     linprog(zeros(T, N), p, solver).status == :Infeasible
 end

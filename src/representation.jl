@@ -81,6 +81,9 @@ Base.convert(::Type{RepTout}, p::VRep) where {RepTout<:VRepresentation} = vconve
 # avoid ambiguity
 Base.convert(::Type{RepTout}, p::VRepresentation) where {RepTout<:VRepresentation} = vconvert(RepTout, p)
 
+# Used by SimpleVRepPolyhedraModel
+Base.convert(::Type{VRep}, p::VRepresentation) = p
+
 MultivariatePolynomials.changecoefficienttype(p::Rep{N,T}, ::Type{T}) where {N,T} = p
 function MultivariatePolynomials.changecoefficienttype(p::RepTin, ::Type{Tout}) where {RepTin<:Rep, Tout}
     RepTout = similar_type(RepTin, Tout)

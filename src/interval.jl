@@ -11,7 +11,7 @@ end
 
 arraytype(p::Interval{T, AT}) where {T, AT} = AT
 
-area{T}(::Interval{T}) = zero(T)
+surface{T}(::Interval{T}) = zero(T)
 volume(p::Interval) = p.length
 Base.isempty(p::Interval) = isempty(p.vrep)
 
@@ -56,6 +56,8 @@ function Interval{T, AT}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) 
             end
         end
     else
+        # The dimension should be -1 so 1 - nhyperplanes == -1 so nhyperplanes == 2
+        push!(hps, HyperPlane(SVector(one(T)), zero(T)))
         push!(hps, HyperPlane(SVector(zero(T)), one(T)))
     end
     h = hrep(hps, hss)
@@ -73,17 +75,17 @@ function _hinterval(rep::HRep{1, T}, ::Type{AT}) where {T, AT}
     function _setlb(newlb)
         if !haslb
             haslb = true
-            lb = newlb
+            lb = T(newlb)
         else
-            lb = max(lb, newlb)
+            lb = T(max(lb, newlb))
         end
     end
     function _setub(newub)
         if !hasub
             hasub = true
-            ub = newub
+            ub = T(newub)
         else
-            ub = min(ub, newub)
+            ub = T(min(ub, newub))
         end
     end
     for hp in hyperplanes(rep)
@@ -101,8 +103,8 @@ function _hinterval(rep::HRep{1, T}, ::Type{AT}) where {T, AT}
         α = hs.a[1]
         if isapproxzero(α)
             if hs.β < 0
-                lb = Inf
-                ub = -Inf
+                lb = T(Inf)
+                ub = T(-Inf)
             end
         elseif α < 0
             _setlb(hs.β / α)
@@ -119,23 +121,7 @@ function _vinterval(v::VRep{1, T}, ::Type{AT}) where {T, AT}
     hasub = true
     ub = zero(T)
     isempty = true
-    for r in rays(v)
-        x = coord(r)[1]
-        if !iszero(x)
-            isempty = false
-            if islin(r)
-                haslb = false
-                hasub = false
-            else
-                if x > 0
-                    hasub = false
-                else
-                    haslb = false
-                end
-            end
-        end
-    end
-    for p in points(v)
+    for p in allpoints(v)
         x = coord(p)[1]
         if isempty
             isempty = false
@@ -145,9 +131,23 @@ function _vinterval(v::VRep{1, T}, ::Type{AT}) where {T, AT}
             lb = min(lb, x)
             ub = max(ub, x)
         end
-        if islin(p)
-          lb = min(lb, -x)
-          ub = max(ub, -x)
+    end
+    for l in lines(v)
+        if !isapproxzero(l)
+            isempty = false
+            haslb = false
+            hasub = false
+        end
+    end
+    for r in rays(v)
+        x = coord(r)[1]
+        if !isapproxzero(x)
+            isempty = false
+            if x > 0
+                hasub = false
+            else
+                haslb = false
+            end
         end
     end
     Interval{T, AT}(haslb, lb, hasub, ub, isempty)

@@ -65,17 +65,6 @@ Base.isvalid(hrep::MixedMatHRep{N, T}, idx::HIndex{N, T}) where {N, T} = 0 < idx
 Base.done(idxs::HIndices{N, T, <:MixedMatHRep{N, T}}, idx::HIndex{N, T}) where {N, T} = idx.value > size(idxs.rep.A, 1)
 Base.get(hrep::MixedMatHRep{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(idx)(hrep.A[idx.value,:], hrep.b[idx.value])
 
-function filterintset(J::IntSet, I)
-    K = IntSet()
-    for (idx, i) in enumerate(I)
-        if i in J
-            push!(K, idx)
-        end
-    end
-    K
-end
-Base.getindex(h::MixedMatHRep, I::AbstractArray) = MixedMatHRep(h.A[I, :], h.b[I], filterintset(h.linset, I))
-
 # V-Representation
 """
     vrep(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet())
@@ -156,12 +145,6 @@ _linset(hrep::MixedMatVRep, ::RIndex) = hrep.Rlinset
 Base.isvalid(vrep::MixedMatVRep{N, T}, idx::VIndex{N, T}) where {N, T} = 0 < idx.value <= size(_mat(vrep, idx), 1) && (idx.value in _linset(vrep, idx)) == islin(idx)
 Base.done(idxs::VIndices{N, T, <:MixedMatVRep{N, T}}, idx::VIndex{N, T}) where {N, T} = idx.value > size(_mat(idxs.rep, idx), 1)
 Base.get(vrep::MixedMatVRep{N, T}, idx::VIndex{N, T}) where {N, T} = valuetype(idx)(_mat(vrep, idx)[idx.value, :])
-
-function Base.getindex(h::MixedMatVRep, I::AbstractArray)
-    Ir = filter(i -> i <= nrays(h), I)
-    Ip = filter(i -> i > nrays(h), I) - nrays(h)
-    MixedMatVRep(h.V[Ip,:], h.R[Ir,:], filterintset(h.Vlinset, I), filterintset(h.Rlinset, I))
-end
 
 function dualfullspace(h::MixedMatHRep, ::FullDim{N}, ::Type{T}) where {N, T}
     MixedMatVRep{N, T}(zeros(T, 1, N), eye(T, N), IntSet(), IntSet(1:N))

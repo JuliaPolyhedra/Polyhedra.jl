@@ -18,13 +18,13 @@ mutable struct LPHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
 
     function LPHRepresentation{N, T, MT}(A::MT, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {N, T, MT<:AbstractMatrix{T}}
         if length(l) != length(u) || size(A, 2) != length(l)
-            error("The length of l and u must be equal to the number of rows of A")
+            throw(DimensionMismatch("The length of l and u must be equal to the number of rows of A"))
         end
         if length(lb) != length(ub) || size(A, 1) != length(lb)
-            error("The length of lb and ub must be equal to the number of columns of A")
+            throw(DimensionMismatch("The length of lb and ub must be equal to the number of columns of A"))
         end
         if size(A, 2) != N
-            error("Type dimension does not match the number of rows of A")
+            throw(DimensionMismatch("Type dimension does not match the number of rows of A"))
         end
         colleqs = IntSet()
         colgeqs = IntSet()
@@ -77,7 +77,6 @@ arraytype(::Union{LPHRepresentation{N, T, MT}, Type{LPHRepresentation{N, T, MT}}
 similar_type(::Type{LPHRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = LPHRepresentation{N, T, similar_type(MT, T)}
 fulltype(::Type{LPHRepresentation{N, T, MT}}) where {N, T, MT} = LPHRepresentation{N, T, MT}
 
-LPHRepresentation(rep::LPHRepresentation) = rep
 _mattype(::Type{<:AbstractVector{T}}) where T = Matrix{T}
 _mattype(::Type{<:AbstractSparseVector{T}}) where T = SparseMatrixCSC{T, Int}
 LPHRepresentation(rep::HRep{N, T}) where {N, T} = LPHRepresentation{N, T, _mattype(arraytype(rep))}(rep)

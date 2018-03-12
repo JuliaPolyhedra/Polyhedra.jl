@@ -41,6 +41,12 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         @test translate(ext, [1, 0]).V == [1 1; 2 0]
     end
 
+    @testset "LPHRepresentation with bad arguments" begin
+        @test_throws DimensionMismatch LPHRepresentation(ones(2, 2), [1], [1], [1, 2], [1, 2])
+        @test_throws DimensionMismatch LPHRepresentation(ones(2, 2), [1, 2], [1, 2], [1], [1])
+        @test_throws DimensionMismatch LPHRepresentation{2, Int, Matrix{Int}}(ones(Int, 1, 1), [1], [1], [1], [1])
+    end
+
     @testset "Lifted Representation with bad arguments" begin
         A = [1 -1 -1; 0 1 0; 0 0 1]
         ls = IntSet([1])
@@ -96,7 +102,8 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
                          ((@inferred hrep(shss)), SVector{3, Float64}),
                          ((@inferred hrep(hps, hss)), Vector{Float64}),
                          ((@inferred hrep(shps, shss)), SVector{3, Float64}),
-                         (hrep([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}))
+                         (hrep([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}),
+                         (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}))
             @test (@inferred coefficienttype(hr)) == Float64
             @test                                               (@inferred eltype(allhalfspaces(hr)))  == HalfSpace{3, Float64, AT}
             @test                                               (@inferred collect(allhalfspaces(hr))) isa Vector{HalfSpace{3, Float64, AT}}
@@ -136,7 +143,8 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
                          ((@inferred vrep(sls, srs)), SVector{2, Int}),
                          ((@inferred vrep(symps, ps, ls, rs)), Vector{Int}),
                          ((@inferred vrep(ssymps, sps, sls, srs)), SVector{2, Int}),
-                         (vrep([1 2; 3 4]), Vector{Int}))
+                         (vrep([1 2; 3 4]), Vector{Int}),
+                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0), IntSet(), IntSet()), Vector{Int}))
             @test (@inferred coefficienttype(vr)) == Int
             @test                                           (@inferred eltype(allpoints(vr)))  == AT
             @test                                           (@inferred collect(allpoints(vr))) isa Vector{AT}
@@ -298,7 +306,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test_throws ErrorException VRepType(SymPoint{2, T, AT}[], AT[], [Line([1, 2])])
             @test_throws ErrorException VRepType(SymPoint{2, T, AT}[], AT[], Line{2, T, AT}[], [Ray([1, 2])])
             @test_throws ErrorException VRepType(SymPoint{2, T, AT}[], AT[], [Line([1, 2])], [Ray([1, 2])])
-            #@test isempty(VRepType(SymPoint{2, T, AT}[], AT[], Line{2, T, AT}[], Ray{2, T, AT}[])) # TODO
+            @test isempty(VRepType(SymPoint{2, T, AT}[], AT[], Line{2, T, AT}[], Ray{2, T, AT}[]))
             v = VRepType([Line([1, 2])])
             @test !hassympoints(v)
             @test collect(points(v)) == [[0, 0]]
