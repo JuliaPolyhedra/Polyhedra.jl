@@ -63,6 +63,7 @@ Same as [`convexhull`](@ref) except that `p1` is modified to be equal to the con
 convexhull!(p::VRep{N}, ine::HRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
 
 conichull(ls::Line...) = vrep([ls...])
+conichull(rs::AbstractPoint...) = vrep([Ray.(rs)...])
 conichull(rs::Ray...) = vrep([rs...])
 
 function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {N, T}

@@ -1,9 +1,9 @@
 _isapprox(x::Real, y::Real) = _isapprox(promote(x, y)...)
 _isapprox(x::T, y::T) where {T<:Real} = x == y
 _isapprox(x::T, y::T) where {T<:AbstractFloat} = y < x+1024*eps(T) && x < y+1024*eps(T)
-_isapprox(x::Vector{S}, y::Vector{T}) where {S<:Real,T<:Real} = _isapprox(promote(x, y)...)
-_isapprox(x::Vector{T}, y::Vector{T}) where {T<:Real} = x == y
-_isapprox(x::Vector{T}, y::Vector{T}) where {T<:AbstractFloat} = _isapprox(norm(x - y), zero(T))
+_isapprox(x::AbstractVector{S}, y::AbstractVector{T}) where {S<:Real,T<:Real} = _isapprox(promote(x, y)...)
+_isapprox(x::AbstractVector{T}, y::AbstractVector{T}) where {T<:Real} = x == y
+_isapprox(x::AbstractVector{T}, y::AbstractVector{T}) where {T<:AbstractFloat} = _isapproxzero(norm(x - y))
 _isapproxzero(x::T) where {T<:Real} = _isapprox(x, zero(T))
 
 function _parallel(x, y)
