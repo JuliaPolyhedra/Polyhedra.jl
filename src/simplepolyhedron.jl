@@ -3,6 +3,8 @@ export SimplePolyhedraLibrary, SimplePolyhedron
 struct SimplePolyhedraLibrary{T} <: PolyhedraLibrary
 end
 
+similar_library(lib::SimplePolyhedraLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to Interval if d is FullDim{1}
+
 mutable struct SimplePolyhedron{N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}} <: Polyhedron{N, T}
     hrep::Nullable{HRepT}
     vrep::Nullable{VRepT}
@@ -14,13 +16,14 @@ mutable struct SimplePolyhedron{N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepr
     end
 end
 
+library(::Union{SimplePolyhedron{N, T}, Type{<:SimplePolyhedron{N, T}}}) where {N, T} = SimplePolyhedraLibrary{T}()
+
 function arraytype(p::SimplePolyhedron{N, T, HRepT, VRepT}) where{N, T, HRepT, VRepT}
     @assert arraytype(HRepT) == arraytype(VRepT)
     arraytype(HRepT)
 end
 
 similar_type(::Type{<:SimplePolyhedron{M, S, HRepT, VRepT}}, d::FullDim{N}, ::Type{T}) where {M, S, HRepT, VRepT, N, T} = SimplePolyhedron{N, T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
-similar_library(p::SimplePolyhedron, d::FullDim, ::Type{T}) where T = default_library(p, d, T) # default_library allows to fallback to Interval if d is FullDim{1}
 
 function SimplePolyhedron{N, T, HRepT, VRepT}(hits::HIt...) where {N, T, HRepT, VRepT}
     SimplePolyhedron{N, T, HRepT, VRepT}(HRepT(hits...))

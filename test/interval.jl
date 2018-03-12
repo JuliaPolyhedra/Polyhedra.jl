@@ -1,4 +1,5 @@
 @testset "Interval tests" begin
+
     # Closed interval
     h = HalfSpace([-1], 3.) ∩ HalfSpace([1.], 8)
     v = convexhull([-3.], [8.])
@@ -6,6 +7,9 @@
     v0 = [[1.], [8], [-2], [4], [-1], [-3], [5]]
     pp = polyhedron(vrep(v0), SimplePolyhedraLibrary{Float64}())
     p = Interval{Float64, SVector{1, Float64}}(pp)
+    @test similar_library(pp, FullDim{1}()) == IntervalLibrary{Float64}()
+    @test getlibrary(p) == IntervalLibrary{Float64}()
+    @test getlibraryfor(p, FullDim{2}()) == SimplePolyhedraLibrary{Float64}()
     @test !hrepiscomputed(pp)
     @test vrepiscomputed(pp)
     @test hrepiscomputed(p)

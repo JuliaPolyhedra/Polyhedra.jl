@@ -1,4 +1,5 @@
 export default_type, default_library, similar_library, library, defaultLPsolverfor
+export getlibrary, getlibraryfor
 
 # TODO use vecrep instead of simplerep
 default_type(::FullDim{N}, ::Type{T}) where {N, T} = SimplePolyhedron{N, T, Intersection{N, T, Vector{T}}, Hull{N, T, Vector{T}}}
@@ -33,7 +34,7 @@ end
 
 function getlibraryfor(args...)
     warn("getlibraryfor is deprecated, use similar_library instead. Note that the dimension `N` now needs to be given as `FullDim{N}()`.")
-    similar_library(p)
+    similar_library(args...)
 end
 
 

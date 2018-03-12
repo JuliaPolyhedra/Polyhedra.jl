@@ -3,11 +3,15 @@ export IntervalLibrary, Interval
 struct IntervalLibrary{T} <: PolyhedraLibrary
 end
 
+similar_library(lib::IntervalLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to SimplePolyhedraLibrary if d is not FullDim{1}
+
 mutable struct Interval{T, AT} <: Polyhedron{1, T}
     hrep::Intersection{1, T, AT}
     vrep::Hull{1, T, AT}
     length::T
 end
+
+library(::Union{Interval{T}, Type{<:Interval{T}}}) where T = IntervalLibrary{T}()
 
 arraytype(p::Interval{T, AT}) where {T, AT} = AT
 
