@@ -88,7 +88,7 @@ function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
             end
         end
 
-        if line != nothing
+        if line !== nothing
             if isempty(face_vert)
                 center = zeros(T, 3)
             else
