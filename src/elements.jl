@@ -206,6 +206,7 @@ const FixedVRepElement{N,T} = Union{Point{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,
 const VRepElement{N,T} = Union{FixedVRepElement{N,T}, AbstractVector{T}}
 const RepElement{N,T} = Union{HRepElement{N,T}, VRepElement{N,T}}
 const FixedRepElement{N,T} = Union{HRepElement{N,T}, FixedVRepElement{N,T}}
+const Element{N, T} = Union{HRepElement{N, T}, VRepElement{N, T}}
 
 FullDim(::Union{FixedRepElement{N}, Type{<:FixedRepElement{N}}}) where {N} = FullDim{N}()
 MultivariatePolynomials.coefficienttype(::Union{FixedRepElement{N, T}, Type{<:FixedRepElement{N, T}}}) where {N, T} = T

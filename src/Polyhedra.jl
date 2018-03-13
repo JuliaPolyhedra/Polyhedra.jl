@@ -44,6 +44,7 @@ include("comp.jl")
 include("representation.jl")
 include("polyhedron.jl")
 include("indices.jl")
+include("incidence.jl")
 include("iterators.jl")
 
 function similar_type(::Type{ET}, ::Type{Tout}) where {Tout, ET<:Union{HRepElement, VRepElement, Rep}}

@@ -190,6 +190,8 @@ end
 function vpupdatedup!(aff, points, sympoints, p::AbstractPoint)
     if !any(point -> (point - p) in aff, points) && !any(sp -> (coord(sp) - p) in aff || (coord(sp) + p) in aff, sympoints)
         found = false
+        # TODO comment that out to avoid creating sympoints
+        #      because of the issue with incidence, see incidence.jl
         for (i, q) in enumerate(points)
             if p + q in aff
                 found = true

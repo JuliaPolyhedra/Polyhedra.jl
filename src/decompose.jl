@@ -26,13 +26,15 @@ function _isdup(zray, triangles)
     end
     false
 end
+_isdup(poly, hidx, triangles) = _isdup(get(poly, hidx).a, triangles)
 
 function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
     exit_point = scene(poly, T)
 
     triangles = Tuple{Tuple{Vector{T},Vector{T},Vector{T}}, Vector{T}}[]
 
-    function decomposeplane(h)
+    function decomposeplane(hidx)
+        h = get(poly, hidx)
         # xray should be the rightmost ray
         xray = nothing
         # xray should be the leftmost ray
@@ -56,8 +58,8 @@ function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
                 end
             end
         end
-        for l in lines(poly)
-            if isapproxzero(dot(l, zray)) && !isapproxzero(l)
+        for l in incidentlines(poly, hidx)
+            if !isapproxzero(l)
                 if line === nothing
                     line = l
                 else
@@ -65,8 +67,8 @@ function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
                 end
             end
         end
-        for r in rays(poly)
-            if isapproxzero(dot(r, zray)) && !isapproxzero(r)
+        for r in incidentrays(poly, hidx)
+            if !isapproxzero(r)
                 if line === nothing
                     if xray === nothing || counterclockwise(r, xray) > 0
                         xray = coord(r) # r is more right than xray
@@ -81,7 +83,7 @@ function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
         end
 
         # Checking vertices
-        face_vert = []
+        face_vert = pointtype(poly)[]
         for x in allpoints(poly)
             if _isapprox(dot(x, zray), h.β)
                 push!(face_vert, x)
@@ -90,11 +92,11 @@ function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
 
         if line !== nothing
             if isempty(face_vert)
-                center = zeros(T, 3)
+                center = origin(pointtype(poly), FullDim{3}())
             else
-                center = vec(first(face_vert))
+                center = first(face_vert)
             end
-            hull = Any[]
+            hull = pointtype(poly)[]
             push!(hull, exit_point(center, line))
             if lineleft
                 push!(hull, exit_point(center, cross(zray, line)))
@@ -147,14 +149,14 @@ function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
         end
     end
 
-    for h in hyperplanes(poly)
-        decomposeplane(h)
+    for hidx in eachindex(hyperplanes(poly))
+        decomposeplane(hidx)
     end
     # If there is already a triangle, his normal is an hyperplane and it is the only face
     if isempty(triangles)
-        for h in halfspaces(poly)
-            if !_isdup(h.a, triangles)
-                decomposeplane(h)
+        for hidx in eachindex(halfspaces(poly))
+            if !_isdup(poly, hidx, triangles)
+                decomposeplane(hidx)
             end
         end
     end
