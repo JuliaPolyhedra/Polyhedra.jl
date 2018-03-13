@@ -473,6 +473,110 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "polyhedron.html#Polyhedra.incidenthalfspaces",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidenthalfspaces",
+    "category": "function",
+    "text": "incidenthalfspaces(p::Polyhedron, idx)\n\nReturns the list of halfspaces incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.incidenthalfspaceindices",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidenthalfspaceindices",
+    "category": "function",
+    "text": "incidenthalfspaceindices(p::Polyhedron, idx)\n\nReturns the list of the indices of halfspaces incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.incidentpoints",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidentpoints",
+    "category": "function",
+    "text": "incidentpoints(p::Polyhedron, idx)\n\nReturns the list of points incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.incidentpointindices",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidentpointindices",
+    "category": "function",
+    "text": "incidentpointindices(p::Polyhedron, idx)\n\nReturns the list of the indices of points incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.incidentrays",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidentrays",
+    "category": "function",
+    "text": "incidentrays(p::Polyhedron, idx)\n\nReturns the list of rays incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.incidentrayindices",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidentrayindices",
+    "category": "function",
+    "text": "incidentrayindices(p::Polyhedron, idx)\n\nReturns the list of the indices of rays incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.incidenthyperplanes",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidenthyperplanes",
+    "category": "function",
+    "text": "incidenthyperplanes(p::Polyhedron, idx)\n\nReturns the list of hyperplanes incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.incidenthyperplaneindices",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidenthyperplaneindices",
+    "category": "function",
+    "text": "incidenthyperplaneindices(p::Polyhedron, idx)\n\nReturns the list of the indices of hyperplanes incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.incidentlines",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidentlines",
+    "category": "function",
+    "text": "incidentlines(p::Polyhedron, idx)\n\nReturns the list of lines incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.incidentlineindices",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidentlineindices",
+    "category": "function",
+    "text": "incidentlineindices(p::Polyhedron, idx)\n\nReturns the list of the indices of lines incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.incidentsympoints",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidentsympoints",
+    "category": "function",
+    "text": "incidentsympoints(p::Polyhedron, idx)\n\nReturns the list of sympoints incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.incidentsympointindices",
+    "page": "Polyhedron",
+    "title": "Polyhedra.incidentsympointindices",
+    "category": "function",
+    "text": "incidentsympointindices(p::Polyhedron, idx)\n\nReturns the list of the indices of sympoints incident to idx for the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Incidence-1",
+    "page": "Polyhedron",
+    "title": "Incidence",
+    "category": "section",
+    "text": "A point p (ray r) is incident to an halfspace langle a x rangle le beta if langle a p rangle = beta (resp. langle a r rangle = beta).incidenthalfspaces\nincidenthalfspaceindices\nincidentpoints\nincidentpointindices\nincidentrays\nincidentrayindicesIn a polyhedron, all points and rays are incident to all hyperplanes and all halfspaces are incident to all lines. The following methods are therefore redundant, e.g. incidenthyperplanes(p, idx) is equivalent to hyperplanes(p) and incidenthyperplaneindices(p, idx) is equivalent to eachindex(hyperplanes(p)). The methods are hence only defined for consistency.incidenthyperplanes\nincidenthyperplaneindices\nincidentlines\nincidentlineindicesA symmetric point is only incident to an pair of symmetric halfspaces or to a homogeneous halfspace. However, one of the two points of the symmetric point can be incident to an hyperplane. Therefore, collecting when collecting incident points and symmetric points of an halfspace, some points may be missed. This will be fixed in the next release with the introduction of symmetric halfspaces and homogeneous halfspaces. Symmetric points and halfspaces will only be allowed in symmetric polyhedron, the latter will not contain any non-symmetric points and halfspaces.incidentsympoints\nincidentsympointindices"
+},
+
+{
     "location": "redundancy.html#",
     "page": "Containment/Redundancy",
     "title": "Containment/Redundancy",
