@@ -93,9 +93,12 @@ for (isVrep, elt, singular) in [(true, :SymPoint, :sympoint), (true, :AbstractPo
     lenp = Symbol("n" * pluralstr)
     isnotemptyp = Symbol("has" * pluralstr)
     mapit = Symbol("map" * pluralstr)
+    inc = Symbol("incident" * pluralstr)
+    incidx = Symbol("incident" * singularstr * "indices")
 
     @eval begin
         export $plural, $lenp, $isnotemptyp, $startp, $donep, $nextp, $elemtype
+        export $inc, $incidx
 
         """
             $plural($horvrep::$HorVRep)
@@ -103,6 +106,20 @@ for (isVrep, elt, singular) in [(true, :SymPoint, :sympoint), (true, :AbstractPo
         Returns an iterator over the $plural of the $HorV-representation `$horvrep`.
         """
         function $plural end
+
+        """
+            incident$plural(p::Polyhedron, idx)
+
+        Returns the list of $plural incident to idx for the polyhedron `p`.
+        """
+        $inc(p::Polyhedron{N, T}, idx) where {N, T} = get(p, IncidentElements{N, T, $elemtype(p)}(p, idx))
+
+        """
+            incident$(singular)indices(p::Polyhedron, idx)
+
+        Returns the list of the indices of $plural incident to idx for the polyhedron `p`.
+        """
+        $incidx(p::Polyhedron{N, T}, idx) where {N, T} = get(p, IncidentIndices{N, T, $elemtype(p)}(p, idx))
 
         """
             $lenp($horvrep::$HorVRep)

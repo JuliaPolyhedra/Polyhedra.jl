@@ -138,7 +138,13 @@ function largedecompose(lib::PolyhedraLibrary)
 end
 
 function decompose(lib::PolyhedraLibrary)
-    orthantdecompose(lib)
-    cubedecompose(lib)
-    largedecompose(lib)
+    @testset "Orthant" begin
+        orthantdecompose(lib)
+    end
+    @testset "Cube" begin
+        cubedecompose(lib)
+    end
+    @testset "Large" begin
+        largedecompose(lib)
+    end
 end

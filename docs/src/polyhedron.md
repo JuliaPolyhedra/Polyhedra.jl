@@ -131,3 +131,38 @@ A JuMP Model can be converted to this representation using `LPHRepresentation(m)
 hrepiscomputed
 vrepiscomputed
 ```
+
+## Incidence
+
+A point ``p`` (ray ``r``) is incident to an halfspace ``\langle a, x \rangle \le \beta`` if ``\langle a, p \rangle = \beta`` (resp. ``\langle a, r \rangle = \beta``).
+
+```@docs
+incidenthalfspaces
+incidenthalfspaceindices
+incidentpoints
+incidentpointindices
+incidentrays
+incidentrayindices
+```
+
+In a polyhedron, all points and rays are incident to all hyperplanes and all halfspaces are incident to all lines.
+The following methods are therefore redundant, e.g. `incidenthyperplanes(p, idx)` is equivalent to `hyperplanes(p)` and `incidenthyperplaneindices(p, idx)` is equivalent to `eachindex(hyperplanes(p))`.
+The methods are hence only defined for consistency.
+
+```@docs
+incidenthyperplanes
+incidenthyperplaneindices
+incidentlines
+incidentlineindices
+```
+
+A symmetric point is only incident to an pair of symmetric halfspaces or to a homogeneous halfspace.
+However, one of the two points of the symmetric point can be incident to an hyperplane.
+Therefore, collecting when collecting incident points and symmetric points of an halfspace, some points may be missed.
+This will be fixed in the next release with the introduction of symmetric halfspaces and homogeneous halfspaces.
+Symmetric points and halfspaces will only be allowed in symmetric polyhedron, the latter will not contain any non-symmetric points and halfspaces.
+
+```@docs
+incidentsympoints
+incidentsympointindices
+```

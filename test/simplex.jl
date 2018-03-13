@@ -10,6 +10,33 @@ function simplextest(lib::PolyhedraLibrary)
     inequality_fulltest(poly1, hsim)
     generator_fulltest(poly1, vsim)
 
+    # Test incidence
+    hpidx = first(eachindex(hyperplanes(poly1)))
+    for ps in (incidentpoints(poly1, hpidx), get.(poly1, incidentpointindices(poly1, hpidx)))
+        @test (ps == [[0, 1], [1, 0]] || ps == [[1, 0], [0, 1]])
+    end
+    for hsidx in eachindex(halfspaces(poly1))
+        h = get(poly1, hsidx)
+        if dot(h.a, [1, 0]) ≈ h.β
+            expps = [[1, 0]]
+        else
+            @assert dot(h.a, [0, 1]) ≈ h.β
+            expps = [[0, 1]]
+        end
+        for ps in (incidentpoints(poly1, hsidx), get.(poly1, incidentpointindices(poly1, hsidx)))
+            @test ps == expps
+        end
+    end
+    for pidx in eachindex(points(poly1))
+        for hps in (incidenthyperplanes(poly1, pidx), get.(poly1, incidenthyperplaneindices(poly1, pidx)))
+            @test hps == [HyperPlane([1, 1], 1)]
+        end
+        for hss in (incidenthalfspaces(poly1, pidx), get.(poly1, incidenthalfspaceindices(poly1, pidx)))
+            h = hss[1]
+            @test dot(h.a, get(poly1, pidx)) ≈ h.β
+        end
+    end
+
     poly2 = polyhedron(vsim, lib)
     @test dim(poly2) == 1
     @test !isempty(poly2)
