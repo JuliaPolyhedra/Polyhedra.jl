@@ -1,51 +1,44 @@
-function fulldecompose(poly::Polyhedron{3, T}) where T
-    # I need to do division so if T is e.g. Integer, I need to use another type
-    RT = typeof(one(T)/2)
-
-    #rayinface{T<:Real}(r::Vector{T}, i::Integer) = isapproxzero(dot(r, A[i,:])) && !isapproxzero(r)
-    #vertinface{T<:Real}(r::Vector{T}, i::Integer) = isapproxzero(dot(r, A[i,:])) && !isapproxzero(r)
-
-    ps = allpoints(poly)
-
+function scene(vr::VRep, ::Type{T}) where T
     # Intersection of rays with the limits of the scene
-    (xmin, xmax) = extrema(map((x)->x[1], ps))
-    (ymin, ymax) = extrema(map((x)->x[2], ps))
-    (zmin, zmax) = extrema(map((x)->x[3], ps))
+    (xmin, xmax) = extrema(map((x)->x[1], allpoints(vr)))
+    (ymin, ymax) = extrema(map((x)->x[2], allpoints(vr)))
+    (zmin, zmax) = extrema(map((x)->x[3], allpoints(vr)))
     width = max(xmax-xmin, ymax-ymin, zmax-zmin)
     if width == zero(T)
         width = 2
     end
-    scene = HyperRectangle{3,RT}([(xmin+xmax)/2-width, (ymin+ymax)/2-width, (zmin+zmax)/2-width], 2*width*ones(RT,3))
-    function exit_point(start, ray)
+    scene = HyperRectangle{3,T}([(xmin+xmax)/2-width, (ymin+ymax)/2-width, (zmin+zmax)/2-width], 2*width*ones(T,3))
+    (start, ray) -> begin
         times = max.((Vector(minimum(scene))-start) ./ ray, (Vector(maximum(scene))-start) ./ ray)
         times[ray .== 0] = Inf # To avoid -Inf with .../(-0)
         time = minimum(times)
         start + time * ray
     end
+end
 
-    hr = hrep(poly)
-    triangles = Tuple{Tuple{Vector{Float64},Vector{Float64},Vector{Float64}}, HIndex{3, T}}[]
+function _isdup(zray, triangles)
+    for tri in triangles
+        normal = tri[2]
+        if isapproxzero(cross(zray, normal)) && dot(zray, normal) > 0 # If A[j,:] is almost 0, it is always true...
+            # parallel and equality or inequality and same sense
+            return true
+        end
+    end
+    false
+end
 
-    function decomposeplane(hidx)
+function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
+    exit_point = scene(poly, T)
+
+    triangles = Tuple{Tuple{Vector{T},Vector{T},Vector{T}}, Vector{T}}[]
+
+    function decomposeplane(h)
         # xray should be the rightmost ray
         xray = nothing
         # xray should be the leftmost ray
         yray = nothing
-        h = get(hr, hidx)
         zray = h.a
         isapproxzero(zray) && return
-        # Check if new face
-        for hs in hreps(hr)
-            for hjdx in eachindex(hs)
-                hjdx == hidx && break
-                hj = get(hr, hjdx)
-                if isapproxzero(cross(zray, hj.a)) && (islin(h) || dot(zray, hj.a) > 0) # If A[j,:] is almost 0, it is always true...
-                    # parallel and equality or inequality and same sense
-                    # TODO is it possible that A[i,:] is stronger than A[j,:] ?
-                    return
-                end
-            end
-        end
 
         # Checking rays
         counterclockwise(a, b) = dot(cross(a, b), zray)
@@ -89,7 +82,7 @@ function fulldecompose(poly::Polyhedron{3, T}) where T
 
         # Checking vertices
         face_vert = []
-        for x in ps
+        for x in allpoints(poly)
             if _isapprox(dot(x, zray), h.β)
                 push!(face_vert, x)
             end
@@ -147,27 +140,32 @@ function fulldecompose(poly::Polyhedron{3, T}) where T
                 b = pop!(hull)
                 while !isempty(hull)
                     c = pop!(hull)
-                    push!(triangles, ((a,b,c), hidx))
+                    push!(triangles, ((a,b,c), zray))
                     b = c
                 end
             end
         end
     end
 
-    for hidx in eachindex(hyperplanes(hr))
-        decomposeplane(hidx)
+    for h in hyperplanes(poly)
+        decomposeplane(h)
     end
-    for hidx in eachindex(halfspaces(hr))
-        decomposeplane(hidx)
+    # If there is already a triangle, his normal is an hyperplane and it is the only face
+    if isempty(triangles)
+        for h in halfspaces(poly)
+            if !_isdup(h.a, triangles)
+                decomposeplane(h)
+            end
+        end
     end
 
     ntri = length(triangles)
-    pts  = Vector{GeometryTypes.Point{3,RT}}(3*ntri)
+    pts  = Vector{GeometryTypes.Point{3,T}}(3ntri)
     faces   = Vector{GeometryTypes.Face{3,Int}}(ntri)
-    ns = Vector{GeometryTypes.Normal{3,RT}}(3*ntri)
+    ns = Vector{GeometryTypes.Normal{3,T}}(3ntri)
     for i in 1:ntri
         tri = pop!(triangles)
-        normal = get(hr, tri[2]).a
+        normal = tri[2]
         for j = 1:3
             idx = 3*(i-1)+j
             #ns[idx] = -normal
@@ -191,6 +189,7 @@ function fulldecompose(poly::Polyhedron{3, T}) where T
     (pts, faces, ns)
 end
 
+fulldecompose(poly::Polyhedron{3, T}) where T = fulldecompose(poly, typeof(one(T)/2))
 
 GeometryTypes.isdecomposable{T<:Point, S<:Polyhedron}(::Type{T}, ::Type{S}) = true
 GeometryTypes.isdecomposable{T<:Face, S<:Polyhedron}(::Type{T}, ::Type{S}) = true
