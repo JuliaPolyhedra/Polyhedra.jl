@@ -102,14 +102,10 @@ end
 # If p is an H-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 # TODO nlines should be the number of non-redundant lines so something similar to dim
 function isredundant(p::HRep{N,T}, v::Union{AbstractPoint, Line, Ray}; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) where {N,T}
-    count = nhyperplanes(p) # v is in every hyperplane otherwise it would not be valid
-    for h in halfspaces(p)
-        if v in hyperplane(h)
-            count += 1
-        end
-    end
+    # v is in every hyperplane otherwise it would not be valid
+    hcount = nhyperplanes(p) + count(h -> v in hyperplane(h), halfspaces(p))
     strong = (isray(v) ? N-1 : N) - nl
-    count < (strongly ? strong : min(strong, 1))
+    hcount < (strongly ? strong : min(strong, 1))
 end
 # A line is never redundant but it can be a duplicate
 isredundant(p::HRep{N,T}, v::Line; strongly = true, nl::Int=nlines(p), solver = JuMP.UnsetSolver) where {N,T} = false
@@ -118,19 +114,10 @@ isredundant(p::HRep{N,T}, v::Line; strongly = true, nl::Int=nlines(p), solver = 
 # If p is a V-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 function isredundant(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) where {N,T}
     checkvconsistency(p)
-    pcount = 0
     hp = hyperplane(h)
-    for v in allpoints(p)
-        if v in hp
-            pcount += 1
-        end
-    end
-    rcount = nlines(p) # every line is in h, otherwise it would not be valid
-    for v in rays(p)
-        if v in hp
-            rcount += 1
-        end
-    end
+    pcount = count(p -> p in hp, allpoints(p))
+    # every line is in h, otherwise it would not be valid
+    rcount = nlines(p) + count(r -> r in hp, rays(p))
     pcount < min(d, 1) || (strongly && pcount + rcount < d)
 end
 # An hyperplane is never redundant but it can be a duplicate
