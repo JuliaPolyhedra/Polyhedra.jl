@@ -7,6 +7,9 @@ default_type(::FullDim{1}, ::Type{T}) where T = Interval{T, SVector{1, T}}
 
 default_library(::FullDim, ::Type{T}) where T = SimplePolyhedraLibrary{T}()
 default_library(::FullDim{1}, ::Type{T}) where T = IntervalLibrary{T}()
+# See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/35
+default_library(::FullDim, ::Type{AbstractFloat}) = IntervalLibrary{Float64}()
+default_library(::FullDim{1}, ::Type{AbstractFloat}) = IntervalLibrary{Float64}()
 
 """
     similar_library(lib::PolyhedraLibrary, d::FullDim{N}, ::Type{T}) where {N, T}
