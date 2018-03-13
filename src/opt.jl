@@ -22,7 +22,7 @@ end
 function MathProgBase.linprog(c::AbstractVector, p::Rep{N}, solver::MathProgBase.AbstractMathProgSolver = defaultLPsolverfor(p)) where N
     m = PolyhedraModel(solver)
     if N != length(c)
-        println("length of objective does not match dimension of polyhedron")
+        throw(DimensionMismatch("length of objective does not match dimension of polyhedron"))
     end
     loadproblem!(m, p, c, :Min)
     optimize!(m)

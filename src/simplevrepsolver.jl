@@ -6,14 +6,14 @@ end
 mutable struct SimpleVRepPolyhedraModel <: AbstractPolyhedraModel
     vrep::Nullable{VRep}
     obj::Nullable{Vector}
-    sense::Nullable{Symbol}
+    sense::Symbol
 
     objval::Nullable
     solution::Nullable{Vector}
     status::Symbol
 
     function SimpleVRepPolyhedraModel()
-        new(nothing, nothing, nothing, nothing, nothing, :Undecided)
+        new(nothing, nothing, :Feas, nothing, nothing, :Undecided)
     end
 end
 
@@ -25,7 +25,9 @@ function loadproblem!(lpm::SimpleVRepPolyhedraModel, vrep::VRep, obj, sense)
         error("sense should be :Max or :Min")
     end
     lpm.vrep = vrep
-    if !isapproxzero(obj)
+    if isapproxzero(obj)
+        lpm.sense = :Feas
+    else
         lpm.obj = copy(obj)
         lpm.sense = sense
     end
@@ -38,25 +40,29 @@ function optimize!(lpm::SimpleVRepPolyhedraModel)
     prob = get(lpm.vrep)
     N = fulldim(prob)
     T = MultivariatePolynomials.coefficienttype(prob)
+    lpm.status = :Undecided
     if !hassympoints(prob) && !haspoints(prob) && !haslines(prob) && !hasrays(prob)
         lpm.status = :Infeasible
     else
         if lpm.sense in [:Max, :Min]
             better(a, b) = (lpm.sense == :Max ? a > b : a < b)
             _better(a, b) = (lpm.sense == :Max ? _gt(a, b) : _lt(a, b))
-            lpm.status = :Infeasible
+            bestobjval = zero(T)
             for r in allrays(prob)
-                objval = lpm.obj ⋅ r
-                if lpm.status != :Unbounded && _better(objval, zero(T))
-                    lpm.status = :Unbounded
-                    lpm.objval = lpm.sense == :Max ? typemax(T) : typemin(T)
-                    lpm.solution = r
+                objval = get(lpm.obj) ⋅ r
+                if _better(objval, bestobjval)
+                    bestobjval = objval
+                    lpm.solution = coord(r)
                 end
+            end
+            if _better(bestobjval, zero(T))
+                lpm.status = :Unbounded
+                lpm.objval = lpm.sense == :Max ? typemax(T) : typemin(T)
             end
             if status != :Unbounded
                 for p in allpoints(prob)
-                    objval = lpm.obj ⋅ p
-                    if lpm.status == :Undecided || (lpm.status == :Optimal && better(objval, get(lpm.objval)))
+                    objval = get(lpm.obj) ⋅ p
+                    if lpm.status == :Undecided || better(objval, get(lpm.objval))
                         lpm.status = :Optimal
                         lpm.objval = objval
                         lpm.solution = p

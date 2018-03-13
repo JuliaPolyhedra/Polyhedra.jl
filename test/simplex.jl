@@ -37,6 +37,16 @@ function simplextest(lib::PolyhedraLibrary)
         end
     end
 
+    @test_throws DimensionMismatch MathProgBase.linprog(ones(3), poly1)
+    sol = MathProgBase.linprog([-2, 0], poly1)
+    @test sol.status == :Optimal
+    @test sol.objval == -2
+    @test sol.sol == [1, 0]
+    sol = MathProgBase.linprog([-1, -3], poly1)
+    @test sol.status == :Optimal
+    @test sol.objval == -3
+    @test sol.sol == [0, 1]
+
     poly2 = polyhedron(vsim, lib)
     @test dim(poly2) == 1
     @test !isempty(poly2)
@@ -62,10 +72,19 @@ function simplextest(lib::PolyhedraLibrary)
     generator_fulltest(poly2, vtri)
 
     # nonnegative orthant cut by x_1 + x_2 = 1
-    extray = conichull(Ray([1, 0]), Ray([0, 1])) # TODO pass the test without "convexhull([0, 0]) + "
-    poly3 = polyhedron(extray, lib)
+    vray = conichull(Ray([1, 0]), Ray([0, 1]))
+    poly3 = polyhedron(vray, lib)
     @test_throws ErrorException chebyshevcenter(poly3)
     @test dim(poly3) == 2
+
+    sol = MathProgBase.linprog([1, 1], poly3)
+    @test sol.status == :Optimal
+    @test sol.objval == 0
+    @test sol.sol == [0, 0]
+    sol = MathProgBase.linprog([0, -1], poly3)
+    @test sol.status == :Unbounded
+    @test sol.attrs[:unboundedray] == [0, 1]
+
     hcut = intersect(HyperPlane([1, 1], 1))
     vcut = convexhull([1, 0]) + conichull(Line([1, -1]))
     @test !ininterior([1/2, 1/2], hcut)
