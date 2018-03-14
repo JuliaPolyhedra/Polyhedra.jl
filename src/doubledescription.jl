@@ -9,7 +9,6 @@ polytypefor{T}(::Type{T}) = T
 polyarraytype(a) = a
 # TODO sparse halfspaces does not mean sparse points
 polyarraytype(::Type{<:SparseVector{T}}) where T = Vector{T}
-polyarraytype(p::Rep) = polyarraytype(arraytype(p))
 
 dualtype(RepT::Type{<:Representation}) = dualtype(RepT, polyarraytype(arraytype(RepT)))
 function dualfullspace(rep::Representation, d::FullDim, ::Type{T}) where T
