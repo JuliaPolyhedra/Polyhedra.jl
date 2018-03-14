@@ -146,6 +146,8 @@ Base.isvalid(vrep::MixedMatVRep{N, T}, idx::VIndex{N, T}) where {N, T} = 0 < idx
 Base.done(idxs::VIndices{N, T, <:MixedMatVRep{N, T}}, idx::VIndex{N, T}) where {N, T} = idx.value > size(_mat(idxs.rep, idx), 1)
 Base.get(vrep::MixedMatVRep{N, T}, idx::VIndex{N, T}) where {N, T} = valuetype(idx)(_mat(vrep, idx)[idx.value, :])
 
+dualtype(::Type{MixedMatHRep{N, T}}) where {N, T} = MixedMatVRep{N, T}
+dualtype(::Type{MixedMatVRep{N, T}}) where {N, T} = MixedMatHRep{N, T}
 function dualfullspace(h::MixedMatHRep, ::FullDim{N}, ::Type{T}) where {N, T}
     MixedMatVRep{N, T}(zeros(T, 1, N), eye(T, N), IntSet(), IntSet(1:N))
 end
