@@ -5,6 +5,7 @@ struct InconsistentVRep{N, T, AT} <: VRepresentation{N, T}
         new{N, T, AT}(Polyhedra.PointsHull(sympoints, points), Polyhedra.RaysHull(lines, rays))
     end
 end
+Polyhedra.dualtype(::Type{InconsistentVRep{N,T,AT}}, ::Type{AT}) where {N, T, AT} = Polyhedra.Intersection{N, T, AT}
 Polyhedra.arraytype(::Union{InconsistentVRep{N, T, AT}, Type{InconsistentVRep{N, T, AT}}}) where {N, T, AT} = AT
 Polyhedra.similar_type(PT::Type{<:InconsistentVRep}, d::FullDim{N}, ::Type{T}) where {N, T} = InconsistentVRep{N, T, Polyhedra.similar_type(Polyhedra.arraytype(PT), d, T)}
 Polyhedra.fulltype(::Type{InconsistentVRep{N, T, AT}}) where {N, T, AT} = InconsistentVRep{N, T, AT}

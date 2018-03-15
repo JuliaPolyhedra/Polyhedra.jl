@@ -214,6 +214,8 @@ similar_type(PT::Type{<:Hull}, d::FullDim{N}, ::Type{T}) where {N, T} = Hull{N, 
 
 fulltype(::Type{<:Union{Hull{N, T, AT}, SymPointsHull{N, T, AT}, PointsHull{N, T, AT}, LinesHull{N, T, AT}, RaysHull{N, T, AT}}}) where {N, T, AT} = Hull{N, T, AT}
 
+dualtype(::Type{<:Intersection{N, T}}, ::Type{AT}) where {N, T, AT} = Hull{N, T, AT}
+dualtype(::Type{<:Hull{N, T}}, ::Type{AT}) where {N, T, AT} = Intersection{N, T, AT}
 function dualfullspace(h::Union{Intersection, Type{<:Intersection}}, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT}
     Hull{N, T, AT}(SymPoint{N, T, AT}[],
                    [origin(AT, d)],

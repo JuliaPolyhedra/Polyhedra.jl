@@ -204,5 +204,5 @@ function getaβ(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T}
 end
 Base.get(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(idx)(getaβ(lp, idx)...)
 
+dualtype(::Type{<:LPHRepresentation{N, T}}, ::Type{AT}) where {N, T, AT} = dualtype(Intersection{N, T, AT}, AT)
 dualfullspace(h::LPHRepresentation, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT} = dualfullspace(Intersection{N, T, AT}, d, T, AT)
-dualfullspace(h::LPHRepresentation, d::FullDim, ::Type{T}) where T = dualfullspace(h, d, T, Vector{T})

@@ -35,10 +35,14 @@ end
 # Need fulltype in case the use does `intersect!` with another element
 SimplePolyhedron{N, T}(rep::Representation{N}) where {N, T} = SimplePolyhedron{N, T}(MultivariatePolynomials.changecoefficienttype(rep, T))
 function SimplePolyhedron{N, T}(rep::HRepresentation{N, T}) where {N, T}
-    SimplePolyhedron{N, T, fulltype(typeof(rep)), Hull{N, T, polyarraytype(rep)}}(rep)
+    HRepT = fulltype(typeof(rep))
+    VRepT = dualtype(HRepT)
+    SimplePolyhedron{N, T, HRepT, VRepT}(rep)
 end
 function SimplePolyhedron{N, T}(rep::VRepresentation{N, T}) where {N, T}
-    SimplePolyhedron{N, T, Intersection{N, T, polyarraytype(rep)}, fulltype(typeof(rep))}(rep)
+    VRepT = fulltype(typeof(rep))
+    HRepT = dualtype(VRepT)
+    SimplePolyhedron{N, T, HRepT, VRepT}(rep)
 end
 
 function polyhedron(rep::Representation{N}, ::SimplePolyhedraLibrary{T}) where {N, T}
