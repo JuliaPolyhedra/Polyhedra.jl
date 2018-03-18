@@ -25,3 +25,14 @@ end
     @test_throws ErrorException loadpolyhedron!(p, "a", "ine")
     @test_throws ErrorException loadpolyhedron!(p, "a", "ext")
 end
+
+@testset "SimplePolyhedron constructor with nothing" begin
+    vr = convexhull([-1, 0], [0, -1]) + conichull(Ray([1, 1]), Ray([-1, 1]))
+    hr = HalfSpace([-1, -1], 1) ∩ HalfSpace([1, -1], 1)
+    p = SimplePolyhedron{2, Int, typeof(hr), typeof(vr)}(hr, nothing)
+    @test hrep(p) === hr
+    @test !vrepiscomputed(p)
+    p = SimplePolyhedron{2, Int, typeof(hr), typeof(vr)}(nothing, vr)
+    @test !hrepiscomputed(p)
+    @test vrep(p) === vr
+end
