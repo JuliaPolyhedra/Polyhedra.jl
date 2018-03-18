@@ -8,12 +8,15 @@ similar_library(lib::SimplePolyhedraLibrary, d::FullDim, ::Type{T}) where T = de
 mutable struct SimplePolyhedron{N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}} <: Polyhedron{N, T}
     hrep::Nullable{HRepT}
     vrep::Nullable{VRepT}
-    function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::HRepT) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
-        new{N, T, HRepT, VRepT}(hrep, nothing)
+    function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::Union{HRepT, Void}, vrep::Union{VRepT, Void}) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
+        new{N, T, HRepT, VRepT}(hrep, vrep)
     end
-    function SimplePolyhedron{N, T, HRepT, VRepT}(vrep::VRepT) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
-        new{N, T, HRepT, VRepT}(nothing, vrep)
-    end
+end
+function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::HRepT) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
+    SimplePolyhedron{N, T, HRepT, VRepT}(hrep, nothing)
+end
+function SimplePolyhedron{N, T, HRepT, VRepT}(vrep::VRepT) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
+    SimplePolyhedron{N, T, HRepT, VRepT}(nothing, vrep)
 end
 
 library(::Union{SimplePolyhedron{N, T}, Type{<:SimplePolyhedron{N, T}}}) where {N, T} = SimplePolyhedraLibrary{T}()
