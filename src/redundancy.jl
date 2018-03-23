@@ -217,7 +217,7 @@ end
 #        push!(lines, l)
 #    end
 #end
-function vrupdatedup!(aff::VAffineSpace, rays::Vector{<:Ray}, r)
+function vrupdatedup!(aff::VLinearSpace, rays::Vector{<:Ray}, r)
     r = remproj(r, aff)
     if !isapproxzero(r) && !any(ray -> remproj(ray, aff) ≈ r, rays)
         l = line(r)
@@ -239,7 +239,7 @@ function vrupdatedup!(aff::VAffineSpace, rays::Vector{<:Ray}, r)
         false
     end
 end
-function premovedups(vrep::VRepresentation, aff::VAffineSpace)
+function premovedups(vrep::VRepresentation, aff::VLinearSpace)
     ps = pointtype(vrep)[]
     sps = sympointtype(vrep)[]
     for p in sympoints(vrep)

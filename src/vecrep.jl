@@ -48,10 +48,10 @@ hrep([HalfSpace([1, 1], 1), HalfSpace([1, -1], 0), HalfSpace([-1, 0], 0)])
 hrep(halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT} = hrep(HyperPlane{N, T, AT}[], halfspaces)
 
 mutable struct Intersection{N, T, AT} <: HRepresentation{N, T}
-    hyperplanes::HAffineSpace{N, T, AT}
+    hyperplanes::HyperPlaneIntersection{N, T, AT}
     halfspaces::Vector{HalfSpace{N, T, AT}}
     function Intersection{N, T, AT}(hyperplanes::ElemIt{HyperPlane{N, T, AT}}, halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT}
-        new{N, T, AT}(HAffineSpace(hyperplanes), lazy_collect(halfspaces))
+        new{N, T, AT}(HyperPlaneIntersection(hyperplanes), lazy_collect(halfspaces))
     end
 end
 Intersection(hyperplanes::ElemIt{HyperPlane{N, T, AT}}, halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT} = Intersection{N, T, AT}(hyperplanes, halfspaces)
@@ -61,7 +61,7 @@ similar_type(PT::Type{<:Intersection}, d::FullDim{N}, ::Type{T}) where {N, T} = 
 @subrepelem Intersection HyperPlane hyperplanes
 @vecrepelem Intersection HalfSpace halfspaces
 
-fulltype(::Type{<:Union{Intersection{N, T, AT}, HAffineSpace{N, T, AT}}}) where {N, T, AT} = Intersection{N, T, AT}
+fulltype(::Type{<:Union{Intersection{N, T, AT}, HyperPlaneIntersection{N, T, AT}}}) where {N, T, AT} = Intersection{N, T, AT}
 
 # V-representation
 
@@ -78,7 +78,7 @@ vrep([SymPoint([1, 1])], [SymPoint([1, -1])])
 """
 vrep(sympoints::SymPointIt) = SymPointsHull(sympoints)
 
-mutable struct SymPointsHull{N, T, AT} <: VSymPolytope{N, T, AT}
+mutable struct SymPointsHull{N, T, AT} <: VSymPolytope{N, T}
     sympoints::Vector{SymPoint{N, T, AT}}
 end
 SymPointsHull(ps::ElemIt{SymPoint{N, T, AT}}) where {N, T, AT<:AbstractPoint{N, T}} = SymPointsHull{N, T, AT}(collect(ps))
@@ -128,7 +128,7 @@ function sympointtype(points::PointIt)
     SymPoint{length(first(points)), coefficienttype(eltype(points)), eltype(points)}
 end
 
-mutable struct PointsHull{N, T, AT} <: VPolytope{N, T, AT}
+mutable struct PointsHull{N, T, AT} <: VPolytope{N, T}
     sympoints::SymPointsHull{N, T, AT}
     points::Vector{AT}
     function PointsHull{N, T, AT}(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}) where {N, T, AT}
@@ -170,7 +170,7 @@ creates a V-representation for positive orthant.
 """
 vrep(rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT} = vrep(Line{N, T, AT}[], rays)
 
-mutable struct RaysHull{N, T, AT} <: VCone{N, T, AT}
+mutable struct RaysHull{N, T, AT} <: VCone{N, T}
     lines::LinesHull{N, T, AT}
     rays::Vector{Ray{N, T, AT}}
     function RaysHull{N, T, AT}(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
@@ -216,7 +216,8 @@ fulltype(::Type{<:Union{Hull{N, T, AT}, SymPointsHull{N, T, AT}, PointsHull{N, T
 
 dualtype(::Type{<:Intersection{N, T}}, ::Type{AT}) where {N, T, AT} = Hull{N, T, AT}
 dualtype(::Type{<:Hull{N, T}}, ::Type{AT}) where {N, T, AT} = Intersection{N, T, AT}
-function dualfullspace(h::Union{Intersection, Type{<:Intersection}}, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT}
+const AnyIntersection{N, T, AT} = Union{Intersection{N, T, AT}, HyperPlaneIntersection{N, T, AT}}
+function dualfullspace(h::Union{AnyIntersection, Type{<:AnyIntersection}}, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT}
     Hull{N, T, AT}(SymPoint{N, T, AT}[],
                    [origin(AT, d)],
                    Line{N, T, AT}.(basis.(AT, d, 1:N)),

@@ -258,5 +258,12 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
     end
     psout = _intres(h, pins, pinp)
     rsout = _intres(h, rins, rinp)
+    if isempty(psout)
+        # Empty polyhedron, there may be rays left,
+        # Example 1: for 0x_1 + x_2 = -1 ∩ 0x_1 + x_2 = 1, the line (0, 1) is detected as correct
+        # Example 2: for 0x_1 + 0x_2 = 1, the lines (1, 0) and (0, 1) are detected as correct
+        # but since there is no point, the polyhedron is empty and we should drop all rays/lines
+        empty!(rsout)
+    end
     typeof(v)(SymPoint{N, T, eltype(psout)}[], psout, linetype(eltype(rsout))[], rsout)
 end
