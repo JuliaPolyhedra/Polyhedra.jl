@@ -80,25 +80,28 @@ macro norepelem(rep, elem)
     end
 end
 
-abstract type VPolytope{N, T, AT} <: VRepresentation{N, T} end
+abstract type HAffineSpace{N, T} <: HRepresentation{N, T} end
+@norepelem HAffineSpace HalfSpace
+
+abstract type VPolytope{N, T} <: VRepresentation{N, T} end
 @norepelem VPolytope Line
 @norepelem VPolytope Ray
 
-abstract type VSymPolytope{N, T, AT} <: VPolytope{N, T, AT} end
+abstract type VSymPolytope{N, T} <: VPolytope{N, T} end
 @norepelem VSymPolytope Point
 
-abstract type VCone{N, T, AT} <: VRepresentation{N, T} end
+abstract type VCone{N, T} <: VRepresentation{N, T} end
 @norepelem VCone SymPoint
 # See issue #28
 Base.length(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = hasallrays(idxs.rep) ? 1 : 0
 Base.isempty(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = !hasallrays(idxs.rep)
 Base.start(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = eltype(idxs)(hasallrays(idxs.rep) ? 1 : 2)
-Base.done(idxs::PointIndices{N, T, <:VCone{N, T}}, idx::PointIndex{N, T}) where {N, T} = idx.value > 1
-Base.get(L::VCone{N, T, AT}, idx::PointIndex{N, T}) where {N, T, AT} = origin(AT, FullDim{N}())
-nextindex(L::VCone{N, T}, idx::PointIndex{N, T}) where {N, T} = typeof(idx)(idx.value + 1)
+Base.done(::PointIndices{N, T, <:VCone{N, T}}, idx::PointIndex{N, T}) where {N, T} = idx.value > 1
+Base.get(L::VCone{N, T}, ::PointIndex{N, T}) where {N, T} = origin(arraytype(L), FullDim{N}())
+nextindex(::VCone{N, T}, idx::PointIndex{N, T}) where {N, T} = typeof(idx)(idx.value + 1)
 
-abstract type VAffineSpace{N, T, AT} <: VCone{N, T, AT} end
-@norepelem VAffineSpace Ray
+abstract type VLinearSpace{N, T} <: VCone{N, T} end
+@norepelem VLinearSpace Ray
 
 """
 The representation `rep` contain the elements `elem` inside a vector in the field `field`.

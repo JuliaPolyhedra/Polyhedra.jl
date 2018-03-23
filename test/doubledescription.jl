@@ -73,6 +73,56 @@
                 @test isempty(v.Rlinset)
             end
         end
+        @testset "Empty Intersection" begin
+            @testset "0x_1 + 0x_2 = 1" begin
+                @testset "Exact" begin
+                    h = intersect(HyperPlane([0, 0], 1))
+                    v = @inferred doubledescription(h)
+                    @test v isa Polyhedra.Hull{2,Rational{BigInt},Vector{Rational{BigInt}}}
+                    @test !haspoints(v)
+                    @test !hasallrays(v)
+                end
+                @testset "Numerical" begin
+                    h = intersect(HyperPlane([0., 0], 1))
+                    v = @inferred doubledescription(h)
+                    @test v isa Polyhedra.Hull{2,Float64,Vector{Float64}}
+                    @test !haspoints(v)
+                    @test !hasallrays(v)
+                end
+            end
+            @testset "-1 = 0x_1 + x_2 = 1" begin
+                @testset "Exact" begin
+                    h = HyperPlane([0, 1], 1) ∩ HyperPlane([0, 1], -1)
+                    v = @inferred doubledescription(h)
+                    @test v isa Polyhedra.Hull{2,Rational{BigInt},Vector{Rational{BigInt}}}
+                    @test !haspoints(v)
+                    @test !hasallrays(v)
+                end
+                @testset "Numerical" begin
+                    h = HyperPlane([0, 1.], 1) ∩ HyperPlane([0, 1.], -1)
+                    v = @inferred doubledescription(h)
+                    @test v isa Polyhedra.Hull{2,Float64,Vector{Float64}}
+                    @test !haspoints(v)
+                    @test !hasallrays(v)
+                end
+            end
+            @testset "1 ≤ x_1 + 0x_2 ≤ -1" begin
+                @testset "Exact" begin
+                    h = HalfSpace([1, 0], -1) ∩ HalfSpace([-1, 0], -1)
+                    v = @inferred doubledescription(h)
+                    @test v isa Polyhedra.Hull{2,Rational{BigInt},Vector{Rational{BigInt}}}
+                    @test !haspoints(v)
+                    @test !hasallrays(v)
+                end
+                @testset "Numerical" begin
+                    h = HalfSpace([1, 0.], -1) ∩ HalfSpace([-1, 0.], -1)
+                    v = @inferred doubledescription(h)
+                    @test v isa Polyhedra.Hull{2,Float64,Vector{Float64}}
+                    @test !haspoints(v)
+                    @test !hasallrays(v)
+                end
+            end
+        end
     end
     @testset "V-representation -> H-representation" begin
         @testset "Hull" begin
