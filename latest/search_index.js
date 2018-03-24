@@ -253,7 +253,31 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "V-representation",
     "category": "section",
-    "text": "The fundamental elements of an V-representation are the points and raysAbstractPoint\nRayA V-representation can be created as the minkowski sum between a convex hull of points and a conic hull of rays. For instance, the positive orthant without the simplex defined in the H-representation section can be created as follows:convexhull([1, 0], [0, 1]) + conichull(Ray([1, 0]), Ray([0, 1]))The V-representation represents the polyhedron as a minkowski sum of a polytope and a polyhedral cone. The polytope is represented using a P-representation : a convex hull of points. The polyhedral cone is represented using an R-representation : a conic hull of rays.Even if rays are enough to describe any polyhedral cone, it is sometimes important to represent the fact that the polyhedron contains an affine subspace. For instance, the polyhedron created withconvexhull([1, 0], [0, 1]) + conichull(Ray([1, 1]), Ray([-1, -1]))contains the line [1, 1].The fundamental element of an affine subspace is the lineLineAn affine subspace can be created as the conic hull/minkownski sum of several lines. For instanceconichull(Line([1, 0]), Line([0, 1]))represents the full space.Likewise, a P-representation can contain symmetric pointsSymPointIn addition to being created incrementally with convex hull and minkowsky addition, a V-representation can also be created using the vrep functionvrep"
+    "text": "The fundamental elements of an V-representation are the points and raysAbstractPoint\nRayA V-representation can be created as the minkowski sum between a convex hull of points and a conic hull of rays. For instance, the positive orthant without the simplex defined in the H-representation section can be created as follows:convexhull([1, 0], [0, 1]) + conichull(Ray([1, 0]), Ray([0, 1]))The V-representation represents the polyhedron as a minkowski sum of a polytope and a polyhedral cone. The polytope is represented using a P-representation : a convex hull of points. The polyhedral cone is represented using an R-representation : a conic hull of rays.Even if rays are enough to describe any polyhedral cone, it is sometimes important to represent the fact that the polyhedron contains an affine subspace. For instance, the polyhedron created withconvexhull([1, 0], [0, 1]) + conichull(Ray([1, 1]), Ray([-1, -1]))contains the line [1, 1].The fundamental element of an affine subspace is the lineLineAn affine subspace can be created as the conic hull/minkownski sum of several lines. For instanceconichull(Line([1, 0]), Line([0, 1]))represents the full space.In addition to being created incrementally with convex hull and minkowsky addition, a V-representation can also be created using the vrep functionvrep"
+},
+
+{
+    "location": "representation.html#Polyhedra.points",
+    "page": "Representation",
+    "title": "Polyhedra.points",
+    "category": "function",
+    "text": "points(vrep::VRep)\n\nReturns an iterator over the points of the V-representation vrep.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.npoints",
+    "page": "Representation",
+    "title": "Polyhedra.npoints",
+    "category": "function",
+    "text": "npoints(vrep::VRep)\n\nReturns the number of points of the V-representation vrep.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.haspoints",
+    "page": "Representation",
+    "title": "Polyhedra.haspoints",
+    "category": "function",
+    "text": "haspoints(vrep::VRep)\n\nReturns whether the V-representation vrep has any point.\n\n\n\n"
 },
 
 {
@@ -333,7 +357,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Interface",
     "category": "section",
-    "text": "A P-representation is represented as a convex hull of symmetric points and points. The points can be obtained with points and the symmetric points with sympoints. As a symmetric point p is the convex hull of of the two points p and -p, even if the P-representation contains symmetric points, a list of points whose convex hull is the polytope can be obtained with allpoints, which has npoints(P) + 2nsympoints(P) elements for a P-representation P since each symmetric point is split in two points.points\nnpoints\nhaspoints\nsympoints\nnsympoints\nhassympoints\nallpoints\nnallpoints\nhasallpointsAn R-representation is represented as a conic hull of lines and rays. The rays can be obtained with rays and the lines with lines. As a line r is the conic hull of of the two rays r and -r, even if the R-representation contains lines, a list of rays whose conic hull is the polyhedral cone can be obtained with allrays, which has nrays(R) + 2nlines(R) elements for an R-representation R since each line is split in two rays.rays\nnrays\nhasrays\nlines\nnlines\nhaslines\nallrays\nnallrays\nhasallrays"
+    "text": "A P-representation is represented as a convex hull points. The points can be obtained with points.points\nnpoints\nhaspointsAn R-representation is represented as a conic hull of lines and rays. The rays can be obtained with rays and the lines with lines. As a line r is the conic hull of of the two rays r and -r, even if the R-representation contains lines, a list of rays whose conic hull is the polyhedral cone can be obtained with allrays, which has nrays(R) + 2nlines(R) elements for an R-representation R since each line is split in two rays.rays\nnrays\nhasrays\nlines\nnlines\nhaslines\nallrays\nnallrays\nhasallrays"
 },
 
 {
@@ -477,7 +501,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Incidence",
     "category": "section",
-    "text": "A point p (ray r) is incident to an halfspace langle a x rangle le beta if langle a p rangle = beta (resp. langle a r rangle = beta).incidenthalfspaces\nincidenthalfspaceindices\nincidentpoints\nincidentpointindices\nincidentrays\nincidentrayindicesIn a polyhedron, all points and rays are incident to all hyperplanes and all halfspaces are incident to all lines. The following methods are therefore redundant, e.g. incidenthyperplanes(p, idx) is equivalent to hyperplanes(p) and incidenthyperplaneindices(p, idx) is equivalent to eachindex(hyperplanes(p)). The methods are hence only defined for consistency.incidenthyperplanes\nincidenthyperplaneindices\nincidentlines\nincidentlineindicesA symmetric point is only incident to an pair of symmetric halfspaces or to a homogeneous halfspace. However, one of the two points of the symmetric point can be incident to an hyperplane. Therefore, collecting when collecting incident points and symmetric points of an halfspace, some points may be missed. This will be fixed in the next release with the introduction of symmetric halfspaces and homogeneous halfspaces. Symmetric points and halfspaces will only be allowed in symmetric polyhedron, the latter will not contain any non-symmetric points and halfspaces.incidentsympoints\nincidentsympointindices"
+    "text": "A point p (ray r) is incident to an halfspace langle a x rangle le beta if langle a p rangle = beta (resp. langle a r rangle = beta).incidenthalfspaces\nincidenthalfspaceindices\nincidentpoints\nincidentpointindices\nincidentrays\nincidentrayindicesIn a polyhedron, all points and rays are incident to all hyperplanes and all halfspaces are incident to all lines. The following methods are therefore redundant, e.g. incidenthyperplanes(p, idx) is equivalent to hyperplanes(p) and incidenthyperplaneindices(p, idx) is equivalent to eachindex(hyperplanes(p)). The methods are hence only defined for consistency.incidenthyperplanes\nincidenthyperplaneindices\nincidentlines\nincidentlineindices"
 },
 
 {
