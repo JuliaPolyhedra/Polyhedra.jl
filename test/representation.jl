@@ -344,4 +344,49 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             inequality_fulltest(vmh, vh)
         end
     end
+    @testset "Copy test" begin
+        @testset "V-representation" begin
+            vr = convexhull(@SVector [0, 1])
+            vc = copy(vr)
+            @test vc !== vr
+            @test vc.points !== vr.points
+            generator_fulltest(vc, vr)
+            vr = conichull(Line(@SVector [1, 1]), Line(@SVector [1, 0]))
+            vc = copy(vr)
+            @test vc !== vr
+            @test vc.lines !== vr.lines
+            generator_fulltest(vc, vr)
+            vr = conichull(Line(@SVector [1, 1]), Ray(@SVector [1, 1]), Line(@SVector [1, 0]))
+            vc = copy(vr)
+            @test vc !== vr
+            @test vc.rays !== vr.rays
+            @test vc.lines !== vr.lines
+            @test vc.lines.lines !== vr.lines.lines
+            generator_fulltest(vc, vr)
+            vr = convexhull(@SVector [0, 1]) + conichull(Line(@SVector [1, 1]), Ray(@SVector [1, 1]), Line(@SVector [1, 0]))
+            vc = copy(vr)
+            @test vc !== vr
+            @test vc.points !== vr.points
+            @test vc.points.points !== vr.points.points
+            @test vc.rays !== vr.rays
+            @test vc.rays.lines !== vr.rays.lines
+            @test vc.rays.lines.lines !== vr.rays.lines.lines
+            @test vc.rays.rays !== vr.rays.rays
+            generator_fulltest(vc, vr)
+        end
+        @testset "H-representation" begin
+            hr = HyperPlane([1, 0], 1) ∩ HyperPlane([0, 1], -1)
+            hc = copy(hr)
+            @test hc !== hr
+            @test hc.hyperplanes !== hr.hyperplanes
+            inequality_fulltest(hc, hr)
+            hr = HyperPlane([1, 0], 1) ∩ HalfSpace([0, 1], -1)
+            hc = copy(hr)
+            @test hc !== hr
+            @test hc.hyperplanes !== hr.hyperplanes
+            @test hc.hyperplanes.hyperplanes !== hr.hyperplanes.hyperplanes
+            @test hc.halfspaces !== hr.halfspaces
+            inequality_fulltest(hc, hr)
+        end
+    end
 end

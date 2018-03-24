@@ -47,6 +47,9 @@ Base.convert(::Type{RepTout}, p::HRep) where {RepTout<:HRepresentation} = hconve
 # avoid ambiguity
 Base.convert(::Type{RepTout}, p::HRepresentation) where {RepTout<:HRepresentation} = hconvert(RepTout, p)
 
+Base.copy(rep::HRepresentation) = typeof(rep)(hreps(rep)...)
+Base.copy(rep::VRepresentation) = typeof(rep)(vreps(rep)...)
+
 function Polyhedron{N, S}(p::Polyhedron{N, T}) where {N, S, T}
     RepTout = similar_type(typeof(p), S)
     if !hrepiscomputed(p) && vrepiscomputed(p)

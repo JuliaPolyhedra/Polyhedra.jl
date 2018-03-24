@@ -65,11 +65,21 @@ Same as [`convexhull`](@ref) except that `p1` is modified to be equal to the con
 """
 convexhull!(p::VRep{N}, ine::VRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
 
+
+function conichull(p1::VCone{N, T1}, p2::VCone{N, T2}) where {N, T1, T2}
+    Tout = promote_type(T1, T2)
+    # Always type of first arg
+    RepTout = similar_type(typeof(p1), Tout)
+    RepTout(rmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)::RepTout
+end
+conichull(p::VCone, el::Union{Line, Ray}) = conichull(p, conichull(el))
+
 conichull(ls::Line...) = vrep([ls...])
 conichull(rs::AbstractPoint...) = vrep([Ray.(rs)...])
 conichull(rs::Ray...) = vrep([rs...])
 conichull(l::Line, r::Ray) = vrep([l], [r])
 conichull(r::Ray, l::Line) = conichull(l, r)
+conichull(r1::Union{VCone{N}, Line{N}, Ray{N}}, r2::Union{VCone{N}, Line{N}, Ray{N}}, rs::Union{VCone{N}, Line{N}, Ray{N}}...) where N = conichull(conichull(r1, r2), rs...)
 
 function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {N, T}
     _tout(p) = similar_type(typeof(p), T)(p)

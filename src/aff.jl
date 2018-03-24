@@ -53,7 +53,7 @@ hrep(hyperplanes::HyperPlaneIt) = HyperPlaneIntersection(hyperplanes)
 # Note that λ is not rhyperplaneuired to be between 0 and 1 as in convex sets.
 struct HyperPlaneIntersection{N, T, AT} <: HAffineSpace{N, T}
     # HyperPlanes whose intersection is the affine space
-    hps::Vector{HyperPlane{N, T, AT}}
+    hyperplanes::Vector{HyperPlane{N, T, AT}}
     function HyperPlaneIntersection{N, T, AT}(hps::HyperPlaneIt{N, T}) where {N, T, AT}
         new{N, T, AT}(lazy_collect(hps))
     end
@@ -63,14 +63,14 @@ arraytype(L::HyperPlaneIntersection{N, T, AT}) where {N, T, AT} = AT
 HyperPlaneIntersection{N, T, AT}() where {N, T, AT} = HyperPlaneIntersection{N, T, AT}(HyperPlane{N, T, AT}[])
 HyperPlaneIntersection(it::ElemIt{HyperPlane{N, T, AT}}) where {N, T, AT} = HyperPlaneIntersection{N, T, AT}(it)
 
-Base.intersect!(L::HyperPlaneIntersection{N}, h::HyperPlane{N}) where N = push!(L.hps, h)
+Base.intersect!(L::HyperPlaneIntersection{N}, h::HyperPlane{N}) where N = push!(L.hyperplanes, h)
 
-@vecrepelem HyperPlaneIntersection HyperPlane hps
-#Base.length(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}) where {N, T, ElemT} = length(idxs.rep.hps)
-#Base.isempty(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}) where {N, T, ElemT} = isempty(idxs.rep.hps)
+@vecrepelem HyperPlaneIntersection HyperPlane hyperplanes
+#Base.length(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}) where {N, T, ElemT} = length(idxs.rep.hyperplanes)
+#Base.isempty(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}) where {N, T, ElemT} = isempty(idxs.rep.hyperplanes)
 #Base.start(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}) where {N, T, ElemT} = HyperPlaneIndex{N, T}(1)
 #Base.done(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}, idx::HyperPlaneIndex{N, T}) where {N, T} = idx.value > length(idxs)
-#Base.get(L::HyperPlaneIntersection{N, T}, idx::HyperPlaneIndex{N, T}) where {N, T} = L.hps[idx.value]
+#Base.get(L::HyperPlaneIntersection{N, T}, idx::HyperPlaneIndex{N, T}) where {N, T} = L.hyperplanes[idx.value]
 #nextindex(L::HyperPlaneIntersection{N, T}, idx::HyperPlaneIndex{N, T}) where {N, T} = HyperPlaneIndex{N, T}(idx.value+1)
 
 # Returns an HyperPlaneIntersection representing the affine hull of p.

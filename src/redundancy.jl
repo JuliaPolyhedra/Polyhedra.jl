@@ -317,5 +317,5 @@ function removeduplicates(hrep::HRepresentation{N, T}) where {N, T}
             newlin |= hupdatedup!(aff, hs, h)
         end
     end
-    typeof(hrep)(aff.hps, hs)
+    typeof(hrep)(aff.hyperplanes, hs)
 end

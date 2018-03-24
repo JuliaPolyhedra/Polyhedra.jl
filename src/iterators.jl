@@ -286,6 +286,7 @@ function fillvits(lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}=Ray
     sps, ps, lines, rays
 end
 
+hreps(p::HAffineSpace{N, T}...) where {N, T} = tuple(hyperplanes(p...))
 function hreps(p::HRep{N, T}...) where {N, T}
     hyperplanes(p...), halfspaces(p...)
 end
@@ -308,13 +309,16 @@ preps(p::VSymPolytope...) = tuple(sympoints(p...))
 preps(p::VRep...) = sympoints(p...), points(p...)
 rreps(p::VPolytope...) = tuple()
 rreps(p::VRep...) = lines(p...), rays(p...)
+rreps(p::VLinearSpace...) = tuple(lines(p...))
 
-function vmap(f, d::FullDim, ::Type{T}, p::VPolytope...) where T
+function pmap(f, d::FullDim, ::Type{T}, p::VRep...) where T
     mapsympoints(f, d, T, p...), mappoints(f, d, T, p...)
 end
-function vmap(f, d::FullDim, ::Type{T}, p::VRep...) where T
-    mapsympoints(f, d, T, p...), mappoints(f, d, T, p...), maplines(f, d, T, p...), maprays(f, d, T, p...)
+function rmap(f, d::FullDim, ::Type{T}, p::VRep...) where T
+    maplines(f, d, T, p...), maprays(f, d, T, p...)
 end
+vmap(f, d::FullDim, ::Type{T}, p::VPolytope...) where T = pmap(f, d, T, p...)
+vmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = pmap(f, d, T, p...)..., rmap(f, d, T, p...)...
 
 function vconvert(::Type{RepTout}, p::VRep{N, T}) where {N, T, RepTout<:VRep{N, T}}
     RepTout(vreps(p)...)
