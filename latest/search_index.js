@@ -241,19 +241,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "representation.html#Polyhedra.SymPoint",
-    "page": "Representation",
-    "title": "Polyhedra.SymPoint",
-    "category": "type",
-    "text": "struct SymPoint{N, T, AT <: AbstractPoint{N, T}}\n    a::AT\nend\n\nThe convex hull of a and -a.\n\n\n\n"
-},
-
-{
     "location": "representation.html#Polyhedra.vrep",
     "page": "Representation",
     "title": "Polyhedra.vrep",
     "category": "function",
-    "text": "vrep(p::Polyhedron)\n\nReturns a V-representation for the polyhedron p.\n\n\n\nvrep(lines::LineIt)\n\nCreates an affine space from the list of lines lines.\n\nExamples\n\nvrep([Line([1, 0, 0]), Line([0, 1, 0])])\n\ncreates the 2-dimensional affine subspace containing all the points (x_1 x_2 0), i.e. the x_1x_2-plane.\n\n\n\nvrep(sympoints::SymPointIt)\n\nCreates a V-representation for the symmetric polytope equal to the convex hull of the symmetric points sympoints.\n\nExamples\n\nThe following creates a square\n\nvrep([SymPoint([1, 1])], [SymPoint([1, -1])])\n\n\n\nvrep(sympoints::SymPointIt, points::PointIt)\n\nCreates a V-representation for the polytope equal to the convex hull of the symmetric points sympoints and points points.\n\nExamples\n\nThe convex hull of (0 -1), (0 1) and (12 12) can be created as follows:\n\nvrep([SymPoint([0, 1])], [[1/2, 1/2]])\n\n\n\nvrep(points::PointIt)\n\nCreates a V-representation for the polytope equal to the convex hull of the points points.\n\nExamples\n\nThe convex hull of (0 0), (0 1) and (12 12) can be created as follows using exact arithmetic\n\nvrep([[0, 0], [0, 1], [1//2, 1//2]])\n\nor as follows using floating point arithmetic\n\nvrep([[0, 0], [0, 1], [1/2, 1/2]])\n\n\n\nvrep(lines::LineIt, rays::RayIt)\n\nCreates a V-representation for the polyhedral cone equal to the conic hull of the lines lines and rays rays.\n\nExamples\n\nvrep([Line([0, 1])], [Ray([1, 0])])\n\ncreates a V-representation for the halfspace x_1 ge 0.\n\n\n\nvrep(rays::RayIt)\n\nCreates a V-representation for the polyhedral cone equal to the conic hull of the rays rays.\n\nExamples\n\nvrep([Ray([1, 0]), Ray([0, 1])])\n\ncreates a V-representation for positive orthant.\n\n\n\nvrep(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt)\n\nCreates a V-representation for the polyhedron equal to the minkowski sum of the convex hull of sympoints and points with the conic hull of lines and rays.\n\n\n\nvrep(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet())\n\nCreates a V-representation for the polyhedron defined by the symmetric points V_i if i in Vlinset, points V_i otherwise, lines R_i if i in Rlinset and rays R_i otherwise where V_i (resp. R_i) is the ith row of V (resp. R), i.e. V[i,:] (resp. R[i,:]).\n\n\n\n"
+    "text": "vrep(p::Polyhedron)\n\nReturns a V-representation for the polyhedron p.\n\n\n\nvrep(lines::LineIt)\n\nCreates an affine space from the list of lines lines.\n\nExamples\n\nvrep([Line([1, 0, 0]), Line([0, 1, 0])])\n\ncreates the 2-dimensional affine subspace containing all the points (x_1 x_2 0), i.e. the x_1x_2-plane.\n\n\n\nvrep(points::PointIt)\n\nCreates a V-representation for the polytope equal to the convex hull of the points points.\n\nExamples\n\nThe convex hull of (0 0), (0 1) and (12 12) can be created as follows using exact arithmetic\n\nvrep([[0, 0], [0, 1], [1//2, 1//2]])\n\nor as follows using floating point arithmetic\n\nvrep([[0, 0], [0, 1], [1/2, 1/2]])\n\n\n\nvrep(lines::LineIt, rays::RayIt)\n\nCreates a V-representation for the polyhedral cone equal to the conic hull of the lines lines and rays rays.\n\nExamples\n\nvrep([Line([0, 1])], [Ray([1, 0])])\n\ncreates a V-representation for the halfspace x_1 ge 0.\n\n\n\nvrep(rays::RayIt)\n\nCreates a V-representation for the polyhedral cone equal to the conic hull of the rays rays.\n\nExamples\n\nvrep([Ray([1, 0]), Ray([0, 1])])\n\ncreates a V-representation for positive orthant.\n\n\n\nvrep(points::PointIt, lines::LineIt, rays::RayIt)\n\nCreates a V-representation for the polyhedron equal to the minkowski sum of the convex hull of points with the conic hull of lines and rays.\n\n\n\nvrep(V::AbstractMatrix, R::AbstractMatrix, Rlinset::IntSet=IntSet())\n\nCreates a V-representation for the polyhedron defined by the points V_i, lines R_i if i in Rlinset and rays R_i otherwise where V_i (resp. R_i) is the ith row of V (resp. R), i.e. V[i,:] (resp. R[i,:]).\n\n\n\n"
 },
 
 {
@@ -262,78 +254,6 @@ var documenterSearchIndex = {"docs": [
     "title": "V-representation",
     "category": "section",
     "text": "The fundamental elements of an V-representation are the points and raysAbstractPoint\nRayA V-representation can be created as the minkowski sum between a convex hull of points and a conic hull of rays. For instance, the positive orthant without the simplex defined in the H-representation section can be created as follows:convexhull([1, 0], [0, 1]) + conichull(Ray([1, 0]), Ray([0, 1]))The V-representation represents the polyhedron as a minkowski sum of a polytope and a polyhedral cone. The polytope is represented using a P-representation : a convex hull of points. The polyhedral cone is represented using an R-representation : a conic hull of rays.Even if rays are enough to describe any polyhedral cone, it is sometimes important to represent the fact that the polyhedron contains an affine subspace. For instance, the polyhedron created withconvexhull([1, 0], [0, 1]) + conichull(Ray([1, 1]), Ray([-1, -1]))contains the line [1, 1].The fundamental element of an affine subspace is the lineLineAn affine subspace can be created as the conic hull/minkownski sum of several lines. For instanceconichull(Line([1, 0]), Line([0, 1]))represents the full space.Likewise, a P-representation can contain symmetric pointsSymPointIn addition to being created incrementally with convex hull and minkowsky addition, a V-representation can also be created using the vrep functionvrep"
-},
-
-{
-    "location": "representation.html#Polyhedra.points",
-    "page": "Representation",
-    "title": "Polyhedra.points",
-    "category": "function",
-    "text": "points(vrep::VRep)\n\nReturns an iterator over the points of the V-representation vrep.\n\n\n\n"
-},
-
-{
-    "location": "representation.html#Polyhedra.npoints",
-    "page": "Representation",
-    "title": "Polyhedra.npoints",
-    "category": "function",
-    "text": "npoints(vrep::VRep)\n\nReturns the number of points of the V-representation vrep.\n\n\n\n"
-},
-
-{
-    "location": "representation.html#Polyhedra.haspoints",
-    "page": "Representation",
-    "title": "Polyhedra.haspoints",
-    "category": "function",
-    "text": "haspoints(vrep::VRep)\n\nReturns whether the V-representation vrep has any point.\n\n\n\n"
-},
-
-{
-    "location": "representation.html#Polyhedra.sympoints",
-    "page": "Representation",
-    "title": "Polyhedra.sympoints",
-    "category": "function",
-    "text": "sympoints(vrep::VRep)\n\nReturns an iterator over the sympoints of the V-representation vrep.\n\n\n\n"
-},
-
-{
-    "location": "representation.html#Polyhedra.nsympoints",
-    "page": "Representation",
-    "title": "Polyhedra.nsympoints",
-    "category": "function",
-    "text": "nsympoints(vrep::VRep)\n\nReturns the number of sympoints of the V-representation vrep.\n\n\n\n"
-},
-
-{
-    "location": "representation.html#Polyhedra.hassympoints",
-    "page": "Representation",
-    "title": "Polyhedra.hassympoints",
-    "category": "function",
-    "text": "hassympoints(vrep::VRep)\n\nReturns whether the V-representation vrep has any sympoint.\n\n\n\n"
-},
-
-{
-    "location": "representation.html#Polyhedra.allpoints",
-    "page": "Representation",
-    "title": "Polyhedra.allpoints",
-    "category": "function",
-    "text": "allpoints(vrep::VRep)\n\nReturns an iterator over the points and sympoints in the V-representation vrep splitting sympoints in two points.\n\nExamples\n\nvrep = convexhull(SymPoint([1, 0]), [0, 1])\ncollect(allpoints(vrep)) # Returns [[1, 0], [-1, 0], [0, 1]]\n\n\n\n"
-},
-
-{
-    "location": "representation.html#Polyhedra.nallpoints",
-    "page": "Representation",
-    "title": "Polyhedra.nallpoints",
-    "category": "function",
-    "text": "nallpoints(vrep::VRep)\n\nReturns the number of points plus twice the number of sympoints in the V-representation vrep, i.e. length(allpoints(vrep))\n\n\n\n"
-},
-
-{
-    "location": "representation.html#Polyhedra.hasallpoints",
-    "page": "Representation",
-    "title": "Polyhedra.hasallpoints",
-    "category": "function",
-    "text": "hasallpoints(vrep::VRep)\n\nReturns whether the V-representation vrep contains any point or sympoint.\n\n\n\n"
 },
 
 {
@@ -550,22 +470,6 @@ var documenterSearchIndex = {"docs": [
     "title": "Polyhedra.incidentlineindices",
     "category": "function",
     "text": "incidentlineindices(p::Polyhedron, idx)\n\nReturns the list of the indices of lines incident to idx for the polyhedron p.\n\n\n\n"
-},
-
-{
-    "location": "polyhedron.html#Polyhedra.incidentsympoints",
-    "page": "Polyhedron",
-    "title": "Polyhedra.incidentsympoints",
-    "category": "function",
-    "text": "incidentsympoints(p::Polyhedron, idx)\n\nReturns the list of sympoints incident to idx for the polyhedron p.\n\n\n\n"
-},
-
-{
-    "location": "polyhedron.html#Polyhedra.incidentsympointindices",
-    "page": "Polyhedron",
-    "title": "Polyhedra.incidentsympointindices",
-    "category": "function",
-    "text": "incidentsympointindices(p::Polyhedron, idx)\n\nReturns the list of the indices of sympoints incident to idx for the polyhedron p.\n\n\n\n"
 },
 
 {
