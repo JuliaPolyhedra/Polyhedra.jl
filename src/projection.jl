@@ -2,9 +2,41 @@ export supportselimination, eliminate, project, fixandeliminate
 export FourierMotzkin, BlockElimination, ProjectGenerators
 
 abstract type EliminationAlgorithm end
+
+"""
+    FourierMotzkin
+
+Computation of the projection by computing the H-representation and applying the Fourier-Motzkin elimination algorithm to it.
+"""
 struct FourierMotzkin <: EliminationAlgorithm end
+
+"""
+    BlockElimination
+
+Computation of the projection by computing the H-representation and applying the block elimination algorithm to it.
+"""
 struct BlockElimination <: EliminationAlgorithm end
+
+"""
+    ProjectGenerators
+
+Computation of the projection by computing the V-representation and projecting them.
+"""
 struct ProjectGenerators <: EliminationAlgorithm end
+
+"""
+    project(p::Polyhedron, pset, algo)
+
+Equivalent to `eliminate(p, setdiff(1:N, pset), algo).
+"""
+function project end
+
+"""
+    eliminate(p::Polyhedron, delset, algo::EliminationAlgorithm)
+
+Eliminate the dimensions in `delset` by projecting the polyhedron onto the remaining dimension.
+"""
+function eliminate end
 
 project(p::Polyhedron{N}, pset) where {N} = eliminate(p, setdiff(1:N, pset))
 project(p::Polyhedron{N}, pset, algo) where {N} = eliminate(p, setdiff(1:N, pset), algo)
