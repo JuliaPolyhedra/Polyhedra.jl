@@ -48,10 +48,10 @@ hrep([HalfSpace([1, 1], 1), HalfSpace([1, -1], 0), HalfSpace([-1, 0], 0)])
 hrep(halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT} = hrep(HyperPlane{N, T, AT}[], halfspaces)
 
 mutable struct Intersection{N, T, AT} <: HRepresentation{N, T}
-    hyperplanes::HyperPlaneIntersection{N, T, AT}
+    hyperplanes::HyperPlanesIntersection{N, T, AT}
     halfspaces::Vector{HalfSpace{N, T, AT}}
     function Intersection{N, T, AT}(hyperplanes::HyperPlaneIt{N, T}, halfspaces::HalfSpaceIt{N, T}) where {N, T, AT}
-        new{N, T, AT}(HyperPlaneIntersection{N, T, AT}(hyperplanes), lazy_collect(halfspaces))
+        new{N, T, AT}(HyperPlanesIntersection{N, T, AT}(hyperplanes), lazy_collect(halfspaces))
     end
 end
 Intersection(hyperplanes::ElemIt{HyperPlane{N, T, AT}}, halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT} = Intersection{N, T, AT}(hyperplanes, halfspaces)
@@ -61,7 +61,7 @@ similar_type(PT::Type{<:Intersection}, d::FullDim{N}, ::Type{T}) where {N, T} = 
 @subrepelem Intersection HyperPlane hyperplanes
 @vecrepelem Intersection HalfSpace halfspaces
 
-fulltype(::Type{<:Union{Intersection{N, T, AT}, HyperPlaneIntersection{N, T, AT}}}) where {N, T, AT} = Intersection{N, T, AT}
+fulltype(::Type{<:Union{Intersection{N, T, AT}, HyperPlanesIntersection{N, T, AT}}}) where {N, T, AT} = Intersection{N, T, AT}
 
 # V-representation
 
@@ -219,7 +219,7 @@ fulltype(::Type{<:Union{Hull{N, T, AT}, SymPointsHull{N, T, AT}, PointsHull{N, T
 
 dualtype(::Type{<:Intersection{N, T}}, ::Type{AT}) where {N, T, AT} = Hull{N, T, AT}
 dualtype(::Type{<:Hull{N, T}}, ::Type{AT}) where {N, T, AT} = Intersection{N, T, AT}
-const AnyIntersection{N, T, AT} = Union{Intersection{N, T, AT}, HyperPlaneIntersection{N, T, AT}}
+const AnyIntersection{N, T, AT} = Union{Intersection{N, T, AT}, HyperPlanesIntersection{N, T, AT}}
 function dualfullspace(h::Union{AnyIntersection, Type{<:AnyIntersection}}, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT}
     Hull{N, T, AT}(SymPoint{N, T, AT}[],
                    [origin(AT, d)],

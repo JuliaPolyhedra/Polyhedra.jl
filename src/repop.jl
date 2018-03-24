@@ -70,7 +70,7 @@ function conichull(p1::VCone{N, T1}, p2::VCone{N, T2}) where {N, T1, T2}
     Tout = promote_type(T1, T2)
     # Always type of first arg
     RepTout = similar_type(typeof(p1), Tout)
-    RepTout(rmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)::RepTout
+    RepTout(rmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)
 end
 conichull(p::VCone, el::Union{Line, Ray}) = conichull(p, conichull(el))
 

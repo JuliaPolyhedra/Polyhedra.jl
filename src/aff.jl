@@ -1,4 +1,4 @@
-export HyperPlaneIntersection, LinesHull, affinehull, linespace, detecthlinearities!, detectvlinearities!
+export HyperPlanesIntersection, LinesHull, affinehull, linespace, detecthlinearities!, detectvlinearities!
 
 # Linearity
 detectvlinearities!(p::VRep) = error("detectvlinearities! not implemented for $(typeof(p))")
@@ -12,7 +12,7 @@ end
 
 
 # It is easy to go from H-rep of affine space to V-rep of affine space by computing the kernel of a matrix using RowEchelon
-# However, it is really worth it since Base.in for an HRepElement in HyperPlaneIntersection and Base.in for an VRepElement in LinesHull are false already.
+# However, it is really worth it since Base.in for an HRepElement in HyperPlanesIntersection and Base.in for an VRepElement in LinesHull are false already.
 function remproj(x::RepElement{N, <:Integer}, l::RepElement{N, <:Integer}) where N
     # generates large numbers but keeps the type integer
     x * dot(coord(l), coord(l)) - l * dot(coord(x), coord(l))
@@ -44,58 +44,60 @@ hrep([HyperPlane([1, 1], 1), HyperPlane([1, 0], 0)])
 ```
 creates the 0-dimensional affine subspace only containing the point ``(0, 1)``.
 """
-hrep(hyperplanes::HyperPlaneIt) = HyperPlaneIntersection(hyperplanes)
+hrep(hyperplanes::HyperPlaneIt) = HyperPlanesIntersection(hyperplanes)
 
 # Representation of an affine space as the intersection of hyperplanes.
 # Also called affine set, affine manifold, affine variety, linear variety or flat.
 # An affine space L satisfies:
 # λx + (1-λ)y ∈ L, ∀x, y ∈ L, ∀ λ ∈ R
 # Note that λ is not rhyperplaneuired to be between 0 and 1 as in convex sets.
-struct HyperPlaneIntersection{N, T, AT} <: HAffineSpace{N, T}
+struct HyperPlanesIntersection{N, T, AT} <: HAffineSpace{N, T}
     # HyperPlanes whose intersection is the affine space
     hyperplanes::Vector{HyperPlane{N, T, AT}}
-    function HyperPlaneIntersection{N, T, AT}(hps::HyperPlaneIt{N, T}) where {N, T, AT}
+    function HyperPlanesIntersection{N, T, AT}(hps::HyperPlaneIt{N, T}) where {N, T, AT}
         new{N, T, AT}(lazy_collect(hps))
     end
 end
-arraytype(L::HyperPlaneIntersection{N, T, AT}) where {N, T, AT} = AT
+arraytype(L::Union{HyperPlanesIntersection{N, T, AT}, Type{HyperPlanesIntersection{N, T, AT}}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:HyperPlanesIntersection}, d::FullDim{N}, ::Type{T}) where {N, T} = HyperPlanesIntersection{N, T, similar_type(arraytype(PT), d, T)}
 
-HyperPlaneIntersection{N, T, AT}() where {N, T, AT} = HyperPlaneIntersection{N, T, AT}(HyperPlane{N, T, AT}[])
-HyperPlaneIntersection(it::ElemIt{HyperPlane{N, T, AT}}) where {N, T, AT} = HyperPlaneIntersection{N, T, AT}(it)
+HyperPlanesIntersection{N, T, AT}() where {N, T, AT} = HyperPlanesIntersection{N, T, AT}(HyperPlane{N, T, AT}[])
+HyperPlanesIntersection(it::ElemIt{HyperPlane{N, T, AT}}) where {N, T, AT} = HyperPlanesIntersection{N, T, AT}(it)
+HyperPlanesIntersection{N, T, AT}(hyperplanes::HyperPlaneIt{N, T}, halfspaces::HalfSpaceIt{N, T}) where {N, T, AT} = Intersection{N, T, AT}(hyperplanes, halfspaces)
 
-Base.intersect!(L::HyperPlaneIntersection{N}, h::HyperPlane{N}) where N = push!(L.hyperplanes, h)
+Base.intersect!(L::HyperPlanesIntersection{N}, h::HyperPlane{N}) where N = push!(L.hyperplanes, h)
 
-@vecrepelem HyperPlaneIntersection HyperPlane hyperplanes
+@vecrepelem HyperPlanesIntersection HyperPlane hyperplanes
 #Base.length(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}) where {N, T, ElemT} = length(idxs.rep.hyperplanes)
 #Base.isempty(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}) where {N, T, ElemT} = isempty(idxs.rep.hyperplanes)
 #Base.start(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}) where {N, T, ElemT} = HyperPlaneIndex{N, T}(1)
 #Base.done(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}, idx::HyperPlaneIndex{N, T}) where {N, T} = idx.value > length(idxs)
-#Base.get(L::HyperPlaneIntersection{N, T}, idx::HyperPlaneIndex{N, T}) where {N, T} = L.hyperplanes[idx.value]
-#nextindex(L::HyperPlaneIntersection{N, T}, idx::HyperPlaneIndex{N, T}) where {N, T} = HyperPlaneIndex{N, T}(idx.value+1)
+#Base.get(L::HyperPlanesIntersection{N, T}, idx::HyperPlaneIndex{N, T}) where {N, T} = L.hyperplanes[idx.value]
+#nextindex(L::HyperPlanesIntersection{N, T}, idx::HyperPlaneIndex{N, T}) where {N, T} = HyperPlaneIndex{N, T}(idx.value+1)
 
-# Returns an HyperPlaneIntersection representing the affine hull of p.
+# Returns an HyperPlanesIntersection representing the affine hull of p.
 # The affine hull is defined as
 # {λx + (1-λ)y | x, y ∈ p, λ ∈ R}
 function affinehull(h::HRep, current=false)
     if !current
         detecthlinearities!(h)
     end
-    HyperPlaneIntersection(hyperplanes(h))
+    HyperPlanesIntersection(hyperplanes(h))
 end
 
-function remproj(h::HRepElement, L::HyperPlaneIntersection)
+function remproj(h::HRepElement, L::HyperPlanesIntersection)
     for hp in hyperplanes(L)
         h = remproj(h, hp)
     end
     h
 end
-function Base.in(h::HRepElement, L::HyperPlaneIntersection)
+function Base.in(h::HRepElement, L::HyperPlanesIntersection)
     h = remproj(h, L)
     isapproxzero(h)
 end
 
-function removeduplicates(L::HyperPlaneIntersection{N, T, AT}) where {N, T, AT}
-    H = HyperPlaneIntersection{N, T, AT}()
+function removeduplicates(L::HyperPlanesIntersection{N, T, AT}) where {N, T, AT}
+    H = HyperPlanesIntersection{N, T, AT}()
     for h in hyperplanes(L)
         if !(h in H)
             intersect!(H, h)
@@ -130,10 +132,13 @@ struct LinesHull{N, T, AT} <: VLinearSpace{N, T}
         new{N, T, AT}(lazy_collect(lines))
     end
 end
-arraytype(L::LinesHull{N, T, AT}) where {N, T, AT} = AT
+arraytype(L::Union{LinesHull{N, T, AT}, Type{LinesHull{N, T, AT}}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:LinesHull}, d::FullDim{N}, ::Type{T}) where {N, T} = LinesHull{N, T, similar_type(arraytype(PT), d, T)}
 
 LinesHull{N, T, AT}() where {N, T, AT} = LinesHull{N, T, AT}(Line{N, T, AT}[])
 LinesHull(it::ElemIt{Line{N, T, AT}}) where {N, T, AT} = LinesHull{N, T, AT}(it)
+
+LinesHull{N, T, AT}(lines::LineIt{N, T}, rays::RayIt{N, T}) where {N, T, AT} = RaysHull{N, T, AT}(lines, rays)
 
 convexhull!(L::LinesHull{N}, l::Line{N}) where {N} = push!(L.lines, l)
 

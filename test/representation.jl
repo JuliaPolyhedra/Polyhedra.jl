@@ -356,7 +356,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test vc !== vr
             @test vc.lines !== vr.lines
             generator_fulltest(vc, vr)
-            vr = conichull(Line(@SVector [1, 1]), Ray(@SVector [1, 1]), Line(@SVector [1, 0]))
+            vr = conichull(Line(@SVector [1, 1]), Line(@SVector [1, 0]), Ray(@SVector [1, 1]))
             vc = copy(vr)
             @test vc !== vr
             @test vc.rays !== vr.rays
@@ -380,7 +380,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test hc !== hr
             @test hc.hyperplanes !== hr.hyperplanes
             inequality_fulltest(hc, hr)
-            hr = HyperPlane([1, 0], 1) ∩ HalfSpace([0, 1], -1)
+            hr = HyperPlane([1, 0], 1) ∩ HyperPlane([1, 1], 0) ∩ HalfSpace([0, 1], -1)
             hc = copy(hr)
             @test hc !== hr
             @test hc.hyperplanes !== hr.hyperplanes
