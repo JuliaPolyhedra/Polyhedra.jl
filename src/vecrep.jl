@@ -50,8 +50,8 @@ hrep(halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT} = hrep(HyperPlane
 mutable struct Intersection{N, T, AT} <: HRepresentation{N, T}
     hyperplanes::HyperPlaneIntersection{N, T, AT}
     halfspaces::Vector{HalfSpace{N, T, AT}}
-    function Intersection{N, T, AT}(hyperplanes::ElemIt{HyperPlane{N, T, AT}}, halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT}
-        new{N, T, AT}(HyperPlaneIntersection(hyperplanes), lazy_collect(halfspaces))
+    function Intersection{N, T, AT}(hyperplanes::HyperPlaneIt{N, T}, halfspaces::HalfSpaceIt{N, T}) where {N, T, AT}
+        new{N, T, AT}(HyperPlaneIntersection{N, T, AT}(hyperplanes), lazy_collect(halfspaces))
     end
 end
 Intersection(hyperplanes::ElemIt{HyperPlane{N, T, AT}}, halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT} = Intersection{N, T, AT}(hyperplanes, halfspaces)
@@ -80,6 +80,9 @@ vrep(sympoints::SymPointIt) = SymPointsHull(sympoints)
 
 mutable struct SymPointsHull{N, T, AT} <: VSymPolytope{N, T}
     sympoints::Vector{SymPoint{N, T, AT}}
+    function SymPointsHull{N, T, AT}(sympoints::SymPointIt{N, T}) where {N, T, AT}
+        new{N, T, AT}(lazy_collect(sympoints))
+    end
 end
 SymPointsHull(ps::ElemIt{SymPoint{N, T, AT}}) where {N, T, AT<:AbstractPoint{N, T}} = SymPointsHull{N, T, AT}(collect(ps))
 arraytype(::Union{SymPointsHull{N, T, AT}, Type{SymPointsHull{N, T, AT}}}) where {N, T, AT} = AT
@@ -131,8 +134,8 @@ end
 mutable struct PointsHull{N, T, AT} <: VPolytope{N, T}
     sympoints::SymPointsHull{N, T, AT}
     points::Vector{AT}
-    function PointsHull{N, T, AT}(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}) where {N, T, AT}
-        new{N, T, AT}(SymPointsHull(sympoints), lazy_collect(points))
+    function PointsHull{N, T, AT}(sympoints::SymPointIt{N, T}, points::PointIt) where {N, T, AT}
+        new{N, T, AT}(SymPointsHull{N, T, AT}(sympoints), lazy_collect(points))
     end
 end
 PointsHull(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}) where {N, T, AT} = PointsHull{N, T, AT}(sympoints, points)
@@ -173,8 +176,8 @@ vrep(rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT} = vrep(Line{N, T, AT}[], rays
 mutable struct RaysHull{N, T, AT} <: VCone{N, T}
     lines::LinesHull{N, T, AT}
     rays::Vector{Ray{N, T, AT}}
-    function RaysHull{N, T, AT}(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
-        new{N, T, AT}(LinesHull(ls), lazy_collect(rs))
+    function RaysHull{N, T, AT}(ls::LineIt{N, T}, rs::RayIt{N, T}) where {N, T, AT}
+        new{N, T, AT}(LinesHull{N, T, AT}(ls), lazy_collect(rs))
     end
 end
 function RaysHull(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}

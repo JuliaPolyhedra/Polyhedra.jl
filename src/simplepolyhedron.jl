@@ -60,11 +60,11 @@ function Base.copy(p::SimplePolyhedron{N, T}) where {N, T}
     end
 end
 
-function Base.push!(p::SimplePolyhedron{N}, ine::HRepresentation{N}) where N
+function Base.intersect!(p::SimplePolyhedron{N}, ine::HRepresentation{N}) where N
     p.hrep = hrep(p) ∩ ine
     p.vrep = nothing
 end
-function Base.push!(p::SimplePolyhedron{N}, ext::VRepresentation{N}) where N
+function convexhull!(p::SimplePolyhedron{N}, ext::VRepresentation{N}) where N
     p.vrep = convexhull(vrep(p), ext)
     p.hrep = nothing
 end

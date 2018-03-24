@@ -323,4 +323,25 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test_throws ErrorException Polyhedra.checkvconsistency(pinc)
         end
     end
+
+    @testset "Conversion with different array type" begin
+        @testset "V-representation" begin
+            vv = convexhull(@SVector [0, 1]) + conichull(Ray(@SVector [1, 1]), Line(@SVector [1, 0]))
+            mv = vrep([0 1], [1 1; 1 0], IntSet(), IntSet([2]))
+            generator_fulltest(vv, mv)
+            mvv = @inferred typeof(mv)(vv)
+            vmv = @inferred typeof(vv)(mv)
+            generator_fulltest(vv, mvv)
+            generator_fulltest(vmv, vv)
+        end
+        @testset "H-representation" begin
+            vh = HalfSpace((@SVector [1, 0]), 0) ∩ HyperPlane((@SVector [0, 1]), 1)
+            mh = hrep([0 1; 1 0], [1, 0], IntSet(1))
+            inequality_fulltest(vh, mh)
+            mvh = @inferred typeof(mh)(vh)
+            vmh = @inferred typeof(vh)(mh)
+            inequality_fulltest(vh, mvh)
+            inequality_fulltest(vmh, vh)
+        end
+    end
 end

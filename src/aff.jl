@@ -18,7 +18,12 @@ function remproj(x::RepElement{N, <:Integer}, l::RepElement{N, <:Integer}) where
     x * dot(coord(l), coord(l)) - l * dot(coord(x), coord(l))
 end
 function remproj(x, l)
-    simplify(x - l * (dot(coord(x), coord(l)) / dot(coord(l), coord(l))))
+    ll = dot(coord(l), coord(l))
+    if isapproxzero(ll)
+        x
+    else
+        simplify(x - l * ((dot(coord(x), coord(l)) / ll)))
+    end
 end
 
 # H-representation
@@ -49,16 +54,13 @@ hrep(hyperplanes::HyperPlaneIt) = HyperPlaneIntersection(hyperplanes)
 struct HyperPlaneIntersection{N, T, AT} <: HAffineSpace{N, T}
     # HyperPlanes whose intersection is the affine space
     hps::Vector{HyperPlane{N, T, AT}}
-    function HyperPlaneIntersection{N, T, AT}(hps::Vector{HyperPlane{N, T, AT}}) where {N, T, AT}
-        new{N, T, AT}(hps)
+    function HyperPlaneIntersection{N, T, AT}(hps::HyperPlaneIt{N, T}) where {N, T, AT}
+        new{N, T, AT}(lazy_collect(hps))
     end
 end
 arraytype(L::HyperPlaneIntersection{N, T, AT}) where {N, T, AT} = AT
 
 HyperPlaneIntersection{N, T, AT}() where {N, T, AT} = HyperPlaneIntersection{N, T, AT}(HyperPlane{N, T, AT}[])
-function HyperPlaneIntersection{N, T, AT}(it::ElemIt{HyperPlane{N, T, AT}}) where {N, T, AT}
-    HyperPlaneIntersection{N, T, AT}(collect(it))
-end
 HyperPlaneIntersection(it::ElemIt{HyperPlane{N, T, AT}}) where {N, T, AT} = HyperPlaneIntersection{N, T, AT}(it)
 
 Base.intersect!(L::HyperPlaneIntersection{N}, h::HyperPlane{N}) where N = push!(L.hps, h)
@@ -124,16 +126,13 @@ vrep(lines::LineIt) = LinesHull(lines)
 # Representation of an affine space containing the origin by the minkowsky sum of lines
 struct LinesHull{N, T, AT} <: VLinearSpace{N, T}
     lines::Vector{Line{N, T, AT}}
-    function LinesHull{N, T, AT}(lines::Vector{Line{N, T, AT}}) where {N, T, AT}
-        new{N, T, AT}(lines)
+    function LinesHull{N, T, AT}(lines::LineIt{N, T}) where {N, T, AT}
+        new{N, T, AT}(lazy_collect(lines))
     end
 end
 arraytype(L::LinesHull{N, T, AT}) where {N, T, AT} = AT
 
 LinesHull{N, T, AT}() where {N, T, AT} = LinesHull{N, T, AT}(Line{N, T, AT}[])
-function LinesHull{N, T, AT}(it::ElemIt{Line{N, T, AT}}) where {N, T, AT}
-    LinesHull{N, T, AT}(collect(it))
-end
 LinesHull(it::ElemIt{Line{N, T, AT}}) where {N, T, AT} = LinesHull{N, T, AT}(it)
 
 convexhull!(L::LinesHull{N}, l::Line{N}) where {N} = push!(L.lines, l)

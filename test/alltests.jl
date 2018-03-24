@@ -20,6 +20,7 @@ include("board.jl")
 include("docexample.jl")
 include("decompose.jl")
 include("issue48.jl")
+include("empty.jl")
 
 alltests = Tuple{String, Function}[]
 push!(alltests, ("Hypercube in 2 dimensions", lib->hypercubetest(lib, 2)))
@@ -35,6 +36,7 @@ push!(alltests, ("Permutahedron", permutahedrontest))
 push!(alltests, ("Board", boardtest))
 push!(alltests, ("Decompose", decompose))
 push!(alltests, ("Issue 48", issue48test))
+push!(alltests, ("Empty", emptytest))
 
 function runtests(lib::PolyhedraLibrary, tests=alltests)
     for (testname, testfun) in tests

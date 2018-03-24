@@ -156,6 +156,7 @@ struct Ray{N, T, AT <: MyVec{N, T}}
     end
 end
 Ray{N, T, AT}(ray::Ray) where {N, T, AT} = Ray{N, T, AT}(AT(ray.a))
+Base.convert(::Type{Ray{N, T, AT}}, ray::Ray) where {N, T, AT} = Ray{N, T, AT}(ray)
 Ray{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Ray{N, T, AT}(a)
 Ray(a::MyVec) = Ray{fulldim(a), eltype(a)}(a)
 
@@ -173,6 +174,7 @@ struct Line{N, T, AT<:MyVec{N, T}}
     end
 end
 Line{N, T, AT}(line::Line) where {N, T, AT} = Line{N, T, AT}(AT(line.a))
+Base.convert(::Type{Line{N, T, AT}}, line::Line) where {N, T, AT} = Line{N, T, AT}(line)
 Line{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Line{N, T, AT}(a)
 Line(a::MyVec) = Line{fulldim(a), eltype(a)}(a)
 

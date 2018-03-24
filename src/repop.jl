@@ -63,11 +63,13 @@ convexhull(p1::Union{VRep{N}, SymPoint{N}, AbstractPoint{N}}, p2::Union{VRep{N},
 
 Same as [`convexhull`](@ref) except that `p1` is modified to be equal to the convex hull.
 """
-convexhull!(p::VRep{N}, ine::HRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
+convexhull!(p::VRep{N}, ine::VRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
 
 conichull(ls::Line...) = vrep([ls...])
 conichull(rs::AbstractPoint...) = vrep([Ray.(rs)...])
 conichull(rs::Ray...) = vrep([rs...])
+conichull(l::Line, r::Ray) = vrep([l], [r])
+conichull(r::Ray, l::Line) = conichull(l, r)
 
 function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {N, T}
     _tout(p) = similar_type(typeof(p), T)(p)
