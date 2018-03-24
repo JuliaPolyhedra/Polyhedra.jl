@@ -121,11 +121,6 @@ conichull(Line([1, 0]), Line([0, 1]))
 ```
 represents the full space.
 
-Likewise, a *P-representation* can contain symmetric points
-```@docs
-SymPoint
-```
-
 In addition to being created incrementally with convex hull and minkowsky addition, a V-representation can also be created using the `vrep` function
 ```@docs
 vrep
@@ -133,21 +128,13 @@ vrep
 
 ### Interface
 
-A P-representation is represented as a convex hull of symmetric points and points.
-The points can be obtained with [`points`](@ref) and the symmetric points with [`sympoints`](@ref).
-As a symmetric point ``p`` is the convex hull of of the two points ``p`` and ``-p``,
-even if the P-representation contains symmetric points, a list of points whose convex hull is the polytope can be obtained with [`allpoints`](@ref), which has `npoints(P) + 2nsympoints(P)` elements for a P-representation `P` since each symmetric point is split in two points.
+A P-representation is represented as a convex hull points.
+The points can be obtained with [`points`](@ref).
 
 ```@docs
 points
 npoints
 haspoints
-sympoints
-nsympoints
-hassympoints
-allpoints
-nallpoints
-hasallpoints
 ```
 
 An R-representation is represented as a conic hull of lines and rays.

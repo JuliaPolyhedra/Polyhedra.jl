@@ -155,14 +155,3 @@ incidenthyperplaneindices
 incidentlines
 incidentlineindices
 ```
-
-A symmetric point is only incident to an pair of symmetric halfspaces or to a homogeneous halfspace.
-However, one of the two points of the symmetric point can be incident to an hyperplane.
-Therefore, collecting when collecting incident points and symmetric points of an halfspace, some points may be missed.
-This will be fixed in the next release with the introduction of symmetric halfspaces and homogeneous halfspaces.
-Symmetric points and halfspaces will only be allowed in symmetric polyhedron, the latter will not contain any non-symmetric points and halfspaces.
-
-```@docs
-incidentsympoints
-incidentsympointindices
-```
