@@ -1,15 +1,15 @@
 struct InconsistentVRep{N, T, AT} <: VRepresentation{N, T}
     points::Polyhedra.PointsHull{N, T, AT}
     rays::Polyhedra.RaysHull{N, T, AT}
-    function InconsistentVRep{N, T, AT}(sympoints, points, lines, rays) where {N, T, AT}
-        new{N, T, AT}(Polyhedra.PointsHull(sympoints, points), Polyhedra.RaysHull(lines, rays))
+    function InconsistentVRep{N, T, AT}(points, lines, rays) where {N, T, AT}
+        new{N, T, AT}(Polyhedra.PointsHull{N, T, AT}(points), Polyhedra.RaysHull(lines, rays))
     end
 end
 Polyhedra.dualtype(::Type{InconsistentVRep{N,T,AT}}, ::Type{AT}) where {N, T, AT} = Polyhedra.Intersection{N, T, AT}
 Polyhedra.arraytype(::Union{InconsistentVRep{N, T, AT}, Type{InconsistentVRep{N, T, AT}}}) where {N, T, AT} = AT
 Polyhedra.similar_type(PT::Type{<:InconsistentVRep}, d::FullDim{N}, ::Type{T}) where {N, T} = InconsistentVRep{N, T, Polyhedra.similar_type(Polyhedra.arraytype(PT), d, T)}
 Polyhedra.fulltype(::Type{InconsistentVRep{N, T, AT}}) where {N, T, AT} = InconsistentVRep{N, T, AT}
-Polyhedra.@subrepelem InconsistentVRep SymPoint points
+#Polyhedra.@subrepelem InconsistentVRep SymPoint points
 Polyhedra.@subrepelem InconsistentVRep Point points
 Polyhedra.@subrepelem InconsistentVRep Line rays
 Polyhedra.@subrepelem InconsistentVRep Ray rays
@@ -29,12 +29,10 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         @test translate(ine, [1, 0]).b == [2, -1, 0]
 
         V = [0 1; 1 0]
-        @test_throws ErrorException MixedMatVRep{3, Int}(V, [1 0], IntSet(), IntSet())
+        @test_throws ErrorException MixedMatVRep{3, Int}(V, [1 0], IntSet())
         @test_throws ErrorException vrep(zeros(0, 2), [1 0]) # V-consistency
-        @test_throws ErrorException vrep(V, [1 0 0], IntSet(), IntSet())
-        @test_throws ErrorException vrep(V, [1 1], IntSet(), IntSet([2]))
-        @test_throws ErrorException vrep(V, [1 1], IntSet([4]), IntSet())
-        @test_throws ErrorException vrep(V, IntSet([4]))
+        @test_throws ErrorException vrep(V, [1 0 0], IntSet())
+        @test_throws ErrorException vrep(V, [1 1], IntSet([2]))
         ext = vrep(V)
         @test fulldim(ext) == 2
         @test (@inferred FullDim(ine)) == FullDim{2}()
@@ -117,8 +115,8 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test isempty(hyperplanes(hr)) == iszero(nhyperplanes(hr))
             @test_throws DimensionMismatch hr * ones(2, 3) # TODO replace by ones(2, 3) \ hr
         end
-        symps = [SymPoint([0, 1])]
-        ssymps = [SymPoint(@SVector [0, 1])]
+        #symps = [SymPoint([0, 1])]
+        #ssymps = [SymPoint(@SVector [0, 1])]
         ps = [[1, 2], [3, 4]]
         sps = [(@SVector [1, 2]), (@SVector [3, 4])]
         rs = [Ray([0, 1])]
@@ -126,33 +124,32 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         ls = [Line([0, 1])]
         sls = [Line(@SVector [0, 1])]
         @test eltype(sps) == SVector{2, Int}
-        for (vr, AT) in (((@inferred vrep(symps)), Vector{Int}),
-                         ((@inferred vrep(ssymps)), SVector{2, Int}),
+        for (vr, AT) in (#((@inferred vrep(symps)), Vector{Int}),
+                         #((@inferred vrep(ssymps)), SVector{2, Int}),
                          (vrep(ps), Vector{Int}),
                          ((@inferred vrep(sps)), SVector{2, Int}),
-                         ((@inferred vrep(symps, ps)), Vector{Int}),
-                         (convexhull(symps..., ps...), Vector{Int}),
-                         (convexhull(ps..., symps...), Vector{Int}),
-                         ((@inferred vrep(ssymps, sps)), SVector{2, Int}),
-                         ((@inferred convexhull(ssymps..., sps...)), SVector{2, Int}),
-                         ((@inferred convexhull(sps..., ssymps...)), SVector{2, Int}),
+                         #((@inferred vrep(symps, ps)), Vector{Int}),
+                         #(convexhull(symps..., ps...), Vector{Int}),
+                         #(convexhull(ps..., symps...), Vector{Int}),
+                         (convexhull(ps...), Vector{Int}),
+                         #((@inferred vrep(ssymps, sps)), SVector{2, Int}),
+                         #((@inferred convexhull(ssymps..., sps...)), SVector{2, Int}),
+                         #((@inferred convexhull(sps..., ssymps...)), SVector{2, Int}),
+                         ((@inferred convexhull(sps...)), SVector{2, Int}),
                          ((@inferred vrep(ls)), Vector{Int}),
                          ((@inferred vrep(sls)), SVector{2, Int}),
                          ((@inferred vrep(rs)), Vector{Int}),
                          ((@inferred vrep(srs)), SVector{2, Int}),
                          ((@inferred vrep(ls, rs)), Vector{Int}),
                          ((@inferred vrep(sls, srs)), SVector{2, Int}),
-                         ((@inferred vrep(symps, ps, ls, rs)), Vector{Int}),
-                         ((@inferred vrep(ssymps, sps, sls, srs)), SVector{2, Int}),
+                         ((@inferred vrep(ps, ls, rs)), Vector{Int}),
+                         ((@inferred vrep(sps, sls, srs)), SVector{2, Int}),
                          (vrep([1 2; 3 4]), Vector{Int}),
-                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0), IntSet(), IntSet()), Vector{Int}))
+                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0), IntSet()), Vector{Int}))
             @test (@inferred coefficienttype(vr)) == Int
-            @test                                           (@inferred eltype(allpoints(vr)))  == AT
-            @test                                           (@inferred collect(allpoints(vr))) isa Vector{AT}
-            @test isempty(allpoints(vr)) == iszero(nallpoints(vr))
-            @test (@inferred Polyhedra.sympointtype(vr)) == (@inferred eltype(sympoints(vr)))  == SymPoint{2, Int, AT}
-            @test                                           (@inferred collect(sympoints(vr))) isa Vector{SymPoint{2, Int, AT}}
-            @test isempty(sympoints(vr)) == iszero(nsympoints(vr))
+#            @test (@inferred Polyhedra.sympointtype(vr)) == (@inferred eltype(sympoints(vr)))  == SymPoint{2, Int, AT}
+#            @test                                           (@inferred collect(sympoints(vr))) isa Vector{SymPoint{2, Int, AT}}
+#            @test isempty(sympoints(vr)) == iszero(nsympoints(vr))
             @test (@inferred Polyhedra.pointtype(vr))    == (@inferred eltype(points(vr)))     == AT
             @test                                           (@inferred collect(points(vr)))    isa Vector{AT}
             @test isempty(points(vr)) == iszero(npoints(vr))
@@ -228,14 +225,10 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         function vtest(vr, nr, np)
             hasr = nr > 0
             hasp = np > 0
-            @test nallpoints(vr) == length(allpoints(vr)) == np
-            @test nsympoints(vr) == length(sympoints(vr)) == 0
             @test npoints(vr) == length(points(vr)) == np
             @test nallrays(vr) == length(allrays(vr)) == nr
             @test nlines(vr) == length(lines(vr)) == 0
             @test nrays(vr) == length(rays(vr)) == nr
-            @test hasallpoints(vr) == !isempty(allpoints(vr)) == hasp
-            @test hassympoints(vr) == !isempty(sympoints(vr)) == false
             @test haspoints(vr) == !isempty(points(vr)) == hasp
             @test hasallrays(vr) == !isempty(allrays(vr)) == hasr
             @test haslines(vr) == !isempty(lines(vr)) == false
@@ -271,7 +264,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
 
     @testset "Building rep with different type" begin
         @test coefficienttype(MixedMatHRep{2, Float64}([1 2; 3 4], [1, 2], IntSet())) == Float64
-        @test coefficienttype(MixedMatVRep{2, Float64}([1 2; 3 4], [1 2; 3 4], IntSet(), IntSet())) == Float64
+        @test coefficienttype(MixedMatVRep{2, Float64}([1 2; 3 4], [1 2; 3 4], IntSet())) == Float64
         @test coefficienttype(LiftedHRepresentation{1, Float64}([1 2; 3 4])) == Float64
         @test coefficienttype(LiftedVRepresentation{1, Float64}([1 2; 3 4])) == Float64
     end
@@ -304,20 +297,19 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         for VRepType in (Polyhedra.LiftedVRepresentation{2, T},
                          Polyhedra.MixedMatVRep{2, T},
                          Polyhedra.Hull{2, T, AT})
-            @test_throws ErrorException VRepType(SymPoint{2, T, AT}[], AT[], [Line([1, 2])])
-            @test_throws ErrorException VRepType(SymPoint{2, T, AT}[], AT[], Line{2, T, AT}[], [Ray([1, 2])])
-            @test_throws ErrorException VRepType(SymPoint{2, T, AT}[], AT[], [Line([1, 2])], [Ray([1, 2])])
-            @test isempty(VRepType(SymPoint{2, T, AT}[], AT[], Line{2, T, AT}[], Ray{2, T, AT}[]))
+            @test_throws ErrorException VRepType(AT[], [Line([1, 2])])
+            @test_throws ErrorException VRepType(AT[], Line{2, T, AT}[], [Ray([1, 2])])
+            @test_throws ErrorException VRepType(AT[], [Line([1, 2])], [Ray([1, 2])])
+            @test isempty(VRepType(AT[], Line{2, T, AT}[], Ray{2, T, AT}[]))
             @test isempty(VRepType(Line{2, T, AT}[], Ray{2, T, AT}[]))
             v = VRepType([Line([1, 2])])
-            @test !hassympoints(v)
             @test collect(points(v)) == [[0, 0]]
             @test collect(lines(v)) == [Line([1, 2])]
             @test !hasrays(v)
         end
-        for vinc in (InconsistentVRep{2, T, AT}(SymPoint{2, T, AT}[], AT[], Line{2, T, AT}[], [Ray([1, 2])]),
-                     InconsistentVRep{2, T, AT}(SymPoint{2, T, AT}[], AT[], [Line([1, 2])], Ray{2, T, AT}[]),
-                     InconsistentVRep{2, T, AT}(SymPoint{2, T, AT}[], AT[], [Line([1, 2])], [Ray([1, 2])]))
+        for vinc in (InconsistentVRep{2, T, AT}(AT[], Line{2, T, AT}[], [Ray([1, 2])]),
+                     InconsistentVRep{2, T, AT}(AT[], [Line([1, 2])], Ray{2, T, AT}[]),
+                     InconsistentVRep{2, T, AT}(AT[], [Line([1, 2])], [Ray([1, 2])]))
             @test_throws ErrorException Polyhedra.checkvconsistency(vinc)
             pinc = polyhedron(vinc)
             @test_throws ErrorException Polyhedra.checkvconsistency(pinc)
@@ -327,7 +319,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
     @testset "Conversion with different array type" begin
         @testset "V-representation" begin
             vv = convexhull(@SVector [0, 1]) + conichull(Ray(@SVector [1, 1]), Line(@SVector [1, 0]))
-            mv = vrep([0 1], [1 1; 1 0], IntSet(), IntSet([2]))
+            mv = vrep([0 1], [1 1; 1 0], IntSet([2]))
             generator_fulltest(vv, mv)
             mvv = @inferred typeof(mv)(vv)
             vmv = @inferred typeof(vv)(mv)

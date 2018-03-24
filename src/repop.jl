@@ -50,13 +50,14 @@ function convexhull(p1::RepTin, p2::VRep{N, T2}) where {N, T1, T2, RepTin<:VRep{
     RepTout = similar_type(RepTin, Tout)
     RepTout(vmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)::RepTout # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
 end
-convexhull(p::Rep, el::Union{SymPoint, AbstractPoint}) = convexhull(p, convexhull(el))
+#convexhull(p::Rep, el::Union{SymPoint, AbstractPoint}) = convexhull(p, convexhull(el))
+convexhull(p::Rep, el::AnyPoint) = convexhull(p, convexhull(el))
 
-convexhull(ps::SymPoint...) = vrep([ps...])
+#convexhull(ps::SymPoint...) = vrep([ps...])
 convexhull(ps::AbstractPoint...) = vrep([ps...])
-convexhull(p1::SymPoint, p2::AbstractPoint) = vrep([p1], [p2])
-convexhull(p1::AbstractPoint, p2::SymPoint) = convexhull(p2, p1)
-convexhull(p1::Union{VRep{N}, SymPoint{N}, AbstractPoint{N}}, p2::Union{VRep{N}, SymPoint{N}, AbstractPoint{N}}, ps::Union{VRep{N}, SymPoint{N}, AbstractPoint{N}}...) where N = convexhull(convexhull(p1, p2), ps...)
+#convexhull(p1::SymPoint, p2::AbstractPoint) = vrep([p1], [p2])
+#convexhull(p1::AbstractPoint, p2::SymPoint) = convexhull(p2, p1)
+convexhull(p1::Union{VRep{N}, AnyPoint{N}}, p2::Union{VRep{N}, AnyPoint{N}}, ps::Union{VRep{N}, AnyPoint{N}}...) where N = convexhull(convexhull(p1, p2), ps...)
 
 """
     convexhull!(p1::VRep, p2::VRep)
@@ -83,8 +84,8 @@ conichull(r1::Union{VCone{N}, Line{N}, Ray{N}}, r2::Union{VCone{N}, Line{N}, Ray
 
 function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {N, T}
     _tout(p) = similar_type(typeof(p), T)(p)
-    ps = [_tout(po1 + po2) for po1 in allpoints(p1) for po2 in allpoints(p2)]
-    SymPoint{N, T, eltype(ps)}[], ps
+    ps = [_tout(po1 + po2) for po1 in points(p1) for po2 in points(p2)]
+    tuple(ps)
 end
 sumpoints(::FullDim{N}, ::Type{T}, p1::Rep, p2::VCone) where {N, T} = RepIterator{N, T}.(preps(p1))
 sumpoints(::FullDim{N}, ::Type{T}, p1::VCone, p2::Rep) where {N, T} = RepIterator{N, T}.(preps(p2))

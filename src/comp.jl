@@ -1,7 +1,8 @@
 isapproxzero(x::T; kws...) where {T<:Real} = x == zero(T)
 isapproxzero(x::T; ztol=Base.rtoldefault(Float64)) where {T<:AbstractFloat} = abs(x) < ztol
 isapproxzero(x::AbstractVector{T}; kws...) where {T<:Real} = isapproxzero(maximum(abs.(x)); kws...)
-isapproxzero(x::Union{SymPoint, Ray, Line}; kws...) = isapproxzero(coord(x); kws...)
+#isapproxzero(x::Union{SymPoint, Ray, Line}; kws...) = isapproxzero(coord(x); kws...)
+isapproxzero(x::Union{Ray, Line}; kws...) = isapproxzero(coord(x); kws...)
 isapproxzero(h::HRepElement; kws...) = isapproxzero(h.a; kws...) && isapproxzero(h.β; kws...)
 
 _isapprox(x::Union{T, AbstractArray{T}}, y::Union{T, AbstractArray{T}}) where {T<:Union{Integer, Rational}} = x == y
@@ -9,7 +10,7 @@ _isapprox(x::Union{T, AbstractArray{T}}, y::Union{T, AbstractArray{T}}) where {T
 # but isapprox(1e-100, 2e-100) should be false
 _isapprox(x, y) = (isapproxzero(x) ? isapproxzero(y) : (isapproxzero(y) ? isapproxzero(x) : isapprox(x, y)))
 
-Base.isapprox(r::SymPoint, s::SymPoint) = _isapprox(coord(r), coord(s)) || _isapprox(coord(r), -coord(s))
+#Base.isapprox(r::SymPoint, s::SymPoint) = _isapprox(coord(r), coord(s)) || _isapprox(coord(r), -coord(s))
 function _scaleray(r::Union{Line, Ray}, s::Union{Line, Ray})
     cr = coord(r)
     cs = coord(s)

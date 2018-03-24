@@ -41,7 +41,7 @@ function optimize!(lpm::SimpleVRepPolyhedraModel)
     N = fulldim(prob)
     T = MultivariatePolynomials.coefficienttype(prob)
     lpm.status = :Undecided
-    if !hassympoints(prob) && !haspoints(prob) && !haslines(prob) && !hasrays(prob)
+    if !haspoints(prob) && !haslines(prob) && !hasrays(prob)
         lpm.status = :Infeasible
     else
         if lpm.sense in [:Max, :Min]
@@ -60,7 +60,7 @@ function optimize!(lpm::SimpleVRepPolyhedraModel)
                 lpm.objval = lpm.sense == :Max ? typemax(T) : typemin(T)
             end
             if status != :Unbounded
-                for p in allpoints(prob)
+                for p in points(prob)
                     objval = get(lpm.obj) ⋅ p
                     if lpm.status == :Undecided || better(objval, get(lpm.objval))
                         lpm.status = :Optimal

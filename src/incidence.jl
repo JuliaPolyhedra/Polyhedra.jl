@@ -30,8 +30,3 @@ end
 IncidentIndices{N, T, ElemT}(p, idx) where {N, T, ElemT<:Element{N, T}} = IncidentIndices{N, T, ElemT, typeof(p), typeof(idx)}(p, idx)
 _inctype(inc::IncidentIndices{N, T, ElemT}) where {N, T, ElemT} = Index{N, T, ElemT}
 _incel(inc::IncidentIndices, idx, eli) = idx
-
-# FIXME SymPoints can only be incident for symmetric hyperplane of for homogeneous hyperplane/halfspace but one of the two points of the sympoint can appear in allincidentpoints
-#       therefore, allincidentpoints *cannot* be just built on top of incidentpoints and incidentsympoints
-#       However, allincidentrays *can* be built on top of incidentrays and incident lines
-#       This shows that only VSymmetric and VSymPolytope should only contain SymPoint and Hull should not contain sympoints, that should be changed for v0.4.0

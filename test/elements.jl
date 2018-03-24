@@ -34,8 +34,8 @@
         @test lift(HalfSpace((@SVector [1, 2]), 3)) == HalfSpace((@SVector [-3, 1, 2]), 0)
         @test lift(HyperPlane([1, 2], 3)) == HyperPlane([-3, 1, 2], 0)
         @test lift(HyperPlane((@SVector [1, 2]), 3)) == HyperPlane((@SVector [-3, 1, 2]), 0)
-        @test lift(SymPoint([2, 3])) == SymPoint([1, 2, 3])
-        @test lift(SymPoint(@SVector [2, 3])) == SymPoint(@SVector [1, 2, 3])
+        #@test lift(SymPoint([2, 3])) == SymPoint([1, 2, 3])
+        #@test lift(SymPoint(@SVector [2, 3])) == SymPoint(@SVector [1, 2, 3])
         @test lift([2, 3]) == [1, 2, 3]
         @test lift(@SVector [2, 3]) == @SVector [1, 2, 3]
         @test lift(Line([2, 3])) == Line([0, 2, 3])

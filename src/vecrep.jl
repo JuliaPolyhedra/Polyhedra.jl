@@ -65,49 +65,49 @@ fulltype(::Type{<:Union{Intersection{N, T, AT}, HyperPlanesIntersection{N, T, AT
 
 # V-representation
 
-"""
-    vrep(sympoints::SymPointIt)
+#"""
+#    vrep(sympoints::SymPointIt)
+#
+#Creates a V-representation for the symmetric polytope equal to the convex hull of the symmetric points `sympoints`.
+#
+#### Examples
+#The following creates a square
+#```julia
+#vrep([SymPoint([1, 1])], [SymPoint([1, -1])])
+#```
+#"""
+#vrep(sympoints::SymPointIt) = SymPointsHull(sympoints)
+#
+#mutable struct SymPointsHull{N, T, AT} <: VSymPolytope{N, T}
+#    sympoints::Vector{SymPoint{N, T, AT}}
+#    function SymPointsHull{N, T, AT}(sympoints::SymPointIt{N, T}) where {N, T, AT}
+#        new{N, T, AT}(lazy_collect(sympoints))
+#    end
+#end
+#SymPointsHull(ps::ElemIt{SymPoint{N, T, AT}}) where {N, T, AT<:AbstractPoint{N, T}} = SymPointsHull{N, T, AT}(collect(ps))
+#arraytype(::Union{SymPointsHull{N, T, AT}, Type{SymPointsHull{N, T, AT}}}) where {N, T, AT} = AT
+#similar_type(PT::Type{<:SymPointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = SymPointsHull{N, T, similar_type(arraytype(PT), d, T)}
+#
+#SymPointsHull{N, T, AT}(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(sympoints, points, lines, rays)
+#SymPointsHull{N, T, AT}(sympoints::SymPointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(sympoints, AT[], lines, rays)
+#
+#@vecrepelem SymPointsHull SymPoint sympoints
+#
+## SymPoint's can be split
+#removevredundancy(vrep::SymPointsHull, hrep::HRep; kws...) = removevredundancy(PointsHull(sympoints(vrep), points(vrep)), hrep; kws...)
 
-Creates a V-representation for the symmetric polytope equal to the convex hull of the symmetric points `sympoints`.
-
-### Examples
-The following creates a square
-```julia
-vrep([SymPoint([1, 1])], [SymPoint([1, -1])])
-```
-"""
-vrep(sympoints::SymPointIt) = SymPointsHull(sympoints)
-
-mutable struct SymPointsHull{N, T, AT} <: VSymPolytope{N, T}
-    sympoints::Vector{SymPoint{N, T, AT}}
-    function SymPointsHull{N, T, AT}(sympoints::SymPointIt{N, T}) where {N, T, AT}
-        new{N, T, AT}(lazy_collect(sympoints))
-    end
-end
-SymPointsHull(ps::ElemIt{SymPoint{N, T, AT}}) where {N, T, AT<:AbstractPoint{N, T}} = SymPointsHull{N, T, AT}(collect(ps))
-arraytype(::Union{SymPointsHull{N, T, AT}, Type{SymPointsHull{N, T, AT}}}) where {N, T, AT} = AT
-similar_type(PT::Type{<:SymPointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = SymPointsHull{N, T, similar_type(arraytype(PT), d, T)}
-
-SymPointsHull{N, T, AT}(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(sympoints, points, lines, rays)
-SymPointsHull{N, T, AT}(sympoints::SymPointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(sympoints, AT[], lines, rays)
-
-@vecrepelem SymPointsHull SymPoint sympoints
-
-# SymPoint's can be split
-removevredundancy(vrep::SymPointsHull, hrep::HRep; kws...) = removevredundancy(PointsHull(sympoints(vrep), points(vrep)), hrep; kws...)
-
-"""
-    vrep(sympoints::SymPointIt, points::PointIt)
-
-Creates a V-representation for the polytope equal to the convex hull of the symmetric points `sympoints` and points `points`.
-
-### Examples
-The convex hull of ``(0, -1)``, ``(0, 1)`` and ``(1/2, 1/2)`` can be created as follows:
-```julia
-vrep([SymPoint([0, 1])], [[1/2, 1/2]])
-```
-"""
-vrep(sympoints::SymPointIt, points::PointIt) = PointsHull(sympoints, points)
+#"""
+#    vrep(sympoints::SymPointIt, points::PointIt)
+#
+#Creates a V-representation for the polytope equal to the convex hull of the symmetric points `sympoints` and points `points`.
+#
+#### Examples
+#The convex hull of ``(0, -1)``, ``(0, 1)`` and ``(1/2, 1/2)`` can be created as follows:
+#```julia
+#vrep([SymPoint([0, 1])], [[1/2, 1/2]])
+#```
+#"""
+#vrep(sympoints::SymPointIt, points::PointIt) = PointsHull(sympoints, points)
 
 """
     vrep(points::PointIt)
@@ -124,28 +124,30 @@ or as follows using floating point arithmetic
 vrep([[0, 0], [0, 1], [1/2, 1/2]])
 ```
 """
-vrep(points::PointIt) = vrep(sympointtype(points)[], points)
-sympointtype(points::ElemIt{StaticArrays.SVector{N, T}}) where {N, T} = SymPoint{N, T, StaticArrays.SVector{N, T}}
-function sympointtype(points::PointIt)
-    isempty(points) && throw(ArgumentError("Cannot create a V-representation from an empty collection of points represented by $(eltype(points)) as the dimension cannot be computed. Use StaticArrays.SVector to represent points instead"))
-    SymPoint{length(first(points)), coefficienttype(eltype(points)), eltype(points)}
-end
+vrep(points::PointIt) = PointsHull(points)
+#sympointtype(points::ElemIt{StaticArrays.SVector{N, T}}) where {N, T} = SymPoint{N, T, StaticArrays.SVector{N, T}}
+#function sympointtype(points::PointIt)
+#    isempty(points) && throw(ArgumentError("Cannot create a V-representation from an empty collection of points represented by $(eltype(points)) as the dimension cannot be computed. Use StaticArrays.SVector to represent points instead"))
+#    SymPoint{length(first(points)), coefficienttype(eltype(points)), eltype(points)}
+#end
 
 mutable struct PointsHull{N, T, AT} <: VPolytope{N, T}
-    sympoints::SymPointsHull{N, T, AT}
     points::Vector{AT}
-    function PointsHull{N, T, AT}(sympoints::SymPointIt{N, T}, points::PointIt) where {N, T, AT}
-        new{N, T, AT}(SymPointsHull{N, T, AT}(sympoints), lazy_collect(points))
+    function PointsHull{N, T, AT}(points::PointIt) where {N, T, AT}
+        new{N, T, AT}(lazy_collect(points))
     end
 end
-PointsHull(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}) where {N, T, AT} = PointsHull{N, T, AT}(sympoints, points)
+PointsHull(points::ElemIt{StaticArrays.SVector{N, T}}) where {N, T} = PointsHull{N, T, StaticArrays.SVector{N, T}}(points)
+function PointsHull(points::PointIt)
+    isempty(points) && throw(ArgumentError("Cannot create a V-representation from an empty collection of points represented by $(eltype(points)) as the dimension cannot be computed. Use StaticArrays.SVector to represent points instead"))
+    PointsHull{length(first(points)), coefficienttype(eltype(points)), eltype(points)}(points)
+end
 arraytype(::Union{PointsHull{N, T, AT}, Type{PointsHull{N, T, AT}}}) where {N, T, AT} = AT
 similar_type(PT::Type{<:PointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = PointsHull{N, T, similar_type(arraytype(PT), d, T)}
 
-PointsHull{N, T, AT}(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(sympoints, points, lines, rays)
+PointsHull{N, T, AT}(points::PointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(points, lines, rays)
 
 @vecrepelem PointsHull Point points
-@subrepelem PointsHull SymPoint sympoints
 
 """
     vrep(lines::LineIt, rays::RayIt)
@@ -190,39 +192,39 @@ similar_type(PT::Type{<:RaysHull}, d::FullDim{N}, ::Type{T}) where {N, T} = Rays
 @subrepelem RaysHull Line lines
 
 """
-    vrep(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt)
+    vrep(points::PointIt, lines::LineIt, rays::RayIt)
 
-Creates a V-representation for the polyhedron equal to the minkowski sum of the convex hull of `sympoints` and `points` with the conic hull of `lines` and `rays`.
+Creates a V-representation for the polyhedron equal to the minkowski sum of the convex hull of `points` with the conic hull of `lines` and `rays`.
 """
-vrep(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) = Hull(sympoints, points, lines, rays)
+vrep(points::PointIt, lines::LineIt, rays::RayIt) = Hull(points, lines, rays)
 
 mutable struct Hull{N, T, AT} <: VRepresentation{N, T}
     points::PointsHull{N, T, AT}
     rays::RaysHull{N, T, AT}
     function Hull{N, T, AT}(vits::VIt{N, T}...) where {N, T, AT}
-        sympoints, points, lines, rays = fillvits(vits...)
-        new{N, T, AT}(PointsHull(sympoints, points), RaysHull(lines, rays))
+        points, lines, rays = fillvits(FullDim{N}(), vits...)
+        # If points is empty and its eltype is Vector, by doing PointsHull(points), we loose the dimension information
+        # If it is non-empty, we still have something type unstable
+        new{N, T, AT}(PointsHull{N, T, AT}(points), RaysHull(lines, rays))
     end
 end
-function Hull(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
-    Hull{N, T, AT}(sympoints, points, lines, rays)
+function Hull(points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
+    Hull{N, T, AT}(points, lines, rays)
 end
 arraytype(::Union{Hull{N, T, AT}, Type{Hull{N, T, AT}}}) where {N, T, AT} = AT
 similar_type(PT::Type{<:Hull}, d::FullDim{N}, ::Type{T}) where {N, T} = Hull{N, T, similar_type(arraytype(PT), d, T)}
 
-@subrepelem Hull SymPoint points
 @subrepelem Hull Point points
 @subrepelem Hull Line rays
 @subrepelem Hull Ray rays
 
-fulltype(::Type{<:Union{Hull{N, T, AT}, SymPointsHull{N, T, AT}, PointsHull{N, T, AT}, LinesHull{N, T, AT}, RaysHull{N, T, AT}}}) where {N, T, AT} = Hull{N, T, AT}
+fulltype(::Type{<:Union{Hull{N, T, AT}, PointsHull{N, T, AT}, LinesHull{N, T, AT}, RaysHull{N, T, AT}}}) where {N, T, AT} = Hull{N, T, AT}
 
 dualtype(::Type{<:Intersection{N, T}}, ::Type{AT}) where {N, T, AT} = Hull{N, T, AT}
 dualtype(::Type{<:Hull{N, T}}, ::Type{AT}) where {N, T, AT} = Intersection{N, T, AT}
 const AnyIntersection{N, T, AT} = Union{Intersection{N, T, AT}, HyperPlanesIntersection{N, T, AT}}
 function dualfullspace(h::Union{AnyIntersection, Type{<:AnyIntersection}}, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT}
-    Hull{N, T, AT}(SymPoint{N, T, AT}[],
-                   [origin(AT, d)],
+    Hull{N, T, AT}([origin(AT, d)],
                    Line{N, T, AT}.(basis.(AT, d, 1:N)),
                    Ray{N, T, AT}[])
 end

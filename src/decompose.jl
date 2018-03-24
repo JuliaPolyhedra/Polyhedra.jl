@@ -1,8 +1,8 @@
 function scene(vr::VRep, ::Type{T}) where T
     # Intersection of rays with the limits of the scene
-    (xmin, xmax) = extrema(map((x)->x[1], allpoints(vr)))
-    (ymin, ymax) = extrema(map((x)->x[2], allpoints(vr)))
-    (zmin, zmax) = extrema(map((x)->x[3], allpoints(vr)))
+    (xmin, xmax) = extrema(map((x)->x[1], points(vr)))
+    (ymin, ymax) = extrema(map((x)->x[2], points(vr)))
+    (zmin, zmax) = extrema(map((x)->x[3], points(vr)))
     width = max(xmax-xmin, ymax-ymin, zmax-zmin)
     if width == zero(T)
         width = 2
@@ -84,7 +84,7 @@ function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
 
         # Checking vertices
         face_vert = pointtype(poly)[]
-        for x in allpoints(poly)
+        for x in points(poly)
             if _isapprox(dot(x, zray), h.β)
                 push!(face_vert, x)
             end

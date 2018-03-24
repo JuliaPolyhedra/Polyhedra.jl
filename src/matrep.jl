@@ -67,35 +67,31 @@ Base.get(hrep::MixedMatHRep{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(i
 
 # V-Representation
 """
-    vrep(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet())
+    vrep(V::AbstractMatrix, R::AbstractMatrix, Rlinset::IntSet=IntSet())
 
-Creates a V-representation for the polyhedron defined by the symmetric points ``V_i`` if `i in Vlinset`,
-points ``V_i`` otherwise, lines ``R_i`` if `i in Rlinset` and rays ``R_i`` otherwise
+Creates a V-representation for the polyhedron defined by the points ``V_i``,
+lines ``R_i`` if `i in Rlinset` and rays ``R_i`` otherwise
 where ``V_i`` (resp. ``R_i``) is the ``i``th row of `V` (resp. `R`), i.e. `V[i,:]` (resp. `R[i,:]`).
 """
-vrep(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet=IntSet(), Rlinset::IntSet=IntSet()) = MixedMatVRep(V, R, Vlinset, Rlinset)
-vrep(V::AbstractMatrix, linset::IntSet=IntSet()) = vrep(V, similar(V, 0, size(V, 2)), linset)
+vrep(V::AbstractMatrix, R::AbstractMatrix, Rlinset::IntSet=IntSet()) = MixedMatVRep(V, R, Rlinset)
+vrep(V::AbstractMatrix) = vrep(V, similar(V, 0, size(V, 2)))
 
 mutable struct MixedMatVRep{N,T} <: MixedVRep{N,T}
     V::AbstractMatrix{T} # each row is a vertex
     R::AbstractMatrix{T} # each row is a ray
-    Vlinset::IntSet
     Rlinset::IntSet
 
-    function MixedMatVRep{N, T}(V::AbstractMatrix, R::AbstractMatrix, Vlinset::IntSet, Rlinset::IntSet) where {N, T}
+    function MixedMatVRep{N, T}(V::AbstractMatrix, R::AbstractMatrix, Rlinset::IntSet) where {N, T}
         if iszero(size(V, 1)) && !iszero(size(R, 1))
             vconsistencyerror()
         end
         if (length(R) > 0 && size(R, 2) != N) || (length(V) > 0 && size(V, 2) != N)
             error("dimension does not match")
         end
-        if !isempty(Vlinset) && last(Vlinset) > size(V, 1)
-            error("The elements of Vlinset should be between 1 and the number of rows of V")
-        end
         if !isempty(Rlinset) && last(Rlinset) > size(R, 1)
             error("The elements of Rlinset should be between 1 and the number of rows of R")
         end
-        new{N, T}(V, R, Vlinset, Rlinset)
+        new{N, T}(V, R, Rlinset)
     end
 end
 
@@ -103,22 +99,20 @@ similar_type{N,T}(::Type{<:MixedMatVRep}, ::FullDim{N}, ::Type{T}) = MixedMatVRe
 arraytype(p::Union{MixedMatVRep{N, T}, Type{MixedMatVRep{N, T}}}) where {N, T} = Vector{T}
 fulltype(::Type{MixedMatVRep{N, T}}) where {N, T} = MixedMatVRep{N, T}
 
-function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Vlinset::IntSet, Rlinset::IntSet) where {S <: Real, T <: Real}
+function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Rlinset::IntSet) where {S <: Real, T <: Real}
     U = promote_type(S, T)
-    MixedMatVRep{size(V,2),U}(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Vlinset, Rlinset)
+    MixedMatVRep{size(V,2),U}(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Rlinset)
 end
 
 MixedMatVRep(v::VRep{N,T}) where {N,T} = MixedMatVRep{N,T}(v)
 
 function MixedMatVRep{N, T}(vits::VIt{N, T}...) where {N, T}
-    sympoints, points, lines, rays = fillvits(vits...)
-    nsympoint = length(sympoints)
+    points, lines, rays = fillvits(FullDim{N}(), vits...)
     npoint = length(points)
     nline = length(lines)
     nray = length(rays)
-    V = Matrix{T}(nsympoint + npoint, N)
+    V = Matrix{T}(npoint, N)
     R = Matrix{T}(nline + nray, N)
-    Vlinset = IntSet()
     Rlinset = IntSet()
     function _fill!(M, linset, offset, ps)
         for (i, p) in enumerate(ps)
@@ -128,28 +122,27 @@ function MixedMatVRep{N, T}(vits::VIt{N, T}...) where {N, T}
             end
         end
     end
-    _fill!(V, Vlinset, 0, sympoints)
-    _fill!(V, Vlinset, nsympoint, points)
+    _fill!(V, nothing, 0, points)
     _fill!(R, Rlinset, 0, lines)
     _fill!(R, Rlinset, nline, rays)
-    MixedMatVRep{N, T}(V, R, Vlinset, Rlinset)
+    MixedMatVRep{N, T}(V, R, Rlinset)
 end
 
-Base.copy(ext::MixedMatVRep{N,T}) where {N,T} = MixedMatVRep{N,T}(copy(ext.V), copy(ext.R), copy(ext.Vlinset), copy(ext.Rlinset))
+Base.copy(ext::MixedMatVRep{N,T}) where {N,T} = MixedMatVRep{N,T}(copy(ext.V), copy(ext.R), copy(ext.Rlinset))
 
 _mat(hrep::MixedMatVRep, ::PIndex) = hrep.V
 _mat(hrep::MixedMatVRep, ::RIndex) = hrep.R
-_linset(hrep::MixedMatVRep, ::PIndex) = hrep.Vlinset
-_linset(hrep::MixedMatVRep, ::RIndex) = hrep.Rlinset
+_islin(hrep::MixedMatVRep, ::PIndex) = false
+_islin(hrep::MixedMatVRep, idx::RIndex) = idx.value in hrep.Rlinset
 
-Base.isvalid(vrep::MixedMatVRep{N, T}, idx::VIndex{N, T}) where {N, T} = 0 < idx.value <= size(_mat(vrep, idx), 1) && (idx.value in _linset(vrep, idx)) == islin(idx)
+Base.isvalid(vrep::MixedMatVRep{N, T}, idx::VIndex{N, T}) where {N, T} = 0 < idx.value <= size(_mat(vrep, idx), 1) && _islin(vrep, idx) == islin(idx)
 Base.done(idxs::VIndices{N, T, <:MixedMatVRep{N, T}}, idx::VIndex{N, T}) where {N, T} = idx.value > size(_mat(idxs.rep, idx), 1)
 Base.get(vrep::MixedMatVRep{N, T}, idx::VIndex{N, T}) where {N, T} = valuetype(idx)(_mat(vrep, idx)[idx.value, :])
 
 dualtype(::Type{MixedMatHRep{N, T}}) where {N, T} = MixedMatVRep{N, T}
 dualtype(::Type{MixedMatVRep{N, T}}) where {N, T} = MixedMatHRep{N, T}
 function dualfullspace(h::MixedMatHRep, ::FullDim{N}, ::Type{T}) where {N, T}
-    MixedMatVRep{N, T}(zeros(T, 1, N), eye(T, N), IntSet(), IntSet(1:N))
+    MixedMatVRep{N, T}(zeros(T, 1, N), eye(T, N), IntSet(1:N))
 end
 
 export SimpleHRepresentation, SimpleVRepresentation

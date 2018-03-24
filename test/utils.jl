@@ -66,7 +66,7 @@ function inequality_fulltest(p::Polyhedron, hrepargs...)
 end
 
 function generator_fulltest(vr::VRepresentation, exp::VRepresentation)
-    @test nallpoints(vr) == nallpoints(exp)
+    @test npoints(vr) == npoints(exp)
     @test nlines(vr) == nlines(exp)
     @test nrays(vr) == nrays(exp)
     linspace = collect(lines(vr))
@@ -77,8 +77,8 @@ function generator_fulltest(vr::VRepresentation, exp::VRepresentation)
     for r in rays(exp)
         @test any(s -> inaff(r, s), rays(vr))
     end
-    for p in allpoints(exp)
-        @test any(q -> inaff(p, q, false), allpoints(vr))
+    for p in points(exp)
+        @test any(q -> inaff(p, q, false), points(vr))
     end
 end
 function generator_fulltest(v::VRepresentation, vrepargs...)

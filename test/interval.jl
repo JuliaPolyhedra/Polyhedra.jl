@@ -102,7 +102,7 @@
 
     # Empty
     h = HyperPlane([0], 1) ∩ HyperPlane([1], 0)
-    v = vrep(SymPoint{1, Int, Vector{Int}}[])
+    v = vrep(Line{1, Int, Vector{Int}}[])
 
     p = polyhedron(v)
     @test p isa Interval{Int}
@@ -162,7 +162,7 @@
 
     # Symmetric interval
     h = HalfSpace([1], 1) ∩ HalfSpace([-1], 1)
-    v = convexhull(SymPoint([1]))
+    v = convexhull([1], [-1])
 
     p = polyhedron(convexhull([-1], [1], [0]))
     @test p isa Interval{Int}
