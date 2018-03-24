@@ -585,6 +585,46 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "projection.html#Polyhedra.FourierMotzkin",
+    "page": "Projection/Elimination",
+    "title": "Polyhedra.FourierMotzkin",
+    "category": "type",
+    "text": "FourierMotzkin\n\nComputation of the projection by computing the H-representation and applying the Fourier-Motzkin elimination algorithm to it.\n\n\n\n"
+},
+
+{
+    "location": "projection.html#Polyhedra.BlockElimination",
+    "page": "Projection/Elimination",
+    "title": "Polyhedra.BlockElimination",
+    "category": "type",
+    "text": "BlockElimination\n\nComputation of the projection by computing the H-representation and applying the block elimination algorithm to it.\n\n\n\n"
+},
+
+{
+    "location": "projection.html#Polyhedra.ProjectGenerators",
+    "page": "Projection/Elimination",
+    "title": "Polyhedra.ProjectGenerators",
+    "category": "type",
+    "text": "ProjectGenerators\n\nComputation of the projection by computing the V-representation and projecting them.\n\n\n\n"
+},
+
+{
+    "location": "projection.html#Polyhedra.eliminate",
+    "page": "Projection/Elimination",
+    "title": "Polyhedra.eliminate",
+    "category": "function",
+    "text": "eliminate(p::Polyhedron, delset, algo::EliminationAlgorithm)\n\nEliminate the dimensions in delset by projecting the polyhedron onto the remaining dimension.\n\n\n\n"
+},
+
+{
+    "location": "projection.html#Polyhedra.project",
+    "page": "Projection/Elimination",
+    "title": "Polyhedra.project",
+    "category": "function",
+    "text": "project(p::Polyhedron, pset, algo)\n\nEquivalent to `eliminate(p, setdiff(1:N, pset), algo).\n\n\n\n"
+},
+
+{
     "location": "projection.html#Polyhedra.fixandeliminate",
     "page": "Projection/Elimination",
     "title": "Polyhedra.fixandeliminate",
@@ -597,7 +637,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Projection/Elimination",
     "title": "Projection/Elimination",
     "category": "section",
-    "text": "Consider the polyhedron created in the beginning of this section. As a reminder, it represents the following H-representation:beginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*One can verify that for any 0 leq x_2 leq 1, there exists a value x_1 such that (x_1 x_2) is in this polyhedron. This means that the H-representation obtained by eliminating x_1 is:beginalign*\n  x_1  leq 1 \n  x_1  geq 0\nendalign*where x_1 in the H-representation above represents x_2 in the previous one. This can be obtained as followsjulia> poly_x2 = eliminate(poly, [1])\njulia> hrep(poly_x2)\nH-representation\nbegin\n 2 2 rational\n 1//1 -1//1\n 0//1 1//1\nendThere is two methods of computing the elimination implemented in CDDLib: Fourier-Motzkin elimination and block elimination. As written by K. Fukuda in CDD\'s documentation, \"[Block elimination] might be a faster way to eliminate variables than the repeated [Fourier-Motzkin elimination] when the number of variables to eliminate is large\". You can specify the method to use as a third argument, e.g. eliminate(poly, [1], :FourierMotzkin), eliminate(poly, [1], :BlockElimination). A third method can be chosen: :ProjectGenerators. It computes the V-representation and then project each of its elements. This is the method of choice when the V-representation is already computed.If nothing is specified as in the block of code above, the behavior depends on the polyhedral library. If neither Fourier-Motzkin nor block elimination is implemented or if the V-representation is already computed then :ProjectGenerators is chosen. Otherwise, Polyhedra lets the library decide. In CDDLib, :FourierMotzkin is chosen when only the last dimension needs to be eliminated and :BlockElimination is chosen otherwise. Note that CDDLib only supports projecting the last trailing dimensions.fixandeliminate"
+    "text": "Consider the polyhedron created in the beginning of this section. As a reminder, it represents the following H-representation:beginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*One can verify that for any 0 leq x_2 leq 1, there exists a value x_1 such that (x_1 x_2) is in this polyhedron. This means that the H-representation obtained by eliminating x_1 is:beginalign*\n  x_1  leq 1 \n  x_1  geq 0\nendalign*where x_1 in the H-representation above represents x_2 in the previous one. This can be obtained as followsjulia> poly_x2 = eliminate(poly, [1])\njulia> hrep(poly_x2)\nH-representation\nbegin\n 2 2 rational\n 1//1 -1//1\n 0//1 1//1\nendThere is two methods of computing the elimination implemented in CDDLib: Fourier-Motzkin elimination and block elimination. As written by K. Fukuda in CDD\'s documentation, \"[Block elimination] might be a faster way to eliminate variables than the repeated [Fourier-Motzkin elimination] when the number of variables to eliminate is large\". You can specify the method to use as a third argument, e.g. eliminate(poly, [1], FourierMotzkin()), eliminate(poly, [1], BlockElimination()). A third method can be chosen: ProjectGenerators. It computes the V-representation and then project each of its elements. This is the method of choice when the V-representation is already computed.FourierMotzkin\nBlockElimination\nProjectGeneratorsIf nothing is specified as in the block of code above, the behavior depends on the polyhedral library. If neither Fourier-Motzkin nor block elimination is implemented or if the V-representation is already computed then :ProjectGenerators is chosen. Otherwise, Polyhedra lets the library decide. In CDDLib, :FourierMotzkin is chosen when only the last dimension needs to be eliminated and :BlockElimination is chosen otherwise. Note that CDDLib only supports projecting the last trailing dimensions.eliminate\nproject\nfixandeliminate"
 },
 
 {
