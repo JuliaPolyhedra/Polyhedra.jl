@@ -49,21 +49,7 @@ end
 # There shouldn't be any duplicates in hrep for this to work
 function removevredundancy(vrep::VRep, hrep::HRep; kws...)
     nl = nlines(vrep)
-    ps = removevredundancy(points(vrep), hrep; nl=nl, kws...)
-    sps = sympointtype(vrep)[]
-    for sp in sympoints(vrep)
-        p1 = coord(sp)
-        p2 = -coord(sp)
-        red1, red2 = isredundant.(hrep, (p1, p2); nl=nl, kws...)
-        if !red1 && !red2
-            push!(sps, sp)
-        elseif !red1
-            push!(ps, p1)
-        elseif !red2
-            push!(ps, p2)
-        end
-    end
-    typeof(vrep)(sps, ps, removevredundancy.(rreps(vrep), hrep; nl=nl, kws...)...)::typeof(vrep)
+    typeof(vrep)(removevredundancy.(vreps(vrep), hrep; nl=nl, kws...)...)::typeof(vrep)
 end
 
 function removehredundancy(hrepit::HIt, vrep::VRep; strongly=true, d=dim(vrep))
@@ -115,7 +101,7 @@ isredundant(p::HRep{N,T}, v::Line; strongly = true, nl::Int=nlines(p), solver = 
 function isredundant(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(p), solver = JuMP.UnsetSolver) where {N,T}
     checkvconsistency(p)
     hp = hyperplane(h)
-    pcount = count(p -> p in hp, allpoints(p))
+    pcount = count(p -> p in hp, points(p))
     # every line is in h, otherwise it would not be valid
     rcount = nlines(p) + count(r -> r in hp, rays(p))
     pcount < min(d, 1) || (strongly && pcount + rcount < d)
@@ -171,38 +157,25 @@ export removeduplicates
 
 # H-duplicates
 # Separate function so that it is compiled with a concrete type for p
-function vpupdatedup!(aff, points, sympoints, p::SymPoint)
-    found = false
-    # sympoints are treated before points so there shouldn't be any
-    @assert isempty(points)
-#    for (i, q) in enumerate(points)
-#        if (coord(p) - q) in aff || (coord(p) + q) in aff
-#            found = true
-#            deleteat!(points, i)
-#            push!(sympoints, p)
-#            break
-#        end
+#function vpupdatedup!(aff, points, sympoints, p::SymPoint)
+#    found = false
+#    # sympoints are treated before points so there shouldn't be any
+#    @assert isempty(points)
+##    for (i, q) in enumerate(points)
+##        if (coord(p) - q) in aff || (coord(p) + q) in aff
+##            found = true
+##            deleteat!(points, i)
+##            push!(sympoints, p)
+##            break
+##        end
+##    end
+#    if !found && !any(sp -> (coord(sp) - coord(p)) in aff || (coord(sp) + coord(p)) in aff, sympoints)
+#        push!(sympoints, p)
 #    end
-    if !found && !any(sp -> (coord(sp) - coord(p)) in aff || (coord(sp) + coord(p)) in aff, sympoints)
-        push!(sympoints, p)
-    end
-end
-function vpupdatedup!(aff, points, sympoints, p::AbstractPoint)
-    if !any(point -> (point - p) in aff, points) && !any(sp -> (coord(sp) - p) in aff || (coord(sp) + p) in aff, sympoints)
-        found = false
-        # TODO comment that out to avoid creating sympoints
-        #      because of the issue with incidence, see incidence.jl
-        for (i, q) in enumerate(points)
-            if p + q in aff
-                found = true
-                deleteat!(points, i)
-                push!(sympoints, SymPoint(p))
-                break
-            end
-        end
-        if !found
-            push!(points, p)
-        end
+#end
+function vpupdatedup!(aff, points, p::AbstractPoint)
+    if !any(point -> (point - p) in aff, points)
+        push!(points, p)
     end
 end
 #function vrupdatedup!(rays, lines, l::Line)
@@ -241,14 +214,10 @@ function vrupdatedup!(aff::VLinearSpace, rays::Vector{<:Ray}, r)
 end
 function premovedups(vrep::VRepresentation, aff::VLinearSpace)
     ps = pointtype(vrep)[]
-    sps = sympointtype(vrep)[]
-    for p in sympoints(vrep)
-        vpupdatedup!(aff, ps, sps, p)
-    end
     for p in points(vrep)
-        vpupdatedup!(aff, ps, sps, p)
+        vpupdatedup!(aff, ps, p)
     end
-    sps, ps
+    tuple(ps)
 end
 function removeduplicates(vrep::VPolytope)
     typeof(vrep)(premovedups(vrep, emptyspace(vrep))...)

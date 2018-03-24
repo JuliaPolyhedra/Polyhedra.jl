@@ -70,7 +70,8 @@ end
 #       for Julia to know them inside the """ ... """ of the docstrings
 HorV = HorVRep = horvrep = singular = singularlin = plural = plurallin = lenp = isnotemptyp = repexem = listexem = :_
 
-for (isVrep, elt, singular) in [(true, :SymPoint, :sympoint), (true, :AbstractPoint, :point),
+for (isVrep, elt, singular) in [#(true, :SymPoint, :sympoint),
+                                (true, :AbstractPoint, :point),
                                 (true, :Line, :line), (true, :Ray, :ray),
                                 (false, :HyperPlane, :hyperplane), (false, :HalfSpace, :halfspace)]
     if isVrep
@@ -158,7 +159,7 @@ for (isVrep, elt, singular) in [(true, :SymPoint, :sympoint), (true, :AbstractPo
 end
 
 # Combines an element type with its linear version.
-# e.g. combines points with the sympoints by splitting sympoints in two points.
+# e.g. combines rays with the lines by splitting lines in two points.
 struct AllRepIterator{N, T, ElemT, LinElemT, PT}
     itlin::RepIterator{N, T, LinElemT, PT}
     it::RepIterator{N, T, ElemT, PT}
@@ -181,7 +182,7 @@ function checknext(it::AllRepIterator, i, state)
 end
 
 splitlin(h::HyperPlane, i) = (i == 1 ? HalfSpace(h.a, h.β) : HalfSpace(-h.a, -h.β))
-splitlin(s::SymPoint, i) = (i == 1 ? coord(s) : -coord(s))
+#splitlin(s::SymPoint, i) = (i == 1 ? coord(s) : -coord(s))
 splitlin(l::Line, i) = (i == 1 ? Ray(coord(l)) : Ray(-coord(l)))
 
 Base.start(it::AllRepIterator) = checknext(it, 1, start(it.itlin))
@@ -200,7 +201,7 @@ function Base.next(it::AllRepIterator, istate)
     (item, newistate)
 end
 
-for (isVrep, singularlin, singular, repexem, listexem) in [(true, :sympoint, :point, "convexhull(SymPoint([1, 0]), [0, 1])", "[1, 0], [-1, 0], [0, 1]"),
+for (isVrep, singularlin, singular, repexem, listexem) in [#(true, :sympoint, :point, "convexhull(SymPoint([1, 0]), [0, 1])", "[1, 0], [-1, 0], [0, 1]"),
                                                            (true, :line, :ray, "Line([1, 0]) + Ray([0, 1])", "Ray([1, 0]), Ray([-1, 0]), Ray([0, 1])"),
                                                            (false, :hyperplane, :halfspace, "HyperPlane([1, 0], 1) ∩ HalfSpace([0, 1], 1)", "HalfSpace([1, 0]), HalfSpace([-1, 0]), HalfSpace([0, 1])")]
     if isVrep
@@ -262,28 +263,28 @@ const HyperPlaneIt{N, T} = ElemIt{<:HyperPlane{N, T}}
 const HalfSpaceIt{N, T} = ElemIt{<:HalfSpace{N, T}}
 const HIt{N, T} = Union{HyperPlaneIt{N, T}, HalfSpaceIt{N, T}}
 
-const SymPointIt{N, T} = ElemIt{<:SymPoint{N, T}}
+#const SymPointIt{N, T} = ElemIt{<:SymPoint{N, T}}
 const PointIt{N, T} = ElemIt{<:AbstractPoint{N, T}}
-const PIt{N, T} = Union{SymPointIt{N, T}, PointIt{N, T}}
+const PIt{N, T} = PointIt{N, T}
+#const PIt{N, T} = Union{SymPointIt{N, T}, PointIt{N, T}}
 const LineIt{N, T} = ElemIt{<:Line{N, T}}
 const RayIt{N, T} = ElemIt{<:Ray{N, T}}
 const RIt{N, T} = Union{LineIt{N, T}, RayIt{N, T}}
 const VIt{N, T} = Union{PIt{N, T}, RIt{N, T}}
 
-function fillvits(sympoints::ElemIt{SymPoint{N, T, AT}}, points::ElemIt{AT}=AT[], lines::ElemIt{Line{N, T, AT}}=Line{N, T, AT}[], rays::ElemIt{Ray{N, T, AT}}=Ray{N, T, AT}[]) where {N, T, AT}
-    if isempty(sympoints) && isempty(points) && !(isempty(lines) && isempty(rays))
+function fillvits(::FullDim{N}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}=Line{N, T, AT}[], rays::ElemIt{Ray{N, T, AT}}=Ray{N, T, AT}[]) where {N, T, AT<:AbstractPoint{N, T}}
+    if isempty(points) && !(isempty(lines) && isempty(rays))
         vconsistencyerror()
     end
-    sympoints, points, lines, rays
+    points, lines, rays
 end
-function fillvits(lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}=Ray{N, T, AT}[]) where {N, T, AT}
-    sps = SymPoint{N, T, AT}[]
+function fillvits(::FullDim{N}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}=Ray{N, T, AT}[]) where {N, T, AT}
     if isempty(lines) && isempty(rays)
         ps = AT[]
     else
         ps = [origin(AT, FullDim{N}())]
     end
-    sps, ps, lines, rays
+    ps, lines, rays
 end
 
 hreps(p::HAffineSpace{N, T}...) where {N, T} = tuple(hyperplanes(p...))
@@ -305,14 +306,14 @@ end
 vreps(p::VPolytope...) = preps(p...)
 vreps(p::VCone...) = rreps(p...)
 vreps(p...) = preps(p...)..., rreps(p...)...
-preps(p::VSymPolytope...) = tuple(sympoints(p...))
-preps(p::VRep...) = sympoints(p...), points(p...)
+#preps(p::VSymPolytope...) = tuple(sympoints(p...))
+preps(p::VRep...) = tuple(points(p...))
 rreps(p::VPolytope...) = tuple()
 rreps(p::VRep...) = lines(p...), rays(p...)
 rreps(p::VLinearSpace...) = tuple(lines(p...))
 
 function pmap(f, d::FullDim, ::Type{T}, p::VRep...) where T
-    mapsympoints(f, d, T, p...), mappoints(f, d, T, p...)
+    tuple(mappoints(f, d, T, p...))
 end
 function rmap(f, d::FullDim, ::Type{T}, p::VRep...) where T
     maplines(f, d, T, p...), maprays(f, d, T, p...)

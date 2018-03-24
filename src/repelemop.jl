@@ -15,13 +15,13 @@ linetype(::Type{Ray{N, T, AT}}) where {N, T, AT} = Line{N, T, AT}
 
 export translate
 
-function htranslate(p::HRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}}) where {N, S, T}
+function htranslate(p::HRep{N, T}, v::Union{AbstractPoint{N, S}}) where {N, S, T}
     f = (i, h) -> translate(h, v)
     Tout = Base.promote_op(+, T, S)
     similar_type(typeof(p), Tout)(hmap(f, FullDim{N}(), Tout, p)...)
 end
 
-function vtranslate{N, S, T}(p::VRep{N, T}, v::Union{AbstractArray{S}, Point{N, S}})
+function vtranslate{N, S, T}(p::VRep{N, T}, v::Union{AbstractPoint{N, S}})
     f = (i, u) -> translate(u, v)
     Tout = Base.promote_op(+, T, S)
     similar_type(typeof(p), Tout)(vmap(f, FullDim{N}(), Tout, p)...)
@@ -194,7 +194,7 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
     pout = PointT[] # Outside
     hp = hyperplane(h)
     hs = halfspace(h)
-    for p in allpoints(v) # we want sympoints to be treated as 2 points
+    for p in points(v) # we want sympoints to be treated as 2 points
         if p in hp
             push!(pinp, p)
         else
@@ -265,5 +265,5 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
         # but since there is no point, the polyhedron is empty and we should drop all rays/lines
         empty!(rsout)
     end
-    typeof(v)(SymPoint{N, T, eltype(psout)}[], psout, linetype(eltype(rsout))[], rsout)
+    typeof(v)(psout, linetype(eltype(rsout))[], rsout)
 end

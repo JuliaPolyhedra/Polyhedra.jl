@@ -1,8 +1,9 @@
 import GeometryTypes.Point
 export Point
 export HRepElement, HalfSpace, HyperPlane
-export VRepElement, AbstractPoint, SymPoint, AbstractRay, Ray, Line
-export islin, isray, ispoint, ispoint, coord, lift, simplify
+export VRepElement, AbstractPoint, AbstractRay, Ray, Line
+#export SymPoint
+export islin, isray, ispoint, coord, lift, simplify
 
 const MyVec{N,T} = Union{Vec{N,T},AbstractVector{T}}
 _vec{T}(::Type{T}, a::AbstractVector) = AbstractArray{T}(a)
@@ -125,22 +126,25 @@ function basis(::Type{SVector{N, T}}, ::FullDim{N}, i::Int) where {N, T}
     SVector{N, T}(ntuple(j -> j == i ? one(T) : zero(T), Val{N}))
 end
 
-"""
-    struct SymPoint{N, T, AT <: AbstractPoint{N, T}}
-        a::AT
-    end
+#"""
+#    struct SymPoint{N, T, AT <: AbstractPoint{N, T}}
+#        a::AT
+#    end
+#
+#The convex hull of `a` and `-a`.
+#"""
+#struct SymPoint{N, T, AT <: AbstractPoint{N, T}}
+#    a::AT
+#    function SymPoint{N, T, AT}(a::AT) where {N, T, AT<:AbstractPoint{N, T}}
+#        new{N, T, AT}(a)
+#    end
+#end
+#SymPoint{N, T, AT}(sympoint::SymPoint) where {N, T, AT} = SymPoint{N, T, AT}(AT(sympoint.a))
+#SymPoint{N, T}(a::AbstractPoint{N, T}) where {N, T} = SymPoint{N, T, typeof(a)}(a)
+#SymPoint(a::AbstractPoint) = SymPoint{fulldim(a), eltype(a)}(a)
 
-The convex hull of `a` and `-a`.
-"""
-struct SymPoint{N, T, AT <: AbstractPoint{N, T}}
-    a::AT
-    function SymPoint{N, T, AT}(a::AT) where {N, T, AT<:AbstractPoint{N, T}}
-        new{N, T, AT}(a)
-    end
-end
-SymPoint{N, T, AT}(sympoint::SymPoint) where {N, T, AT} = SymPoint{N, T, AT}(AT(sympoint.a))
-SymPoint{N, T}(a::AbstractPoint{N, T}) where {N, T} = SymPoint{N, T, typeof(a)}(a)
-SymPoint(a::AbstractPoint) = SymPoint{fulldim(a), eltype(a)}(a)
+#const AnyPoint{N, T} = Union{SymPoint{N, T}, AbstractPoint{N, T}}
+const AnyPoint{N, T} = AbstractPoint{N, T}
 
 """
     struct Ray{N, T, AT <: MyVec{N, T}}
@@ -178,12 +182,15 @@ Base.convert(::Type{Line{N, T, AT}}, line::Line) where {N, T, AT} = Line{N, T, A
 Line{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Line{N, T, AT}(a)
 Line(a::MyVec) = Line{fulldim(a), eltype(a)}(a)
 
-Base.:(==)(a::T, b::T) where {T<:Union{SymPoint,Ray,Line}} = coord(a) == coord(b)
-Base.getindex(x::Union{SymPoint,Ray,Line}, i) = x.a[i]
-Base.vec(x::Union{SymPoint,Ray,Line}) = vec(x.a)
+#const VStruct{N, T} = Union{SymPoint{N, T}, Line{N, T}, Ray{N, T}}
+const VStruct{N, T} = Union{Line{N, T}, Ray{N, T}}
+
+Base.:(==)(a::T, b::T) where T<:VStruct = coord(a) == coord(b)
+Base.getindex(x::VStruct, i) = x.a[i]
+Base.vec(x::VStruct) = vec(x.a)
 
 Base.:-(h::ElemT) where {ElemT<:Union{HyperPlane, HalfSpace}} = ElemT(-h.a, -h.β)
-Base.:-(elem::ElemT) where {ElemT<:Union{SymPoint,Ray,Line}} = ElemT(-coord(elem))
+Base.:-(elem::ElemT) where ElemT<:VStruct = ElemT(-coord(elem))
 # Used in remproj
 Base.:-(p::AbstractVector, l::Line) = p - coord(l)
 # Ray - Line is done in remproj
@@ -193,18 +200,18 @@ Base.:+(p::AbstractPoint, r::Ray) = p + coord(r)
 
 for op in [:dot, :cross]
     @eval begin
-        Base.$op(x::Union{SymPoint,Ray,Line}, y) = $op(x.a, y)
-        Base.$op(x, y::Union{SymPoint,Ray,Line}) = $op(x, y.a)
-        Base.$op(x::Union{SymPoint,Ray,Line}, y::Union{SymPoint,Ray,Line}) = $op(x.a, y.a)
+        Base.$op(x::VStruct, y) = $op(x.a, y)
+        Base.$op(x, y::VStruct) = $op(x, y.a)
+        Base.$op(x::VStruct, y::VStruct) = $op(x.a, y.a)
     end
 end
 
-Base.:(*)(α, r::T) where {T<:Union{SymPoint,Ray,Line}} = T(α * r.a)
-Base.:(*)(r::T, α) where {T<:Union{SymPoint,Ray,Line}} = T(r.a * α)
-Base.:(/)(r::T, α) where {T<:Union{SymPoint,Ray,Line}} = T(r.a / α)
+Base.:(*)(α, r::T) where T<:VStruct = T(α * r.a)
+Base.:(*)(r::T, α) where T<:VStruct = T(r.a * α)
+Base.:(/)(r::T, α) where T<:VStruct = T(r.a / α)
 
 const AbstractRay{N, T} = Union{Ray{N, T}, Line{N, T}}
-const FixedVRepElement{N,T} = Union{Point{N,T}, Ray{N,T}, Line{N,T}, SymPoint{N,T}}
+const FixedVRepElement{N,T} = Union{Point{N, T}, VStruct{N, T}}
 const VRepElement{N,T} = Union{FixedVRepElement{N,T}, AbstractVector{T}}
 const RepElement{N,T} = Union{HRepElement{N,T}, VRepElement{N,T}}
 const FixedRepElement{N,T} = Union{HRepElement{N,T}, FixedVRepElement{N,T}}
@@ -213,19 +220,17 @@ const Element{N, T} = Union{HRepElement{N, T}, VRepElement{N, T}}
 FullDim(::Union{FixedRepElement{N}, Type{<:FixedRepElement{N}}}) where {N} = FullDim{N}()
 MultivariatePolynomials.coefficienttype(::Union{FixedRepElement{N, T}, Type{<:FixedRepElement{N, T}}}) where {N, T} = T
 
-islin(::Union{SymPoint, Line, Type{<:Union{SymPoint, Line}}}) = true
+#islin(::Union{SymPoint, Line, Type{<:Union{SymPoint, Line}}}) = true
+islin(::Union{Line, Type{<:Line}}) = true
 islin(::Union{AbstractPoint, Ray, Type{<:Union{AbstractPoint, Ray}}}) = false
-ispoint(::Union{SymPoint, AbstractPoint, Type{<:Union{SymPoint, AbstractPoint}}}) = true
+ispoint(::Union{AnyPoint, Type{<:AnyPoint}}) = true
 ispoint(::Union{Line, Ray, Type{<:Union{Line, Ray}}}) = false
-isray(::Union{SymPoint, AbstractPoint, Type{<:Union{SymPoint, AbstractPoint}}}) = false
-isray(::Union{Line, Ray, Type{<:Union{Line, Ray}}}) = true
+isray(v) = !ispoint(v)
 
 coord(v::ElemT) where {ElemT<:Union{Point,AbstractVector}} = v
-coord(v::ElemT) where {ElemT<:Union{HRepElement,SymPoint,Ray,Line}} = v.a
+coord(v::ElemT) where {ElemT<:Union{HRepElement,VStruct}} = v.a
 
-const VRepElementContainer{N,T} = Union{Ray{N,T}, Line{N,T}, SymPoint{N,T}}
-
-function Base.:*(P::AbstractMatrix, v::ElemT) where {N, T, ElemT<:VRepElementContainer{N, T}}
+function Base.:*(P::AbstractMatrix, v::ElemT) where {N, T, ElemT<:VStruct{N, T}}
       Tout = _promote_type(T, eltype(P))
       ElemTout = similar_type(ElemT, FullDim{size(P, 1)}(), Tout)
       return ElemTout(P * v.a)
@@ -249,7 +254,7 @@ end
 zeropad(v::ElemT, n::Integer) where {N, T, ElemT <: VRepElement{N, T}} = _zeropad(v, n)
 zeropad(v::AbstractVector, n::Integer) = _zeropad(v, n)
 
-for ElemT in [:HalfSpace, :HyperPlane, :SymPoint, :Ray, :Line]
+for ElemT in [:HalfSpace, :HyperPlane, :Ray, :Line] # , :SymPoint
     @eval begin
         similar_type(::Type{$ElemT{N,T,AT}}, dout::FullDim{Nout}, ::Type{Tout}) where {N,T,AT,Nout,Tout} = $ElemT{Nout,Tout,similar_type(AT, dout, Tout)}
     end
@@ -259,7 +264,7 @@ ininterior{N}(r::Ray{N}, h::HalfSpace{N}) = _neg(h.a ⋅ r)
 ininterior{N}(l::Line{N}, h::HalfSpace{N}) = _neg(h.a ⋅ l)
 ininterior{N}(p::Point{N}, h::HalfSpace{N}) = _lt(h.a ⋅ p, h.β)
 ininterior{N}(p::AbstractVector, h::HalfSpace{N}) = _lt(h.a ⋅ p, h.β)
-ininterior{N}(p::SymPoint{N}, h::HalfSpace{N}) = _lt(h.a ⋅ p.p, h.β)
+#ininterior{N}(p::SymPoint{N}, h::HalfSpace{N}) = _lt(h.a ⋅ p.p, h.β)
 
 inrelativeinterior(p::VRepElement, h::HalfSpace) = ininterior(p, h)
 
@@ -267,10 +272,10 @@ Base.in(r::Ray{N}, h::HalfSpace{N}) where N = _nonpos(h.a ⋅ r)
 Base.in(l::Line{N}, h::HalfSpace{N}) where N = _nonpos(h.a ⋅ l)
 Base.in(p::Point{N}, h::HalfSpace{N}) where N = _leq(h.a ⋅ p, h.β)
 Base.in(p::AbstractVector, h::HalfSpace{N}) where N = _leq(h.a ⋅ p, h.β)
-function Base.in(p::SymPoint{N}, h::HalfSpace{N}) where N
-    ap = h.a ⋅ p.p
-    _leq(ap, h.β) && _leq(-ap, h.β)
-end
+#function Base.in(p::SymPoint{N}, h::HalfSpace{N}) where N
+#    ap = h.a ⋅ p.p
+#    _leq(ap, h.β) && _leq(-ap, h.β)
+#end
 
 ininterior(p::VRepElement, h::HyperPlane) = false
 inrelativeinterior(p::VRepElement, h::HyperPlane) = p in h
@@ -279,7 +284,7 @@ Base.in(r::Ray{N}, h::HyperPlane{N}) where {N} = isapproxzero(h.a ⋅ r)
 Base.in(l::Line{N}, h::HyperPlane{N}) where {N} = isapproxzero(h.a ⋅ l)
 Base.in(p::Point{N}, h::HyperPlane{N}) where {N} = _isapprox(h.a ⋅ p, h.β)
 Base.in(p::AbstractVector, h::HyperPlane{N}) where {N} = _isapprox(h.a ⋅ p, h.β)
-Base.in(p::SymPoint{N}, h::HyperPlane{N}) where {N} = isapproxzero(h.β) && isapproxzero(h.a ⋅ p.a)
+#Base.in(p::SymPoint{N}, h::HyperPlane{N}) where {N} = isapproxzero(h.β) && isapproxzero(h.a ⋅ p.a)
 
 function Base.vec(x::FixedVector{N,T}) where {N,T}
     y = Vector{T}(N)
@@ -288,7 +293,7 @@ function Base.vec(x::FixedVector{N,T}) where {N,T}
     end
     y
 end
-#Base.vec{ElemT::VRepElementContainer}(x::ElemT) = ElemT(vec(x.a))
+#Base.vec{ElemT::VStruct}(x::ElemT) = ElemT(vec(x.a))
 
 function pushbefore(a::AbstractSparseVector{T}, β::T) where T
     b = spzeros(T, length(a)+1)
@@ -308,9 +313,10 @@ lift(h::Ray{N,T}) where {N,T} = Ray{N+1,T}(pushbefore(h.a, zero(T)))
 lift(h::Line{N,T}) where {N,T} = Line{N+1,T}(pushbefore(h.a, zero(T)))
 lift(h::Point{N,T}) where {N,T} = pushbefore(h, one(T))
 lift(h::AbstractVector{T}) where {T} = pushbefore(h, one(T))
-lift(h::SymPoint{N,T}) where {N,T} = SymPoint{N+1,T}(pushbefore(h.a, one(T)))
+#lift(h::SymPoint{N,T}) where {N,T} = SymPoint{N+1,T}(pushbefore(h.a, one(T)))
 
-translate(p::Union{Point,AbstractVector,SymPoint}, v) = p + v
+#translate(p::Union{Point,AbstractVector,SymPoint}, v) = p + v
+translate(p::Union{Point,AbstractVector}, v) = p + v
 translate(r::Union{Ray,Line}, v) = r
 
 translate(h::ElemT, p) where {ElemT<:HRepElement} = ElemT(h.a, h.β + h.a ⋅ p)
@@ -366,4 +372,4 @@ simplify(h::HalfSpace{N, T}) where {N, T} = HalfSpace{N, T}(_simplify(h.a, h.β)
 simplify(h::HyperPlane{N, T}) where {N, T} = HyperPlane{N, T}(_simplify(h.a, h.β)...)
 simplify(r::T) where {T<:Union{Ray,Line}} = T(_simplify(coord(r)))
 # Cannot scale points
-simplify(p::Union{Point, AbstractVector, SymPoint}) = p
+simplify(p::AnyPoint) = p

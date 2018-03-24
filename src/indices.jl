@@ -15,9 +15,10 @@ const HyperPlaneIndex{N, T} = Index{N, T, <:HyperPlane{N, T}}
 const HalfSpaceIndex{N, T} = Index{N, T, <:HalfSpace{N, T}}
 const HIndex{N, T} = Union{HyperPlaneIndex{N, T}, HalfSpaceIndex{N, T}}
 
-const SymPointIndex{N, T} = Index{N, T, <:SymPoint{N, T}}
+#const SymPointIndex{N, T} = Index{N, T, <:SymPoint{N, T}}
 const PointIndex{N, T} = Index{N, T, <:AbstractPoint{N, T}}
-const PIndex{N, T} = Union{SymPointIndex{N, T}, PointIndex{N, T}}
+#const PIndex{N, T} = Union{SymPointIndex{N, T}, PointIndex{N, T}}
+const PIndex{N, T} = PointIndex{N, T}
 const LineIndex{N, T} = Index{N, T, <:Line{N, T}}
 const RayIndex{N, T} = Index{N, T, <:Ray{N, T}}
 const RIndex{N, T} = Union{LineIndex{N, T}, RayIndex{N, T}}
@@ -44,9 +45,10 @@ const HyperPlaneIndices{N, T, RepT} = Indices{N, T, <:HyperPlane{N, T}, RepT}
 const HalfSpaceIndices{N, T, RepT} = Indices{N, T, <:HalfSpace{N, T}, RepT}
 const HIndices{N, T, RepT} = Union{HyperPlaneIndices{N, T, RepT}, HalfSpaceIndices{N, T, RepT}}
 
-const SymPointIndices{N, T, RepT} = Indices{N, T, <:SymPoint{N, T}, RepT}
+#const SymPointIndices{N, T, RepT} = Indices{N, T, <:SymPoint{N, T}, RepT}
 const PointIndices{N, T, RepT} = Indices{N, T, <:AbstractPoint{N, T}, RepT}
-const PIndices{N, T, RepT} = Union{SymPointIndices{N, T, RepT}, PointIndices{N, T, RepT}}
+#const PIndices{N, T, RepT} = Union{SymPointIndices{N, T, RepT}, PointIndices{N, T, RepT}}
+const PIndices{N, T, RepT} = PointIndices{N, T, RepT}
 const LineIndices{N, T, RepT} = Indices{N, T, <:Line{N, T}, RepT}
 const RayIndices{N, T, RepT} = Indices{N, T, <:Ray{N, T}, RepT}
 const RIndices{N, T, RepT} = Union{LineIndices{N, T, RepT}, RayIndices{N, T, RepT}}
@@ -91,7 +93,7 @@ abstract type VSymPolytope{N, T} <: VPolytope{N, T} end
 @norepelem VSymPolytope Point
 
 abstract type VCone{N, T} <: VRepresentation{N, T} end
-@norepelem VCone SymPoint
+#@norepelem VCone SymPoint
 # See issue #28
 Base.length(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = hasallrays(idxs.rep) ? 1 : 0
 Base.isempty(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = !hasallrays(idxs.rep)

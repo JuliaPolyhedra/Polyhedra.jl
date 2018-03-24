@@ -8,9 +8,7 @@ function infeasibletest(lib::PolyhedraLibrary, n)
 
     poly = polyhedron(m, lib)
 
-    @test !hassympoints(poly)
     @test !haspoints(poly)
-    @test !hasallpoints(poly)
     @test !haslines(poly)
     @test !hasrays(poly)
     @test !hasallrays(poly)
@@ -21,9 +19,7 @@ function infeasibletest(lib::PolyhedraLibrary, n)
 
     # haseqs has triggered a detection of linearity but
     # it shouldn't affect the V-representation
-    @test !hassympoints(poly)
     @test !haspoints(poly)
-    @test !hasallpoints(poly)
     @test !haslines(poly)
     @test !hasrays(poly)
     @test !hasallrays(poly)

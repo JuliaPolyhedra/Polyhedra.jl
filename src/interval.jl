@@ -25,17 +25,12 @@ function Interval{T, AT}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) 
     end
     hps = HyperPlane{1, T, AT}[]
     hss = HalfSpace{1, T, AT}[]
-    sps = SymPoint{1, T, AT}[]
     ps = AT[]
     ls = Line{1, T, AT}[]
     rs = Ray{1, T, AT}[]
     if !isempty
         if hasub
-            if haslb && _isapprox(lb, -ub)
-                push!(sps, SymPoint(SVector(ub)))
-            else
-                push!(ps, SVector(ub))
-            end
+            push!(ps, SVector(ub))
             if haslb && _isapprox(lb, ub)
                 push!(hps, HyperPlane(SVector(one(T)), ub))
             else
@@ -55,9 +50,7 @@ function Interval{T, AT}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) 
         if haslb
             if !_isapprox(lb, ub)
                 push!(hss, HalfSpace(SVector(-one(T)), -lb))
-                if !_isapprox(lb, -ub)
-                    push!(ps, SVector(lb))
-                end
+                push!(ps, SVector(lb))
             end
         end
     else
@@ -66,7 +59,7 @@ function Interval{T, AT}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) 
         push!(hps, HyperPlane(SVector(zero(T)), one(T)))
     end
     h = hrep(hps, hss)
-    v = vrep(sps, ps, ls, rs)
+    v = vrep(ps, ls, rs)
     volume = isempty ? zero(T) : (haslb && hasub ? max(zero(T), ub - lb) : -one(T))
     Interval{T, AT}(h, v, volume)
 end
@@ -125,7 +118,7 @@ function _vinterval(v::VRep{1, T}, ::Type{AT}) where {T, AT}
     hasub = true
     ub = zero(T)
     isempty = true
-    for p in allpoints(v)
+    for p in points(v)
         x = coord(p)[1]
         if isempty
             isempty = false

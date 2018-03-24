@@ -47,7 +47,7 @@ Base.isvalid(hrep::LiftedHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} 
 Base.done(idxs::HIndices{N, T, <:LiftedHRepresentation{N, T}}, idx::HIndex{N, T}) where {N, T} = idx.value > size(idxs.rep.A, 1)
 Base.get(hrep::LiftedHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(idx)(-hrep.A[idx.value,2:end], hrep.A[idx.value,1])
 
-# V-Represenation
+# V-Representation
 
 mutable struct LiftedVRepresentation{N,T} <: MixedVRep{N,T}
     R::AbstractMatrix{T} # each row is a vertex if the first element is 1 and a ray otherwise
@@ -71,12 +71,11 @@ LiftedVRepresentation(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <:
 LiftedVRepresentation(v::VRepresentation{N,T}) where {N,T} = LiftedVRepresentation{N,T}(v)
 
 function LiftedVRepresentation{N, T}(vits::VIt{N, T}...) where {N, T}
-    sympoints, points, lines, rays = fillvits(vits...)
-    nsympoint = length(sympoints)
+    points, lines, rays = fillvits(FullDim{N}(), vits...)
     npoint = length(points)
     nline = length(lines)
     nray = length(rays)
-    nvrep = nsympoint + npoint + nline + nray
+    nvrep = npoint + nline + nray
     R = Matrix{T}(nvrep, N+1)
     linset = IntSet()
     function _fill(offset, z, ps)
@@ -88,10 +87,9 @@ function LiftedVRepresentation{N, T}(vits::VIt{N, T}...) where {N, T}
             end
         end
     end
-    _fill(0, one(T), sympoints)
-    _fill(nsympoint, one(T), points)
-    _fill(nsympoint+npoint, zero(T), lines)
-    _fill(nsympoint+npoint+nline, zero(T), rays)
+    _fill(0, one(T), points)
+    _fill(npoint, zero(T), lines)
+    _fill(npoint+nline, zero(T), rays)
     LiftedVRepresentation{N, T}(R, linset)
 end
 
@@ -106,7 +104,10 @@ function isrowpoint(ext::LiftedVRepresentation{N,T}, i) where {N,T}
 end
 
 function Base.isvalid(vrep::LiftedVRepresentation{N, T}, idx::VIndex{N, T}) where {N, T}
-    0 < idx.value <= nvreps(vrep) && isrowpoint(vrep, idx.value) == ispoint(idx) && (idx.value in vrep.linset) == islin(idx)
+    isp = isrowpoint(vrep, idx.value)
+    isl = (idx.value in vrep.linset)
+    @assert !isp || !isl # if isp && isl, it is a symmetric point but it is not allowed to mix symmetric points and points
+    0 < idx.value <= nvreps(vrep) && isp == ispoint(idx) && isl == islin(idx)
 end
 Base.done(idxs::VIndices{N, T, <:LiftedVRepresentation{N, T}}, idx::VIndex{N, T}) where {N, T} = idx.value > size(idxs.rep.R, 1)
 Base.get(vrep::LiftedVRepresentation{N, T}, idx::VIndex{N, T}) where {N, T} = valuetype(idx)(vrep.R[idx.value,2:end])
