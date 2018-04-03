@@ -287,14 +287,11 @@ function fillvits(::FullDim{N}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{
     ps, lines, rays
 end
 
+hreps(p::HRep{N, T}...) where {N, T} = hyperplanes(p...), halfspaces(p...)
 hreps(p::HAffineSpace{N, T}...) where {N, T} = tuple(hyperplanes(p...))
-function hreps(p::HRep{N, T}...) where {N, T}
-    hyperplanes(p...), halfspaces(p...)
-end
 
-function hmap(f, d::FullDim, ::Type{T}, p::HRep...) where T
-    maphyperplanes(f, d, T, p...), maphalfspaces(f, d, T, p...)
-end
+hmap(f, d::FullDim, ::Type{T}, p::HRep...) where T = maphyperplanes(f, d, T, p...), maphalfspaces(f, d, T, p...)
+hmap(f, d::FullDim, ::Type{T}, p::HAffineSpace...) where T = tuple(maphyperplanes(f, d, T, p...))
 
 function hconvert(::Type{RepTout}, p::HRep{N, T}) where {N, T, RepTout<:HRep{N, T}}
     RepTout(hreps(p)...)
@@ -303,23 +300,19 @@ function hconvert(::Type{RepTout}, p::HRep{N}) where {N, T, RepTout<:HRep{N, T}}
     RepTout(RepIterator{N, T}.(hreps(p))...)
 end
 
-vreps(p::VPolytope...) = preps(p...)
-vreps(p::VCone...) = rreps(p...)
 vreps(p...) = preps(p...)..., rreps(p...)...
-#preps(p::VSymPolytope...) = tuple(sympoints(p...))
 preps(p::VRep...) = tuple(points(p...))
-rreps(p::VPolytope...) = tuple()
+preps(p::VCone...) = tuple()
 rreps(p::VRep...) = lines(p...), rays(p...)
 rreps(p::VLinearSpace...) = tuple(lines(p...))
+rreps(p::VPolytope...) = tuple()
 
-function pmap(f, d::FullDim, ::Type{T}, p::VRep...) where T
-    tuple(mappoints(f, d, T, p...))
-end
-function rmap(f, d::FullDim, ::Type{T}, p::VRep...) where T
-    maplines(f, d, T, p...), maprays(f, d, T, p...)
-end
-vmap(f, d::FullDim, ::Type{T}, p::VPolytope...) where T = pmap(f, d, T, p...)
 vmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = pmap(f, d, T, p...)..., rmap(f, d, T, p...)...
+pmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = tuple(mappoints(f, d, T, p...))
+pmap(f, d::FullDim, ::Type, p::VCone...) = tuple()
+rmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = maplines(f, d, T, p...), maprays(f, d, T, p...)
+rmap(f, d::FullDim, ::Type{T}, p::VLinearSpace...) where T = maplines(f, d, T, p...)
+rmap(f, d::FullDim, ::Type, p::VPolytope...) = tuple()
 
 function vconvert(::Type{RepTout}, p::VRep{N, T}) where {N, T, RepTout<:VRep{N, T}}
     RepTout(vreps(p)...)

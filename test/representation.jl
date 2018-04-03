@@ -83,88 +83,88 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         @test Polyhedra.similar_type(LiftedVRepresentation{2, Int}, FullDim{3}(), Float64) == LiftedVRepresentation{3, Float64}
     end
 
-    @testset "eltype for some iterators is incorrect #7" begin
-        function collecttest(it, exp_type)
-            @test MP.coefficienttype(it) == exp_type
-            a = collect(it)
-            @test typeof(a) = Vector{exp_type}
-        end
-        hps = [HyperPlane([1, 2, 3], 7.)]
-        shps = [@inferred HyperPlane((@SVector [1, 2, 3]), 7.)]
-        @test eltype(shps) == HyperPlane{3, Float64, SVector{3, Float64}}
-        hss = [HalfSpace([4, 5, 6.], 8)]
-        shss = [@inferred HalfSpace((@SVector [4., 5., 6.]), 8)]
-        @test eltype(shss) == HalfSpace{3, Float64, SVector{3, Float64}}
-        for (hr, AT) in (((@inferred hrep(hps)), Vector{Float64}),
-                         ((@inferred hrep(shps)), SVector{3, Float64}),
-                         ((@inferred hrep(hss)), Vector{Float64}),
-                         ((@inferred hrep(shss)), SVector{3, Float64}),
-                         ((@inferred hrep(hps, hss)), Vector{Float64}),
-                         ((@inferred hrep(shps, shss)), SVector{3, Float64}),
-                         (hrep([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}),
-                         (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}))
-            @test (@inferred coefficienttype(hr)) == Float64
-            @test                                               (@inferred eltype(allhalfspaces(hr)))  == HalfSpace{3, Float64, AT}
-            @test                                               (@inferred collect(allhalfspaces(hr))) isa Vector{HalfSpace{3, Float64, AT}}
-            @test isempty(allhalfspaces(hr)) == iszero(nallhalfspaces(hr))
-            @test (@inferred Polyhedra.halfspacetype(hr))    == (@inferred eltype(halfspaces(hr)))     == HalfSpace{3, Float64, AT}
-            @test                                               (@inferred collect(halfspaces(hr)))    isa Vector{HalfSpace{3, Float64, AT}}
-            @test isempty(halfspaces(hr)) == iszero(nhalfspaces(hr))
-            @test (@inferred Polyhedra.hyperplanetype(hr))   == (@inferred eltype(hyperplanes(hr)))    == HyperPlane{3, Float64, AT}
-            @test                                               (@inferred collect(hyperplanes(hr)))   isa Vector{HyperPlane{3, Float64, AT}}
-            @test isempty(hyperplanes(hr)) == iszero(nhyperplanes(hr))
-            @test_throws DimensionMismatch hr * ones(2, 3) # TODO replace by ones(2, 3) \ hr
-        end
-        #symps = [SymPoint([0, 1])]
-        #ssymps = [SymPoint(@SVector [0, 1])]
-        ps = [[1, 2], [3, 4]]
-        sps = [(@SVector [1, 2]), (@SVector [3, 4])]
-        rs = [Ray([0, 1])]
-        srs = [Ray(@SVector [0, 1])]
-        ls = [Line([0, 1])]
-        sls = [Line(@SVector [0, 1])]
-        @test eltype(sps) == SVector{2, Int}
-        for (vr, AT) in (#((@inferred vrep(symps)), Vector{Int}),
-                         #((@inferred vrep(ssymps)), SVector{2, Int}),
-                         (vrep(ps), Vector{Int}),
-                         ((@inferred vrep(sps)), SVector{2, Int}),
-                         #((@inferred vrep(symps, ps)), Vector{Int}),
-                         #(convexhull(symps..., ps...), Vector{Int}),
-                         #(convexhull(ps..., symps...), Vector{Int}),
-                         (convexhull(ps...), Vector{Int}),
-                         #((@inferred vrep(ssymps, sps)), SVector{2, Int}),
-                         #((@inferred convexhull(ssymps..., sps...)), SVector{2, Int}),
-                         #((@inferred convexhull(sps..., ssymps...)), SVector{2, Int}),
-                         ((@inferred convexhull(sps...)), SVector{2, Int}),
-                         ((@inferred vrep(ls)), Vector{Int}),
-                         ((@inferred vrep(sls)), SVector{2, Int}),
-                         ((@inferred vrep(rs)), Vector{Int}),
-                         ((@inferred vrep(srs)), SVector{2, Int}),
-                         ((@inferred vrep(ls, rs)), Vector{Int}),
-                         ((@inferred vrep(sls, srs)), SVector{2, Int}),
-                         ((@inferred vrep(ps, ls, rs)), Vector{Int}),
-                         ((@inferred vrep(sps, sls, srs)), SVector{2, Int}),
-                         (vrep([1 2; 3 4]), Vector{Int}),
-                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0), IntSet()), Vector{Int}))
-            @test (@inferred coefficienttype(vr)) == Int
-#            @test (@inferred Polyhedra.sympointtype(vr)) == (@inferred eltype(sympoints(vr)))  == SymPoint{2, Int, AT}
-#            @test                                           (@inferred collect(sympoints(vr))) isa Vector{SymPoint{2, Int, AT}}
-#            @test isempty(sympoints(vr)) == iszero(nsympoints(vr))
-            @test (@inferred Polyhedra.pointtype(vr))    == (@inferred eltype(points(vr)))     == AT
-            @test                                           (@inferred collect(points(vr)))    isa Vector{AT}
-            @test isempty(points(vr)) == iszero(npoints(vr))
-            @test                                           (@inferred eltype(allrays(vr)))    == Ray{2, Int, AT}
-            @test                                           (@inferred collect(allrays(vr)))   isa Vector{Ray{2, Int, AT}}
-            @test isempty(allrays(vr)) == iszero(nallrays(vr))
-            @test (@inferred Polyhedra.linetype(vr))     == (@inferred eltype(lines(vr)))      == Line{2, Int, AT}
-            @test                                           (@inferred collect(lines(vr)))     isa Vector{Line{2, Int, AT}}
-            @test isempty(lines(vr)) == iszero(nlines(vr))
-            @test (@inferred Polyhedra.raytype(vr))      == (@inferred eltype(rays(vr)))       == Ray{2, Int, AT}
-            @test                                           (@inferred collect(rays(vr)))      isa Vector{Ray{2, Int, AT}}
-            @test isempty(rays(vr)) == iszero(nrays(vr))
-            @test_throws DimensionMismatch ones(2, 1) * vr
-        end
-    end
+#    @testset "eltype for some iterators is incorrect #7" begin
+#        function collecttest(it, exp_type)
+#            @test MP.coefficienttype(it) == exp_type
+#            a = collect(it)
+#            @test typeof(a) = Vector{exp_type}
+#        end
+#        hps = [HyperPlane([1, 2, 3], 7.)]
+#        shps = [@inferred HyperPlane((@SVector [1, 2, 3]), 7.)]
+#        @test eltype(shps) == HyperPlane{3, Float64, SVector{3, Float64}}
+#        hss = [HalfSpace([4, 5, 6.], 8)]
+#        shss = [@inferred HalfSpace((@SVector [4., 5., 6.]), 8)]
+#        @test eltype(shss) == HalfSpace{3, Float64, SVector{3, Float64}}
+#        for (hr, AT) in (((@inferred hrep(hps)), Vector{Float64}),
+#                         ((@inferred hrep(shps)), SVector{3, Float64}),
+#                         ((@inferred hrep(hss)), Vector{Float64}),
+#                         ((@inferred hrep(shss)), SVector{3, Float64}),
+#                         ((@inferred hrep(hps, hss)), Vector{Float64}),
+#                         ((@inferred hrep(shps, shss)), SVector{3, Float64}),
+#                         (hrep([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}),
+#                         (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}))
+#            @test (@inferred coefficienttype(hr)) == Float64
+#            @test                                               (@inferred eltype(allhalfspaces(hr)))  == HalfSpace{3, Float64, AT}
+#            @test                                               (@inferred collect(allhalfspaces(hr))) isa Vector{HalfSpace{3, Float64, AT}}
+#            @test isempty(allhalfspaces(hr)) == iszero(nallhalfspaces(hr))
+#            @test (@inferred Polyhedra.halfspacetype(hr))    == (@inferred eltype(halfspaces(hr)))     == HalfSpace{3, Float64, AT}
+#            @test                                               (@inferred collect(halfspaces(hr)))    isa Vector{HalfSpace{3, Float64, AT}}
+#            @test isempty(halfspaces(hr)) == iszero(nhalfspaces(hr))
+#            @test (@inferred Polyhedra.hyperplanetype(hr))   == (@inferred eltype(hyperplanes(hr)))    == HyperPlane{3, Float64, AT}
+#            @test                                               (@inferred collect(hyperplanes(hr)))   isa Vector{HyperPlane{3, Float64, AT}}
+#            @test isempty(hyperplanes(hr)) == iszero(nhyperplanes(hr))
+#            @test_throws DimensionMismatch hr * ones(2, 3) # TODO replace by ones(2, 3) \ hr
+#        end
+#        #symps = [SymPoint([0, 1])]
+#        #ssymps = [SymPoint(@SVector [0, 1])]
+#        ps = [[1, 2], [3, 4]]
+#        sps = [(@SVector [1, 2]), (@SVector [3, 4])]
+#        rs = [Ray([0, 1])]
+#        srs = [Ray(@SVector [0, 1])]
+#        ls = [Line([0, 1])]
+#        sls = [Line(@SVector [0, 1])]
+#        @test eltype(sps) == SVector{2, Int}
+#        for (vr, AT) in (#((@inferred vrep(symps)), Vector{Int}),
+#                         #((@inferred vrep(ssymps)), SVector{2, Int}),
+#                         (vrep(ps), Vector{Int}),
+#                         ((@inferred vrep(sps)), SVector{2, Int}),
+#                         #((@inferred vrep(symps, ps)), Vector{Int}),
+#                         #(convexhull(symps..., ps...), Vector{Int}),
+#                         #(convexhull(ps..., symps...), Vector{Int}),
+#                         (convexhull(ps...), Vector{Int}),
+#                         #((@inferred vrep(ssymps, sps)), SVector{2, Int}),
+#                         #((@inferred convexhull(ssymps..., sps...)), SVector{2, Int}),
+#                         #((@inferred convexhull(sps..., ssymps...)), SVector{2, Int}),
+#                         ((@inferred convexhull(sps...)), SVector{2, Int}),
+#                         ((@inferred vrep(ls)), Vector{Int}),
+#                         ((@inferred vrep(sls)), SVector{2, Int}),
+#                         ((@inferred vrep(rs)), Vector{Int}),
+#                         ((@inferred vrep(srs)), SVector{2, Int}),
+#                         ((@inferred vrep(ls, rs)), Vector{Int}),
+#                         ((@inferred vrep(sls, srs)), SVector{2, Int}),
+#                         ((@inferred vrep(ps, ls, rs)), Vector{Int}),
+#                         ((@inferred vrep(sps, sls, srs)), SVector{2, Int}),
+#                         (vrep([1 2; 3 4]), Vector{Int}),
+#                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0), IntSet()), Vector{Int}))
+#            @test (@inferred coefficienttype(vr)) == Int
+##            @test (@inferred Polyhedra.sympointtype(vr)) == (@inferred eltype(sympoints(vr)))  == SymPoint{2, Int, AT}
+##            @test                                           (@inferred collect(sympoints(vr))) isa Vector{SymPoint{2, Int, AT}}
+##            @test isempty(sympoints(vr)) == iszero(nsympoints(vr))
+#            @test (@inferred Polyhedra.pointtype(vr))    == (@inferred eltype(points(vr)))     == AT
+#            @test                                           (@inferred collect(points(vr)))    isa Vector{AT}
+#            @test isempty(points(vr)) == iszero(npoints(vr))
+#            @test                                           (@inferred eltype(allrays(vr)))    == Ray{2, Int, AT}
+#            @test                                           (@inferred collect(allrays(vr)))   isa Vector{Ray{2, Int, AT}}
+#            @test isempty(allrays(vr)) == iszero(nallrays(vr))
+#            @test (@inferred Polyhedra.linetype(vr))     == (@inferred eltype(lines(vr)))      == Line{2, Int, AT}
+#            @test                                           (@inferred collect(lines(vr)))     isa Vector{Line{2, Int, AT}}
+#            @test isempty(lines(vr)) == iszero(nlines(vr))
+#            @test (@inferred Polyhedra.raytype(vr))      == (@inferred eltype(rays(vr)))       == Ray{2, Int, AT}
+#            @test                                           (@inferred collect(rays(vr)))      isa Vector{Ray{2, Int, AT}}
+#            @test isempty(rays(vr)) == iszero(nrays(vr))
+#            @test_throws DimensionMismatch ones(2, 1) * vr
+#        end
+#    end
 
     @testset "Iterating over halfspaces of a MixedMatHRep broken #9" begin
         A = [1 2; 3 4; 5 6]
@@ -262,123 +262,123 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         htest(LiftedHRepresentation([0 1; 0 2], IntSet([2])), 1, 1)
     end
 
-    @testset "Building rep with different type" begin
-        @test coefficienttype(MixedMatHRep{2, Float64}([1 2; 3 4], [1, 2], IntSet())) == Float64
-        @test coefficienttype(MixedMatVRep{2, Float64}([1 2; 3 4], [1 2; 3 4], IntSet())) == Float64
-        @test coefficienttype(LiftedHRepresentation{1, Float64}([1 2; 3 4])) == Float64
-        @test coefficienttype(LiftedVRepresentation{1, Float64}([1 2; 3 4])) == Float64
-    end
-
-    @testset "Chebyshev center" begin
-        p = hrep(eye(2), zeros(2))
-        @test_throws ErrorException chebyshevcenter(p, lpsolver) # unbounded
-
-        p = hrep([1 1; -1 -1], [0, -1])
-        @test_throws ErrorException chebyshevcenter(p, lpsolver) # empty
-
-        # examples/chebyshevcenter.ipynb
-        A = [ 2  1
-              2 -1
-             -1  2
-             -1 -2]
-        b = ones(4)
-        p = hrep(A, b)
-        c, r = chebyshevcenter(p, lpsolver)
-        @test c ≈ [0, 0] atol=1e-6
-        @test r ≈ 0.4472135955 atol=1e-6
-
-        p = convexhull([0, 0], [0, 1], [1, 0])
-        @test_throws ErrorException chebyshevcenter(p) # Not yet implemented
-    end
-
-    @testset "V-consistency with iterator constructor" begin
-        T = Int
-        AT = Vector{Int}
-        for VRepType in (Polyhedra.LiftedVRepresentation{2, T},
-                         Polyhedra.MixedMatVRep{2, T},
-                         Polyhedra.Hull{2, T, AT})
-            @test_throws ErrorException VRepType(AT[], [Line([1, 2])])
-            @test_throws ErrorException VRepType(AT[], Line{2, T, AT}[], [Ray([1, 2])])
-            @test_throws ErrorException VRepType(AT[], [Line([1, 2])], [Ray([1, 2])])
-            @test isempty(VRepType(AT[], Line{2, T, AT}[], Ray{2, T, AT}[]))
-            @test isempty(VRepType(Line{2, T, AT}[], Ray{2, T, AT}[]))
-            v = VRepType([Line([1, 2])])
-            @test collect(points(v)) == [[0, 0]]
-            @test collect(lines(v)) == [Line([1, 2])]
-            @test !hasrays(v)
-        end
-        for vinc in (InconsistentVRep{2, T, AT}(AT[], Line{2, T, AT}[], [Ray([1, 2])]),
-                     InconsistentVRep{2, T, AT}(AT[], [Line([1, 2])], Ray{2, T, AT}[]),
-                     InconsistentVRep{2, T, AT}(AT[], [Line([1, 2])], [Ray([1, 2])]))
-            @test_throws ErrorException Polyhedra.checkvconsistency(vinc)
-            pinc = polyhedron(vinc)
-            @test_throws ErrorException Polyhedra.checkvconsistency(pinc)
-        end
-    end
-
-    @testset "Conversion with different array type" begin
-        @testset "V-representation" begin
-            vv = convexhull(@SVector [0, 1]) + conichull((@SVector [1, 1]), Line(@SVector [1, 0]))
-            mv = vrep([0 1], [1 1; 1 0], IntSet([2]))
-            generator_fulltest(vv, mv)
-            mvv = @inferred typeof(mv)(vv)
-            vmv = @inferred typeof(vv)(mv)
-            generator_fulltest(vv, mvv)
-            generator_fulltest(vmv, vv)
-        end
-        @testset "H-representation" begin
-            vh = HalfSpace((@SVector [1, 0]), 0) ∩ HyperPlane((@SVector [0, 1]), 1)
-            mh = hrep([0 1; 1 0], [1, 0], IntSet(1))
-            inequality_fulltest(vh, mh)
-            mvh = @inferred typeof(mh)(vh)
-            vmh = @inferred typeof(vh)(mh)
-            inequality_fulltest(vh, mvh)
-            inequality_fulltest(vmh, vh)
-        end
-    end
-    @testset "Copy test" begin
-        @testset "V-representation" begin
-            vr = convexhull(@SVector [0, 1])
-            vc = copy(vr)
-            @test vc !== vr
-            @test vc.points !== vr.points
-            generator_fulltest(vc, vr)
-            vr = conichull(Line(@SVector [1, 1]), Line(@SVector [1, 0]))
-            vc = copy(vr)
-            @test vc !== vr
-            @test vc.lines !== vr.lines
-            generator_fulltest(vc, vr)
-            vr = conichull(Line(@SVector [1, 1]), Line(@SVector [1, 0]), @SVector [1, 1])
-            vc = copy(vr)
-            @test vc !== vr
-            @test vc.rays !== vr.rays
-            @test vc.lines !== vr.lines
-            @test vc.lines.lines !== vr.lines.lines
-            generator_fulltest(vc, vr)
-            vr = convexhull(@SVector [0, 1]) + conichull(Line(@SVector [1, 1]), (@SVector [1, 1]), Line(@SVector [1, 0]))
-            vc = copy(vr)
-            @test vc !== vr
-            @test vc.points !== vr.points
-            @test vc.points.points !== vr.points.points
-            @test vc.rays !== vr.rays
-            @test vc.rays.lines !== vr.rays.lines
-            @test vc.rays.lines.lines !== vr.rays.lines.lines
-            @test vc.rays.rays !== vr.rays.rays
-            generator_fulltest(vc, vr)
-        end
-        @testset "H-representation" begin
-            hr = HyperPlane([1, 0], 1) ∩ HyperPlane([0, 1], -1)
-            hc = copy(hr)
-            @test hc !== hr
-            @test hc.hyperplanes !== hr.hyperplanes
-            inequality_fulltest(hc, hr)
-            hr = HyperPlane([1, 0], 1) ∩ HyperPlane([1, 1], 0) ∩ HalfSpace([0, 1], -1)
-            hc = copy(hr)
-            @test hc !== hr
-            @test hc.hyperplanes !== hr.hyperplanes
-            @test hc.hyperplanes.hyperplanes !== hr.hyperplanes.hyperplanes
-            @test hc.halfspaces !== hr.halfspaces
-            inequality_fulltest(hc, hr)
-        end
-    end
+#    @testset "Building rep with different type" begin
+#        @test coefficienttype(MixedMatHRep{2, Float64}([1 2; 3 4], [1, 2], IntSet())) == Float64
+#        @test coefficienttype(MixedMatVRep{2, Float64}([1 2; 3 4], [1 2; 3 4], IntSet())) == Float64
+#        @test coefficienttype(LiftedHRepresentation{1, Float64}([1 2; 3 4])) == Float64
+#        @test coefficienttype(LiftedVRepresentation{1, Float64}([1 2; 3 4])) == Float64
+#    end
+#
+#    @testset "Chebyshev center" begin
+#        p = hrep(eye(2), zeros(2))
+#        @test_throws ErrorException chebyshevcenter(p, lpsolver) # unbounded
+#
+#        p = hrep([1 1; -1 -1], [0, -1])
+#        @test_throws ErrorException chebyshevcenter(p, lpsolver) # empty
+#
+#        # examples/chebyshevcenter.ipynb
+#        A = [ 2  1
+#              2 -1
+#             -1  2
+#             -1 -2]
+#        b = ones(4)
+#        p = hrep(A, b)
+#        c, r = chebyshevcenter(p, lpsolver)
+#        @test c ≈ [0, 0] atol=1e-6
+#        @test r ≈ 0.4472135955 atol=1e-6
+#
+#        p = convexhull([0, 0], [0, 1], [1, 0])
+#        @test_throws ErrorException chebyshevcenter(p) # Not yet implemented
+#    end
+#
+#    @testset "V-consistency with iterator constructor" begin
+#        T = Int
+#        AT = Vector{Int}
+#        for VRepType in (Polyhedra.LiftedVRepresentation{2, T},
+#                         Polyhedra.MixedMatVRep{2, T},
+#                         Polyhedra.Hull{2, T, AT})
+#            @test_throws ErrorException VRepType(AT[], [Line([1, 2])])
+#            @test_throws ErrorException VRepType(AT[], Line{2, T, AT}[], [Ray([1, 2])])
+#            @test_throws ErrorException VRepType(AT[], [Line([1, 2])], [Ray([1, 2])])
+#            @test isempty(VRepType(AT[], Line{2, T, AT}[], Ray{2, T, AT}[]))
+#            @test isempty(VRepType(Line{2, T, AT}[], Ray{2, T, AT}[]))
+#            v = VRepType([Line([1, 2])])
+#            @test collect(points(v)) == [[0, 0]]
+#            @test collect(lines(v)) == [Line([1, 2])]
+#            @test !hasrays(v)
+#        end
+#        for vinc in (InconsistentVRep{2, T, AT}(AT[], Line{2, T, AT}[], [Ray([1, 2])]),
+#                     InconsistentVRep{2, T, AT}(AT[], [Line([1, 2])], Ray{2, T, AT}[]),
+#                     InconsistentVRep{2, T, AT}(AT[], [Line([1, 2])], [Ray([1, 2])]))
+#            @test_throws ErrorException Polyhedra.checkvconsistency(vinc)
+#            pinc = polyhedron(vinc)
+#            @test_throws ErrorException Polyhedra.checkvconsistency(pinc)
+#        end
+#    end
+#
+#    @testset "Conversion with different array type" begin
+#        @testset "V-representation" begin
+#            vv = convexhull(@SVector [0, 1]) + conichull((@SVector [1, 1]), Line(@SVector [1, 0]))
+#            mv = vrep([0 1], [1 1; 1 0], IntSet([2]))
+#            generator_fulltest(vv, mv)
+#            mvv = @inferred typeof(mv)(vv)
+#            vmv = @inferred typeof(vv)(mv)
+#            generator_fulltest(vv, mvv)
+#            generator_fulltest(vmv, vv)
+#        end
+#        @testset "H-representation" begin
+#            vh = HalfSpace((@SVector [1, 0]), 0) ∩ HyperPlane((@SVector [0, 1]), 1)
+#            mh = hrep([0 1; 1 0], [1, 0], IntSet(1))
+#            inequality_fulltest(vh, mh)
+#            mvh = @inferred typeof(mh)(vh)
+#            vmh = @inferred typeof(vh)(mh)
+#            inequality_fulltest(vh, mvh)
+#            inequality_fulltest(vmh, vh)
+#        end
+#    end
+#    @testset "Copy test" begin
+#        @testset "V-representation" begin
+#            vr = convexhull(@SVector [0, 1])
+#            vc = copy(vr)
+#            @test vc !== vr
+#            @test vc.points !== vr.points
+#            generator_fulltest(vc, vr)
+#            vr = conichull(Line(@SVector [1, 1]), Line(@SVector [1, 0]))
+#            vc = copy(vr)
+#            @test vc !== vr
+#            @test vc.lines !== vr.lines
+#            generator_fulltest(vc, vr)
+#            vr = conichull(Line(@SVector [1, 1]), Line(@SVector [1, 0]), @SVector [1, 1])
+#            vc = copy(vr)
+#            @test vc !== vr
+#            @test vc.rays !== vr.rays
+#            @test vc.lines !== vr.lines
+#            @test vc.lines.lines !== vr.lines.lines
+#            generator_fulltest(vc, vr)
+#            vr = convexhull(@SVector [0, 1]) + conichull(Line(@SVector [1, 1]), (@SVector [1, 1]), Line(@SVector [1, 0]))
+#            vc = copy(vr)
+#            @test vc !== vr
+#            @test vc.points !== vr.points
+#            @test vc.points.points !== vr.points.points
+#            @test vc.rays !== vr.rays
+#            @test vc.rays.lines !== vr.rays.lines
+#            @test vc.rays.lines.lines !== vr.rays.lines.lines
+#            @test vc.rays.rays !== vr.rays.rays
+#            generator_fulltest(vc, vr)
+#        end
+#        @testset "H-representation" begin
+#            hr = HyperPlane([1, 0], 1) ∩ HyperPlane([0, 1], -1)
+#            hc = copy(hr)
+#            @test hc !== hr
+#            @test hc.hyperplanes !== hr.hyperplanes
+#            inequality_fulltest(hc, hr)
+#            hr = HyperPlane([1, 0], 1) ∩ HyperPlane([1, 1], 0) ∩ HalfSpace([0, 1], -1)
+#            hc = copy(hr)
+#            @test hc !== hr
+#            @test hc.hyperplanes !== hr.hyperplanes
+#            @test hc.hyperplanes.hyperplanes !== hr.hyperplanes.hyperplanes
+#            @test hc.halfspaces !== hr.halfspaces
+#            inequality_fulltest(hc, hr)
+#        end
+#    end
 end

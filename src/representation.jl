@@ -2,8 +2,23 @@ export Representation, HRepresentation, VRepresentation, coefficienttype, fulldi
 export RepIterator
 export Rep
 
+"""
+    Representation{N, T<:Real}
+
+Supertype for H-(or V-)representations of an `N`-dimensional` with coefficient type `T`.
+"""
 abstract type Representation{N, T <: Real} end
+"""
+    HRepresentation{N, T<:Real}
+
+Supertype for H-representations of an `N`-dimensional` with coefficient type `T`.
+"""
 abstract type HRepresentation{N,T} <: Representation{N,T} end
+"""
+    VRepresentation{N, T<:Real}
+
+Supertype for V-representations of an `N`-dimensional` with coefficient type `T`.
+"""
 abstract type VRepresentation{N,T} <: Representation{N,T} end
 
 export Rep, HRep, VRep

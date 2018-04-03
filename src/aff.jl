@@ -63,17 +63,12 @@ similar_type(PT::Type{<:HyperPlanesIntersection}, d::FullDim{N}, ::Type{T}) wher
 
 HyperPlanesIntersection{N, T, AT}() where {N, T, AT} = HyperPlanesIntersection{N, T, AT}(HyperPlane{N, T, AT}[])
 HyperPlanesIntersection(it::ElemIt{HyperPlane{N, T, AT}}) where {N, T, AT} = HyperPlanesIntersection{N, T, AT}(it)
-HyperPlanesIntersection{N, T, AT}(hyperplanes::HyperPlaneIt{N, T}, halfspaces::HalfSpaceIt{N, T}) where {N, T, AT} = Intersection{N, T, AT}(hyperplanes, halfspaces)
 
 Base.intersect!(L::HyperPlanesIntersection{N}, h::HyperPlane{N}) where N = push!(L.hyperplanes, h)
 
 @vecrepelem HyperPlanesIntersection HyperPlane hyperplanes
-#Base.length(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}) where {N, T, ElemT} = length(idxs.rep.hyperplanes)
-#Base.isempty(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}) where {N, T, ElemT} = isempty(idxs.rep.hyperplanes)
-#Base.start(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}) where {N, T, ElemT} = HyperPlaneIndex{N, T}(1)
-#Base.done(idxs::Indices{N, T, HyperPlane{N, T}, <:HAffineSpace{N, T}}, idx::HyperPlaneIndex{N, T}) where {N, T} = idx.value > length(idxs)
-#Base.get(L::HyperPlanesIntersection{N, T}, idx::HyperPlaneIndex{N, T}) where {N, T} = L.hyperplanes[idx.value]
-#nextindex(L::HyperPlanesIntersection{N, T}, idx::HyperPlaneIndex{N, T}) where {N, T} = HyperPlaneIndex{N, T}(idx.value+1)
+
+hreptype(::Type{<:HyperPlanesIntersection{N, T, AT}}) where {N, T, AT} = Intersection{N, T, AT}
 
 # Returns an HyperPlanesIntersection representing the affine hull of p.
 # The affine hull is defined as
@@ -138,11 +133,12 @@ similar_type(PT::Type{<:LinesHull}, d::FullDim{N}, ::Type{T}) where {N, T} = Lin
 LinesHull{N, T, AT}() where {N, T, AT} = LinesHull{N, T, AT}(Line{N, T, AT}[])
 LinesHull(it::ElemIt{Line{N, T, AT}}) where {N, T, AT} = LinesHull{N, T, AT}(it)
 
-LinesHull{N, T, AT}(lines::LineIt{N, T}, rays::RayIt{N, T}) where {N, T, AT} = RaysHull{N, T, AT}(lines, rays)
-
 convexhull!(L::LinesHull{N}, l::Line{N}) where {N} = push!(L.lines, l)
 
 @vecrepelem LinesHull Line lines
+
+conetype(::Type{LinesHull{N, T, AT}}) where {N, T, AT} = RaysHull{N, T, AT}
+vreptype(::Type{LinesHull{N, T, AT}}) where {N, T, AT} = Hull{N, T, AT}
 
 # Returns a LinesHull representing the following set (TODO does it have a name?, does someone has a reference talking about it ?)
 # {x | ⟨a, x⟩ = 0 ∀ a such that (α, β) is a valid hyperplane for p}
