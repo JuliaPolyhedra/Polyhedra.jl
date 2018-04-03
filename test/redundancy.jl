@@ -15,7 +15,7 @@
 #        @test !hasallrays(vr)
 #    end
     @testset "Point" begin
-        vr = convexhull([-1, 0], [0, -1]) + conichull(Ray([1, 1]), Ray([-1, 1]))
+        vr = convexhull([-1, 0], [0, -1]) + conichull([1, 1], [-1, 1])
         hr = HalfSpace([-1, -1], 1) ∩ HalfSpace([1, -1], 1)
         vr = Polyhedra.removevredundancy(vr, hr)
         @test collect(points(vr)) == [[0, -1]]
@@ -23,7 +23,7 @@
         @test collect(rays(vr)) == [Ray([1, 1]), Ray([-1, 1])]
     end
 #    @testset "Split SymPoint" begin
-#        vr = convexhull(SymPoint([-1, 0]), SymPoint([0, 1])) + conichull(Ray([1, 1]), Ray([-1, 1]))
+#        vr = convexhull(SymPoint([-1, 0]), SymPoint([0, 1])) + conichull([1, 1], [-1, 1])
 #        hr = HalfSpace([-1, -1], 1) ∩ HalfSpace([1, -1], 1)
 #        vr = Polyhedra.removevredundancy(vr, hr)
 #        @test !hassympoints(vr)
@@ -31,7 +31,7 @@
 #        @test !haslines(vr)
 #        @test collect(rays(vr)) == [Ray([1, 1]), Ray([-1, 1])]
 #
-#        vr = convexhull(SymPoint([1, 0]), SymPoint([0, 1])) + conichull(Ray([-1, 1]))
+#        vr = convexhull(SymPoint([1, 0]), SymPoint([0, 1])) + conichull([-1, 1])
 #        hr = HalfSpace([-1, -1], 1) ∩ HalfSpace([1, -1], 1) ∩ HalfSpace([1, 1], 1)
 #        vr = Polyhedra.removevredundancy(vr, hr)
 #        @test !hassympoints(vr)

@@ -318,7 +318,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
 
     @testset "Conversion with different array type" begin
         @testset "V-representation" begin
-            vv = convexhull(@SVector [0, 1]) + conichull(Ray(@SVector [1, 1]), Line(@SVector [1, 0]))
+            vv = convexhull(@SVector [0, 1]) + conichull((@SVector [1, 1]), Line(@SVector [1, 0]))
             mv = vrep([0 1], [1 1; 1 0], IntSet([2]))
             generator_fulltest(vv, mv)
             mvv = @inferred typeof(mv)(vv)
@@ -348,14 +348,14 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test vc !== vr
             @test vc.lines !== vr.lines
             generator_fulltest(vc, vr)
-            vr = conichull(Line(@SVector [1, 1]), Line(@SVector [1, 0]), Ray(@SVector [1, 1]))
+            vr = conichull(Line(@SVector [1, 1]), Line(@SVector [1, 0]), @SVector [1, 1])
             vc = copy(vr)
             @test vc !== vr
             @test vc.rays !== vr.rays
             @test vc.lines !== vr.lines
             @test vc.lines.lines !== vr.lines.lines
             generator_fulltest(vc, vr)
-            vr = convexhull(@SVector [0, 1]) + conichull(Line(@SVector [1, 1]), Ray(@SVector [1, 1]), Line(@SVector [1, 0]))
+            vr = convexhull(@SVector [0, 1]) + conichull(Line(@SVector [1, 1]), (@SVector [1, 1]), Line(@SVector [1, 0]))
             vc = copy(vr)
             @test vc !== vr
             @test vc.points !== vr.points

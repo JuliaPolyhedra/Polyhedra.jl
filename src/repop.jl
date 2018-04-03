@@ -33,6 +33,8 @@ Same as [`intersect`](@ref) except that `p1` is modified to be equal to the inte
 """
 Base.intersect!(p::HRep{N}, ine::HRepresentation{N}) where {N} = error("intersect! not implemented for $(typeof(p)). It probably does not support in-place modification, try `intersect` (without the `!`) instead.")
 
+const VAny{N, T} = Union{VRep{N, T}, VRepElement{N, T}}
+
 """
     convexhull(P1::VRep, P2::VRep)
 
@@ -50,14 +52,16 @@ function convexhull(p1::RepTin, p2::VRep{N, T2}) where {N, T1, T2, RepTin<:VRep{
     RepTout = similar_type(RepTin, Tout)
     RepTout(vmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)::RepTout # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
 end
-#convexhull(p::Rep, el::Union{SymPoint, AbstractPoint}) = convexhull(p, convexhull(el))
-convexhull(p::Rep, el::AnyPoint) = convexhull(p, convexhull(el))
+convexhull(p::Rep, el::VRepElement) = convexhull(p, convexhull(el))
 
-#convexhull(ps::SymPoint...) = vrep([ps...])
 convexhull(ps::AbstractPoint...) = vrep([ps...])
-#convexhull(p1::SymPoint, p2::AbstractPoint) = vrep([p1], [p2])
-#convexhull(p1::AbstractPoint, p2::SymPoint) = convexhull(p2, p1)
-convexhull(p1::Union{VRep{N}, AnyPoint{N}}, p2::Union{VRep{N}, AnyPoint{N}}, ps::Union{VRep{N}, AnyPoint{N}}...) where N = convexhull(convexhull(p1, p2), ps...)
+conichull(ls::Line...) = vrep([ls...])
+conichull(rs::Ray...) = vrep([rs...])
+conichull(p::AbstractPoint, r::Union{Line, Ray}) = vrep([p], [r])
+conichull(r::Union{Line, Ray}, p::AbstractPoint) = conichull(p, r)
+conichull(l::Line, r::Ray) = vrep([l], [r])
+conichull(r::Ray, l::Line) = conichull(l, r)
+convexhull(p1::VAny{N}, p2::VAny{N}, ps::VAny{N}...) where N = convexhull(convexhull(p1, p2), ps...)
 
 """
     convexhull!(p1::VRep, p2::VRep)
@@ -66,21 +70,13 @@ Same as [`convexhull`](@ref) except that `p1` is modified to be equal to the con
 """
 convexhull!(p::VRep{N}, ine::VRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
 
+# conify: same than conichull except that conify(::VRepElement) returns a VRepElement and not a V-representation
+conify(v::VRep) = vrep(lines(v), [collect(rays(v)); collect(Ray.(points(v)))])
+conify(v::VCone) = v
+conify(p::AbstractPoint) = Ray(p)
+conify(r::Union{Line, Ray}) = r
 
-function conichull(p1::VCone{N, T1}, p2::VCone{N, T2}) where {N, T1, T2}
-    Tout = promote_type(T1, T2)
-    # Always type of first arg
-    RepTout = similar_type(typeof(p1), Tout)
-    RepTout(rmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)
-end
-conichull(p::VCone, el::Union{Line, Ray}) = conichull(p, conichull(el))
-
-conichull(ls::Line...) = vrep([ls...])
-conichull(rs::AbstractPoint...) = vrep([Ray.(rs)...])
-conichull(rs::Ray...) = vrep([rs...])
-conichull(l::Line, r::Ray) = vrep([l], [r])
-conichull(r::Ray, l::Line) = conichull(l, r)
-conichull(r1::Union{VCone{N}, Line{N}, Ray{N}}, r2::Union{VCone{N}, Line{N}, Ray{N}}, rs::Union{VCone{N}, Line{N}, Ray{N}}...) where N = conichull(conichull(r1, r2), rs...)
+conichull(p...) = convexhull(conify.(p)...)
 
 function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {N, T}
     _tout(p) = similar_type(typeof(p), T)(p)

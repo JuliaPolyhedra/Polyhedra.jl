@@ -72,7 +72,7 @@ function simplextest(lib::PolyhedraLibrary)
     generator_fulltest(poly2, vtri)
 
     # nonnegative orthant cut by x_1 + x_2 = 1
-    vray = conichull(Ray([1, 0]), Ray([0, 1]))
+    vray = conichull([1, 0], [0, 1])
     poly3 = polyhedron(vray, lib)
     @test_throws ErrorException chebyshevcenter(poly3)
     @test dim(poly3) == 2
@@ -111,7 +111,7 @@ function simplextest(lib::PolyhedraLibrary)
     generator_fulltest(plin, vcut)
     #ineout = hrep(plin)
     #@test linset(ineout) == IntSet(1)
-    vlin = convexhull([1, 0]) + conichull(Ray([1, -1]), Ray([-1, 1]))
+    vlin = convexhull([1, 0]) + conichull([1, -1], [-1, 1])
     plin = polyhedron(vlin, lib)
     inequality_fulltest(plin, hcut)
     generator_fulltest(plin, vcut)
