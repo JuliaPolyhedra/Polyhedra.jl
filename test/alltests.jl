@@ -1,7 +1,5 @@
 using Polyhedra
 
-include("utils.jl")
-
 # Basic
 include("basictests.jl")
 

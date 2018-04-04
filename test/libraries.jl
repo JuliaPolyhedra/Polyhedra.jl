@@ -29,25 +29,40 @@ push!(exact_libraries, SimplePolyhedraLibrary{Rational{BigInt}}())
 cdd && push!(exact_libraries, CDDLib.CDDLibrary(:exact))
 lrs && push!(exact_libraries, LRSLib.LRSLibrary())
 
-# Load available solvers
+# Load an available solver
+lpsolver = nothing
 glp = try_import(:GLPKMathProgInterface)
-cbc = try_import(:Cbc)
-if cbc; import Clp; end
-grb = false && try_import(:Gurobi) # Gurobi creates BigFloat when the input is BigInt and then cannot handle it
-cpx = try_import(:CPLEX)
-xpr = try_import(:Xpress)
-mos = try_import(:Mosek)
-ipt = try_import(:Ipopt)
-eco = try_import(:ECOS)
-scs = try_import(:SCS)
-
-# Create solver lists
-lp_solvers = Any[]
-grb && push!(lp_solvers, Gurobi.GurobiSolver(OutputFlag=0))
-xpr && push!(lp_solvers, Xpress.XpressSolver(OUTPUTLOG=0))
-mos && push!(lp_solvers, Mosek.MosekSolver(LOG=0))
-cbc && push!(lp_solvers, Clp.ClpSolver())
-glp && push!(lp_solvers, GLPKMathProgInterface.GLPKSolverLP())
-ipt && push!(lp_solvers, Ipopt.IpoptSolver(print_level=0))
-eco && push!(lp_solvers, ECOS.ECOSSolver(verbose=false))
-scs && push!(lp_solvers, SCS.SCSSolver(eps=1e-6,verbose=0))
+glp && (lpsolver = GLPKMathProgInterface.GLPKSolverLP())
+if lpsolver === nothing
+    cbc = try_import(:Cbc)
+    if cbc; import Clp; end
+    cbc && (lpsolver = Clp.ClpSolver())
+end
+if lpsolver === nothing
+    grb = try_import(:Gurobi) # Gurobi creates BigFloat when the input is BigInt and then cannot handle it
+    grb && (lpsolver = Gurobi.GurobiSolver(OutputFlag=0))
+end
+if lpsolver === nothing
+    cpx = try_import(:CPLEX)
+end
+if lpsolver === nothing
+    xpr = try_import(:Xpress)
+    xpr && (lpsolver = Xpress.XpressSolver(OUTPUTLOG=0))
+end
+if lpsolver === nothing
+    mos = try_import(:Mosek)
+    mos && (lpsolver = Mosek.MosekSolver(LOG=0))
+end
+if lpsolver === nothing
+    ipt = try_import(:Ipopt)
+    ipt && (lpsolver = Ipopt.IpoptSolver(print_level=0))
+end
+if lpsolver === nothing
+    eco = try_import(:ECOS)
+    eco && (lpsolver = ECOS.ECOSSolver(verbose=false))
+end
+if lpsolver === nothing
+    scs = try_import(:SCS)
+    scs && (lpsolver = SCS.SCSSolver(eps=1e-6,verbose=0))
+    @assert lpsolver !== nothing
+end
