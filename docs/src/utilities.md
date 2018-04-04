@@ -9,6 +9,7 @@ intersect
 intersect!
 convexhull
 convexhull!
+doubledescription
 ```
 
 ## Volume

@@ -1,9 +1,14 @@
 # Polyhedron
 
-As seen in the previous section, a polyhedron can be described in 2 ways: either using the H-representation (list of inequalities) or the V-representation (list of points and rays).
-A typical problem is: Given the H-(or V-)representation of one or several polyhedra, what is the H-(or V-)representation of some polyhedra obtained after some operations on these initial polyhedra.
-This description is similar to the description usually given to algorithms except that in that case we talk about numbers given in their binary representation and not polyhedra given in their H-(or V-)representation.
-This motivates the creation of a type representing polyhedra.
+As seen in the previous section, a polyhedron can be described in 2 ways: either using the H-representation (intersection of halfspaces) or the V-representation (convex hull of points and rays).
+The problem of computing the H-representation from the V-representation (or vice versa) is called the *representation conversion problem*.
+It can be solved by the Double-Description method
+```julia
+doubledescription
+```
+However, other methods exist such as the reverse search implemented by [LRS](https://github.com/JuliaPolyhedra/LRSLib.jl) and the quick hull algorithm implemented by [qhull](https://github.com/JuliaPolyhedra/QHull.jl).
+
+This motivates the creation of a type representing polyhedra, transparently handling the conversion from H-representation to V-representation when needed for some operation.
 Just like the abstract type `AbstractArray{N,T}` represents an `N`-dimensional array with elements of type `T`,
 the abstract type `Polyhedron{N,T}` represents an `N`-dimensional polyhedron with elements of coefficient type `T`.
 
@@ -63,67 +68,37 @@ One can retrieve an H-representation (resp. V-representation) from a polyhedron 
 The concrete subtype of `HRepresentation` (resp. `VRepresentation`) returned is not necessarily the same that the one used to create the polyhedron.
 As a rule of thumb, it is the representation the closest to the internal representation used by the library.
 ```julia
-julia> hrep = hrep(poly)
-julia> typeof(hrep)
+julia> hr = hrep(poly)
+julia> typeof(hr)
 Polyhedra.LiftedHRepresentation{2,Rational{BigInt}}
-julia> hrep = SimpleHRepresentation(hrep)
-julia> typeof(hrep)
-Polyhedra.SimpleHRepresentation{2,Rational{BigInt}}
-julia> hrep.A
+julia> hr = MixedMatHRep(hr)
+julia> typeof(hr)
+Polyhedra.MixedMatHRep{2,Rational{BigInt}}
+julia> hr.A
 3x2 Array{Rational{BigInt},2}:
   1//1   1//1
   1//1  -1//1
  -1//1   0//1
-julia> hrep.b
+julia> hr.b
 3-element Array{Rational{BigInt},1}:
  1//1
  0//1
  0//1
-julia> vrep = vrep(poly)
-julia> typeof(vrep)
+julia> vr = vrep(poly)
+julia> typeof(vr)
 Polyhedra.LiftedVRepresentation{2,Rational{BigInt}}
-julia> vrep = SimpleVRepresentation(vrep)
-julia> typeof(vrep)
-Polyhedra.SimpleVRepresentation{2,Rational{BigInt}}
-julia> vrep.V
+julia> vr = MixedMatVRep(vrep)
+julia> typeof(vr)
+Polyhedra.MixedMatVRep{2,Rational{BigInt}}
+julia> vr.V
 3x2 Array{Rational{BigInt},2}:
  1//2  1//2
  0//1  1//1
  0//1  0//1
 
-julia> vrep.R
+julia> vr.R
 0x2 Array{Rational{BigInt},2}
 ```
-
-## Creating a polyhedron from the feasible set of a JuMP model
-
-A typical application of polyhedral computation is the computation of the set of extreme points and rays of the feasible set of an optimization problem.
-This comes from the fact that given a minimization of a concave function (or maximization of a convex function) on a convex feasible set (e.g. Linear Programming),
-we are either in the following three situations:
-
-- The feasible set is empty, i.e. the problem is infeasible.
-- An extreme ray is optimal, i.e. the problem is unbounded (or it may also be bounded if the objective is constant along the ray).
-- An extreme point is optimal.
-
-A JuMP model is treated by `polyhedron` just like any H-representation. For example, the hypercube of dimension `n` can be created as follows
-```julia
-m = Model()
-@variable(m, 0 ≤ x[1:n] ≤ 1)
-
-poly = polyhedron(m, CDDLibrary(:exact))
-```
-
-In fact, the MathProgBase representation of the feasible set of a linear program:
-
-```math
-\begin{align*}
-  lb \leq Ax \leq ub\\
-  l \leq x \leq u\\
-\end{align*}
-```
-
-has `LPHRepresentation` as a corresponding H-representation.
-A JuMP Model can be converted to this representation using `LPHRepresentation(m)`.
 
 ## Checking if a representation has been computed
 
@@ -154,4 +129,11 @@ incidenthyperplanes
 incidenthyperplaneindices
 incidentlines
 incidentlineindices
+```
+
+## Default libraries
+
+```@docs
+SimplePolyhedronLibrary
+IntervalLibrary
 ```
