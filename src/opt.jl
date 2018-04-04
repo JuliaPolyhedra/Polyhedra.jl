@@ -19,7 +19,12 @@ struct LinprogSolution
     attrs
 end
 
-function MathProgBase.linprog(c::AbstractVector, p::Rep{N}, solver::MathProgBase.AbstractMathProgSolver = defaultLPsolverfor(p)) where N
+"""
+    linprog(c::AbstractVector, p::Rep, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p))
+
+Solve the minimization of the objective ``\\langle c, x \\rangle`` over the polyhedron `p`.
+"""
+function MathProgBase.linprog(c::AbstractVector, p::Rep{N}, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p)) where N
     m = PolyhedraModel(solver)
     if N != length(c)
         throw(DimensionMismatch("length of objective does not match dimension of polyhedron"))
@@ -42,6 +47,11 @@ function MathProgBase.linprog(c::AbstractVector, p::Rep{N}, solver::MathProgBase
     end
 end
 
-function Base.isempty(p::Rep{N,T}, solver::MathProgBase.AbstractMathProgSolver = defaultLPsolverfor(p)) where {N,T}
+"""
+    isempty(p::Rep, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p))
+
+Check whether the polyhedron `p` is empty by using the solver `solver`.
+"""
+function Base.isempty(p::Rep{N, T}, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p)) where {N, T}
     linprog(zeros(T, N), p, solver).status == :Infeasible
 end

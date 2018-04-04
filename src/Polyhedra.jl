@@ -42,10 +42,10 @@ similar_type(::Type{<:Vec}, ::FullDim{N}, ::Type{T}) where {N, T} = Vec{N,T}
 include("elements.jl")
 include("comp.jl")
 include("representation.jl")
-include("polyhedron.jl")
 include("indices.jl")
 include("incidence.jl")
 include("iterators.jl")
+include("polyhedron.jl")
 
 function similar_type(::Type{ET}, ::Type{Tout}) where {Tout, ET<:Union{HRepElement, VRepElement, Rep}}
     similar_type(ET, FullDim(ET), Tout)

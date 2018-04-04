@@ -6,7 +6,7 @@ using JuMP
 Return a tuple with the center and radius of the largest euclidean ball contained in the polyhedron `p`.
 Throws an error if the polyhedron is empty or if the radius is infinite.
 """
-function hchebyshevcenter(p::HRep{N}, solver=defaultLPsolverfor(p, solver)) where N
+function hchebyshevcenter(p::HRep{N}, solver=Polyhedra.solver(p)) where N
     m = Model(solver=solver)
     c = @variable m [1:N]
     for hp in hyperplanes(p)
@@ -42,14 +42,14 @@ function hchebyshevcenter(p::HRep{N}, solver=defaultLPsolverfor(p, solver)) wher
     (getvalue(c), getvalue(minr))
 end
 
-# TODO defaultLPsolverfor here should not be SimpleVRepSolver
+# TODO solver here should not be VRepSolver
 """
     vchebyshevcenter(p::VRep[, solver])
 
 Return a tuple with the center and radius of the smallest euclidean ball containing the polyhedron `p`.
 Throws an error if the polyhedron is empty or if the radius is infinite (i.e. `p` is not a polytope, it contains rays).
 """
-function vchebyshevcenter(p::VRep, solver=defaultLPsolverfor(p, solver))
+function vchebyshevcenter(p::VRep, solver=Polyhedra.solver(p))
     error("TODO")
 end
 
@@ -58,12 +58,12 @@ end
 
 If `p` is a H-representation or is a polyhedron for which the H-representation has already been computed, calls `hchebyshevcenter`, otherwise, call `vchebyshevcenter`.
 """
-function chebyshevcenter(p::Polyhedron, solver=defaultLPsolverfor(p))
+function chebyshevcenter(p::Polyhedron, solver=Polyhedra.solver(p))
     if hrepiscomputed(p)
         hchebyshevcenter(p, solver)
     else
         vchebyshevcenter(p, solver)
     end
 end
-chebyshevcenter(p::HRepresentation, solver=defaultLPsolverfor(p)) = hchebyshevcenter(p, solver)
-chebyshevcenter(p::VRepresentation, solver=defaultLPsolverfor(p)) = vchebyshevcenter(p, solver)
+chebyshevcenter(p::HRepresentation, solver=Polyhedra.solver(p)) = hchebyshevcenter(p, solver)
+chebyshevcenter(p::VRepresentation, solver=Polyhedra.solver(p)) = vchebyshevcenter(p, solver)

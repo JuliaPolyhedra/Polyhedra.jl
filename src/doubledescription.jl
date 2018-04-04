@@ -18,6 +18,24 @@ function dualfullspace(rep::Representation{N, T}) where {N, T}
     dualfullspace(rep, FullDim{N}(), polytypefor(T))
 end
 
+"""
+    doubledescription(h::HRepresentation)
+
+Computes the V-representation of the polyhedron represented by `h` using the Double-Description algorithm [1, 2].
+
+    doubledescription(V::VRepresentation)
+
+Computes the H-representation of the polyhedron represented by `v` using the Double-Description algorithm [1, 2].
+
+[1] Motzkin, T. S., Raiffa, H., Thompson, G. L. and Thrall, R. M.
+The double description method
+*Contribution to the Theory of Games*, *Princeton University Press*, **1953**
+[2] Fukuda, K. and Prodon, A.
+Double description method revisited
+*Combinatorics and computer science*, *Springer*, **1996**, 91-111
+"""
+function doubledescription end
+
 function doubledescription(h::HRepresentation)
     # The redundancy of V-elements are measured using
     # the number of hyperplane they are in. If there are

@@ -1,15 +1,4 @@
-export HyperPlanesIntersection, LinesHull, affinehull, linespace, detecthlinearities!, detectvlinearities!
-
-# Linearity
-detectvlinearities!(p::VRep) = error("detectvlinearities! not implemented for $(typeof(p))")
-detecthlinearities!(p::HRep) = error("detecthlinearities! not implemented for $(typeof(p))")
-function dim(h::HRep{N}, current=false) where N
-    if !current
-        detecthlinearities!(h::HRep)
-    end
-    N - nhyperplanes(h)
-end
-
+export HyperPlanesIntersection, LinesHull, affinehull, linespace
 
 # It is easy to go from H-rep of affine space to V-rep of affine space by computing the kernel of a matrix using RowEchelon
 # However, it is really worth it since Base.in for an HRepElement in HyperPlanesIntersection and Base.in for an VRepElement in LinesHull are false already.
@@ -80,7 +69,7 @@ Base.intersect!(L::HyperPlanesIntersection{N}, h::HyperPlane{N}) where N = push!
 # {λx + (1-λ)y | x, y ∈ p, λ ∈ R}
 function affinehull(h::HRep, current=false)
     if !current
-        detecthlinearities!(h)
+        detecthlinearity!(h)
     end
     HyperPlanesIntersection(hyperplanes(h))
 end
@@ -148,7 +137,7 @@ convexhull!(L::LinesHull{N}, l::Line{N}) where {N} = push!(L.lines, l)
 # {x | ⟨a, x⟩ = 0 ∀ a such that (α, β) is a valid hyperplane for p}
 function linespace(v::VRep, current=false)
     if !current
-        detectvlinearities!(v)
+        detectvlinearity!(v)
     end
     LinesHull(lines(v))
 end

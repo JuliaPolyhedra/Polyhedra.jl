@@ -10,6 +10,7 @@ makedocs(
         "Polyhedron" => "polyhedron.md",
         "Containment/Redundancy" => "redundancy.md",
         "Projection/Elimination" => "projection.md",
+        "Optimization" => "optimization.md",
         "Utilities" => "utilities.md"
     ],
     # The following ensures that we only include the docstrings from

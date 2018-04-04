@@ -1,7 +1,7 @@
 # Mandatory
 export polyhedron, loadpolyhedron!
 export hrepiscomputed, hrep, vrepiscomputed, vrep
-export dim, volume, surface
+export volume, surface
 
 """
     polyhedron(rep::Representation{N, T})
@@ -37,17 +37,6 @@ function vrepiscomputed end
 Returns a V-representation for the polyhedron `p`.
 """
 vrep(p::Polyhedron) = error("`vrep` not implemented for `$(eltype(p))`")
-
-"""
-    dim(p::Polyhedron)
-
-Returns the dimension of the affine hull of the polyhedron.
-That is the number of non-redundant hyperplanes that define it.
-"""
-function dim(p::Polyhedron)
-    detecthlinearities!(p)
-    fulldim(p) - nhyperplanes(p)
-end
 
 """
     volume(p::Polyhedron{N, T}) where {N, T}

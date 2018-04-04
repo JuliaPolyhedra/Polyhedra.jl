@@ -4,7 +4,7 @@ function doctest(lib::PolyhedraLibrary)
     V = [1//2 1//2; 0 1; 0 0]
     hr = hrep(A, b)
     p = polyhedron(hr, lib)
-    solver = defaultLPsolverfor(p, lpsolver)
+    solver = Polyhedra.solver(p, lpsolver)
     @test issubset(p, HalfSpace([1, -1], 0), solver)
     @test !(issubset(p, HalfSpace([1, 1], 0), solver))
     @test !(issubset(p, HyperPlane([-1, 0], 0), solver))
