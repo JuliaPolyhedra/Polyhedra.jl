@@ -78,7 +78,7 @@ importall MathProgBase.SolverInterface
 include("opt.jl")
 include("lpqp_to_polyhedra.jl")
 include("polyhedra_to_lpqp.jl")
-include("simplevrepsolver.jl")
+include("vrepsolver.jl")
 include("default.jl")
 
 # Visualization
