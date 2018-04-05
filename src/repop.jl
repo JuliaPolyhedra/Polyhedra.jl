@@ -41,6 +41,7 @@ function Base.intersect(p::HRep{N}...) where N
     RepTout(hmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)
 end
 Base.intersect(p::Rep, el::HRepElement) = p ∩ intersect(el)
+Base.intersect(el::HRepElement, p::Rep) = p ∩ el
 
 Base.intersect(hps::HyperPlane...) = hrep([hps...])
 Base.intersect(hss::HalfSpace...) = hrep([hss...])
@@ -78,6 +79,7 @@ function convexhull(p::VRep{N}...) where N
     RepTout(vmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)::RepTout # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
 end
 convexhull(p::Rep, el::VRepElement) = convexhull(p, convexhull(el))
+convexhull(el::VRepElement, p::Rep) = convexhull(p, el)
 
 convexhull(ps::AbstractPoint...) = vrep([ps...])
 convexhull(ls::Line...) = vrep([ls...])

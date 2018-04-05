@@ -319,9 +319,17 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         @testset "V-representation" begin
             generator_fulltest(convexhull([1, 0], Line([0, 1.])), convexhull(Line([0, 1]), [1, 0.]))
             @test conichull(convexhull([1, 0.]), conichull([0, 1])) isa Polyhedra.RaysHull{2, Float64}
+            @test convexhull(convexhull([1, 0]), Line([0, 1.])) isa Polyhedra.Hull{2, Float64}
+            @test convexhull(Line([0, 1.]), convexhull([1, 0])) isa Polyhedra.Hull{2, Float64}
+            @test convexhull(convexhull(Line([0, 1.])), [1, 0]) isa Polyhedra.Hull{2, Float64}
+            @test convexhull(convexhull(Line([1, 0])), Line([0, 1.])) isa Polyhedra.LinesHull{2, Float64}
+            @test convexhull(conichull([1, 0.]), Line([0, 1])) isa Polyhedra.RaysHull{2, Float64}
+            @test convexhull(conichull([1, 0.]), [0, 1]) isa Polyhedra.Hull{2, Float64}
         end
         @testset "H-representation" begin
             @test (@inferred (HyperPlane([1, 1], 0) ∩ HyperPlane([1, 0], 1)) ∩ (HyperPlane([1, 1], 0) ∩ HyperPlane([1., 0.], 1))) isa Polyhedra.HyperPlanesIntersection{2, Float64}
+            @test HyperPlane([1, 1], 0) ∩ HalfSpace([1., 0.], 1.) isa Polyhedra.Intersection{2, Float64}
+            @test (@inferred (HalfSpace([1., 0.], 1.) ∩ (HyperPlane([1, 1], 0) ∩ HyperPlane([1, 0], 1)))) isa Polyhedra.Intersection{2, Float64}
         end
     end
     @testset "Conversion with different array type" begin

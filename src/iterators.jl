@@ -311,7 +311,7 @@ vmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = pmap(f, d, T, p...)..., rma
 pmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = tuple(mappoints(f, d, T, p...))
 pmap(f, d::FullDim, ::Type, p::VCone...) = tuple()
 rmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = maplines(f, d, T, p...), maprays(f, d, T, p...)
-rmap(f, d::FullDim, ::Type{T}, p::VLinearSpace...) where T = maplines(f, d, T, p...)
+rmap(f, d::FullDim, ::Type{T}, p::VLinearSpace...) where T = tuple(maplines(f, d, T, p...))
 rmap(f, d::FullDim, ::Type, p::VPolytope...) = tuple()
 
 function vconvert(::Type{RepTout}, p::VRep{N, T}) where {N, T, RepTout<:VRep{N, T}}
