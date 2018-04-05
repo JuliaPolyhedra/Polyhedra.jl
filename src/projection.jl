@@ -1,7 +1,9 @@
 export supportselimination, eliminate, project, fixandeliminate
-export FourierMotzkin, BlockElimination, ProjectGenerators
+export DefaultElimination, FourierMotzkin, BlockElimination, ProjectGenerators
 
 abstract type EliminationAlgorithm end
+
+struct DefaultElimination <: EliminationAlgorithm end
 
 """
     FourierMotzkin
@@ -49,7 +51,9 @@ eliminate(p::Polyhedron, delset, ::BlockElimination)   = error("Block eliminatio
 eliminate(p::Polyhedron{N}, algo::EliminationAlgorithm) where {N} = eliminate(p, IntSet(N), algo)
 
 # eliminate the last dimension by default
-function eliminate(p::Polyhedron{N}, delset=IntSet(N)) where N
+eliminate(p::Polyhedron{N}, delset=IntSet(N)) where N = eliminate(p, delset, DefaultElimination())
+
+function eliminate(p::Polyhedron{N}, delset, ::DefaultElimination) where N
     fm = supportselimination(p, FourierMotzkin())
     be = supportselimination(p, BlockElimination())
     if (!fm && !be) || vrepiscomputed(p)

@@ -2,8 +2,8 @@ function simplextest(lib::PolyhedraLibrary)
     hsim = HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0) ∩ HyperPlane([1, 1], 1)
     vsim = convexhull([0, 1], [1, 0])
     poly1 = polyhedron(hsim, lib)
-    @test !isempty(poly1, Polyhedra.solver(poly1, lpsolver))
-    center, radius = chebyshevcenter(poly1, Polyhedra.solver(poly1, lpsolver))
+    @test !isempty(poly1, Polyhedra.solver(poly1, lpsolver...))
+    center, radius = chebyshevcenter(poly1, Polyhedra.solver(poly1, lpsolver...))
     @test center ≈ [1/2, 1/2]
     @test radius ≈ 1/2
     @test dim(poly1) == 1 # FIXME doing dim earlier makes chebyshevcenter fail
@@ -56,7 +56,7 @@ function simplextest(lib::PolyhedraLibrary)
     # x_1 cannot be 2
     hempty = hsim ∩ HyperPlane([1, 0], 2)
     poly = polyhedron(hempty, lib)
-    @test isempty(poly, Polyhedra.solver(poly, lpsolver))
+    @test isempty(poly, Polyhedra.solver(poly, lpsolver...))
 
     # We now add the vertex (0, 0)
     ext0 = convexhull([0, 0])

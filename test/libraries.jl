@@ -30,39 +30,40 @@ cdd && push!(exact_libraries, CDDLib.CDDLibrary(:exact))
 lrs && push!(exact_libraries, LRSLib.LRSLibrary())
 
 # Load an available solver
-lpsolver = nothing
+lp_solver = nothing
 glp = try_import(:GLPKMathProgInterface)
-glp && (lpsolver = GLPKMathProgInterface.GLPKSolverLP())
-if lpsolver === nothing
+glp && (lp_solver = GLPKMathProgInterface.GLPKSolverLP())
+if lp_solver === nothing
     cbc = try_import(:Cbc)
     if cbc; import Clp; end
-    cbc && (lpsolver = Clp.ClpSolver())
+    cbc && (lp_solver = Clp.ClpSolver())
 end
-if lpsolver === nothing
+if lp_solver === nothing
     grb = try_import(:Gurobi) # Gurobi creates BigFloat when the input is BigInt and then cannot handle it
-    grb && (lpsolver = Gurobi.GurobiSolver(OutputFlag=0))
+    grb && (lp_solver = Gurobi.GurobiSolver(OutputFlag=0))
 end
-if lpsolver === nothing
+if lp_solver === nothing
     cpx = try_import(:CPLEX)
 end
-if lpsolver === nothing
+if lp_solver === nothing
     xpr = try_import(:Xpress)
-    xpr && (lpsolver = Xpress.XpressSolver(OUTPUTLOG=0))
+    xpr && (lp_solver = Xpress.XpressSolver(OUTPUTLOG=0))
 end
-if lpsolver === nothing
+if lp_solver === nothing
     mos = try_import(:Mosek)
-    mos && (lpsolver = Mosek.MosekSolver(LOG=0))
+    mos && (lp_solver = Mosek.MosekSolver(LOG=0))
 end
-if lpsolver === nothing
+if lp_solver === nothing
     ipt = try_import(:Ipopt)
-    ipt && (lpsolver = Ipopt.IpoptSolver(print_level=0))
+    ipt && (lp_solver = Ipopt.IpoptSolver(print_level=0))
 end
-if lpsolver === nothing
+if lp_solver === nothing
     eco = try_import(:ECOS)
-    eco && (lpsolver = ECOS.ECOSSolver(verbose=false))
+    eco && (lp_solver = ECOS.ECOSSolver(verbose=false))
 end
-if lpsolver === nothing
+if lp_solver === nothing
     scs = try_import(:SCS)
-    scs && (lpsolver = SCS.SCSSolver(eps=1e-6,verbose=0))
-    @assert lpsolver !== nothing
+    scs && (lp_solver = SCS.SCSSolver(eps=1e-6,verbose=0))
+    @assert lp_solver !== nothing
 end
+lpsolver = tuple(lp_solver)
