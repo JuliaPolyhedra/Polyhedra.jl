@@ -14,8 +14,8 @@ Creates an H-representation for the polyhedron equal to the intersection of the 
 For instance, the simplex
 ```math
 \\begin{align*}
-  x_1 + x_2 &= 1 \\
-  x_1 &\\geq 0 \\
+  x_1 + x_2 &= 1 \\\\
+  x_1 &\\geq 0 \\\\
   x_2 &\\geq 0
 \\end{align*}
 ```
@@ -34,11 +34,11 @@ Creates an H-representation for the polyhedron equal to the intersection of the 
 ### Examples
 For instance, the polytope
 ```math
-\begin{align*}
-  x_1 + x_2 &\leq 1 \\
-  x_1 - x_2 &\leq 0 \\
-  x_1 & \geq 0.
-\end{align*}
+\\begin{align*}
+  x_1 + x_2 &\\leq 1 \\\\
+  x_1 - x_2 &\\leq 0 \\\\
+  x_1 & \\geq 0.
+\\end{align*}
 ```
 can be created as follows:
 ```julia

@@ -60,7 +60,7 @@ function inequality_fulltest(h::HRepresentation, hrepargs...)
     inequality_fulltest(h, hrep(hrepargs...))
 end
 function inequality_fulltest(p::Polyhedron, hrepargs...)
-    detecthlinearities!(p)
+    detecthlinearity!(p)
     removehredundancy!(p)
     inequality_fulltest(hrep(p), hrepargs...)
 end
@@ -85,7 +85,7 @@ function generator_fulltest(v::VRepresentation, vrepargs...)
     generator_fulltest(v, vrep(vrepargs...))
 end
 function generator_fulltest(p::Polyhedron, vrepargs...)
-    detectvlinearities!(p)
+    detectvlinearity!(p)
     removevredundancy!(p)
     generator_fulltest(vrep(p), vrepargs...)
 end

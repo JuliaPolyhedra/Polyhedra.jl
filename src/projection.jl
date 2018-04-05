@@ -68,6 +68,12 @@ function eliminate(p::Polyhedron{N}, delset, ::ProjectGenerators) where N
     Iproj * p
 end
 
+"""
+    project(p::Polyhedron, P::AbstractMatrix)
+
+Projects the polyhedron `p` into the `size(P, 2)`-dimensional linear subspace spanned by the columns of `P`.
+The new orthonormal basis for this subspace is computed by applying the Gram–Schmidt process to the columns of `P`, starting with the first column.
+"""
 function project(p::Polyhedron{N,T}, P::AbstractMatrix) where {N,T}
     # Function to make x orthogonal to an orthonormal basis in Q
     # We first make the columns of P orthonormal

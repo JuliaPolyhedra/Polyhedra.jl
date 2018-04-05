@@ -1,9 +1,14 @@
 # Polyhedron
 
-As seen in the previous section, a polyhedron can be described in 2 ways: either using the H-representation (list of inequalities) or the V-representation (list of points and rays).
-A typical problem is: Given the H-(or V-)representation of one or several polyhedra, what is the H-(or V-)representation of some polyhedra obtained after some operations on these initial polyhedra.
-This description is similar to the description usually given to algorithms except that in that case we talk about numbers given in their binary representation and not polyhedra given in their H-(or V-)representation.
-This motivates the creation of a type representing polyhedra.
+As seen in the previous section, a polyhedron can be described in 2 ways: either using the H-representation (intersection of halfspaces) or the V-representation (convex hull of points and rays).
+The problem of computing the H-representation from the V-representation (or vice versa) is called the *representation conversion problem*.
+It can be solved by the Double-Description method
+```@docs
+doubledescription
+```
+However, other methods exist such as the reverse search implemented by [LRS](https://github.com/JuliaPolyhedra/LRSLib.jl) and the quick hull algorithm implemented by [qhull](https://github.com/JuliaPolyhedra/QHull.jl).
+
+This motivates the creation of a type representing polyhedra, transparently handling the conversion from H-representation to V-representation when needed for some operation.
 Just like the abstract type `AbstractArray{N,T}` represents an `N`-dimensional array with elements of type `T`,
 the abstract type `Polyhedron{N,T}` represents an `N`-dimensional polyhedron with elements of coefficient type `T`.
 
@@ -14,40 +19,51 @@ For instance, when retreiving an H-(or V-)representation, the representation wil
 Therefore using `Int` for `T` may result in `InexactError`.
 For this reason, by default, the type `T` chosen is not a subtype of `Integer`.
 
-Consider the representations `hrep`, `vrep` and `vrepf` created in the preceding section.
-One can use the CDD library, to create an instance of a concrete subtype of `Polyhedron`
+A polyhedron can be created from a representation and a library using the `polyhedron` function.
+```@docs
+polyhedron
+```
+
+To illustrate the usage of the `polyhedron` function, consider the following representations:
+```julia
+hr = HalfSpace([1, 1], 1) ∩ HalfSpace([1, -1], 0) ∩ HalfSpace([-1, 0], 0)
+vre = convexhull([0, 0], [0, 1], [1//2, 1//2])
+vrf = convexhull([0, 0], [0, 1], [1/2, 1/2])
+```
+
+One can use the CDD library, to create an instance of a concrete subtype of `Polyhedron` as follows:
 ```julia
 julia> using CDDLib
-julia> polyf = polyhedron(hrep, CDDLibrary())
+julia> polyf = polyhedron(hr, CDDLibrary())
 julia> typeof(polyhf)
 CDDLib.CDDPolyhedron{2,Float64}
 ```
 
 We see that the library has choosen to deal with floating point arithmetic.
-This decision does not depend on the type of `hrep` but only on the instance of `CDDLibrary` given.
+This decision does not depend on the type of `hr` but only on the instance of `CDDLibrary` given.
 `CDDLibrary` creates `CDDPolyhedron` of type either `Float64` or `Rational{BigInt}`.
 One can choose the first one using `CDDLibrary(:float)` and the second one using `CDDLibrary(:exact)`, by default it is `:float`.
 ```julia
-julia> poly = polyhedron(hrep, CDDLibrary(:exact))
+julia> poly = polyhedron(hr, CDDLibrary(:exact))
 julia> typeof(poly)
 CDDLib.CDDPolyhedron{2,Rational{BigInt}}
 ```
 
-The first polyhedron `polyf` can also be created from its V-representation using either of the 4 following lines
+The first polyhedron `polyf` can also be created from its V-representation using either of the 4 following lines:
 ```julia
-julia> polyf = polyhedron(vrepf, CDDLibrary(:float))
-julia> polyf = polyhedron(vrepf, CDDLibrary())
-julia> polyf = polyhedron(vrep,  CDDLibrary(:float))
-julia> polyf = polyhedron(vrep,  CDDLibrary())
+julia> polyf = polyhedron(vrf, CDDLibrary(:float))
+julia> polyf = polyhedron(vrf, CDDLibrary())
+julia> polyf = polyhedron(vre,  CDDLibrary(:float))
+julia> polyf = polyhedron(vre,  CDDLibrary())
 ```
 
-and `poly` using either of those lines
+and `poly` using either of those lines:
 ```julia
-julia> poly = polyhedron(vrepf, CDDLibrary(:exact))
-julia> poly = polyhedron(vrep , CDDLibrary(:exact))
+julia> poly = polyhedron(vrf, CDDLibrary(:exact))
+julia> poly = polyhedron(vre, CDDLibrary(:exact))
 ```
 
-of course, creating a representation in floating points with exact arithmetic works here because we have `0.5` which is `0.1` in binary but in general, is not a good idea.
+Of course, creating a representation in floating points with exact arithmetic works here because we have `0.5` which is `0.1` in binary but in general, is not a good idea.
 ```julia
 julia> Rational{BigInt}(1/2)
 1//2
@@ -63,67 +79,37 @@ One can retrieve an H-representation (resp. V-representation) from a polyhedron 
 The concrete subtype of `HRepresentation` (resp. `VRepresentation`) returned is not necessarily the same that the one used to create the polyhedron.
 As a rule of thumb, it is the representation the closest to the internal representation used by the library.
 ```julia
-julia> hrep = hrep(poly)
-julia> typeof(hrep)
+julia> hr = hrep(poly)
+julia> typeof(hr)
 Polyhedra.LiftedHRepresentation{2,Rational{BigInt}}
-julia> hrep = SimpleHRepresentation(hrep)
-julia> typeof(hrep)
-Polyhedra.SimpleHRepresentation{2,Rational{BigInt}}
-julia> hrep.A
+julia> hr = MixedMatHRep(hr)
+julia> typeof(hr)
+Polyhedra.MixedMatHRep{2,Rational{BigInt}}
+julia> hr.A
 3x2 Array{Rational{BigInt},2}:
   1//1   1//1
   1//1  -1//1
  -1//1   0//1
-julia> hrep.b
+julia> hr.b
 3-element Array{Rational{BigInt},1}:
  1//1
  0//1
  0//1
-julia> vrep = vrep(poly)
-julia> typeof(vrep)
+julia> vr = vrep(poly)
+julia> typeof(vr)
 Polyhedra.LiftedVRepresentation{2,Rational{BigInt}}
-julia> vrep = SimpleVRepresentation(vrep)
-julia> typeof(vrep)
-Polyhedra.SimpleVRepresentation{2,Rational{BigInt}}
-julia> vrep.V
+julia> vr = MixedMatVRep(vrep)
+julia> typeof(vr)
+Polyhedra.MixedMatVRep{2,Rational{BigInt}}
+julia> vr.V
 3x2 Array{Rational{BigInt},2}:
  1//2  1//2
  0//1  1//1
  0//1  0//1
 
-julia> vrep.R
+julia> vr.R
 0x2 Array{Rational{BigInt},2}
 ```
-
-## Creating a polyhedron from the feasible set of a JuMP model
-
-A typical application of polyhedral computation is the computation of the set of extreme points and rays of the feasible set of an optimization problem.
-This comes from the fact that given a minimization of a concave function (or maximization of a convex function) on a convex feasible set (e.g. Linear Programming),
-we are either in the following three situations:
-
-- The feasible set is empty, i.e. the problem is infeasible.
-- An extreme ray is optimal, i.e. the problem is unbounded (or it may also be bounded if the objective is constant along the ray).
-- An extreme point is optimal.
-
-A JuMP model is treated by `polyhedron` just like any H-representation. For example, the hypercube of dimension `n` can be created as follows
-```julia
-m = Model()
-@variable(m, 0 ≤ x[1:n] ≤ 1)
-
-poly = polyhedron(m, CDDLibrary(:exact))
-```
-
-In fact, the MathProgBase representation of the feasible set of a linear program:
-
-```math
-\begin{align*}
-  lb \leq Ax \leq ub\\
-  l \leq x \leq u\\
-\end{align*}
-```
-
-has `LPHRepresentation` as a corresponding H-representation.
-A JuMP Model can be converted to this representation using `LPHRepresentation(m)`.
 
 ## Checking if a representation has been computed
 
@@ -134,7 +120,20 @@ vrepiscomputed
 
 ## Incidence
 
-A point ``p`` (ray ``r``) is incident to an halfspace ``\langle a, x \rangle \le \beta`` if ``\langle a, p \rangle = \beta`` (resp. ``\langle a, r \rangle = \beta``).
+Elements can be accessed in a representation or polyhedron using indices and `Base.get`:
+```@docs
+Polyhedra.Index
+Polyhedra.Indices
+```
+The list of indices can be obtained using, e.g., `eachindex(points(rep))`.
+For instance, the following prints all points using indices
+```julia
+for pi in eachindex(points(rep))
+    @show get(rep, pi)
+end
+```
+
+A point ``p`` (resp. ray ``r``) is incident to an halfspace ``\langle a, x \rangle \le \beta`` if ``\langle a, p \rangle = \beta`` (resp. ``\langle a, r \rangle = \beta``).
 
 ```@docs
 incidenthalfspaces
@@ -154,4 +153,20 @@ incidenthyperplanes
 incidenthyperplaneindices
 incidentlines
 incidentlineindices
+```
+
+## Default libraries
+
+The following functions allows to select a default library:
+```@docs
+default_library
+similar_library
+library
+default_type
+```
+
+The following libraries serves as fallback:
+```@docs
+SimplePolyhedraLibrary
+IntervalLibrary
 ```

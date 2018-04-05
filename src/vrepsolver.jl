@@ -1,9 +1,14 @@
-export SimpleVRepSolver, SimpleVRepPolyhedraModel
+export VRepSolver, VRepPolyhedraModel
 
-struct SimpleVRepSolver <: MathProgBase.AbstractMathProgSolver
+"""
+    VRepSolver
+
+Linear Programming solver using the V-representation of the feasible set to find the optimal solution.
+"""
+struct VRepSolver <: MathProgBase.AbstractMathProgSolver
 end
 
-mutable struct SimpleVRepPolyhedraModel <: AbstractPolyhedraModel
+mutable struct VRepPolyhedraModel <: AbstractPolyhedraModel
     vrep::Nullable{VRep}
     obj::Nullable{Vector}
     sense::Symbol
@@ -12,15 +17,15 @@ mutable struct SimpleVRepPolyhedraModel <: AbstractPolyhedraModel
     solution::Nullable{Vector}
     status::Symbol
 
-    function SimpleVRepPolyhedraModel()
+    function VRepPolyhedraModel()
         new(nothing, nothing, :Feas, nothing, nothing, :Undecided)
     end
 end
 
-PolyhedraModel(::SimpleVRepSolver) = SimpleVRepPolyhedraModel()
-LinearQuadraticModel(s::SimpleVRepSolver) = PolyhedraToLPQPBridge(PolyhedraModel(s))
+PolyhedraModel(::VRepSolver) = VRepPolyhedraModel()
+LinearQuadraticModel(s::VRepSolver) = PolyhedraToLPQPBridge(PolyhedraModel(s))
 
-function loadproblem!(lpm::SimpleVRepPolyhedraModel, vrep::VRep, obj, sense)
+function loadproblem!(lpm::VRepPolyhedraModel, vrep::VRep, obj, sense)
     if !(sense in [:Max, :Min])
         error("sense should be :Max or :Min")
     end
@@ -33,7 +38,7 @@ function loadproblem!(lpm::SimpleVRepPolyhedraModel, vrep::VRep, obj, sense)
     end
 end
 
-function optimize!(lpm::SimpleVRepPolyhedraModel)
+function optimize!(lpm::VRepPolyhedraModel)
     if isnull(lpm.vrep)
         error("No problem loaded")
     end
@@ -77,15 +82,15 @@ function optimize!(lpm::SimpleVRepPolyhedraModel)
     end
 end
 
-function MathProgBase.status(lpm::SimpleVRepPolyhedraModel)
+function MathProgBase.status(lpm::VRepPolyhedraModel)
     lpm.status
 end
-function MathProgBase.getobjval(lpm::SimpleVRepPolyhedraModel)
+function MathProgBase.getobjval(lpm::VRepPolyhedraModel)
     get(lpm.objval)
 end
-function MathProgBase.getsolution(lpm::SimpleVRepPolyhedraModel)
+function MathProgBase.getsolution(lpm::VRepPolyhedraModel)
     copy(get(lpm.solution))
 end
-function MathProgBase.getunboundedray(lpm::SimpleVRepPolyhedraModel)
+function MathProgBase.getunboundedray(lpm::VRepPolyhedraModel)
     copy(get(lpm.solution))
 end

@@ -8,9 +8,22 @@ ininterior
 inrelativeinterior
 ```
 
+## Linearity
+
+```@docs
+detecthlinearity!
+detectvlinearity!
+dim
+```
+
+## Duplicates
+
+```@docs
+removeduplicates
+```
+
 ## Redundancy
 ```@docs
-dim
 isredundant
 removehredundancy!
 removevredundancy!

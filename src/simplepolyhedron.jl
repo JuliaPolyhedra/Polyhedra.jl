@@ -1,5 +1,11 @@
 export SimplePolyhedraLibrary, SimplePolyhedron
 
+"""
+    SimplePolyhedraLibrary{T}
+
+Default library for polyhedra of dimension larger than 1 ([`IntervalLibrary`](@ref) is the default for polyhedra of dimension 1).
+The library implements the bare minimum and uses the fallback implementation for all operations.
+"""
 struct SimplePolyhedraLibrary{T} <: PolyhedraLibrary
 end
 
@@ -92,19 +98,19 @@ function vrep(p::SimplePolyhedron)
     get(p.vrep)
 end
 
-function detecthlinearities!(p::SimplePolyhedron)
+function detecthlinearity!(p::SimplePolyhedron)
     p.hrep = removeduplicates(hrep(p))
 end
-function detectvlinearities!(p::SimplePolyhedron)
+function detectvlinearity!(p::SimplePolyhedron)
     p.vrep = removeduplicates(vrep(p))
 end
 function removehredundancy!(p::SimplePolyhedron)
-    detectvlinearities!(p)
-    detecthlinearities!(p)
+    detectvlinearity!(p)
+    detecthlinearity!(p)
     p.hrep = removehredundancy(hrep(p), vrep(p))
 end
 function removevredundancy!(p::SimplePolyhedron)
-    detecthlinearities!(p)
-    detectvlinearities!(p)
+    detecthlinearity!(p)
+    detectvlinearity!(p)
     p.vrep = removevredundancy(vrep(p), hrep(p))
 end
