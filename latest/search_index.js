@@ -29,7 +29,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Index",
     "title": "Contents",
     "category": "section",
-    "text": "Pages = [\"installation.md\", \"representation.md\", \"polyhedron.md\", \"redundancy.md\", \"projection.md\", \"utilities.md\"]\nDepth = 2"
+    "text": "Pages = [\"installation.md\", \"representation.md\", \"polyhedron.md\", \"redundancy.md\", \"projection.md\", \"optimization.md\", \"utilities.md\"]\nDepth = 2"
 },
 
 {
@@ -125,7 +125,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.hrep",
     "category": "function",
-    "text": "hrep(p::Polyhedron)\n\nReturns an H-representation for the polyhedron p.\n\n\n\nhrep(hyperplanes::HyperPlaneIt)\n\nCreates an affine space from the list of hyperplanes hyperplanes.\n\nExamples\n\nhrep([HyperPlane([0, 1, 0], 1), HyperPlane([0, 0, 1], 0)])\n\ncreates the 1-dimensional affine subspace containing all the points (x_1 0 0), i.e. the x_1-axis.\n\nhrep([HyperPlane([1, 1], 1), HyperPlane([1, 0], 0)])\n\ncreates the 0-dimensional affine subspace only containing the point (0 1).\n\n\n\nhrep(hyperplanes::HyperPlaneIt, halfspaces::HalfSpaceIt)\n\nCreates an H-representation for the polyhedron equal to the intersection of the hyperplanes hyperplanes and halfspaces halfspaces.\n\nExamples\n\nFor instance, the simplex\n\nbeginalign*\n  x_1 + x_2 = 1 \n  x_1 geq 0 \n  x_2 geq 0\nendalign*\n\ncan be created as follows:\n\nhrep([HalfSpace([-1, 0], 0)], [HyperPlane([1, 1], 1), HalfSpace([0, -1], 0)])\n\n\n\nhrep(halfspaces::HalfSpaceIt)\n\nCreates an H-representation for the polyhedron equal to the intersection of the halfspaces halfspaces.\n\nExamples\n\nFor instance, the polytope\n\neginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nndalign*\n\ncan be created as follows:\n\nhrep([HalfSpace([1, 1], 1), HalfSpace([1, -1], 0), HalfSpace([-1, 0], 0)])\n\n\n\nhrep(model::JuMP.Model)\n\nBuilds an H-representation from the feasibility set of the JuMP model model. Note that if non-linear constraint are present in the model, they are ignored.\n\n\n\nhrep(A::AbstractMatrix, b::AbstractVector, linset::IntSet=IntSet())\n\nCreates an H-representation for the polyhedron defined by the inequalities langle A_i x rangle = b_i if i in linset and langle A_i x rangle le b_i otherwise where A_i is the ith row of A, i.e. A[i,:] and b_i is b[i].\n\n\n\n"
+    "text": "hrep(p::Polyhedron)\n\nReturns an H-representation for the polyhedron p.\n\n\n\nhrep(hyperplanes::HyperPlaneIt)\n\nCreates an affine space from the list of hyperplanes hyperplanes.\n\nExamples\n\nhrep([HyperPlane([0, 1, 0], 1), HyperPlane([0, 0, 1], 0)])\n\ncreates the 1-dimensional affine subspace containing all the points (x_1 0 0), i.e. the x_1-axis.\n\nhrep([HyperPlane([1, 1], 1), HyperPlane([1, 0], 0)])\n\ncreates the 0-dimensional affine subspace only containing the point (0 1).\n\n\n\nhrep(hyperplanes::HyperPlaneIt, halfspaces::HalfSpaceIt)\n\nCreates an H-representation for the polyhedron equal to the intersection of the hyperplanes hyperplanes and halfspaces halfspaces.\n\nExamples\n\nFor instance, the simplex\n\nbeginalign*\n  x_1 + x_2 = 1 \n  x_1 geq 0 \n  x_2 geq 0\nendalign*\n\ncan be created as follows:\n\nhrep([HalfSpace([-1, 0], 0)], [HyperPlane([1, 1], 1), HalfSpace([0, -1], 0)])\n\n\n\nhrep(halfspaces::HalfSpaceIt)\n\nCreates an H-representation for the polyhedron equal to the intersection of the halfspaces halfspaces.\n\nExamples\n\nFor instance, the polytope\n\nbeginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*\n\ncan be created as follows:\n\nhrep([HalfSpace([1, 1], 1), HalfSpace([1, -1], 0), HalfSpace([-1, 0], 0)])\n\n\n\nhrep(model::JuMP.Model)\n\nBuilds an H-representation from the feasibility set of the JuMP model model. Note that if non-linear constraint are present in the model, they are ignored.\n\n\n\nhrep(A::AbstractMatrix, b::AbstractVector, linset::IntSet=IntSet())\n\nCreates an H-representation for the polyhedron defined by the inequalities langle A_i x rangle = b_i if i in linset and langle A_i x rangle le b_i otherwise where A_i is the ith row of A, i.e. A[i,:] and b_i is b[i].\n\n\n\n"
 },
 
 {
@@ -369,11 +369,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "polyhedron.html#Polyhedra.doubledescription",
+    "page": "Polyhedron",
+    "title": "Polyhedra.doubledescription",
+    "category": "function",
+    "text": "doubledescription(h::HRepresentation)\n\nComputes the V-representation of the polyhedron represented by h using the Double-Description algorithm [1, 2].\n\ndoubledescription(V::VRepresentation)\n\nComputes the H-representation of the polyhedron represented by v using the Double-Description algorithm [1, 2].\n\n[1] Motzkin, T. S., Raiffa, H., Thompson, G. L. and Thrall, R. M. The double description method Contribution to the Theory of Games, Princeton University Press, 1953\n\n[2] Fukuda, K. and Prodon, A. Double description method revisited Combinatorics and computer science, Springer, 1996, 91-111\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.polyhedron",
+    "page": "Polyhedron",
+    "title": "Polyhedra.polyhedron",
+    "category": "function",
+    "text": "polyhedron(rep::Representation{N, T})\n\nCreates a polyhedron from the representation rep using the default library including in the Polyhedra package.\n\n\n\n"
+},
+
+{
     "location": "polyhedron.html#Polyhedron-1",
     "page": "Polyhedron",
     "title": "Polyhedron",
     "category": "section",
-    "text": "As seen in the previous section, a polyhedron can be described in 2 ways: either using the H-representation (list of inequalities) or the V-representation (list of points and rays). A typical problem is: Given the H-(or V-)representation of one or several polyhedra, what is the H-(or V-)representation of some polyhedra obtained after some operations on these initial polyhedra. This description is similar to the description usually given to algorithms except that in that case we talk about numbers given in their binary representation and not polyhedra given in their H-(or V-)representation. This motivates the creation of a type representing polyhedra. Just like the abstract type AbstractArray{N,T} represents an N-dimensional array with elements of type T, the abstract type Polyhedron{N,T} represents an N-dimensional polyhedron with elements of coefficient type T.There is typically one concrete subtype of Polyhedron by library. For instance, the CDD library defines CDDPolyhedron and the LRS library defines LRSPolyhedron. It must be said that the type T is not necessarily how the elements are stored internally by the library but the polyhedron will behave just like it is stored that way. For instance, when retreiving an H-(or V-)representation, the representation will be of type T. Therefore using Int for T may result in InexactError. For this reason, by default, the type T chosen is not a subtype of Integer.Consider the representations hrep, vrep and vrepf created in the preceding section. One can use the CDD library, to create an instance of a concrete subtype of Polyhedronjulia> using CDDLib\njulia> polyf = polyhedron(hrep, CDDLibrary())\njulia> typeof(polyhf)\nCDDLib.CDDPolyhedron{2,Float64}We see that the library has choosen to deal with floating point arithmetic. This decision does not depend on the type of hrep but only on the instance of CDDLibrary given. CDDLibrary creates CDDPolyhedron of type either Float64 or Rational{BigInt}. One can choose the first one using CDDLibrary(:float) and the second one using CDDLibrary(:exact), by default it is :float.julia> poly = polyhedron(hrep, CDDLibrary(:exact))\njulia> typeof(poly)\nCDDLib.CDDPolyhedron{2,Rational{BigInt}}The first polyhedron polyf can also be created from its V-representation using either of the 4 following linesjulia> polyf = polyhedron(vrepf, CDDLibrary(:float))\njulia> polyf = polyhedron(vrepf, CDDLibrary())\njulia> polyf = polyhedron(vrep,  CDDLibrary(:float))\njulia> polyf = polyhedron(vrep,  CDDLibrary())and poly using either of those linesjulia> poly = polyhedron(vrepf, CDDLibrary(:exact))\njulia> poly = polyhedron(vrep , CDDLibrary(:exact))of course, creating a representation in floating points with exact arithmetic works here because we have 0.5 which is 0.1 in binary but in general, is not a good idea.julia> Rational{BigInt}(1/2)\n1//2\njulia> Rational{BigInt}(1/3)\n6004799503160661//18014398509481984\njulia> Rational{BigInt}(1/5)\n3602879701896397//18014398509481984"
+    "text": "As seen in the previous section, a polyhedron can be described in 2 ways: either using the H-representation (intersection of halfspaces) or the V-representation (convex hull of points and rays). The problem of computing the H-representation from the V-representation (or vice versa) is called the representation conversion problem. It can be solved by the Double-Description methoddoubledescriptionHowever, other methods exist such as the reverse search implemented by LRS and the quick hull algorithm implemented by qhull.This motivates the creation of a type representing polyhedra, transparently handling the conversion from H-representation to V-representation when needed for some operation. Just like the abstract type AbstractArray{N,T} represents an N-dimensional array with elements of type T, the abstract type Polyhedron{N,T} represents an N-dimensional polyhedron with elements of coefficient type T.There is typically one concrete subtype of Polyhedron by library. For instance, the CDD library defines CDDPolyhedron and the LRS library defines LRSPolyhedron. It must be said that the type T is not necessarily how the elements are stored internally by the library but the polyhedron will behave just like it is stored that way. For instance, when retreiving an H-(or V-)representation, the representation will be of type T. Therefore using Int for T may result in InexactError. For this reason, by default, the type T chosen is not a subtype of Integer.A polyhedron can be created from a representation and a library using the polyhedron function.polyhedronTo illustrate the usage of the polyhedron function, consider the following representations:hr = HalfSpace([1, 1], 1) ∩ HalfSpace([1, -1], 0) ∩ HalfSpace([-1, 0], 0)\nvre = convexhull([0, 0], [0, 1], [1//2, 1//2])\nvrf = convexhull([0, 0], [0, 1], [1/2, 1/2])One can use the CDD library, to create an instance of a concrete subtype of Polyhedron as follows:julia> using CDDLib\njulia> polyf = polyhedron(hr, CDDLibrary())\njulia> typeof(polyhf)\nCDDLib.CDDPolyhedron{2,Float64}We see that the library has choosen to deal with floating point arithmetic. This decision does not depend on the type of hr but only on the instance of CDDLibrary given. CDDLibrary creates CDDPolyhedron of type either Float64 or Rational{BigInt}. One can choose the first one using CDDLibrary(:float) and the second one using CDDLibrary(:exact), by default it is :float.julia> poly = polyhedron(hr, CDDLibrary(:exact))\njulia> typeof(poly)\nCDDLib.CDDPolyhedron{2,Rational{BigInt}}The first polyhedron polyf can also be created from its V-representation using either of the 4 following lines:julia> polyf = polyhedron(vrf, CDDLibrary(:float))\njulia> polyf = polyhedron(vrf, CDDLibrary())\njulia> polyf = polyhedron(vre,  CDDLibrary(:float))\njulia> polyf = polyhedron(vre,  CDDLibrary())and poly using either of those lines:julia> poly = polyhedron(vrf, CDDLibrary(:exact))\njulia> poly = polyhedron(vre, CDDLibrary(:exact))Of course, creating a representation in floating points with exact arithmetic works here because we have 0.5 which is 0.1 in binary but in general, is not a good idea.julia> Rational{BigInt}(1/2)\n1//2\njulia> Rational{BigInt}(1/3)\n6004799503160661//18014398509481984\njulia> Rational{BigInt}(1/5)\n3602879701896397//18014398509481984"
 },
 
 {
@@ -381,15 +397,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Retrieving a representation",
     "category": "section",
-    "text": "One can retrieve an H-representation (resp. V-representation) from a polyhedron using hrep (resp. vrep). The concrete subtype of HRepresentation (resp. VRepresentation) returned is not necessarily the same that the one used to create the polyhedron. As a rule of thumb, it is the representation the closest to the internal representation used by the library.julia> hrep = hrep(poly)\njulia> typeof(hrep)\nPolyhedra.LiftedHRepresentation{2,Rational{BigInt}}\njulia> hrep = SimpleHRepresentation(hrep)\njulia> typeof(hrep)\nPolyhedra.SimpleHRepresentation{2,Rational{BigInt}}\njulia> hrep.A\n3x2 Array{Rational{BigInt},2}:\n  1//1   1//1\n  1//1  -1//1\n -1//1   0//1\njulia> hrep.b\n3-element Array{Rational{BigInt},1}:\n 1//1\n 0//1\n 0//1\njulia> vrep = vrep(poly)\njulia> typeof(vrep)\nPolyhedra.LiftedVRepresentation{2,Rational{BigInt}}\njulia> vrep = SimpleVRepresentation(vrep)\njulia> typeof(vrep)\nPolyhedra.SimpleVRepresentation{2,Rational{BigInt}}\njulia> vrep.V\n3x2 Array{Rational{BigInt},2}:\n 1//2  1//2\n 0//1  1//1\n 0//1  0//1\n\njulia> vrep.R\n0x2 Array{Rational{BigInt},2}"
-},
-
-{
-    "location": "polyhedron.html#Creating-a-polyhedron-from-the-feasible-set-of-a-JuMP-model-1",
-    "page": "Polyhedron",
-    "title": "Creating a polyhedron from the feasible set of a JuMP model",
-    "category": "section",
-    "text": "A typical application of polyhedral computation is the computation of the set of extreme points and rays of the feasible set of an optimization problem. This comes from the fact that given a minimization of a concave function (or maximization of a convex function) on a convex feasible set (e.g. Linear Programming), we are either in the following three situations:The feasible set is empty, i.e. the problem is infeasible.\nAn extreme ray is optimal, i.e. the problem is unbounded (or it may also be bounded if the objective is constant along the ray).\nAn extreme point is optimal.A JuMP model is treated by polyhedron just like any H-representation. For example, the hypercube of dimension n can be created as followsm = Model()\n@variable(m, 0 ≤ x[1:n] ≤ 1)\n\npoly = polyhedron(m, CDDLibrary(:exact))In fact, the MathProgBase representation of the feasible set of a linear program:beginalign*\n  lb leq Ax leq ub\n  l leq x leq u\nendalign*has LPHRepresentation as a corresponding H-representation. A JuMP Model can be converted to this representation using LPHRepresentation(m)."
+    "text": "One can retrieve an H-representation (resp. V-representation) from a polyhedron using hrep (resp. vrep). The concrete subtype of HRepresentation (resp. VRepresentation) returned is not necessarily the same that the one used to create the polyhedron. As a rule of thumb, it is the representation the closest to the internal representation used by the library.julia> hr = hrep(poly)\njulia> typeof(hr)\nPolyhedra.LiftedHRepresentation{2,Rational{BigInt}}\njulia> hr = MixedMatHRep(hr)\njulia> typeof(hr)\nPolyhedra.MixedMatHRep{2,Rational{BigInt}}\njulia> hr.A\n3x2 Array{Rational{BigInt},2}:\n  1//1   1//1\n  1//1  -1//1\n -1//1   0//1\njulia> hr.b\n3-element Array{Rational{BigInt},1}:\n 1//1\n 0//1\n 0//1\njulia> vr = vrep(poly)\njulia> typeof(vr)\nPolyhedra.LiftedVRepresentation{2,Rational{BigInt}}\njulia> vr = MixedMatVRep(vrep)\njulia> typeof(vr)\nPolyhedra.MixedMatVRep{2,Rational{BigInt}}\njulia> vr.V\n3x2 Array{Rational{BigInt},2}:\n 1//2  1//2\n 0//1  1//1\n 0//1  0//1\n\njulia> vr.R\n0x2 Array{Rational{BigInt},2}"
 },
 
 {
@@ -414,6 +422,22 @@ var documenterSearchIndex = {"docs": [
     "title": "Checking if a representation has been computed",
     "category": "section",
     "text": "hrepiscomputed\nvrepiscomputed"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.Index",
+    "page": "Polyhedron",
+    "title": "Polyhedra.Index",
+    "category": "type",
+    "text": "Index{N, T, ElemT}\n\nIndex of an element of type ElemT in a Rep{N, T}.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.Indices",
+    "page": "Polyhedron",
+    "title": "Polyhedra.Indices",
+    "category": "type",
+    "text": "Indices{N, T, ElemT, RepT<:Rep{N, T}}\n\nIterator over the indices of the elements of type ElemT of the field rep.\n\n\n\n"
 },
 
 {
@@ -501,7 +525,63 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Incidence",
     "category": "section",
-    "text": "A point p (ray r) is incident to an halfspace langle a x rangle le beta if langle a p rangle = beta (resp. langle a r rangle = beta).incidenthalfspaces\nincidenthalfspaceindices\nincidentpoints\nincidentpointindices\nincidentrays\nincidentrayindicesIn a polyhedron, all points and rays are incident to all hyperplanes and all halfspaces are incident to all lines. The following methods are therefore redundant, e.g. incidenthyperplanes(p, idx) is equivalent to hyperplanes(p) and incidenthyperplaneindices(p, idx) is equivalent to eachindex(hyperplanes(p)). The methods are hence only defined for consistency.incidenthyperplanes\nincidenthyperplaneindices\nincidentlines\nincidentlineindices"
+    "text": "Elements can be accessed in a representation or polyhedron using indices and Base.get:Polyhedra.Index\nPolyhedra.IndicesThe list of indices can be obtained using, e.g., eachindex(points(rep)). For instance, the following prints all points using indicesfor pi in eachindex(points(rep))\n    @show get(rep, pi)\nendA point p (resp. ray r) is incident to an halfspace langle a x rangle le beta if langle a p rangle = beta (resp. langle a r rangle = beta).incidenthalfspaces\nincidenthalfspaceindices\nincidentpoints\nincidentpointindices\nincidentrays\nincidentrayindicesIn a polyhedron, all points and rays are incident to all hyperplanes and all halfspaces are incident to all lines. The following methods are therefore redundant, e.g. incidenthyperplanes(p, idx) is equivalent to hyperplanes(p) and incidenthyperplaneindices(p, idx) is equivalent to eachindex(hyperplanes(p)). The methods are hence only defined for consistency.incidenthyperplanes\nincidenthyperplaneindices\nincidentlines\nincidentlineindices"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.default_library",
+    "page": "Polyhedron",
+    "title": "Polyhedra.default_library",
+    "category": "function",
+    "text": "default_library(::FullDim{N}, ::Type{T}) where {N, T}\n\nReturns the default polyhedral library for N-dimensional polyhedron of coefficient type T.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.similar_library",
+    "page": "Polyhedron",
+    "title": "Polyhedra.similar_library",
+    "category": "function",
+    "text": "similar_library(lib::PolyhedraLibrary, d::FullDim{N}, ::Type{T}) where {N, T}\n\nReturns a library that supports polyhedra of full dimension T with coefficient type T. If lib does not support it, this commonly calls default_library(d, T).\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.library",
+    "page": "Polyhedron",
+    "title": "Polyhedra.library",
+    "category": "function",
+    "text": "library(p::Polyhedron)\n\nReturns the library used by p.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.default_type",
+    "page": "Polyhedron",
+    "title": "Polyhedra.default_type",
+    "category": "function",
+    "text": "default_type(::FullDim{N}, ::Type{T}) where {N, T}\n\nReturns the default polyhedron type for N-dimensional polyhedron of coefficient type T.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.SimplePolyhedraLibrary",
+    "page": "Polyhedron",
+    "title": "Polyhedra.SimplePolyhedraLibrary",
+    "category": "type",
+    "text": "SimplePolyhedraLibrary{T}\n\nDefault library for polyhedra of dimension larger than 1 (IntervalLibrary is the default for polyhedra of dimension 1). The library implements the bare minimum and uses the fallback implementation for all operations.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Polyhedra.IntervalLibrary",
+    "page": "Polyhedron",
+    "title": "Polyhedra.IntervalLibrary",
+    "category": "type",
+    "text": "IntervalLibrary{T}\n\nDefault library for polyhedra of dimension 1. Many aspect of polyhedral computation become trivial in one dimension. This library exploits this fact. The library is also used as a fallback for libraries that do not support 1-dimensional polyhedra (e.g. qhull). That is projecting a polyhedron using such library produces a polyhedron using IntervalLibrary.\n\n\n\n"
+},
+
+{
+    "location": "polyhedron.html#Default-libraries-1",
+    "page": "Polyhedron",
+    "title": "Default libraries",
+    "category": "section",
+    "text": "The following functions allows to select a default library:default_library\nsimilar_library\nlibrary\ndefault_typeThe following libraries serves as fallback:SimplePolyhedraLibrary\nIntervalLibrary"
 },
 
 {
@@ -561,11 +641,51 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "redundancy.html#Polyhedra.detecthlinearity!",
+    "page": "Containment/Redundancy",
+    "title": "Polyhedra.detecthlinearity!",
+    "category": "function",
+    "text": "detecthlinearity!(p::VRep)\n\nDetects all the hyperplanes contained in the H-representation and remove all redundant hyperplanes.\n\nExamples\n\nThe representation\n\nh = HalfSpace([1, 1], 1]) ∩ HalfSpace([-1, -1], -1)\n\ncontains the hyperplane HyperPlane([1, 1], 1).\n\n\n\n"
+},
+
+{
+    "location": "redundancy.html#Polyhedra.detectvlinearity!",
+    "page": "Containment/Redundancy",
+    "title": "Polyhedra.detectvlinearity!",
+    "category": "function",
+    "text": "detectvlinearity!(p::VRep)\n\nDetects all the lines contained in the V-representation and remove all redundant lines.\n\nExamples\n\nThe representation\n\nv = conichull([1, 1], [-1, -1])\n\ncontains the line Line([1, 1]).\n\n\n\n"
+},
+
+{
     "location": "redundancy.html#Polyhedra.dim",
     "page": "Containment/Redundancy",
     "title": "Polyhedra.dim",
     "category": "function",
-    "text": "dim(p::Polyhedron)\n\nReturns the dimension of the affine hull of the polyhedron. That is the number of non-redundant hyperplanes that define it.\n\n\n\n"
+    "text": "dim(h::HRep, current=false)\n\nReturns the dimension of the affine hull of the polyhedron. That is the number of non-redundant hyperplanes that define it. If current is true then it simply returns the dimension according the current number of hyperplanes, assuming that the H-linearity has already been detected. Otherwise, it first calls detecthlinearity!.\n\n\n\n"
+},
+
+{
+    "location": "redundancy.html#Linearity-1",
+    "page": "Containment/Redundancy",
+    "title": "Linearity",
+    "category": "section",
+    "text": "detecthlinearity!\ndetectvlinearity!\ndim"
+},
+
+{
+    "location": "redundancy.html#Polyhedra.removeduplicates",
+    "page": "Containment/Redundancy",
+    "title": "Polyhedra.removeduplicates",
+    "category": "function",
+    "text": "removeduplicates(rep::Representation)\n\nRemoves the duplicates in the Representation.\n\nIn an H-representation, it removes the redundant hyperplanes and it remove an halfspace when it is equal to another halfspace in the affine hull. For instance, HalfSpace([1, 1], 1) is equal to HalfSpace([1, 0], 0) in the affine hull generated by HyperPlane([0, 1], 1]).\nIn a V-representation, it removes the redundant lines and it remove a point (resp. ray) when it is equal to another point (resp. ray) in the line hull. For instance, in the line hull generated by Line([0, 1]), [1, 1] is equal to [1, 0] and Ray([2, 2]) is equal to Ray([1, 0]).\n\n\n\n"
+},
+
+{
+    "location": "redundancy.html#Duplicates-1",
+    "page": "Containment/Redundancy",
+    "title": "Duplicates",
+    "category": "section",
+    "text": "removeduplicates"
 },
 
 {
@@ -597,7 +717,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Redundancy",
     "category": "section",
-    "text": "dim\nisredundant\nremovehredundancy!\nremovevredundancy!"
+    "text": "isredundant\nremovehredundancy!\nremovevredundancy!"
 },
 
 {
@@ -662,6 +782,70 @@ var documenterSearchIndex = {"docs": [
     "title": "Projection/Elimination",
     "category": "section",
     "text": "Consider the polyhedron created in the beginning of this section. As a reminder, it represents the following H-representation:beginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*One can verify that for any 0 leq x_2 leq 1, there exists a value x_1 such that (x_1 x_2) is in this polyhedron. This means that the H-representation obtained by eliminating x_1 is:beginalign*\n  x_1  leq 1 \n  x_1  geq 0\nendalign*where x_1 in the H-representation above represents x_2 in the previous one. This can be obtained as followsjulia> poly_x2 = eliminate(poly, [1])\njulia> hrep(poly_x2)\nH-representation\nbegin\n 2 2 rational\n 1//1 -1//1\n 0//1 1//1\nendThere is two methods of computing the elimination implemented in CDDLib: Fourier-Motzkin elimination and block elimination. As written by K. Fukuda in CDD\'s documentation, \"[Block elimination] might be a faster way to eliminate variables than the repeated [Fourier-Motzkin elimination] when the number of variables to eliminate is large\". You can specify the method to use as a third argument, e.g. eliminate(poly, [1], FourierMotzkin()), eliminate(poly, [1], BlockElimination()). A third method can be chosen: ProjectGenerators. It computes the V-representation and then project each of its elements. This is the method of choice when the V-representation is already computed.FourierMotzkin\nBlockElimination\nProjectGeneratorsIf nothing is specified as in the block of code above, the behavior depends on the polyhedral library. If neither Fourier-Motzkin nor block elimination is implemented or if the V-representation is already computed then :ProjectGenerators is chosen. Otherwise, Polyhedra lets the library decide. In CDDLib, :FourierMotzkin is chosen when only the last dimension needs to be eliminated and :BlockElimination is chosen otherwise. Note that CDDLib only supports projecting the last trailing dimensions.eliminate\nproject\nfixandeliminate"
+},
+
+{
+    "location": "optimization.html#",
+    "page": "Optimization",
+    "title": "Optimization",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "optimization.html#Base.isempty",
+    "page": "Optimization",
+    "title": "Base.isempty",
+    "category": "function",
+    "text": "isempty(p::Rep, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p))\n\nCheck whether the polyhedron p is empty by using the solver solver.\n\n\n\n"
+},
+
+{
+    "location": "optimization.html#MathProgBase.HighLevelInterface.linprog",
+    "page": "Optimization",
+    "title": "MathProgBase.HighLevelInterface.linprog",
+    "category": "function",
+    "text": "linprog(c::AbstractVector, p::Rep, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p))\n\nSolve the minimization of the objective langle c x rangle over the polyhedron p.\n\n\n\n"
+},
+
+{
+    "location": "optimization.html#Polyhedra.VRepSolver",
+    "page": "Optimization",
+    "title": "Polyhedra.VRepSolver",
+    "category": "type",
+    "text": "VRepSolver\n\nLinear Programming solver using the V-representation of the feasible set to find the optimal solution.\n\n\n\n"
+},
+
+{
+    "location": "optimization.html#Polyhedra.default_solver",
+    "page": "Optimization",
+    "title": "Polyhedra.default_solver",
+    "category": "function",
+    "text": "default_solver(p::Rep)\n\nReturns a default linear programming solver for the polyhedron p (e.g. CDD has an internal solver which is used by default).\n\n\n\n"
+},
+
+{
+    "location": "optimization.html#Polyhedra.solver",
+    "page": "Optimization",
+    "title": "Polyhedra.solver",
+    "category": "function",
+    "text": "solver(p::Rep, solver::MathProgBase.AbstractMathProgSolver=default_solver(p))\n\nIf the V-representation of p has been computed, returns VRepSolver(), otherwise, returns solver.\n\n\n\n"
+},
+
+{
+    "location": "optimization.html#Optimization-1",
+    "page": "Optimization",
+    "title": "Optimization",
+    "category": "section",
+    "text": "A polyhedron can represents the feasible set of an optimization program. The program is infeasible when the polyhedron is empty.isempty\nMathProgBase.linprogIf the V-representation of the polyhedron has been computed, it can be used to solve the linear program.VRepSolverOtherwise, any programming solver implementing the MathProgBase interface can be used. See here for a list of available solvers.Polyhedra.default_solver\nPolyhedra.solver"
+},
+
+{
+    "location": "optimization.html#Creating-a-polyhedron-from-the-feasible-set-of-a-JuMP-model-1",
+    "page": "Optimization",
+    "title": "Creating a polyhedron from the feasible set of a JuMP model",
+    "category": "section",
+    "text": "A typical application of polyhedral computation is the computation of the set of extreme points and rays of the feasible set of an optimization problem. This comes from the fact that given a minimization of a concave function (or maximization of a convex function) on a convex feasible set (e.g. Linear Programming), we are either in the following three situations:The feasible set is empty, i.e. the problem is infeasible.\nAn extreme ray is optimal, i.e. the problem is unbounded (or it may also be bounded if the objective is constant along the ray).\nAn extreme point is optimal.A JuMP model is treated by polyhedron just like any H-representation. For example, the hypercube of dimension n can be created as followsm = Model()\n@variable(m, 0 ≤ x[1:n] ≤ 1)\n\npoly = polyhedron(m, CDDLibrary(:exact))In fact, the MathProgBase representation of the feasible set of a linear program:beginalign*\n  lb leq Ax leq ub\n  l leq x leq u\nendalign*has LPHRepresentation as a corresponding H-representation. A JuMP model can be converted to this representation using LPHRepresentation(m)."
 },
 
 {
@@ -798,6 +982,38 @@ var documenterSearchIndex = {"docs": [
     "title": "Chebyshev center",
     "category": "section",
     "text": "chebyshevcenter\nhchebyshevcenter\nvchebyshevcenter"
+},
+
+{
+    "location": "utilities.html#Polyhedra.@subrepelem",
+    "page": "Utilities",
+    "title": "Polyhedra.@subrepelem",
+    "category": "macro",
+    "text": "The representation rep contain the elements elem inside a representation in the field field.\n\n\n\n"
+},
+
+{
+    "location": "utilities.html#Polyhedra.@norepelem",
+    "page": "Utilities",
+    "title": "Polyhedra.@norepelem",
+    "category": "macro",
+    "text": "The representation rep does not contain any elem.\n\n\n\n"
+},
+
+{
+    "location": "utilities.html#Polyhedra.@vecrepelem",
+    "page": "Utilities",
+    "title": "Polyhedra.@vecrepelem",
+    "category": "macro",
+    "text": "The representation rep contain the elements elem inside a vector in the field field.\n\n\n\n"
+},
+
+{
+    "location": "utilities.html#Defining-new-representation-1",
+    "page": "Utilities",
+    "title": "Defining new representation",
+    "category": "section",
+    "text": "The following macros make it easy to define new representations:Polyhedra.@subrepelem\nPolyhedra.@norepelem\nPolyhedra.@vecrepelem"
 },
 
 ]}
