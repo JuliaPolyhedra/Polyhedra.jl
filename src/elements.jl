@@ -206,6 +206,17 @@ for op in [:dot, :cross]
     end
 end
 
+for ElT in (:HyperPlane, :HalfSpace, :Line, :Ray)
+    @eval begin
+        Base.promote_rule(::Type{$ElT{N, T, AT}}, ::Type{$ElT{N, T, AT}}) where {N, T, AT} = $ElT{N, T, AT}
+        Base.promote_rule(::Type{$ElT{N, T, AS}}, ::Type{$ElT{N, T, AT}}) where {N, T, AS, AT} = $ElT{N, T, promote_type(AS, AT)}
+        function Base.promote_rule(::Type{$ElT{N, S, AS}}, ::Type{$ElT{N, T, AT}}) where {N, S, T, AS, AT}
+            U = promote_type(S, T)
+            $ElT{N, U, promote_type(similar_type(AS, U), similar_type(AT, U))}
+        end
+    end
+end
+
 Base.:(*)(α, r::T) where T<:VStruct = T(α * r.a)
 Base.:(*)(r::T, α) where T<:VStruct = T(r.a * α)
 Base.:(/)(r::T, α) where T<:VStruct = T(r.a / α)

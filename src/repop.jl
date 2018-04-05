@@ -21,6 +21,7 @@ function promote_reptype(P1::Type{<:Rep{N, S}}, P2::Type{<:Rep{N, T}}) where {N,
     # P2 might not support coefficient type U so we avoid calling similar_type on P2
     _promote_reptype(similar_type(P1, U), P2)
 end
+promote_reptype(P1::Type{<:Rep{N}}, P2::Type{<:Rep{N}}, P::Type{<:Rep{N}}...) where N = promote_reptype(promote_reptype(P1, P2), P...)
 
 """
     intersect(P1::HRep, P2::HRep)
@@ -34,10 +35,10 @@ The type of the result will be chosen closer to the type of `P1`. For instance, 
 If `P1` and `P2` are both polyhedra (resp. H-representation), the resulting polyhedron type (resp. H-representation type) will be computed according to the type of `P1`.
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
-function Base.intersect(p1::HRep{N, T1}, p2::HRep{N, T2}) where {N, T1, T2}
-    Tout = promote_type(T1, T2)
-    RepTout = promote_reptype(typeof(p1), typeof(p2))
-    RepTout(hmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)
+function Base.intersect(p::HRep{N}...) where N
+    RepTout = promote_reptype(typeof.(p)...)
+    T = MultivariatePolynomials.coefficienttype(RepTout)
+    RepTout(hmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)
 end
 Base.intersect(p::Rep, el::HRepElement) = p ∩ intersect(el)
 
@@ -65,21 +66,26 @@ The type of the result will be chosen closer to the type of `P1`. For instance, 
 If `P1` and `P2` are both polyhedra (resp. V-representation), the resulting polyhedron type (resp. V-representation type) will be computed according to the type of `P1`.
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
-function convexhull(p1::VRep{N, S}, p2::VRep{N, T}) where {N, S, T}
-    U = promote_type(S, T)
-    RepTout = promote_reptype(typeof(p1), typeof(p2))
-    RepTout(vmap((i,x) -> similar_type(typeof(x), U)(x), FullDim{N}(), U, p1, p2)...)::RepTout # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
+function convexhull(p::VRep{N}...) where N
+    RepTout = promote_reptype(typeof.(p)...)
+    T = MultivariatePolynomials.coefficienttype(RepTout)
+    RepTout(vmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)::RepTout # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
 end
 convexhull(p::Rep, el::VRepElement) = convexhull(p, convexhull(el))
 
 convexhull(ps::AbstractPoint...) = vrep([ps...])
 convexhull(ls::Line...) = vrep([ls...])
 convexhull(rs::Ray...) = vrep([rs...])
-convexhull(p::AbstractPoint, r::Union{Line, Ray}) = vrep([p], [r])
-convexhull(r::Union{Line, Ray}, p::AbstractPoint) = conichull(p, r)
-convexhull(l::Line, r::Ray) = vrep([l], [r])
-convexhull(r::Ray, l::Line) = conichull(l, r)
-convexhull(p1::VAny{N}, p2::VAny{N}, ps::VAny{N}...) where N = convexhull(convexhull(p1, p2), ps...)
+convexhull(p::AbstractPoint{N, T}, r::Union{Line{N, T}, Ray{N, T}}) where {N, T} = vrep([p], [r])
+convexhull(r::Union{Line{N, T}, Ray{N, T}}, p::AbstractPoint{N, T}) where {N, T} = conichull(p, r)
+convexhull(l::Line{N, T}, r::Ray{N, T}) where {N, T} = vrep([l], [r])
+convexhull(r::Ray{N, T}, l::Line{N, T}) where {N, T} = conichull(l, r)
+convexhull(p1::VAny{N, T}, p2::VAny{N, T}, ps::VAny{N, T}...) where {N, T} = convexhull(convexhull(p1, p2), ps...)
+function convexhull(p::VAny{N}...) where N
+    T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
+    f(p) = similar_type(typeof(p), T)(p)
+    convexhull(f.(p)...)
+end
 
 """
     convexhull!(p1::VRep, p2::VRep)

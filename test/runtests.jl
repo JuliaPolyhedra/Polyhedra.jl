@@ -7,12 +7,12 @@ MP = MultivariatePolynomials
 using StaticArrays
 
 include("utils.jl")
-include("alltests.jl")
+#include("alltests.jl")
 
 include("libraries.jl")
 
-include("elements.jl")
-include("comp.jl")
+#include("elements.jl")
+#include("comp.jl")
 include("representation.jl")
 include("polyhedron.jl")
 
