@@ -16,7 +16,7 @@ default_type(::FullDim{1}, ::Type{T}) where T = Interval{T, SVector{1, T}}
 
 Returns the default polyhedral library for `N`-dimensional polyhedron of coefficient type `T`.
 """
-function default_type end
+function default_library end
 
 _default_type(::Type{T}) where T = T
 # See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/35

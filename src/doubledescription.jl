@@ -30,6 +30,7 @@ Computes the H-representation of the polyhedron represented by `v` using the Dou
 [1] Motzkin, T. S., Raiffa, H., Thompson, G. L. and Thrall, R. M.
 The double description method
 *Contribution to the Theory of Games*, *Princeton University Press*, **1953**
+
 [2] Fukuda, K. and Prodon, A.
 Double description method revisited
 *Combinatorics and computer science*, *Springer*, **1996**, 91-111
