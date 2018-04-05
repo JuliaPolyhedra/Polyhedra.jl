@@ -44,9 +44,15 @@ Base.intersect(p::Rep, el::HRepElement) = p ∩ intersect(el)
 
 Base.intersect(hps::HyperPlane...) = hrep([hps...])
 Base.intersect(hss::HalfSpace...) = hrep([hss...])
-Base.intersect(h1::HyperPlane, h2::HalfSpace) = hrep([h1], [h2])
-Base.intersect(h1::HalfSpace, h2::HyperPlane) = h2 ∩ h1
-Base.intersect(h1::Union{HRep{N}, HRepElement{N}}, h2::Union{HRep{N}, HRepElement{N}}, hs::Union{HRep{N}, HRepElement{N}}...) where N = intersect(h1 ∩ h2, hs...)
+Base.intersect(h1::HyperPlane{N, T}, h2::HalfSpace{N, T}) where {N, T} = hrep([h1], [h2])
+Base.intersect(h1::HalfSpace{N, T}, h2::HyperPlane{N, T}) where {N, T} = h2 ∩ h1
+Base.intersect(p1::HAny{N, T}, p2::HAny{N, T}, ps::HAny{N, T}...) where {N, T} = intersect(p1 ∩ p2, ps...)
+function Base.intersect(p::HAny{N}...) where N
+    T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
+    f(p) = similar_type(typeof(p), T)(p)
+    intersect(f.(p)...)
+end
+
 
 """
     intersect!(p1::VRep, p2::VRep)
@@ -77,9 +83,9 @@ convexhull(ps::AbstractPoint...) = vrep([ps...])
 convexhull(ls::Line...) = vrep([ls...])
 convexhull(rs::Ray...) = vrep([rs...])
 convexhull(p::AbstractPoint{N, T}, r::Union{Line{N, T}, Ray{N, T}}) where {N, T} = vrep([p], [r])
-convexhull(r::Union{Line{N, T}, Ray{N, T}}, p::AbstractPoint{N, T}) where {N, T} = conichull(p, r)
+convexhull(r::Union{Line{N, T}, Ray{N, T}}, p::AbstractPoint{N, T}) where {N, T} = convexhull(p, r)
 convexhull(l::Line{N, T}, r::Ray{N, T}) where {N, T} = vrep([l], [r])
-convexhull(r::Ray{N, T}, l::Line{N, T}) where {N, T} = conichull(l, r)
+convexhull(r::Ray{N, T}, l::Line{N, T}) where {N, T} = convexhull(l, r)
 convexhull(p1::VAny{N, T}, p2::VAny{N, T}, ps::VAny{N, T}...) where {N, T} = convexhull(convexhull(p1, p2), ps...)
 function convexhull(p::VAny{N}...) where N
     T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
@@ -95,7 +101,7 @@ Same as [`convexhull`](@ref) except that `p1` is modified to be equal to the con
 convexhull!(p::VRep{N}, ine::VRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
 
 # conify: same than conichull except that conify(::VRepElement) returns a VRepElement and not a V-representation
-conify(v::VRep) = vrep(lines(v), [collect(rays(v)); collect(Ray.(points(v)))])
+conify(v::VRep) = vrep(lines(v), [collect(rays(v)); Ray.(collect(points(v)))])
 conify(v::VCone) = v
 conify(p::AbstractPoint) = Ray(p)
 conify(r::Union{Line, Ray}) = r

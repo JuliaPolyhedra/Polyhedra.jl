@@ -318,7 +318,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
     @testset "Combination of different coefficient type" begin
         @testset "V-representation" begin
             generator_fulltest(convexhull([1, 0], Line([0, 1.])), convexhull(Line([0, 1]), [1, 0.]))
-            @test (@inferred conichull(convexhull([1, 0.]), conichull([0, 1]))) isa Polyhedra.RaysHull{2, Float64}
+            @test conichull(convexhull([1, 0.]), conichull([0, 1])) isa Polyhedra.RaysHull{2, Float64}
         end
         @testset "H-representation" begin
             @test (@inferred (HyperPlane([1, 1], 0) ∩ HyperPlane([1, 0], 1)) ∩ (HyperPlane([1, 1], 0) ∩ HyperPlane([1., 0.], 1))) isa Polyhedra.HyperPlanesIntersection{2, Float64}
