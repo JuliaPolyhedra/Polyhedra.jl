@@ -1,5 +1,28 @@
 export convexhull, convexhull!, conichull
 
+const HAny{N, T} = Union{HRep{N, T}, HRepElement{N, T}}
+const VAny{N, T} = Union{VRep{N, T}, VRepElement{N, T}}
+
+_promote_reptype(P1::Type{<:HAffineSpace}, ::Type{<:HAffineSpace}) = P1
+_promote_reptype(P1::Type{<:HAffineSpace}, ::Type{<:HRep}) = hreptype(P1)
+_promote_reptype(P1::Type{<:HRep}, ::Type{<:HRep}) = P1
+
+_promote_reptype(P1::Type{<:VPolytope}, ::Type{<:VPolytope}) = P1
+_promote_reptype(P1::Type{<:VPolytope}, ::Type{<:VRep}) = vreptype(P1)
+_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VLinearSpace}) = P1
+_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VCone}) = conetype(P1)
+_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VRep}) = vreptype(P1)
+_promote_reptype(P1::Type{<:VCone}, ::Type{<:VCone}) = P1
+_promote_reptype(P1::Type{<:VCone}, ::Type{<:VRep}) = vreptype(P1)
+_promote_reptype(P1::Type{<:VRep}, ::Type{<:VRep}) = P1
+
+function promote_reptype(P1::Type{<:Rep{N, S}}, P2::Type{<:Rep{N, T}}) where {N, S, T}
+    U = promote_type(S, T)
+    # P2 might not support coefficient type U so we avoid calling similar_type on P2
+    _promote_reptype(similar_type(P1, U), P2)
+end
+promote_reptype(P1::Type{<:Rep{N}}, P2::Type{<:Rep{N}}, P::Type{<:Rep{N}}...) where N = promote_reptype(promote_reptype(P1, P2), P...)
+
 """
     intersect(P1::HRep, P2::HRep)
 
@@ -12,19 +35,25 @@ The type of the result will be chosen closer to the type of `P1`. For instance, 
 If `P1` and `P2` are both polyhedra (resp. H-representation), the resulting polyhedron type (resp. H-representation type) will be computed according to the type of `P1`.
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
-function Base.intersect(p1::RepTin, p2::HRep{N, T2}) where {N, T1, T2, RepTin<:HRep{N, T1}}
-    Tout = promote_type(T1, T2)
-    # Always type of first arg
-    RepTout = similar_type(RepTin, Tout)
-    RepTout(hmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)
+function Base.intersect(p::HRep{N}...) where N
+    RepTout = promote_reptype(typeof.(p)...)
+    T = MultivariatePolynomials.coefficienttype(RepTout)
+    RepTout(hmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)
 end
 Base.intersect(p::Rep, el::HRepElement) = p ∩ intersect(el)
+Base.intersect(el::HRepElement, p::Rep) = p ∩ el
 
 Base.intersect(hps::HyperPlane...) = hrep([hps...])
 Base.intersect(hss::HalfSpace...) = hrep([hss...])
-Base.intersect(h1::HyperPlane, h2::HalfSpace) = hrep([h1], [h2])
-Base.intersect(h1::HalfSpace, h2::HyperPlane) = h2 ∩ h1
-Base.intersect(h1::Union{HRep{N}, HRepElement{N}}, h2::Union{HRep{N}, HRepElement{N}}, hs::Union{HRep{N}, HRepElement{N}}...) where N = intersect(h1 ∩ h2, hs...)
+Base.intersect(h1::HyperPlane{N, T}, h2::HalfSpace{N, T}) where {N, T} = hrep([h1], [h2])
+Base.intersect(h1::HalfSpace{N, T}, h2::HyperPlane{N, T}) where {N, T} = h2 ∩ h1
+Base.intersect(p1::HAny{N, T}, p2::HAny{N, T}, ps::HAny{N, T}...) where {N, T} = intersect(p1 ∩ p2, ps...)
+function Base.intersect(p::HAny{N}...) where N
+    T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
+    f(p) = similar_type(typeof(p), T)(p)
+    intersect(f.(p)...)
+end
+
 
 """
     intersect!(p1::VRep, p2::VRep)
@@ -44,20 +73,27 @@ The type of the result will be chosen closer to the type of `P1`. For instance, 
 If `P1` and `P2` are both polyhedra (resp. V-representation), the resulting polyhedron type (resp. V-representation type) will be computed according to the type of `P1`.
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
-function convexhull(p1::RepTin, p2::VRep{N, T2}) where {N, T1, T2, RepTin<:VRep{N, T1}}
-    Tout = promote_type(T1, T2)
-    # Always type of first arg
-    RepTout = similar_type(RepTin, Tout)
-    RepTout(vmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)::RepTout # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
+function convexhull(p::VRep{N}...) where N
+    RepTout = promote_reptype(typeof.(p)...)
+    T = MultivariatePolynomials.coefficienttype(RepTout)
+    RepTout(vmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)::RepTout # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
 end
-#convexhull(p::Rep, el::Union{SymPoint, AbstractPoint}) = convexhull(p, convexhull(el))
-convexhull(p::Rep, el::AnyPoint) = convexhull(p, convexhull(el))
+convexhull(p::Rep, el::VRepElement) = convexhull(p, convexhull(el))
+convexhull(el::VRepElement, p::Rep) = convexhull(p, el)
 
-#convexhull(ps::SymPoint...) = vrep([ps...])
 convexhull(ps::AbstractPoint...) = vrep([ps...])
-#convexhull(p1::SymPoint, p2::AbstractPoint) = vrep([p1], [p2])
-#convexhull(p1::AbstractPoint, p2::SymPoint) = convexhull(p2, p1)
-convexhull(p1::Union{VRep{N}, AnyPoint{N}}, p2::Union{VRep{N}, AnyPoint{N}}, ps::Union{VRep{N}, AnyPoint{N}}...) where N = convexhull(convexhull(p1, p2), ps...)
+convexhull(ls::Line...) = vrep([ls...])
+convexhull(rs::Ray...) = vrep([rs...])
+convexhull(p::AbstractPoint{N, T}, r::Union{Line{N, T}, Ray{N, T}}) where {N, T} = vrep([p], [r])
+convexhull(r::Union{Line{N, T}, Ray{N, T}}, p::AbstractPoint{N, T}) where {N, T} = convexhull(p, r)
+convexhull(l::Line{N, T}, r::Ray{N, T}) where {N, T} = vrep([l], [r])
+convexhull(r::Ray{N, T}, l::Line{N, T}) where {N, T} = convexhull(l, r)
+convexhull(p1::VAny{N, T}, p2::VAny{N, T}, ps::VAny{N, T}...) where {N, T} = convexhull(convexhull(p1, p2), ps...)
+function convexhull(p::VAny{N}...) where N
+    T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
+    f(p) = similar_type(typeof(p), T)(p)
+    convexhull(f.(p)...)
+end
 
 """
     convexhull!(p1::VRep, p2::VRep)
@@ -66,21 +102,13 @@ Same as [`convexhull`](@ref) except that `p1` is modified to be equal to the con
 """
 convexhull!(p::VRep{N}, ine::VRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
 
+# conify: same than conichull except that conify(::VRepElement) returns a VRepElement and not a V-representation
+conify(v::VRep) = vrep(lines(v), [collect(rays(v)); Ray.(collect(points(v)))])
+conify(v::VCone) = v
+conify(p::AbstractPoint) = Ray(p)
+conify(r::Union{Line, Ray}) = r
 
-function conichull(p1::VCone{N, T1}, p2::VCone{N, T2}) where {N, T1, T2}
-    Tout = promote_type(T1, T2)
-    # Always type of first arg
-    RepTout = similar_type(typeof(p1), Tout)
-    RepTout(rmap((i,x) -> similar_type(typeof(x), Tout)(x), FullDim{N}(), Tout, p1, p2)...)
-end
-conichull(p::VCone, el::Union{Line, Ray}) = conichull(p, conichull(el))
-
-conichull(ls::Line...) = vrep([ls...])
-conichull(rs::AbstractPoint...) = vrep([Ray.(rs)...])
-conichull(rs::Ray...) = vrep([rs...])
-conichull(l::Line, r::Ray) = vrep([l], [r])
-conichull(r::Ray, l::Line) = conichull(l, r)
-conichull(r1::Union{VCone{N}, Line{N}, Ray{N}}, r2::Union{VCone{N}, Line{N}, Ray{N}}, rs::Union{VCone{N}, Line{N}, Ray{N}}...) where N = conichull(conichull(r1, r2), rs...)
+conichull(p...) = convexhull(conify.(p)...)
 
 function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {N, T}
     _tout(p) = similar_type(typeof(p), T)(p)
@@ -90,10 +118,9 @@ end
 sumpoints(::FullDim{N}, ::Type{T}, p1::Rep, p2::VCone) where {N, T} = RepIterator{N, T}.(preps(p1))
 sumpoints(::FullDim{N}, ::Type{T}, p1::VCone, p2::Rep) where {N, T} = RepIterator{N, T}.(preps(p2))
 
-function Base.:+(p1::RepTin, p2::VRep{N, T2}) where {N, T1, T2, RepTin<:VRep{N, T1}}
+function Base.:+(p1::VRep{N, T1}, p2::VRep{N, T2}) where {N, T1, T2}
     Tout = promote_type(T1, T2)
-    # Always type of first arg
-    RepTout = similar_type(RepTin, Tout)
+    RepTout = promote_reptype(typeof(p1), typeof(p2))
     RepTout(sumpoints(FullDim{N}(), Tout, p1, p2)..., RepIterator{N, Tout}.(rreps(p1, p2))...)
 end
 Base.:+(p::Rep, el::Union{Line, Ray}) = p + vrep([el])

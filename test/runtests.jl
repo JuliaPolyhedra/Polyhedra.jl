@@ -6,12 +6,10 @@ MP = MultivariatePolynomials
 
 using StaticArrays
 
+include("utils.jl")
 include("alltests.jl")
 
 include("libraries.jl")
-if !isempty(lp_solvers)
-    lpsolver = first(lp_solvers)
-end
 
 include("elements.jl")
 include("comp.jl")

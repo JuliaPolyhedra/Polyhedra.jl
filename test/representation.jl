@@ -315,10 +315,26 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test_throws ErrorException Polyhedra.checkvconsistency(pinc)
         end
     end
-
+    @testset "Combination of different coefficient type" begin
+        @testset "V-representation" begin
+            generator_fulltest(convexhull([1, 0], Line([0, 1.])), convexhull(Line([0, 1]), [1, 0.]))
+            @test conichull(convexhull([1, 0.]), conichull([0, 1])) isa Polyhedra.RaysHull{2, Float64}
+            @test convexhull(convexhull([1, 0]), Line([0, 1.])) isa Polyhedra.Hull{2, Float64}
+            @test convexhull(Line([0, 1.]), convexhull([1, 0])) isa Polyhedra.Hull{2, Float64}
+            @test convexhull(convexhull(Line([0, 1.])), [1, 0]) isa Polyhedra.Hull{2, Float64}
+            @test convexhull(convexhull(Line([1, 0])), Line([0, 1.])) isa Polyhedra.LinesHull{2, Float64}
+            @test convexhull(conichull([1, 0.]), Line([0, 1])) isa Polyhedra.RaysHull{2, Float64}
+            @test convexhull(conichull([1, 0.]), [0, 1]) isa Polyhedra.Hull{2, Float64}
+        end
+        @testset "H-representation" begin
+            @test (@inferred (HyperPlane([1, 1], 0) ∩ HyperPlane([1, 0], 1)) ∩ (HyperPlane([1, 1], 0) ∩ HyperPlane([1., 0.], 1))) isa Polyhedra.HyperPlanesIntersection{2, Float64}
+            @test HyperPlane([1, 1], 0) ∩ HalfSpace([1., 0.], 1.) isa Polyhedra.Intersection{2, Float64}
+            @test (@inferred (HalfSpace([1., 0.], 1.) ∩ (HyperPlane([1, 1], 0) ∩ HyperPlane([1, 0], 1)))) isa Polyhedra.Intersection{2, Float64}
+        end
+    end
     @testset "Conversion with different array type" begin
         @testset "V-representation" begin
-            vv = convexhull(@SVector [0, 1]) + conichull(Ray(@SVector [1, 1]), Line(@SVector [1, 0]))
+            vv = convexhull(@SVector [0, 1]) + conichull((@SVector [1, 1]), Line(@SVector [1, 0]))
             mv = vrep([0 1], [1 1; 1 0], IntSet([2]))
             generator_fulltest(vv, mv)
             mvv = @inferred typeof(mv)(vv)
@@ -348,14 +364,14 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test vc !== vr
             @test vc.lines !== vr.lines
             generator_fulltest(vc, vr)
-            vr = conichull(Line(@SVector [1, 1]), Line(@SVector [1, 0]), Ray(@SVector [1, 1]))
+            vr = conichull(Line(@SVector [1, 1]), Line(@SVector [1, 0]), @SVector [1, 1])
             vc = copy(vr)
             @test vc !== vr
             @test vc.rays !== vr.rays
             @test vc.lines !== vr.lines
             @test vc.lines.lines !== vr.lines.lines
             generator_fulltest(vc, vr)
-            vr = convexhull(@SVector [0, 1]) + conichull(Line(@SVector [1, 1]), Ray(@SVector [1, 1]), Line(@SVector [1, 0]))
+            vr = convexhull(@SVector [0, 1]) + conichull(Line(@SVector [1, 1]), (@SVector [1, 1]), Line(@SVector [1, 0]))
             vc = copy(vr)
             @test vc !== vr
             @test vc.points !== vr.points

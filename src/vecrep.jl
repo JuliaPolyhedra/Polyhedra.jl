@@ -145,7 +145,7 @@ end
 arraytype(::Union{PointsHull{N, T, AT}, Type{PointsHull{N, T, AT}}}) where {N, T, AT} = AT
 similar_type(PT::Type{<:PointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = PointsHull{N, T, similar_type(arraytype(PT), d, T)}
 
-PointsHull{N, T, AT}(points::PointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(points, lines, rays)
+vreptype(::Type{PointsHull{N, T, AT}}) where {N, T, AT} = Hull{N, T, AT}
 
 @vecrepelem PointsHull Point points
 
@@ -191,12 +191,16 @@ similar_type(PT::Type{<:RaysHull}, d::FullDim{N}, ::Type{T}) where {N, T} = Rays
 @vecrepelem RaysHull Ray rays
 @subrepelem RaysHull Line lines
 
+vreptype(::Type{RaysHull{N, T, AT}}) where {N, T, AT} = Hull{N, T, AT}
+
 """
     vrep(points::PointIt, lines::LineIt, rays::RayIt)
 
 Creates a V-representation for the polyhedron equal to the minkowski sum of the convex hull of `points` with the conic hull of `lines` and `rays`.
 """
 vrep(points::PointIt, lines::LineIt, rays::RayIt) = Hull(points, lines, rays)
+
+vrep(points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}) where {N, T, AT} = Hull(points, lines, Ray{N, T, AT}[])
 
 mutable struct Hull{N, T, AT} <: VRepresentation{N, T}
     points::PointsHull{N, T, AT}
