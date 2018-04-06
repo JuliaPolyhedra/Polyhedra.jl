@@ -71,7 +71,6 @@ function orthantdecompose(lib::PolyhedraLibrary)
 end
 
 function cubedecompose(lib::PolyhedraLibrary)
-    contains(string(typeof(lib)),"LRSLibrary") && return
     p = polyhedron(convexhull([ 1.,  1,   1],
                               [ 1., -1,   1],
                               [ 1.,  1,  -1],
@@ -100,7 +99,6 @@ function cubedecompose(lib::PolyhedraLibrary)
     test_decompose(p, d)
 end
 function largedecompose(lib::PolyhedraLibrary)
-    contains(string(typeof(lib)),"LRSLibrary") && return
     V = [-1 -1  1;
          -1  1  1;
           1 -1  1;

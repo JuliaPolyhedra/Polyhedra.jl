@@ -28,6 +28,6 @@ include("show.jl")
 include("polyhedra.jl")
 for (arith, T) in (("floating point", Float64), ("exact", Rational{BigInt}))
     @testset "Polyhedra tests in $arith arithmetic" begin
-        polyhedratest(SimplePolyhedraLibrary{T}())
+        polyhedratest(SimplePolyhedraLibrary{T}(), ["board"])
     end
 end
