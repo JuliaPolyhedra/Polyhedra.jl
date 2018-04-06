@@ -9,26 +9,6 @@ function try_import(name::Symbol)
     end
 end
 
-cdd = false && try_import(:CDDLib)
-lrs = false && try_import(:LRSLib)
-
-# Create library lists
-libraries = PolyhedraLibrary[]
-push!(libraries, SimplePolyhedraLibrary{Rational{BigInt}}())
-push!(libraries, SimplePolyhedraLibrary{Float64}())
-cdd && push!(libraries, CDDLib.CDDLibrary(:float))
-cdd && push!(libraries, CDDLib.CDDLibrary(:exact))
-lrs && push!(libraries, LRSLib.LRSLibrary())
-# Floating point arithmetic libraries
-float_libraries = PolyhedraLibrary[]
-push!(float_libraries, SimplePolyhedraLibrary{Float64}())
-cdd && push!(float_libraries, CDDLib.CDDLibrary(:float))
-# Exact arithmetic libraries
-exact_libraries = PolyhedraLibrary[]
-push!(exact_libraries, SimplePolyhedraLibrary{Rational{BigInt}}())
-cdd && push!(exact_libraries, CDDLib.CDDLibrary(:exact))
-lrs && push!(exact_libraries, LRSLib.LRSLibrary())
-
 # Load an available solver
 lp_solver = nothing
 glp = try_import(:GLPKMathProgInterface)

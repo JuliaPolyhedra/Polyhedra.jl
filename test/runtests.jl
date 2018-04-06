@@ -27,18 +27,8 @@ include("default.jl")
 
 include("show.jl")
 
-for lib in libraries
-    basicpolyhedrontests(lib)
-end
-
-for (testname, testfun) in alltests
-    @testset "$testname tests" begin
-        for arith in [("floating point", float_libraries), ("exact", exact_libraries)]
-            arithname, arith_libraries = arith
-            @testset "$testname tests in $arithname arithmetic with $(typeof(library))" for library in arith_libraries
-                testfun(library)
-            end
-            length(arith_libraries) == 0 && warn("$testname tests in $arithname arithmetics test not run!")
-        end
+for arith in (("floating point", Float64), ("exact", Rational{BigInt}))
+    @testset "Polyhedra tests in $arith arithmetic" begin
+        polyhedratest(SimplePolyhedraLibrary{T}())
     end
 end
