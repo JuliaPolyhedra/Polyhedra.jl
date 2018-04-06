@@ -1,5 +1,7 @@
 using Polyhedra
 
+include("config.jl")
+
 include("jump.jl")
 include("misc.jl")
 

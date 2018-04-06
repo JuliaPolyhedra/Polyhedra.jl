@@ -7,8 +7,6 @@ MP = MultivariatePolynomials
 using StaticArrays
 
 include("utils.jl")
-include("config.jl")
-include("alltests.jl")
 
 include("solvers.jl")
 
@@ -27,7 +25,8 @@ include("default.jl")
 
 include("show.jl")
 
-for arith in (("floating point", Float64), ("exact", Rational{BigInt}))
+include("polyhedra.jl")
+for (arith, T) in (("floating point", Float64), ("exact", Rational{BigInt}))
     @testset "Polyhedra tests in $arith arithmetic" begin
         polyhedratest(SimplePolyhedraLibrary{T}())
     end
