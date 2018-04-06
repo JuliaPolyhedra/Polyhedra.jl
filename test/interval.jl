@@ -6,34 +6,38 @@
 
     v0 = [[1.], [8], [-2], [4], [-1], [-3], [5]]
     pp = polyhedron(vrep(v0), SimplePolyhedraLibrary{Float64}())
-    p = Interval{Float64, SVector{1, Float64}}(pp)
-    @test similar_library(pp, FullDim{1}()) == IntervalLibrary{Float64}()
-    @test getlibrary(p) == IntervalLibrary{Float64}()
-    @test getlibraryfor(p, FullDim{2}()) == SimplePolyhedraLibrary{Float64}()
     @test !hrepiscomputed(pp)
     @test vrepiscomputed(pp)
-    @test hrepiscomputed(p)
-    @test vrepiscomputed(p)
-    @test p isa Interval{Float64}
-    @test !isempty(p)
-    @test volume(p) == 11
-    @test dim(p) == 1
-    inequality_fulltest(p, h)
-    generator_fulltest(p, v)
+    for p in (Interval{Float64, SVector{1, Float64}}(pp),
+              Interval{Float64, SVector{1, Float64}}(Polyhedra.vreps(pp)...))
+        @test similar_library(pp, FullDim{1}()) == IntervalLibrary{Float64}()
+        @test getlibrary(p) == IntervalLibrary{Float64}()
+        @test getlibraryfor(p, FullDim{2}()) == SimplePolyhedraLibrary{Float64}()
+        @test hrepiscomputed(p)
+        @test vrepiscomputed(p)
+        @test p isa Interval{Float64}
+        @test !isempty(p)
+        @test volume(p) == 11
+        @test dim(p) == 1
+        inequality_fulltest(p, h)
+        generator_fulltest(p, v)
+    end
 
     pp = polyhedron(h, SimplePolyhedraLibrary{Float64}())
-    p = Interval{Float64, SVector{1, Float64}}(pp)
     @test hrepiscomputed(pp)
     @test !vrepiscomputed(pp)
-    @test hrepiscomputed(p)
-    @test vrepiscomputed(p)
-    @test p isa Interval{Float64}
-    @test !isempty(p)
-    @test iszero(surface(p))
-    @test volume(p) == 11
-    @test dim(p) == 1
-    generator_fulltest(p, v)
-    inequality_fulltest(p, h)
+    for p in (Interval{Float64, SVector{1, Float64}}(pp),
+              Interval{Float64, SVector{1, Float64}}(Polyhedra.hreps(pp)...))
+        @test hrepiscomputed(p)
+        @test vrepiscomputed(p)
+        @test p isa Interval{Float64}
+        @test !isempty(p)
+        @test iszero(surface(p))
+        @test volume(p) == 11
+        @test dim(p) == 1
+        generator_fulltest(p, v)
+        inequality_fulltest(p, h)
+    end
 
     # Singleton
     h = intersect(HyperPlane([1.], 2))

@@ -17,6 +17,9 @@ mutable struct Interval{T, AT} <: Polyhedron{1, T}
     length::T
 end
 
+Interval{T, AT}(it::HIt{1}...) where {T, AT} = _hinterval(Intersection{1, T, AT}(it...), AT)
+Interval{T, AT}(it::VIt{1}...) where {T, AT} = _vinterval(Hull{1, T, AT}(it...), AT)
+
 library(::Union{Interval{T}, Type{<:Interval{T}}}) where T = IntervalLibrary{T}()
 
 arraytype(p::Interval{T, AT}) where {T, AT} = AT
