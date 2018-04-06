@@ -7,6 +7,7 @@ MP = MultivariatePolynomials
 using StaticArrays
 
 include("utils.jl")
+include("config.jl")
 include("alltests.jl")
 
 include("libraries.jl")

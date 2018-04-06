@@ -1,4 +1,4 @@
-function basicpolyhedrontests(lib::PolyhedraLibrary)
+function basictest(lib::PolyhedraLibrary)
     @testset "Polyhedron eltype conversion tests with $(typeof(lib))" begin
         A = [1 0; 0 1]
         b = [0, 0]
