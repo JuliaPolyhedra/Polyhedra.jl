@@ -53,7 +53,7 @@ function test_decompose(p::Polyhedron, d::Dict)
     @test isempty(d)
 end
 
-function orthantdecompose(lib::PolyhedraLibrary)
+function orthantdecomposetest(lib::PolyhedraLibrary)
     v = vrep([Ray([1., 0, 0]),
               Ray([0, 1., 0]),
               Ray([0, 0, 1.])])
@@ -70,7 +70,7 @@ function orthantdecompose(lib::PolyhedraLibrary)
     test_decompose(p, d)
 end
 
-function cubedecompose(lib::PolyhedraLibrary)
+function cubedecomposetest(lib::PolyhedraLibrary)
     p = polyhedron(convexhull([ 1.,  1,   1],
                               [ 1., -1,   1],
                               [ 1.,  1,  -1],
@@ -98,7 +98,7 @@ function cubedecompose(lib::PolyhedraLibrary)
                                     Face([ 1.0,  1.0, -1.0], [ 1.0, -1.0, -1.0], [ 1.0, -1.0,  1.0])])
     test_decompose(p, d)
 end
-function largedecompose(lib::PolyhedraLibrary)
+function largedecomposetest(lib::PolyhedraLibrary)
     V = [-1 -1  1;
          -1  1  1;
           1 -1  1;
@@ -135,14 +135,8 @@ function largedecompose(lib::PolyhedraLibrary)
     test_decompose(p, d)
 end
 
-function decompose(lib::PolyhedraLibrary)
-    @testset "Orthant" begin
-        orthantdecompose(lib)
-    end
-    @testset "Cube" begin
-        cubedecompose(lib)
-    end
-    @testset "Large" begin
-        largedecompose(lib)
-    end
-end
+decomposetests = Dict("orthantdecompose" => orthantdecomposetest,
+                      "cubedecompose"    => cubedecomposetest,
+                      "largedecompose"   => largedecomposetest)
+
+@polytestset decompose
