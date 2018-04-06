@@ -66,15 +66,6 @@ function Base.copy(p::SimplePolyhedron{N, T}) where {N, T}
     end
 end
 
-function Base.intersect!(p::SimplePolyhedron{N}, ine::HRepresentation{N}) where N
-    p.hrep = hrep(p) ∩ ine
-    p.vrep = nothing
-end
-function convexhull!(p::SimplePolyhedron{N}, ext::VRepresentation{N}) where N
-    p.vrep = convexhull(vrep(p), ext)
-    p.hrep = nothing
-end
-
 hrepiscomputed(p::SimplePolyhedron) = !isnull(p.hrep)
 function computehrep!(p::SimplePolyhedron)
     # vrep(p) could trigger an infinite loop if both vrep and hrep are null
@@ -98,19 +89,17 @@ function vrep(p::SimplePolyhedron)
     get(p.vrep)
 end
 
-function detecthlinearity!(p::SimplePolyhedron)
-    p.hrep = removeduplicates(hrep(p))
+function sethrep!(p::SimplePolyhedron, h::HRepresentation)
+    p.hrep = h
 end
-function detectvlinearity!(p::SimplePolyhedron)
-    p.vrep = removeduplicates(vrep(p))
+function setvrep!(p::SimplePolyhedron, v::VRepresentation)
+    p.vrep = v
 end
-function removehredundancy!(p::SimplePolyhedron)
-    detectvlinearity!(p)
-    detecthlinearity!(p)
-    p.hrep = removehredundancy(hrep(p), vrep(p))
+function resethrep!(p::SimplePolyhedron, h::HRepresentation)
+    p.hrep = h
+    p.vrep = nothing
 end
-function removevredundancy!(p::SimplePolyhedron)
-    detecthlinearity!(p)
-    detectvlinearity!(p)
-    p.vrep = removevredundancy(vrep(p), hrep(p))
+function resetvrep!(p::SimplePolyhedron, v::VRepresentation)
+    p.vrep = v
+    p.hrep = nothing
 end

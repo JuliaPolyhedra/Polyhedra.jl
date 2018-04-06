@@ -20,6 +20,7 @@ h = HalfSpace([1, 1], 1]) ∩ HalfSpace([-1, -1], -1)
 contains the hyperplane `HyperPlane([1, 1], 1)`.
 """
 detecthlinearity!(p::HRep) = error("detecthlinearity! not implemented for $(typeof(p))")
+detecthlinearity!(p::Polyhedron) = sethrep!(p, removeduplicates(hrep(p)))
 
 """
     detectvlinearity!(p::VRep)
@@ -34,6 +35,7 @@ v = conichull([1, 1], [-1, -1])
 contains the line `Line([1, 1])`.
 """
 detectvlinearity!(p::VRep) = error("detectvlinearity! not implemented for $(typeof(p))")
+detectvlinearity!(p::Polyhedron) = setvrep!(p, removeduplicates(vrep(p)))
 function detectvlinearity!(p::VPolytope) end # No ray so no line
 
 """
@@ -67,6 +69,12 @@ function isredundant end
 Removes the elements of the H-representation of `p` that can be removed without changing the polyhedron represented by `p`. That is, it only keeps the halfspaces corresponding to facets of the polyhedron.
 """
 function removehredundancy! end
+function removehredundancy!(p::Polyhedron)
+    detectvlinearity!(p)
+    detecthlinearity!(p)
+    sethrep!(p, removehredundancy(hrep(p), vrep(p)))
+end
+
 
 """
     removevredundancy!(p::VRep)
@@ -74,6 +82,11 @@ function removehredundancy! end
 Removes the elements of the V-representation of `p` that can be removed without changing the polyhedron represented by `p`. That is, it only keeps the extreme points and rays. This operation is often called "convex hull" as the remaining points are the extreme points of the convex hull of the initial set of points.
 """
 function removevredundancy! end
+function removevredundancy!(p::Polyhedron)
+    detecthlinearity!(p)
+    detectvlinearity!(p)
+    setvrep!(p, removevredundancy(vrep(p), hrep(p)))
+end
 
 function _filter(f, it)
     # FIXME returns a Vector{Any}

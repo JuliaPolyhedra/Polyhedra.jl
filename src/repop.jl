@@ -60,7 +60,10 @@ end
 
 Same as [`intersect`](@ref) except that `p1` is modified to be equal to the intersection.
 """
-Base.intersect!(p::HRep{N}, ine::HRepresentation{N}) where {N} = error("intersect! not implemented for $(typeof(p)). It probably does not support in-place modification, try `intersect` (without the `!`) instead.")
+Base.intersect!(p::HRep{N}, ::HRepresentation{N}) where {N} = error("intersect! not implemented for $(typeof(p)). It probably does not support in-place modification, try `intersect` (without the `!`) instead.")
+function Base.intersect!(p::Polyhedron{N}, h::HRepresentation{N}) where N
+    resethrep!(p, hrep(p) ∩ h)
+end
 
 """
     convexhull(P1::VRep, P2::VRep)
@@ -101,6 +104,9 @@ end
 Same as [`convexhull`](@ref) except that `p1` is modified to be equal to the convex hull.
 """
 convexhull!(p::VRep{N}, ine::VRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
+function convexhull!(p::Polyhedron{N}, v::VRepresentation{N}) where N
+    resetvrep!(p, convexhull(vrep(p), v))
+end
 
 # conify: same than conichull except that conify(::VRepElement) returns a VRepElement and not a V-representation
 conify(v::VRep) = vrep(lines(v), [collect(rays(v)); Ray.(collect(points(v)))])
