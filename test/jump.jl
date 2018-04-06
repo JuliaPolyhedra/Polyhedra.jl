@@ -6,7 +6,7 @@ include("jumpsimplex.jl")
 include("nonfulldimensional.jl")
 
 const jumptests = Dict("hypercube"          => lib->hypercubetest(lib, 2),
-                       "simplex"            => lib->simplextest(lib, 2),
+                       "jumpsimplex"        => lib->jumpsimplextest(lib, 2),
                        "simplexorig"        => lib->simplexorigtest(lib, 2),
                        "crosspolytope"      => lib->crosspolytopetest(lib, 2),
                        "ex1"                => ex1test,
