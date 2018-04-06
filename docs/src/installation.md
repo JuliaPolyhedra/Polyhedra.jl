@@ -30,4 +30,4 @@ Many C libraries are are available for manipulating Polyhedra.
 Some of them works with floating point arithmetic and some of them can do the computation exactly using rational arithmetic and multiple precision libraries such as [GMP](https://gmplib.org/).
 Julia also natively support Rational arithmetic using multiple precision libraries and of course floating point arithmetic.
 That makes the use of both arithmetic very easy and transparent.
-A list of Polyhedra Manipulation Libraries is available [in the JuliaPolyhera website](https://juliapolyhedra.github.io/).
+A list of Polyhedra Manipulation Libraries is available in [the JuliaPolyhera website](https://juliapolyhedra.github.io/).
