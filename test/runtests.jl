@@ -10,7 +10,7 @@ include("utils.jl")
 include("config.jl")
 include("alltests.jl")
 
-include("libraries.jl")
+include("solvers.jl")
 
 include("elements.jl")
 include("comp.jl")
