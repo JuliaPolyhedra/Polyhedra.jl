@@ -1,9 +1,9 @@
 # Polyhedra
 
-| **Documentation** | **PackageEvaluator** | **Build Status** | **Social** |
-|:-----------------:|:--------------------:|:----------------:|:----------:|
-| [![][docs-stable-img]][docs-stable-url] | [![][pkg-0.5-img]][pkg-0.5-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] |
-| [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.6-img]][pkg-0.6-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] |
+| **Documentation** | **PackageEvaluator** | **Build Status** | **Social** | **References to cite** |
+|:-----------------:|:--------------------:|:----------------:|:----------:|:----------------------:|
+| [![][docs-stable-img]][docs-stable-url] | [![][pkg-0.5-img]][pkg-0.5-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.6-img]][pkg-0.6-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
 
 [<img src="examples/drakeperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/drakeperm.jl)
 [<img src="examples/glvizperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/glvizperm.jl)
@@ -43,3 +43,6 @@ It defines the abstract type `Polyhedron` and splits the operations on this type
 [gitter-url]: https://gitter.im/JuliaPolyhedra/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link
 [gitter-img]: https://badges.gitter.im/JuliaPolyhedra/Lobby.svg
 [discourse-url]: https://discourse.julialang.org/c/domain/opt
+
+[zenodo-url]: https://doi.org/10.5281/zenodo.1214290
+[zenodo-img]: https://zenodo.org/badge/DOI/10.5281/zenodo.1214290.svg
