@@ -148,10 +148,10 @@ end
 export SimpleHRepresentation, SimpleVRepresentation
 
 function SimpleHRepresentation(args...)
-    warn("`SimpleHRepresentation` is deprecated, it has been renamed to `MixedMatHRep`. It is recommended to use `hrep` to build a `MixedMatHRep`, e.g. `hrep([1 2; 3 4], [5, 6])` for `x + 2y ≤ 5` and `3x + 4y ≤ 6`.")
-    MixedMatHRep(args...)
+    Base.depwarn("`SimpleHRepresentation` is deprecated, it has been renamed to `MixedMatHRep`. It is recommended to use `hrep` to build a `MixedMatHRep`, e.g. `hrep([1 2; 3 4], [5, 6])` for `x + 2y ≤ 5` and `3x + 4y ≤ 6`.", :SimpleHRepresentation)
+    hrep(args...)
 end
 function SimpleVRepresentation(args...)
-    warn("`SimpleVRepresentation` is deprecated, it has been renamed to `MixedMatVRep` It is recommended to use `vrep` to build a `MixedMatVRep`, e.g. `vrep([1 2; 3 4])` for the convex hull of `(1, 2)` and `(3, 4)`.")
-    MixedMatVRep(args...)
+    Base.depwarn("`SimpleVRepresentation` is deprecated, it has been renamed to `MixedMatVRep` It is recommended to use `vrep` to build a `MixedMatVRep`, e.g. `vrep([1 2; 3 4])` for the convex hull of `(1, 2)` and `(3, 4)`.", :SimpleVRepresentation)
+    vrep(args...)
 end

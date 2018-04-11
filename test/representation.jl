@@ -102,7 +102,8 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
                          ((@inferred hrep(hps, hss)), Vector{Float64}),
                          ((@inferred hrep(shps, shss)), SVector{3, Float64}),
                          (hrep([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}),
-                         (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}))
+                         (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}),
+                         (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8]), Vector{Float64}))
             @test (@inferred coefficienttype(hr)) == Float64
             @test                                               (@inferred eltype(allhalfspaces(hr)))  == HalfSpace{3, Float64, AT}
             @test                                               (@inferred collect(allhalfspaces(hr))) isa Vector{HalfSpace{3, Float64, AT}}
@@ -145,7 +146,9 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
                          ((@inferred vrep(ps, ls, rs)), Vector{Int}),
                          ((@inferred vrep(sps, sls, srs)), SVector{2, Int}),
                          (vrep([1 2; 3 4]), Vector{Int}),
-                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0), IntSet()), Vector{Int}))
+                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0), IntSet()), Vector{Int}),
+                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0)), Vector{Int}),
+                         (SimpleVRepresentation([1 2; 3 4]), Vector{Int}))
             @test (@inferred coefficienttype(vr)) == Int
 #            @test (@inferred Polyhedra.sympointtype(vr)) == (@inferred eltype(sympoints(vr)))  == SymPoint{2, Int, AT}
 #            @test                                           (@inferred collect(sympoints(vr))) isa Vector{SymPoint{2, Int, AT}}
