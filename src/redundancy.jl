@@ -168,11 +168,11 @@ end
 isredundant(p::VRep{N,T}, h::HyperPlane; strongly = true, d::Int=dim(p), solver=Polyhedra.solver(p)) where {N,T} = false
 
 function ishredundant(args...; kws...)
-    warn("ishredundant is deprecated, use isredundant intead")
+    Base.depwarn("ishredundant is deprecated, use isredundant intead", :ishredundant)
     isredundant(args...; kws...)
 end
 function isvredundant(args...; kws...)
-    warn("isvredundant is deprecated, use isredundant intead")
+    Base.depwarn("isvredundant is deprecated, use isredundant intead", :isvredundant)
     isredundant(args...; kws...)
 end
 
