@@ -44,12 +44,12 @@ Returns the library used by `p`.
 function library end
 
 function getlibrary(args...)
-    warn("getlibrary is deprecated, use library instead")
+    Base.depwarn("getlibrary is deprecated, use library instead", :getlibrary)
     library(args...)
 end
 
 function getlibraryfor(args...)
-    warn("getlibraryfor is deprecated, use similar_library instead. Note that the dimension `N` now needs to be given as `FullDim{N}()`.")
+    Base.depwarn("getlibraryfor is deprecated, use similar_library instead. Note that the dimension `N` now needs to be given as `FullDim{N}()`.", :getlibraryfor)
     similar_library(args...)
 end
 
