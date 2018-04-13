@@ -272,6 +272,8 @@ const RayIt{N, T} = ElemIt{<:Ray{N, T}}
 const RIt{N, T} = Union{LineIt{N, T}, RayIt{N, T}}
 const VIt{N, T} = Union{PIt{N, T}, RIt{N, T}}
 
+const It{N, T} = Union{HIt{N, T}, VIt{N, T}}
+
 function fillvits(::FullDim{N}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}=Line{N, T, AT}[], rays::ElemIt{Ray{N, T, AT}}=Ray{N, T, AT}[]) where {N, T, AT<:AbstractPoint{N, T}}
     if isempty(points) && !(isempty(lines) && isempty(rays))
         vconsistencyerror()

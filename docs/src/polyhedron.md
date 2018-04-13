@@ -170,3 +170,8 @@ The following libraries serves as fallback:
 SimplePolyhedraLibrary
 IntervalLibrary
 ```
+
+The type and library of the polyhedron obtained after applying an operation of several polyhedra (of possibly different type and/or library) is determined by the `similar` function.
+```@docs
+similar
+```

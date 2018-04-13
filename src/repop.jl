@@ -3,26 +3,6 @@ export convexhull, convexhull!, conichull
 const HAny{N, T} = Union{HRep{N, T}, HRepElement{N, T}}
 const VAny{N, T} = Union{VRep{N, T}, VRepElement{N, T}}
 
-_promote_reptype(P1::Type{<:HAffineSpace}, ::Type{<:HAffineSpace}) = P1
-_promote_reptype(P1::Type{<:HAffineSpace}, ::Type{<:HRep}) = hreptype(P1)
-_promote_reptype(P1::Type{<:HRep}, ::Type{<:HRep}) = P1
-
-_promote_reptype(P1::Type{<:VPolytope}, ::Type{<:VPolytope}) = P1
-_promote_reptype(P1::Type{<:VPolytope}, ::Type{<:VRep}) = vreptype(P1)
-_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VLinearSpace}) = P1
-_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VCone}) = conetype(P1)
-_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VRep}) = vreptype(P1)
-_promote_reptype(P1::Type{<:VCone}, ::Type{<:VCone}) = P1
-_promote_reptype(P1::Type{<:VCone}, ::Type{<:VRep}) = vreptype(P1)
-_promote_reptype(P1::Type{<:VRep}, ::Type{<:VRep}) = P1
-
-function promote_reptype(P1::Type{<:Rep{N, S}}, P2::Type{<:Rep{N, T}}) where {N, S, T}
-    U = promote_type(S, T)
-    # P2 might not support coefficient type U so we avoid calling similar_type on P2
-    _promote_reptype(similar_type(P1, U), P2)
-end
-promote_reptype(P1::Type{<:Rep{N}}, P2::Type{<:Rep{N}}, P::Type{<:Rep{N}}...) where N = promote_reptype(promote_reptype(P1, P2), P...)
-
 """
     intersect(P1::HRep, P2::HRep)
 
@@ -36,9 +16,8 @@ If `P1` and `P2` are both polyhedra (resp. H-representation), the resulting poly
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
 function Base.intersect(p::HRep{N}...) where N
-    RepTout = promote_reptype(typeof.(p)...)
-    T = MultivariatePolynomials.coefficienttype(RepTout)
-    RepTout(hmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)
+    T = promote_coefficienttype(p)
+    similar(p, hmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)
 end
 Base.intersect(p::Rep, el::HRepElement) = p ∩ intersect(el)
 Base.intersect(el::HRepElement, p::Rep) = p ∩ el
@@ -77,9 +56,8 @@ If `P1` and `P2` are both polyhedra (resp. V-representation), the resulting poly
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
 function convexhull(p::VRep{N}...) where N
-    RepTout = promote_reptype(typeof.(p)...)
-    T = MultivariatePolynomials.coefficienttype(RepTout)
-    RepTout(vmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)::RepTout # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
+    T = promote_coefficienttype(p)
+    similar(p, vmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)
 end
 convexhull(p::Rep, el::VRepElement) = convexhull(p, convexhull(el))
 convexhull(el::VRepElement, p::Rep) = convexhull(p, el)
@@ -125,9 +103,8 @@ sumpoints(::FullDim{N}, ::Type{T}, p1::Rep, p2::VCone) where {N, T} = RepIterato
 sumpoints(::FullDim{N}, ::Type{T}, p1::VCone, p2::Rep) where {N, T} = RepIterator{N, T}.(preps(p2))
 
 function Base.:+(p1::VRep{N, T1}, p2::VRep{N, T2}) where {N, T1, T2}
-    Tout = promote_type(T1, T2)
-    RepTout = promote_reptype(typeof(p1), typeof(p2))
-    RepTout(sumpoints(FullDim{N}(), Tout, p1, p2)..., RepIterator{N, Tout}.(rreps(p1, p2))...)
+    T = typeof(zero(T1) + zero(T2))
+    similar((p1, p2), FullDim{N}(), T, sumpoints(FullDim{N}(), T, p1, p2)..., RepIterator{N, T}.(rreps(p1, p2))...)
 end
 Base.:+(p::Rep, el::Union{Line, Ray}) = p + vrep([el])
 Base.:+(el::Union{Line, Ray}, p::Rep) = p + el
@@ -137,23 +114,20 @@ function usehrep(p1::Polyhedron, p2::Polyhedron)
     hrepiscomputed(p1) && (!vrepiscomputed(p1) || hrepiscomputed(p2))
 end
 
-function hcartesianproduct(p1::RepT1, p2::RepT2) where {N1, N2, T1, T2, RepT1<:HRep{N1, T1}, RepT2<:HRep{N2, T2}}
-    dout = FullDim{N1+N2}()
-    Tout = promote_type(T1, T2)
-    # Always type of first arg
-    RepTout = similar_type(RepT1, dout, Tout)
+function hcartesianproduct(p1::HRep{N1}, p2::HRep{N2}) where {N1, N2}
+    d = FullDim{N1+N2}()
+    T = promote_coefficienttype((p1, p2))
     f = (i, x) -> zeropad(x, i == 1 ? N2 : -N1)
-    RepTout(hmap(f, dout, Tout, p1, p2)...)
+    similar((p1, p2), d, T, hmap(f, d, T, p1, p2)...)
 end
-function vcartesianproduct(p1::RepT1, p2::RepT2) where {N1, N2, T1, T2, RepT1<:VRep{N1, T1}, RepT2<:VRep{N2, T2}}
-    dout = FullDim{N1+N2}()
-    Tout = promote_type(T1, T2)
+function vcartesianproduct(p1::VRep{N1}, p2::VRep{N2}) where {N1, N2}
+    d = FullDim{N1+N2}()
+    T = promote_coefficienttype((p1, p2))
     # Always type of first arg
-    RepTout = similar_type(RepT1, dout)
     f1 = (i, x) -> zeropad(x, N2)
     f2 = (i, x) -> zeropad(x, -N1)
-    q1 = similar_type(RepT1, dout, Tout)(vmap(f1, dout, Tout, p1)...)
-    q2 = similar_type(RepT2, dout, Tout)(vmap(f2, dout, Tout, p2)...)
+    q1 = similar(p1, d, T, vmap(f1, d, T, p1)...)
+    q2 = similar(p2, d, T, vmap(f2, d, T, p2)...)
     q1 + q2
 end
 cartesianproduct(p1::HRep, p2::HRep) = hcartesianproduct(p1, p2)
@@ -186,16 +160,15 @@ Base.:(\)(P::AbstractMatrix, rep::HRep) = rep / P'
 
 Transform the polyhedron represented by ``p`` into ``P^{-T} p`` by transforming each halfspace ``\\langle a, x \\rangle \\le \\beta`` into ``\\langle P a, x \\rangle \\le \\beta`` and each hyperplane ``\\langle a, x \\rangle = \\beta`` into ``\\langle P a, x \\rangle = \\beta``.
 """
-function Base.:(/)(p::RepT, P::AbstractMatrix) where {Nin, Tin, RepT<:HRep{Nin, Tin}}
+function Base.:(/)(p::HRep{Nin, Tin}, P::AbstractMatrix) where {Nin, Tin}
     if size(P, 2) != Nin
         throw(DimensionMismatch("The number of rows of P must match the dimension of the H-representation"))
     end
     f = (i, h) -> h / P
-    # For a matrix P of StaticArrays, `dout` should be type stable
-    dout = FullDim{size(P, 1)}()
-    Tout = _promote_type(Tin, eltype(P))
-    RepTout = similar_type(RepT, dout, Tout)
-    RepTout(hmap(f, dout, Tout, p)...)
+    # For a matrix P of StaticArrays, `d` should be type stable
+    d = FullDim{size(P, 1)}()
+    T = _promote_type(Tin, eltype(P))
+    similar(p, d, T, hmap(f, d, T, p)...)
 end
 
 function Base.:(*)(rep::HRep, P::AbstractMatrix)
@@ -208,14 +181,13 @@ end
 
 Transform the polyhedron represented by ``p`` into ``P p`` by transforming each element of the V-representation (points, symmetric points, rays and lines) `x` into ``P x``.
 """
-function Base.:(*)(P::AbstractMatrix, p::RepT) where {Nin, Tin, RepT<:VRep{Nin, Tin}}
+function Base.:(*)(P::AbstractMatrix, p::VRep{Nin, Tin}) where {Nin, Tin}
     if size(P, 2) != Nin
         throw(DimensionMismatch("The number of rows of P must match the dimension of the V-representation"))
     end
     f = (i, v) -> P * v
-    # For a matrix P of StaticArrays, `dout` should be type stable
-    dout = FullDim{size(P, 1)}()
-    Tout = _promote_type(Tin, eltype(P))
-    RepTout = similar_type(RepT, dout, Tout)
-    RepTout(vmap(f, dout, Tout, p)...)
+    # For a matrix P of StaticArrays, `d` should be type stable
+    d = FullDim{size(P, 1)}()
+    T = _promote_type(Tin, eltype(P))
+    similar(p, d, T, vmap(f, d, T, p)...)
 end

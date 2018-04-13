@@ -5,6 +5,12 @@ Polyhedra can be described in 2 different ways.
 1. H-representation: As the intersection of finitely many halfspaces given by its facets.
 2. V-representation: As the convex hull of its vertices + the conic hull of its rays where '+' is the Minkowski sum.
 
+```@docs
+HRepresentation
+VRepresentation
+Representation
+```
+
 In `Polyhedra.jl`, those representations are given the respective abstract types `HRepresentation` and `VRepresentation` which are themself subtypes of `Representation`.
 
 These functions can be called on both H-representation and V-representation
