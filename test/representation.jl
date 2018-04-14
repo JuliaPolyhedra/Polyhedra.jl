@@ -274,10 +274,10 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
 
     @testset "Chebyshev center" begin
         p = hrep(eye(2), zeros(2))
-        @test_throws ErrorException chebyshevcenter(p, lpsolver...) # unbounded
+        @test_throws ErrorException chebyshevcenter(p, lp_solver) # unbounded
 
         p = hrep([1 1; -1 -1], [0, -1])
-        @test_throws ErrorException chebyshevcenter(p, lpsolver...) # empty
+        @test_throws ErrorException chebyshevcenter(p, lp_solver) # empty
 
         # examples/chebyshevcenter.ipynb
         A = [ 2  1
@@ -286,7 +286,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
              -1 -2]
         b = ones(4)
         p = hrep(A, b)
-        c, r = chebyshevcenter(p, lpsolver...)
+        c, r = chebyshevcenter(p, lp_solver)
         @test c ≈ [0, 0] atol=1e-6
         @test r ≈ 0.4472135955 atol=1e-6
 
