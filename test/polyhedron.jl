@@ -29,10 +29,12 @@ end
 @testset "SimplePolyhedron constructor with nothing" begin
     vr = convexhull([-1, 0], [0, -1]) + conichull([1, 1], [-1, 1])
     hr = HalfSpace([-1, -1], 1) ∩ HalfSpace([1, -1], 1)
-    p = SimplePolyhedron{2, Int, typeof(hr), typeof(vr)}(hr, nothing)
+    p = SimplePolyhedron{2, Int, typeof(hr), typeof(vr)}(hr, nothing, lp_solver)
     @test hrep(p) === hr
     @test !vrepiscomputed(p)
-    p = SimplePolyhedron{2, Int, typeof(hr), typeof(vr)}(nothing, vr)
+    @test p.solver === lp_solver
+    p = SimplePolyhedron{2, Int, typeof(hr), typeof(vr)}(nothing, vr, lp_solver)
     @test !hrepiscomputed(p)
     @test vrep(p) === vr
+    @test p.solver === lp_solver
 end
