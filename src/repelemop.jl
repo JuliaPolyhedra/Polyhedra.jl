@@ -17,14 +17,16 @@ export translate
 
 function htranslate(p::HRep{N, T}, v::Union{AbstractPoint{N, S}}) where {N, S, T}
     f = (i, h) -> translate(h, v)
+    d = FullDim{N}()
     Tout = Base.promote_op(+, T, S)
-    similar_type(typeof(p), Tout)(hmap(f, FullDim{N}(), Tout, p)...)
+    similar(p, d, Tout, hmap(f, d, Tout, p)...)
 end
 
 function vtranslate{N, S, T}(p::VRep{N, T}, v::Union{AbstractPoint{N, S}})
     f = (i, u) -> translate(u, v)
+    d = FullDim{N}()
     Tout = Base.promote_op(+, T, S)
-    similar_type(typeof(p), Tout)(vmap(f, FullDim{N}(), Tout, p)...)
+    similar(p, d, Tout, vmap(f, d, Tout, p)...)
 end
 
 translate(p::HRep, v) = htranslate(p, v)
@@ -265,5 +267,5 @@ function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
         # but since there is no point, the polyhedron is empty and we should drop all rays/lines
         empty!(rsout)
     end
-    typeof(v)(psout, linetype(eltype(rsout))[], rsout)
+    similar(v, psout, linetype(eltype(rsout))[], rsout)
 end
