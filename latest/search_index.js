@@ -81,6 +81,30 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "representation.html#Polyhedra.HRepresentation",
+    "page": "Representation",
+    "title": "Polyhedra.HRepresentation",
+    "category": "type",
+    "text": "HRepresentation{N, T<:Real}\n\nSupertype for H-representations of an N-dimensionalwith coefficient typeT`.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.VRepresentation",
+    "page": "Representation",
+    "title": "Polyhedra.VRepresentation",
+    "category": "type",
+    "text": "VRepresentation{N, T<:Real}\n\nSupertype for V-representations of an N-dimensionalwith coefficient typeT`.\n\n\n\n"
+},
+
+{
+    "location": "representation.html#Polyhedra.Representation",
+    "page": "Representation",
+    "title": "Polyhedra.Representation",
+    "category": "type",
+    "text": "Representation{N, T<:Real}\n\nSupertype for H-(or V-)representations of an N-dimensionalwith coefficient typeT`.\n\n\n\n"
+},
+
+{
     "location": "representation.html#Polyhedra.fulldim",
     "page": "Representation",
     "title": "Polyhedra.fulldim",
@@ -101,7 +125,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Representation",
     "category": "section",
-    "text": "Polyhedra can be described in 2 different ways.H-representation: As the intersection of finitely many halfspaces given by its facets.\nV-representation: As the convex hull of its vertices + the conic hull of its rays where \'+\' is the Minkowski sum.In Polyhedra.jl, those representations are given the respective abstract types HRepresentation and VRepresentation which are themself subtypes of Representation.These functions can be called on both H-representation and V-representationfulldim\ncoefficienttype"
+    "text": "Polyhedra can be described in 2 different ways.H-representation: As the intersection of finitely many halfspaces given by its facets.\nV-representation: As the convex hull of its vertices + the conic hull of its rays where \'+\' is the Minkowski sum.HRepresentation\nVRepresentation\nRepresentationIn Polyhedra.jl, those representations are given the respective abstract types HRepresentation and VRepresentation which are themself subtypes of Representation.These functions can be called on both H-representation and V-representationfulldim\ncoefficienttype"
 },
 
 {
@@ -577,11 +601,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "polyhedron.html#Base.similar",
+    "page": "Polyhedron",
+    "title": "Base.similar",
+    "category": "function",
+    "text": "similar(p::Tuple{Vararg{Polyhedra.Rep}}, ::Polyhedra.FullDim{N}, ::Type{T}, it::Polyhedra.It{N, T}...)\n\nCreates a representation with a type similar to p of a polyhedron of full dimension N, element type T and initialize it with the iterators it. The type of the result will be chosen closer to the type of p[1].\n\n\n\n"
+},
+
+{
     "location": "polyhedron.html#Default-libraries-1",
     "page": "Polyhedron",
     "title": "Default libraries",
     "category": "section",
-    "text": "The following functions allows to select a default library:default_library\nsimilar_library\nlibrary\ndefault_typeThe following libraries serves as fallback:SimplePolyhedraLibrary\nIntervalLibrary"
+    "text": "The following functions allows to select a default library:default_library\nsimilar_library\nlibrary\ndefault_typeThe following libraries serves as fallback:SimplePolyhedraLibrary\nIntervalLibraryThe type and library of the polyhedron obtained after applying an operation of several polyhedra (of possibly different type and/or library) is determined by the similar function.similar"
 },
 
 {
