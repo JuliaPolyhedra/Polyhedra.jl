@@ -5,7 +5,7 @@ export VRepSolver, VRepPolyhedraModel
 
 Linear Programming solver using the V-representation of the feasible set to find the optimal solution.
 """
-struct VRepSolver <: MathProgBase.AbstractMathProgSolver
+struct VRepSolver <: MPB.AbstractMathProgSolver
 end
 
 mutable struct VRepPolyhedraModel <: AbstractPolyhedraModel
@@ -82,15 +82,15 @@ function optimize!(lpm::VRepPolyhedraModel)
     end
 end
 
-function MathProgBase.status(lpm::VRepPolyhedraModel)
+function MPB.status(lpm::VRepPolyhedraModel)
     lpm.status
 end
-function MathProgBase.getobjval(lpm::VRepPolyhedraModel)
+function MPB.getobjval(lpm::VRepPolyhedraModel)
     get(lpm.objval)
 end
-function MathProgBase.getsolution(lpm::VRepPolyhedraModel)
+function MPB.getsolution(lpm::VRepPolyhedraModel)
     copy(get(lpm.solution))
 end
-function MathProgBase.getunboundedray(lpm::VRepPolyhedraModel)
+function MPB.getunboundedray(lpm::VRepPolyhedraModel)
     copy(get(lpm.solution))
 end

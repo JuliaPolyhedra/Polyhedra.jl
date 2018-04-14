@@ -14,6 +14,9 @@ abstract type Polyhedron{N,T} <: GeometryPrimitive{N,T} end
 using StaticArrays
 using StaticArrays.FixedSizeArrays: FixedVector
 
+using MathProgBase
+const MPB = MathProgBase
+
 # Similar to StaticArrays.Size
 struct FullDim{N}
     function FullDim{N}() where N

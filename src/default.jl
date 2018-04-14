@@ -74,7 +74,7 @@ end
 
 If the V-representation of `p` has been computed, returns `VRepSolver()`, otherwise, returns `solver`.
 """
-function solver(p::Rep, solver::MathProgBase.AbstractMathProgSolver=default_solver(p))
+function solver(p::Rep, solver::MPB.AbstractMathProgSolver=default_solver(p))
     if vrepiscomputed(p)
         VRepSolver()
     else
@@ -82,8 +82,8 @@ function solver(p::Rep, solver::MathProgBase.AbstractMathProgSolver=default_solv
     end
 end
 
-solver(v::VRepresentation, solver::MathProgBase.AbstractMathProgSolver=default_solver(v)) = VRepSolver()
-solver(h::HRepresentation, solver::MathProgBase.AbstractMathProgSolver=default_solver(h)) = solver
+solver(v::VRepresentation, solver::MPB.AbstractMathProgSolver=default_solver(v)) = VRepSolver()
+solver(h::HRepresentation, solver::MPB.AbstractMathProgSolver=default_solver(h)) = solver
 
 _promote_reptype(P1::Type{<:HRep}, ::Type{<:HRep}) = P1
 _promote_reptype(P1::Type{<:VRep}, ::Type{<:VRep}) = P1

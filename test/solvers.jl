@@ -46,4 +46,4 @@ if lp_solver === nothing
     scs && (lp_solver = SCS.SCSSolver(eps=1e-6,verbose=0))
     @assert lp_solver !== nothing
 end
-lpsolver = tuple(lp_solver)
+lpsolver = tuple(lp_solver) # TODO remove in v0.3.2

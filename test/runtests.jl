@@ -9,6 +9,7 @@ using StaticArrays
 include("utils.jl")
 
 include("solvers.jl")
+lpsolver = tuple() # TODO remove in v0.3.2
 
 include("elements.jl")
 include("comp.jl")
@@ -28,6 +29,6 @@ include("show.jl")
 include("polyhedra.jl")
 for (arith, T) in (("floating point", Float64), ("exact", Rational{BigInt}))
     @testset "Polyhedra tests in $arith arithmetic" begin
-        polyhedratest(SimplePolyhedraLibrary{T}(), ["board"])
+        polyhedratest(SimplePolyhedraLibrary{T}(lp_solver), ["board"])
     end
 end

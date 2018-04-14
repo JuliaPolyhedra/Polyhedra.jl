@@ -8,13 +8,13 @@
 PolyhedraModel(s) = LPQPtoPolyhedraBridge(LinearQuadraticModel(s))
 
 struct LPQPtoPolyhedraBridge <: AbstractPolyhedraModel
-    lpqpmodel::MathProgBase.AbstractLinearQuadraticModel
+    lpqpmodel::MPB.AbstractLinearQuadraticModel
     rep
     c
     sense
 end
 
-LPQPtoPolyhedraBridge(m::MathProgBase.AbstractLinearQuadraticModel) = LPQPtoPolyhedraBridge(m, nothing, nothing, nothing)
+LPQPtoPolyhedraBridge(m::MPB.AbstractLinearQuadraticModel) = LPQPtoPolyhedraBridge(m, nothing, nothing, nothing)
 
 export LPQPtoPolyhedraBridge
 

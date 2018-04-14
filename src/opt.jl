@@ -1,11 +1,9 @@
-using MathProgBase
-
 export AbstractPolyhedraModel
 
-abstract type AbstractPolyhedraModel <: MathProgBase.AbstractLinearQuadraticModel end
+abstract type AbstractPolyhedraModel <: MPB.AbstractLinearQuadraticModel end
 
 # see the cheat in lpqp_to_polyhedra
-#function PolyhedraModel(solver::MathProgBase.AbstractMathProgSolver)
+#function PolyhedraModel(solver::MPB.AbstractMathProgSolver)
 #  error("PolyhedraModel not implemented for solver $solver")
 #end
 
@@ -24,7 +22,7 @@ end
 
 Solve the minimization of the objective ``\\langle c, x \\rangle`` over the polyhedron `p`.
 """
-function MathProgBase.linprog(c::AbstractVector, p::Rep{N}, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p)) where N
+function MPB.linprog(c::AbstractVector, p::Rep{N}, solver::MPB.AbstractMathProgSolver=Polyhedra.solver(p)) where N
     m = PolyhedraModel(solver)
     if N != length(c)
         throw(DimensionMismatch("length of objective does not match dimension of polyhedron"))
@@ -52,6 +50,6 @@ end
 
 Check whether the polyhedron `p` is empty by using the solver `solver`.
 """
-function Base.isempty(p::Rep{N, T}, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p)) where {N, T}
+function Base.isempty(p::Rep{N, T}, solver::MPB.AbstractMathProgSolver=Polyhedra.solver(p)) where {N, T}
     linprog(zeros(T, N), p, solver).status == :Infeasible
 end
