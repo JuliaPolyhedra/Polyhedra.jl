@@ -85,9 +85,15 @@ end
 abstract type HAffineSpace{N, T} <: HRepresentation{N, T} end
 @norepelem HAffineSpace HalfSpace
 
+_promote_reptype(P1::Type{<:HAffineSpace}, ::Type{<:HAffineSpace}) = P1
+_promote_reptype(P1::Type{<:HAffineSpace}, ::Type{<:HRep}) = hreptype(P1)
+
 abstract type VPolytope{N, T} <: VRepresentation{N, T} end
 @norepelem VPolytope Line
 @norepelem VPolytope Ray
+
+_promote_reptype(P1::Type{<:VPolytope}, ::Type{<:VPolytope}) = P1
+_promote_reptype(P1::Type{<:VPolytope}, ::Type{<:VRep}) = vreptype(P1)
 
 abstract type VSymPolytope{N, T} <: VPolytope{N, T} end
 @norepelem VSymPolytope Point
@@ -102,8 +108,15 @@ Base.done(::PointIndices{N, T, <:VCone{N, T}}, idx::PointIndex{N, T}) where {N, 
 Base.get(L::VCone{N, T}, ::PointIndex{N, T}) where {N, T} = origin(arraytype(L), FullDim{N}())
 nextindex(::VCone{N, T}, idx::PointIndex{N, T}) where {N, T} = typeof(idx)(idx.value + 1)
 
+_promote_reptype(P1::Type{<:VCone}, ::Type{<:VCone}) = P1
+_promote_reptype(P1::Type{<:VCone}, ::Type{<:VRep}) = vreptype(P1)
+
 abstract type VLinearSpace{N, T} <: VCone{N, T} end
 @norepelem VLinearSpace Ray
+
+_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VLinearSpace}) = P1
+_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VCone}) = conetype(P1)
+_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VRep}) = vreptype(P1)
 
 """
 The representation `rep` contain the elements `elem` inside a vector in the field `field`.

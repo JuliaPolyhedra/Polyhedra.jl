@@ -76,3 +76,36 @@ end
 
 solver(v::VRepresentation, solver::MathProgBase.AbstractMathProgSolver=default_solver(v)) = VRepSolver()
 solver(h::HRepresentation, solver::MathProgBase.AbstractMathProgSolver=default_solver(h)) = solver
+
+_promote_reptype(P1::Type{<:HRep}, ::Type{<:HRep}) = P1
+_promote_reptype(P1::Type{<:VRep}, ::Type{<:VRep}) = P1
+function promote_reptype(P1::Type{<:Rep}, P2::Type{<:Rep})
+    _promote_reptype(P1, P2)
+end
+promote_reptype(P1::Type{<:Rep}, P2::Type{<:Rep}, P::Type{<:Rep}...) = promote_reptype(promote_reptype(P1, P2), P...)
+promote_reptype(P::Type{<:Rep}) = P
+
+function default_similar(p::Tuple{Vararg{Polyhedra.Rep}}, d::FullDim{N}, ::Type{T}, it::It{N, T}...) where {N, T}
+    # Some types in p may not support `d` or `T` so we call `similar_type` after `promote_reptype`
+    RepTout = similar_type(promote_reptype(typeof.(p)...), d, T)
+    RepTout(it...)::RepTout # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
+end
+
+"""
+    similar(p::Tuple{Vararg{Polyhedra.Rep}}, ::Polyhedra.FullDim{N}, ::Type{T}, it::Polyhedra.It{N, T}...)
+
+Creates a representation with a type similar to `p` of a polyhedron of full dimension `N`, element type `T` and initialize it with the iterators `it`.
+The type of the result will be chosen closer to the type of `p[1]`.
+"""
+Base.similar(p::Tuple{Vararg{Polyhedra.Rep}}, d::FullDim{N}, ::Type{T}, it::It{N, T}...) where {N, T} = default_similar(p, d, T, it...)
+function promote_coefficienttype(p::Tuple{Vararg{Polyhedra.Rep}})
+    promote_type(MultivariatePolynomials.coefficienttype.(p)...)
+end
+function Base.similar(p::Tuple{Vararg{Polyhedra.Rep{N}}}, d::FullDim{N}, it::It{N}...) where N
+    T = promote_coefficienttype(p)
+    similar(p, d, T, it...)
+end
+function Base.similar(p::Tuple{Vararg{Polyhedra.Rep{N}}}, it::It{N}...) where N
+    similar(p, FullDim{N}(), it...)
+end
+Base.similar(p::Rep, args...) = similar((p,), args...)
