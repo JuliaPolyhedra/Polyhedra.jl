@@ -60,6 +60,14 @@ end
 Returns a default linear programming solver for the polyhedron `p` (e.g. CDD has an internal solver which is used by default).
 """
 default_solver(p::Rep) = JuMP.UnsetSolver()
+function default_solver(p::Rep, ps::Rep...)
+    s = default_solver(p)
+    if s === nothing || s isa JuMP.UnsetSolver
+        default_solver(ps...)
+    else
+        s
+    end
+end
 
 """
     solver(p::Rep, solver::MathProgBase.AbstractMathProgSolver=default_solver(p))
@@ -85,9 +93,18 @@ end
 promote_reptype(P1::Type{<:Rep}, P2::Type{<:Rep}, P::Type{<:Rep}...) = promote_reptype(promote_reptype(P1, P2), P...)
 promote_reptype(P::Type{<:Rep}) = P
 
-function default_similar(p::Tuple{Vararg{Polyhedra.Rep}}, d::FullDim{N}, ::Type{T}, it::It{N, T}...) where {N, T}
+# whether Rep has the constructor Rep(::It...; solver=...)
+supportssolver(::Type{<:Rep}) = false
+
+function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim{N}, ::Type{T}, it::It{N, T}...) where {N, T}
     # Some types in p may not support `d` or `T` so we call `similar_type` after `promote_reptype`
     RepTout = similar_type(promote_reptype(typeof.(p)...), d, T)
+    if supportssolver(RepTout)
+        solver = default_solver(p...)
+        if solver !== nothing && !(solver isa JuMP.UnsetSolver)
+            return RepTout(it..., solver=solver)
+        end
+    end
     RepTout(it...)::RepTout # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
 end
 
@@ -97,15 +114,15 @@ end
 Creates a representation with a type similar to `p` of a polyhedron of full dimension `N`, element type `T` and initialize it with the iterators `it`.
 The type of the result will be chosen closer to the type of `p[1]`.
 """
-Base.similar(p::Tuple{Vararg{Polyhedra.Rep}}, d::FullDim{N}, ::Type{T}, it::It{N, T}...) where {N, T} = default_similar(p, d, T, it...)
-function promote_coefficienttype(p::Tuple{Vararg{Polyhedra.Rep}})
+Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim{N}, ::Type{T}, it::It{N, T}...) where {N, T} = default_similar(p, d, T, it...)
+function promote_coefficienttype(p::Tuple{Vararg{Rep}})
     promote_type(MultivariatePolynomials.coefficienttype.(p)...)
 end
-function Base.similar(p::Tuple{Vararg{Polyhedra.Rep{N}}}, d::FullDim{N}, it::It{N}...) where N
+function Base.similar(p::Tuple{Vararg{Rep{N}}}, d::FullDim{N}, it::It{N}...) where N
     T = promote_coefficienttype(p)
     similar(p, d, T, it...)
 end
-function Base.similar(p::Tuple{Vararg{Polyhedra.Rep{N}}}, it::It{N}...) where N
+function Base.similar(p::Tuple{Vararg{Rep{N}}}, it::It{N}...) where N
     similar(p, FullDim{N}(), it...)
 end
 Base.similar(p::Rep, args...) = similar((p,), args...)
