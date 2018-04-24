@@ -4,10 +4,16 @@
     @test p isa SimplePolyhedron{2, Rational{BigInt}, LPHRepresentation{2, Rational{BigInt}, SparseMatrixCSC{Rational{BigInt},Int}}, Polyhedra.Hull{2, Rational{BigInt}, Vector{Rational{BigInt}}}}
     h = hrep(zeros(2, 2), zeros(2))
     p = @inferred polyhedron(h)
-    @test p isa SimplePolyhedron{2, Float64, MixedMatHRep{2, Float64}, MixedMatVRep{2, Float64}}
+    @test p isa SimplePolyhedron{2, Float64, MixedMatHRep{2, Float64, Matrix{Float64}}, MixedMatVRep{2, Float64, Matrix{Float64}}}
+    h = hrep(spzeros(2, 2), zeros(2))
+    p = @inferred polyhedron(h)
+    @test p isa SimplePolyhedron{2, Float64, MixedMatHRep{2, Float64, SparseMatrixCSC{Float64, Int}}, MixedMatVRep{2, Float64, Matrix{Float64}}}
     v = vrep(zeros(2, 3))
     p = @inferred polyhedron(v)
-    @test p isa SimplePolyhedron{3, Float64, MixedMatHRep{3, Float64}, MixedMatVRep{3, Float64}}
+    @test p isa SimplePolyhedron{3, Float64, MixedMatHRep{3, Float64, Matrix{Float64}}, MixedMatVRep{3, Float64, Matrix{Float64}}}
+    v = vrep(spzeros(2, 3))
+    p = @inferred polyhedron(v)
+    @test p isa SimplePolyhedron{3, Float64, MixedMatHRep{3, Float64, Matrix{Float64}}, MixedMatVRep{3, Float64, SparseMatrixCSC{Float64, Int}}}
 end
 
 struct BadPoly{N, T} <: Polyhedra.Polyhedron{N, T}

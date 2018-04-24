@@ -71,9 +71,7 @@ function LPHRepresentation(A::AbstractMatrix, l::AbstractVector, u::AbstractVect
     LPHRepresentation{size(A,2), T, typeof(AT)}(AT, AbstractVector{T}(l), AbstractVector{T}(u), AbstractVector{T}(lb), AbstractVector{T}(ub))
 end
 
-similar_type(::Type{<:Matrix}, ::Type{T}) where T = Matrix{T}
-similar_type(::Type{SparseMatrixCSC{S, I}}, ::Type{T}) where {S, I, T} = SparseMatrixCSC{T, I}
-arraytype(::Union{LPHRepresentation{N, T, MT}, Type{LPHRepresentation{N, T, MT}}}) where {N, T, MT} = MT <: AbstractSparseArray ? SparseVector{T, Int} : Vector{T}
+arraytype(::Union{LPHRepresentation{N, T, MT}, Type{LPHRepresentation{N, T, MT}}}) where {N, T, MT} = arraytype(MT)
 similar_type(::Type{LPHRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = LPHRepresentation{N, T, similar_type(MT, T)}
 fulltype(::Type{LPHRepresentation{N, T, MT}}) where {N, T, MT} = LPHRepresentation{N, T, MT}
 

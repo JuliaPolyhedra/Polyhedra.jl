@@ -102,6 +102,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
                          ((@inferred hrep(hps, hss)), Vector{Float64}),
                          ((@inferred hrep(shps, shss)), SVector{3, Float64}),
                          (hrep([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}),
+                         (hrep(spzeros(2, 3), [7., 8], IntSet([1])), SparseVector{Float64, Int}),
                          (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}),
                          (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8]), Vector{Float64}))
             @test (@inferred coefficienttype(hr)) == Float64
@@ -146,6 +147,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
                          ((@inferred vrep(ps, ls, rs)), Vector{Int}),
                          ((@inferred vrep(sps, sls, srs)), SVector{2, Int}),
                          (vrep([1 2; 3 4]), Vector{Int}),
+                         (vrep(spzeros(Int, 2, 2)), SparseVector{Int, Int}),
                          (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0), IntSet()), Vector{Int}),
                          (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0)), Vector{Int}),
                          (SimpleVRepresentation([1 2; 3 4]), Vector{Int}))
@@ -199,7 +201,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         N = 5
         M = 10
         T = Int64
-        reps = [MixedMatHRep{N, T}, MixedMatVRep{N, T}, LiftedHRepresentation{N, T}, LiftedVRepresentation{N, T}]
+        reps = [MixedMatHRep{N, T, Matrix{T}}, MixedMatVRep{N, T, Matrix{T}}, LiftedHRepresentation{N, T}, LiftedVRepresentation{N, T}]
         for rep in reps
             changedrep = Polyhedra.similar_type(rep, FullDim{M}())
             @test fulldim(changedrep) == M
@@ -298,7 +300,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         T = Int
         AT = Vector{Int}
         for VRepType in (Polyhedra.LiftedVRepresentation{2, T},
-                         Polyhedra.MixedMatVRep{2, T},
+                         Polyhedra.MixedMatVRep{2, T, Matrix{T}},
                          Polyhedra.Hull{2, T, AT})
             @test_throws ErrorException VRepType(AT[], [Line([1, 2])])
             @test_throws ErrorException VRepType(AT[], Line{2, T, AT}[], [Ray([1, 2])])
