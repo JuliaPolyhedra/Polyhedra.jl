@@ -22,7 +22,7 @@ function htranslate(p::HRep{N, T}, v::Union{AbstractPoint{N, S}}) where {N, S, T
     similar(p, d, Tout, hmap(f, d, Tout, p)...)
 end
 
-function vtranslate{N, S, T}(p::VRep{N, T}, v::Union{AbstractPoint{N, S}})
+function vtranslate(p::VRep{N, T}, v::Union{AbstractPoint{N, S}}) where {N, S, T}
     f = (i, u) -> translate(u, v)
     d = FullDim{N}()
     Tout = Base.promote_op(+, T, S)

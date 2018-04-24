@@ -19,7 +19,7 @@ mutable struct LiftedHRepresentation{N, T} <: MixedHRep{N, T}
     end
 end
 
-similar_type{N,T}(::Type{<:LiftedHRepresentation}, ::FullDim{N}, ::Type{T}) = LiftedHRepresentation{N,T}
+similar_type(::Type{<:LiftedHRepresentation}, ::FullDim{N}, ::Type{T}) where {N,T} = LiftedHRepresentation{N,T}
 arraytype(p::Union{LiftedHRepresentation{N, T}, Type{LiftedHRepresentation{N, T}}}) where {N, T} = Vector{T}
 
 LiftedHRepresentation(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = LiftedHRepresentation{size(A,2)-1,T}(A, linset)
@@ -64,7 +64,7 @@ mutable struct LiftedVRepresentation{N,T} <: MixedVRep{N,T}
     end
 end
 
-similar_type{N,T}(::Type{<:LiftedVRepresentation}, ::FullDim{N}, ::Type{T}) = LiftedVRepresentation{N,T}
+similar_type(::Type{<:LiftedVRepresentation}, ::FullDim{N}, ::Type{T}) where {N,T} = LiftedVRepresentation{N,T}
 arraytype(p::Union{LiftedVRepresentation{N, T}, Type{LiftedVRepresentation{N, T}}}) where {N, T} = Vector{T}
 
 LiftedVRepresentation(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = LiftedVRepresentation{size(R,2)-1,T}(R, linset)

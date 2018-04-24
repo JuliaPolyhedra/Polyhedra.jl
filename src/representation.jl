@@ -54,8 +54,8 @@ checkvconsistency(p::Polyhedron) = vrepiscomputed(p) && checkvconsistency(vrep(p
 
 # This method solves the ambiguity with the following methods and the general method
 # Base.convert{T}(::Type{T}, p::T) = p
-Base.convert{T<:HRepresentation}(::Type{T}, p::T) = p
-Base.convert{T<:VRepresentation}(::Type{T}, p::T) = p
+Base.convert(::Type{T}, p::T) where {T<:HRepresentation} = p
+Base.convert(::Type{T}, p::T) where {T<:VRepresentation} = p
 
 Base.convert(::Type{RepTout}, p::HRepresentation) where RepTout<:HRep = hconvert(RepTout, p)
 Base.convert(::Type{RepTout}, p::HRep) where {RepTout<:HRepresentation} = hconvert(RepTout, p)

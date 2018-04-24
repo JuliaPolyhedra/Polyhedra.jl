@@ -2,9 +2,9 @@ export doubledescription
 # Naive implementation of the double description Algorithm
 # See JuliaPolyhedra/ConvexHull.jl for an efficient implementation
 
-polytypefor{T <: Integer}(::Type{T}) = Rational{BigInt}
+polytypefor(::Type{T}) where {T <: Integer} = Rational{BigInt}
 polytypefor(::Type{Float32}) = Float64
-polytypefor{T}(::Type{T}) = T
+polytypefor(::Type{T}) where {T} = T
 
 polyarraytype(a) = a
 # TODO sparse halfspaces does not mean sparse points
