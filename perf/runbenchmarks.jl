@@ -28,15 +28,15 @@ using StaticArrays
 #   evals/sample:     1
 # MixedMatHRep
 # BenchmarkTools.Trial:
-#   memory estimate:  152.77 KiB
-#   allocs estimate:  2893
+#   memory estimate:  148.64 KiB
+#   allocs estimate:  2775
 #   --------------
-#   minimum time:     541.129 μs (0.00% GC)
-#   median time:      550.350 μs (0.00% GC)
-#   mean time:        586.288 μs (4.79% GC)
-#   maximum time:     5.012 ms (84.70% GC)
+#   minimum time:     479.105 μs (0.00% GC)
+#   median time:      486.236 μs (0.00% GC)
+#   mean time:        508.813 μs (3.73% GC)
+#   maximum time:     3.555 ms (83.56% GC)
 #   --------------
-#   samples:          8505
+#   samples:          9809
 #   evals/sample:     1
 
 let
