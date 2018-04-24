@@ -24,7 +24,7 @@ library(::Union{Interval{T}, Type{<:Interval{T}}}) where T = IntervalLibrary{T}(
 
 arraytype(p::Interval{T, AT}) where {T, AT} = AT
 
-surface{T}(::Interval{T}) = zero(T)
+surface(::Interval{T}) where {T} = zero(T)
 volume(p::Interval) = p.length
 Base.isempty(p::Interval) = isempty(p.vrep)
 

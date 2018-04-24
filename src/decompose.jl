@@ -195,9 +195,9 @@ end
 
 fulldecompose(poly::Polyhedron{3, T}) where T = fulldecompose(poly, typeof(one(T)/2))
 
-GeometryTypes.isdecomposable{T<:Point, S<:Polyhedron}(::Type{T}, ::Type{S}) = true
-GeometryTypes.isdecomposable{T<:Face, S<:Polyhedron}(::Type{T}, ::Type{S}) = true
-GeometryTypes.isdecomposable{T<:Normal, S<:Polyhedron}(::Type{T}, ::Type{S}) = true
+GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:Point, S<:Polyhedron} = true
+GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:Face, S<:Polyhedron} = true
+GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:Normal, S<:Polyhedron} = true
 function GeometryTypes.decompose(PT::Type{Point{N, T1}}, poly::Polyhedron{N, T2}) where {N, T1, T2}
     points = fulldecompose(poly)[1]
     map(PT, points)
@@ -206,7 +206,7 @@ function GeometryTypes.decompose(FT::Type{Face{N, T}}, poly::Polyhedron{3, T2}) 
     faces = fulldecompose(poly)[2]
     decompose(FT, faces)
 end
-function GeometryTypes.decompose{NT<:Normal, T}(::Type{NT}, poly::Polyhedron{3,T})
+function GeometryTypes.decompose(::Type{NT}, poly::Polyhedron{3,T}) where {NT<:Normal, T}
     ns = fulldecompose(poly)[3]
     map(NT, ns)
 end

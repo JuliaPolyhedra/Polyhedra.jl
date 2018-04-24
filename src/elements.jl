@@ -6,14 +6,14 @@ export VRepElement, AbstractPoint, AbstractRay, Ray, Line
 export islin, isray, ispoint, coord, lift, simplify
 
 const MyVec{N,T} = Union{Vec{N,T},AbstractVector{T}}
-_vec{T}(::Type{T}, a::AbstractVector) = AbstractArray{T}(a)
-_vec{T}(::Type{T}, a::AbstractVector{T}) = a
-function _vec{N,T}(::Type{T}, a::StaticArrays.SVector{N})
+_vec(::Type{T}, a::AbstractVector) where {T} = AbstractArray{T}(a)
+_vec(::Type{T}, a::AbstractVector{T}) where {T} = a
+function _vec(::Type{T}, a::StaticArrays.SVector{N}) where {N,T}
     StaticArrays.SVector{N,T}(a)
 end
-_vec{N,T}(::Type{T}, a::StaticArrays.SVector{N,T}) = a
-_vec{N,T}(::Type{T}, a::Vec{N}) = Vec{N,T}(a)
-_vec{N,T}(::Type{T}, a::Vec{N,T}) = a
+_vec(::Type{T}, a::StaticArrays.SVector{N,T}) where {N,T} = a
+_vec(::Type{T}, a::Vec{N}) where {N,T} = Vec{N,T}(a)
+_vec(::Type{T}, a::Vec{N,T}) where {N,T} = a
 
 abstract type HRepElement{N,T} end
 
@@ -270,10 +270,10 @@ for ElemT in [:HalfSpace, :HyperPlane, :Ray, :Line] # , :SymPoint
     end
 end
 
-ininterior{N}(r::Ray{N}, h::HalfSpace{N}) = _neg(h.a ⋅ r)
-ininterior{N}(l::Line{N}, h::HalfSpace{N}) = _neg(h.a ⋅ l)
-ininterior{N}(p::Point{N}, h::HalfSpace{N}) = _lt(h.a ⋅ p, h.β)
-ininterior{N}(p::AbstractVector, h::HalfSpace{N}) = _lt(h.a ⋅ p, h.β)
+ininterior(r::Ray{N}, h::HalfSpace{N}) where {N} = _neg(h.a ⋅ r)
+ininterior(l::Line{N}, h::HalfSpace{N}) where {N} = _neg(h.a ⋅ l)
+ininterior(p::Point{N}, h::HalfSpace{N}) where {N} = _lt(h.a ⋅ p, h.β)
+ininterior(p::AbstractVector, h::HalfSpace{N}) where {N} = _lt(h.a ⋅ p, h.β)
 #ininterior{N}(p::SymPoint{N}, h::HalfSpace{N}) = _lt(h.a ⋅ p.p, h.β)
 
 inrelativeinterior(p::VRepElement, h::HalfSpace) = ininterior(p, h)
