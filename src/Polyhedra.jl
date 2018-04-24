@@ -41,6 +41,8 @@ end
 similar_type(::Type{<:Point}, ::FullDim{N}, ::Type{T}) where {N, T} = Point{N,T}
 similar_type(::Type{<:Vec}, ::FullDim{N}, ::Type{T}) where {N, T} = Vec{N,T}
 
+emptymatrix(::Type{MT}, m, n) where {MT<:AbstractMatrix} = MT(m, n)
+emptymatrix(::Type{SparseMatrixCSC{T, Int}}, m, n) where T = spzeros(T, m, n)
 similar_type(::Type{<:Matrix}, ::Type{T}) where T = Matrix{T}
 similar_type(::Type{SparseMatrixCSC{S, I}}, ::Type{T}) where {S, I, T} = SparseMatrixCSC{T, I}
 arraytype(::Type{<:AbstractSparseArray{T}}) where T = SparseVector{T, Int}

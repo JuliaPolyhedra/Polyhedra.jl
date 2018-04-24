@@ -100,7 +100,7 @@ LPHRepresentation(rep::HRep{N, T}) where {N, T} = LPHRepresentation{N, T, _matty
 function LPHRepresentation{N, T, MT}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
-    A = MT <: AbstractSparseArray ? spzeros(eltype(MT), nhrep, N) : MT(nhrep, N)
+    A = emptymatrix(MT, nhrep, N)
     lb = Vector{T}(nhrep)
     ub = Vector{T}(nhrep)
     MPB.HighLevelInterface.warn_no_inf(T)
