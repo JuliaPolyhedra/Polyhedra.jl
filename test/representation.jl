@@ -57,8 +57,8 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         @test ine.A !== A
         #@test linset(ine) == ls
         @test ine.linset !== ls
-        @test Polyhedra.similar_type(LiftedHRepresentation{2, Int}, Float64) == LiftedHRepresentation{2, Float64}
-        @test Polyhedra.similar_type(LiftedHRepresentation{2, Int}, FullDim{3}(), Float64) == LiftedHRepresentation{3, Float64}
+        @test Polyhedra.similar_type(LiftedHRepresentation{2, Int, Matrix{Int}}, Float64) == LiftedHRepresentation{2, Float64, Matrix{Float64}}
+        @test Polyhedra.similar_type(LiftedHRepresentation{2, Int, SparseMatrixCSC{Int, Int}}, FullDim{3}(), Float64) == LiftedHRepresentation{3, Float64, SparseMatrixCSC{Float64, Int}}
 
         A2 = [1 1; -1 0; 0 -1]
         b2 = [1, 0, 0]
@@ -79,8 +79,8 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         #@test linset(ext) == Vlinset
         @test ext.linset !== Vlinset
 
-        @test Polyhedra.similar_type(LiftedVRepresentation{2, Int}, Float64) == LiftedVRepresentation{2, Float64}
-        @test Polyhedra.similar_type(LiftedVRepresentation{2, Int}, FullDim{3}(), Float64) == LiftedVRepresentation{3, Float64}
+        @test Polyhedra.similar_type(LiftedVRepresentation{2, Int, SparseMatrixCSC{Int, Int}}, Float64) == LiftedVRepresentation{2, Float64, SparseMatrixCSC{Float64, Int}}
+        @test Polyhedra.similar_type(LiftedVRepresentation{2, Int, Matrix{Int}}, FullDim{3}(), Float64) == LiftedVRepresentation{3, Float64, Matrix{Float64}}
     end
 
     @testset "eltype for some iterators is incorrect #7" begin
@@ -201,7 +201,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         N = 5
         M = 10
         T = Int64
-        reps = [MixedMatHRep{N, T, Matrix{T}}, MixedMatVRep{N, T, Matrix{T}}, LiftedHRepresentation{N, T}, LiftedVRepresentation{N, T}]
+        reps = [MixedMatHRep{N, T, Matrix{T}}, MixedMatVRep{N, T, Matrix{T}}, LiftedHRepresentation{N, T, Matrix{T}}, LiftedVRepresentation{N, T, Matrix{T}}]
         for rep in reps
             changedrep = Polyhedra.similar_type(rep, FullDim{M}())
             @test fulldim(changedrep) == M
@@ -299,7 +299,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
     @testset "V-consistency with iterator constructor" begin
         T = Int
         AT = Vector{Int}
-        for VRepType in (Polyhedra.LiftedVRepresentation{2, T},
+        for VRepType in (Polyhedra.LiftedVRepresentation{2, T, Matrix{T}},
                          Polyhedra.MixedMatVRep{2, T, Matrix{T}},
                          Polyhedra.Hull{2, T, AT})
             @test_throws ErrorException VRepType(AT[], [Line([1, 2])])

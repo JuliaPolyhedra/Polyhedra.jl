@@ -3,32 +3,36 @@ export LiftedHRepresentation, LiftedVRepresentation
 # H-Represenation
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
-mutable struct LiftedHRepresentation{N, T} <: MixedHRep{N, T}
+mutable struct LiftedHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
     # Ax >= 0, it is [b -A] * [z; x] where z = 1
-    A::AbstractMatrix{T}
+    A::MT
     linset::IntSet
 
-    function LiftedHRepresentation{N, T}(A::AbstractMatrix, linset::IntSet=IntSet()) where {N, T}
+    function LiftedHRepresentation{N, T, MT}(A::MT, linset::IntSet=IntSet()) where {N, T, MT}
         if !isempty(linset) && last(linset) > size(A, 1)
             error("The elements of linset should be between 1 and the number of rows of A")
         end
         if size(A, 2) != N+1
             error("dimension does not match")
         end
-        new{N, T}(A, linset)
+        new{N, T, MT}(A, linset)
     end
 end
 
-similar_type(::Type{<:LiftedHRepresentation}, ::FullDim{N}, ::Type{T}) where {N,T} = LiftedHRepresentation{N,T}
-arraytype(p::Union{LiftedHRepresentation{N, T}, Type{LiftedHRepresentation{N, T}}}) where {N, T} = Vector{T}
+similar_type(::Type{LiftedHRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = LiftedHRepresentation{N, T, similar_type(MT, T)}
+arraytype(p::Union{LiftedHRepresentation{N, T, MT}, Type{LiftedHRepresentation{N, T, MT}}}) where {N, T, MT} = arraytype(MT)
 
-LiftedHRepresentation(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = LiftedHRepresentation{size(A,2)-1,T}(A, linset)
-LiftedHRepresentation(h::HRepresentation{N,T}) where {N,T} = LiftedHRepresentation{N,T}(h)
+LiftedHRepresentation{N, T}(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where {N, T} = LiftedHRepresentation{N, T, typeof(A)}(A, linset)
+LiftedHRepresentation{N, T}(A::AbstractMatrix, linset::IntSet=IntSet()) where {N, T} = LiftedHRepresentation{N, T}(AbstractMatrix{T}(A), linset)
+LiftedHRepresentation(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where T = LiftedHRepresentation{size(A, 2) - 1, T}(A, linset)
+function LiftedHRepresentation(h::HRepresentation{N, T}) where {N, T}
+    LiftedHRepresentation{N, T, arraytype(h) <: AbstractSparseVector ? SparseMatrixCSC{T, Int} : Matrix{T}}(h)
+end
 
-function LiftedHRepresentation{N, T}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T}
+function LiftedHRepresentation{N, T, MT}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
-    A = Matrix{T}(nhrep, N+1)
+    A = emptymatrix(MT, nhrep, N+1)
     linset = IntSet(1:nhyperplane)
     for (i, h) in enumerate(hyperplanes)
         A[i,2:end] = -h.a
@@ -49,34 +53,36 @@ Base.get(hrep::LiftedHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} = va
 
 # V-Representation
 
-mutable struct LiftedVRepresentation{N,T} <: MixedVRep{N,T}
-    R::AbstractMatrix{T} # each row is a vertex if the first element is 1 and a ray otherwise
+mutable struct LiftedVRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedVRep{N, T}
+    R::MT # each row is a vertex if the first element is 1 and a ray otherwise
     linset::IntSet
 
-    function LiftedVRepresentation{N, T}(R::AbstractMatrix, linset::IntSet=IntSet([])) where {N, T}
+    function LiftedVRepresentation{N, T, MT}(R::MT, linset::IntSet=IntSet([])) where {N, T, MT}
         if length(R) > 0 && size(R, 2) != N+1
             error("dimension does not match")
         end
         if !isempty(linset) && last(linset) > size(R, 1)
             error("The elements of linset should be between 1 and the number of rows of R")
         end
-        new{N, T}(R, linset)
+        new{N, T, MT}(R, linset)
     end
 end
 
-similar_type(::Type{<:LiftedVRepresentation}, ::FullDim{N}, ::Type{T}) where {N,T} = LiftedVRepresentation{N,T}
-arraytype(p::Union{LiftedVRepresentation{N, T}, Type{LiftedVRepresentation{N, T}}}) where {N, T} = Vector{T}
+similar_type(::Type{LiftedVRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = LiftedVRepresentation{N, T, similar_type(MT, T)}
+arraytype(p::Union{LiftedVRepresentation{N, T, MT}, Type{LiftedVRepresentation{N, T, MT}}}) where {N, T, MT} = arraytype(MT)
 
-LiftedVRepresentation(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where {T <: Real} = LiftedVRepresentation{size(R,2)-1,T}(R, linset)
-LiftedVRepresentation(v::VRepresentation{N,T}) where {N,T} = LiftedVRepresentation{N,T}(v)
+LiftedVRepresentation{N, T}(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where {N, T} = LiftedVRepresentation{N, T, typeof(R)}(R, linset)
+LiftedVRepresentation{N, T}(R::AbstractMatrix, linset::IntSet=IntSet()) where {N, T} = LiftedVRepresentation{N, T}(AbstractMatrix{T}(R), linset)
+LiftedVRepresentation(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where T = LiftedVRepresentation{size(R, 2) - 1, T}(R, linset)
+LiftedVRepresentation(v::VRepresentation{N,T}) where {N, T} = LiftedVRepresentation{N, T, Matrix{T}}(v)
 
-function LiftedVRepresentation{N, T}(vits::VIt{N, T}...) where {N, T}
+function LiftedVRepresentation{N, T, MT}(vits::VIt{N, T}...) where {N, T, MT}
     points, lines, rays = fillvits(FullDim{N}(), vits...)
     npoint = length(points)
     nline = length(lines)
     nray = length(rays)
     nvrep = npoint + nline + nray
-    R = Matrix{T}(nvrep, N+1)
+    R = emptymatrix(MT, nvrep, N+1)
     linset = IntSet()
     function _fill(offset, z, ps)
         for (i, p) in enumerate(ps)
