@@ -131,12 +131,12 @@ but it is much more efficient. The code above does a polyhedral projection while
 each halfspace `⟨a, x⟩ ≤ β` (resp. each hyperplane `⟨a, x⟩ = β`) by the halfspace `⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩`
 (resp. the hyperplane `⟨a_J, x⟩ = β - ⟨a_I, v⟩`) where `J = setdiff(1:N, I)`.
 """
-function fixandeliminate(p::HRep{N, T}, I, v) where {N, T}
+function fixandeliminate(p::HRep{N, S}, I, v) where {N, S}
     J = setdiff(1:N, I)
-    dout = FullDim{length(J)}()
-    f = (i, h) -> _fixelim(h, I, J, v, dout)
-    Tout = promote_type(T, eltype(v))
-    similar_type(typeof(p), dout, Tout)(hmap(f, dout, Tout, p)...)
+    d = FullDim{length(J)}()
+    f = (i, h) -> _fixelim(h, I, J, v, d)
+    T = promote_type(S, eltype(v))
+    similar(p, d, T, hmap(f, d, T, p)...)
 end
 
 # TODO rewrite, it is just cutting a cone with a half-space, nothing more

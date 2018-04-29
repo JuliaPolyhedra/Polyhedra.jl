@@ -22,7 +22,8 @@ Interval{T, AT}(it::VIt{1}...) where {T, AT} = _vinterval(Hull{1, T, AT}(it...),
 
 library(::Union{Interval{T}, Type{<:Interval{T}}}) where T = IntervalLibrary{T}()
 
-arraytype(p::Interval{T, AT}) where {T, AT} = AT
+hvectortype(::Type{Interval{T, AT}}) where {T, AT} = AT
+vvectortype(::Type{Interval{T, AT}}) where {T, AT} = AT
 
 surface(::Interval{T}) where {T} = zero(T)
 volume(p::Interval) = p.length

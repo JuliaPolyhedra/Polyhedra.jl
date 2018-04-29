@@ -20,13 +20,13 @@ mutable struct LiftedHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N
 end
 
 similar_type(::Type{LiftedHRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = LiftedHRepresentation{N, T, similar_type(MT, T)}
-arraytype(p::Union{LiftedHRepresentation{N, T, MT}, Type{LiftedHRepresentation{N, T, MT}}}) where {N, T, MT} = arraytype(MT)
+hvectortype(p::Type{LiftedHRepresentation{N, T, MT}}) where {N, T, MT} = vectortype(MT)
 
 LiftedHRepresentation{N, T}(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where {N, T} = LiftedHRepresentation{N, T, typeof(A)}(A, linset)
 LiftedHRepresentation{N, T}(A::AbstractMatrix, linset::IntSet=IntSet()) where {N, T} = LiftedHRepresentation{N, T}(AbstractMatrix{T}(A), linset)
 LiftedHRepresentation(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where T = LiftedHRepresentation{size(A, 2) - 1, T}(A, linset)
 function LiftedHRepresentation(h::HRepresentation{N, T}) where {N, T}
-    LiftedHRepresentation{N, T, arraytype(h) <: AbstractSparseVector ? SparseMatrixCSC{T, Int} : Matrix{T}}(h)
+    LiftedHRepresentation{N, T, hvectortype(typeof(h)) <: AbstractSparseVector ? SparseMatrixCSC{T, Int} : Matrix{T}}(h)
 end
 
 function LiftedHRepresentation{N, T, MT}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T, MT}
@@ -69,7 +69,7 @@ mutable struct LiftedVRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedVRep{N
 end
 
 similar_type(::Type{LiftedVRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = LiftedVRepresentation{N, T, similar_type(MT, T)}
-arraytype(p::Union{LiftedVRepresentation{N, T, MT}, Type{LiftedVRepresentation{N, T, MT}}}) where {N, T, MT} = arraytype(MT)
+vvectortype(p::Type{LiftedVRepresentation{N, T, MT}}) where {N, T, MT} = vectortype(MT)
 
 LiftedVRepresentation{N, T}(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where {N, T} = LiftedVRepresentation{N, T, typeof(R)}(R, linset)
 LiftedVRepresentation{N, T}(R::AbstractMatrix, linset::IntSet=IntSet()) where {N, T} = LiftedVRepresentation{N, T}(AbstractMatrix{T}(R), linset)

@@ -5,6 +5,7 @@ include("board.jl")
 include("docexample.jl")
 include("issue48.jl")
 include("empty.jl")
+include("sparse.jl")
 
 const misctests = Dict("basic" => basictest,
                        "doc" => doctest,
@@ -12,6 +13,7 @@ const misctests = Dict("basic" => basictest,
                        "permutahedron" => permutahedrontest,
                        "board" => boardtest,
                        "issue48" => issue48test,
-                       "empty" => emptytest)
+                       "empty" => emptytest,
+                       "sparse" => sparsetest)
 
 @polytestset misc

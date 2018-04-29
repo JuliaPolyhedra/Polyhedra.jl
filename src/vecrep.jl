@@ -55,8 +55,8 @@ mutable struct Intersection{N, T, AT} <: HRepresentation{N, T}
     end
 end
 Intersection(hyperplanes::ElemIt{HyperPlane{N, T, AT}}, halfspaces::ElemIt{HalfSpace{N, T, AT}}) where {N, T, AT} = Intersection{N, T, AT}(hyperplanes, halfspaces)
-arraytype(::Union{Intersection{N, T, AT}, Type{Intersection{N, T, AT}}}) where {N, T, AT} = AT
-similar_type(PT::Type{<:Intersection}, d::FullDim{N}, ::Type{T}) where {N, T} = Intersection{N, T, similar_type(arraytype(PT), d, T)}
+hvectortype(::Type{Intersection{N, T, AT}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:Intersection}, d::FullDim{N}, ::Type{T}) where {N, T} = Intersection{N, T, similar_type(hvectortype(PT), d, T)}
 
 @subrepelem Intersection HyperPlane hyperplanes
 @vecrepelem Intersection HalfSpace halfspaces
@@ -85,8 +85,8 @@ fulltype(::Type{<:Union{Intersection{N, T, AT}, HyperPlanesIntersection{N, T, AT
 #    end
 #end
 #SymPointsHull(ps::ElemIt{SymPoint{N, T, AT}}) where {N, T, AT<:AbstractPoint{N, T}} = SymPointsHull{N, T, AT}(collect(ps))
-#arraytype(::Union{SymPointsHull{N, T, AT}, Type{SymPointsHull{N, T, AT}}}) where {N, T, AT} = AT
-#similar_type(PT::Type{<:SymPointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = SymPointsHull{N, T, similar_type(arraytype(PT), d, T)}
+#vectortype(::Union{SymPointsHull{N, T, AT}, Type{SymPointsHull{N, T, AT}}}) where {N, T, AT} = AT
+#similar_type(PT::Type{<:SymPointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = SymPointsHull{N, T, similar_type(vectortype(PT), d, T)}
 #
 #SymPointsHull{N, T, AT}(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(sympoints, points, lines, rays)
 #SymPointsHull{N, T, AT}(sympoints::SymPointIt, lines::LineIt, rays::RayIt) where {N, T, AT} = Hull{N, T, AT}(sympoints, AT[], lines, rays)
@@ -142,8 +142,8 @@ function PointsHull(points::PointIt)
     isempty(points) && throw(ArgumentError("Cannot create a V-representation from an empty collection of points represented by $(eltype(points)) as the dimension cannot be computed. Use StaticArrays.SVector to represent points instead"))
     PointsHull{length(first(points)), coefficienttype(eltype(points)), eltype(points)}(points)
 end
-arraytype(::Union{PointsHull{N, T, AT}, Type{PointsHull{N, T, AT}}}) where {N, T, AT} = AT
-similar_type(PT::Type{<:PointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = PointsHull{N, T, similar_type(arraytype(PT), d, T)}
+vvectortype(::Type{PointsHull{N, T, AT}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:PointsHull}, d::FullDim{N}, ::Type{T}) where {N, T} = PointsHull{N, T, similar_type(vvectortype(PT), d, T)}
 
 vreptype(::Type{PointsHull{N, T, AT}}) where {N, T, AT} = Hull{N, T, AT}
 
@@ -185,8 +185,8 @@ end
 function RaysHull(ls::ElemIt{Line{N, T, AT}}, rs::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
     RaysHull{N, T, AT}(ls, rs)
 end
-arraytype(::Union{RaysHull{N, T, AT}, Type{RaysHull{N, T, AT}}}) where {N, T, AT} = AT
-similar_type(PT::Type{<:RaysHull}, d::FullDim{N}, ::Type{T}) where {N, T} = RaysHull{N, T, similar_type(arraytype(PT), d, T)}
+vvectortype(::Type{RaysHull{N, T, AT}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:RaysHull}, d::FullDim{N}, ::Type{T}) where {N, T} = RaysHull{N, T, similar_type(vvectortype(PT), d, T)}
 
 @vecrepelem RaysHull Ray rays
 @subrepelem RaysHull Line lines
@@ -215,8 +215,8 @@ end
 function Hull(points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}) where {N, T, AT}
     Hull{N, T, AT}(points, lines, rays)
 end
-arraytype(::Union{Hull{N, T, AT}, Type{Hull{N, T, AT}}}) where {N, T, AT} = AT
-similar_type(PT::Type{<:Hull}, d::FullDim{N}, ::Type{T}) where {N, T} = Hull{N, T, similar_type(arraytype(PT), d, T)}
+vvectortype(::Type{Hull{N, T, AT}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:Hull}, d::FullDim{N}, ::Type{T}) where {N, T} = Hull{N, T, similar_type(vvectortype(PT), d, T)}
 
 @subrepelem Hull Point points
 @subrepelem Hull Line rays

@@ -45,8 +45,6 @@ emptymatrix(::Type{MT}, m, n) where {MT<:AbstractMatrix} = MT(m, n)
 emptymatrix(::Type{SparseMatrixCSC{T, Int}}, m, n) where T = spzeros(T, m, n)
 similar_type(::Type{<:Matrix}, ::Type{T}) where T = Matrix{T}
 similar_type(::Type{SparseMatrixCSC{S, I}}, ::Type{T}) where {S, I, T} = SparseMatrixCSC{T, I}
-arraytype(::Type{<:AbstractSparseArray{T}}) where T = SparseVector{T, Int}
-arraytype(::Type{<:AbstractMatrix{T}}) where T = Vector{T}
 
 # Interface/Definitions
 include("elements.jl")
@@ -56,6 +54,23 @@ include("indices.jl")
 include("incidence.jl")
 include("iterators.jl")
 include("polyhedron.jl")
+
+# For retro-compatibility with CDD and LRS, remove in v0.3.4
+vvectortype(RepT::Type{<:Polyhedron}) = vectortype(RepT)
+hvectortype(RepT::Type{<:Polyhedron}) = vectortype(RepT)
+# TODO Only define vectortype for the type for Polyhedron v0.4
+function vectortype(RepT::Type{<:Polyhedron})
+    @assert hvectortype(RepT) == vvectortype(RepT)
+    hvectortype(RepT)
+end
+vectortype(HRepT::Type{<:HRepresentation}) = hvectortype(HRepT)
+vectortype(VRepT::Type{<:VRepresentation}) = vvectortype(VRepT)
+vectortype(p::Rep) = vectortype(typeof(p))
+
+vectortype(::Type{<:AbstractSparseArray{T}}) where T = SparseVector{T, Int}
+vectortype(::Type{<:AbstractMatrix{T}}) where T = Vector{T}
+
+const arraytype = vectortype
 
 function similar_type(::Type{ET}, ::Type{Tout}) where {Tout, ET<:Union{HRepElement, VRepElement, Rep}}
     similar_type(ET, FullDim(ET), Tout)
