@@ -71,13 +71,13 @@ function LPHRepresentation(A::AbstractMatrix, l::AbstractVector, u::AbstractVect
     LPHRepresentation{size(A,2), T, typeof(AT)}(AT, AbstractVector{T}(l), AbstractVector{T}(u), AbstractVector{T}(lb), AbstractVector{T}(ub))
 end
 
-arraytype(::Union{LPHRepresentation{N, T, MT}, Type{LPHRepresentation{N, T, MT}}}) where {N, T, MT} = arraytype(MT)
+hvectortype(::Type{LPHRepresentation{N, T, MT}}) where {N, T, MT} = vectortype(MT)
 similar_type(::Type{LPHRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = LPHRepresentation{N, T, similar_type(MT, T)}
 fulltype(::Type{LPHRepresentation{N, T, MT}}) where {N, T, MT} = LPHRepresentation{N, T, MT}
 
 _mattype(::Type{<:AbstractVector{T}}) where T = Matrix{T}
 _mattype(::Type{<:AbstractSparseVector{T}}) where T = SparseMatrixCSC{T, Int}
-LPHRepresentation(rep::HRep{N, T}) where {N, T} = LPHRepresentation{N, T, _mattype(arraytype(rep))}(rep)
+LPHRepresentation(rep::HRep{N, T}) where {N, T} = LPHRepresentation{N, T, _mattype(hvectortype(typeof(rep)))}(rep)
 
 #function LPHRepresentation{N, T}(it::HRepIterator{N, T}) where {N,T}
 #    A = Matrix{T}(length(it), N)
@@ -190,7 +190,7 @@ Base.done(idxs::HIndices{N, T, <:LPHRepresentation{N, T}}, idx::HIndex{N, T}) wh
 function getaβ(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T}
     colrow, i, lgeq = _index2state(lp, idx)
     if colrow == 1
-        a = origin(arraytype(lp), FullDim{N}())
+        a = origin(hvectortype(typeof(lp)), FullDim{N}())
         a[i] = lgeq == 2 ? -one(T) : one(T)
         β = lgeq == 2 ? -lp.l[i] : lp.u[i]
     else

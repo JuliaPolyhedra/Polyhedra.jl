@@ -8,7 +8,13 @@ const SingleRepIterator{N, T, ElemT, RepT} = AbstractRepIterator{N, T, ElemT, Tu
 Base.eachindex(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT}) where {N, T, ElemT, RepT<:Rep{N, T}} = Indices{N, T, similar_type(ElemT, FullDim{N}(), T)}(it.ps[1])
 Base.start(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT})     where {N, T, ElemT, RepT<:Rep{N, T}} = start(eachindex(it))::Index{N, T, similar_type(ElemT, FullDim{N}(), T)}
 Base.done(it::SingleRepIterator, idx::Index) = done(eachindex(it), idx)
-Base.next(it::SingleRepIterator, idx::Index) = mapitem(it, 1, get(it.ps[1], idx)), nextindex(it.ps[1], idx)
+function Base.next(it::SingleRepIterator, idx::Index)
+    #mapitem(it, 1, get(it.ps[1], idx)), nextindex(it.ps[1], idx)
+    x = get(it.ps[1], idx)
+    a = mapitem(it, 1, x)
+    b = nextindex(it.ps[1], idx)
+    a, b
+end
 
 # If there are multiple representations, we need to iterate.
 # Builds a SingleRepIterator{ElemT} from p
@@ -75,10 +81,12 @@ for (isVrep, elt, singular) in [#(true, :SymPoint, :sympoint),
                                 (true, :Line, :line), (true, :Ray, :ray),
                                 (false, :HyperPlane, :hyperplane), (false, :HalfSpace, :halfspace)]
     if isVrep
+        vectortype = :vvectortype
         HorV = :V
         HorVRep = :VRep
         horvrep = :vrep
     else
+        vectortype = :hvectortype
         HorV = :H
         HorVRep = :HRep
         horvrep = :hrep
@@ -138,9 +146,9 @@ for (isVrep, elt, singular) in [#(true, :SymPoint, :sympoint),
 
         $elemtype(p::Polyhedron) = $elemtype($horvrep(p))
         if $singularstr == "point"
-            $elemtype(p::$HorVRep) = arraytype(p)
+            $elemtype(p::$HorVRep) = $vectortype(typeof(p))
         else
-            $elemtype(p::$HorVRep{N, T}) where {N, T} = $elt{N, T, arraytype(p)}
+            $elemtype(p::$HorVRep{N, T}) where {N, T} = $elt{N, T, $vectortype(typeof(p))}
         end
 
         function $plural(p::$HorVRep{N, T}...) where {N, T}

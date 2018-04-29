@@ -40,10 +40,8 @@ library(::Union{SimplePolyhedron{N, T}, Type{<:SimplePolyhedron{N, T}}}) where {
 default_solver(p::SimplePolyhedron) = p.solver
 supportssolver(::Type{<:SimplePolyhedron}) = true
 
-function arraytype(p::SimplePolyhedron{N, T, HRepT, VRepT}) where{N, T, HRepT, VRepT}
-    @assert arraytype(HRepT) == arraytype(VRepT)
-    arraytype(HRepT)
-end
+hvectortype(::Type{<:SimplePolyhedron{N, T, HRepT}}) where {N, T, HRepT} = hvectortype(HRepT)
+vvectortype(::Type{SimplePolyhedron{N, T, HRepT, VRepT}}) where {N, T, HRepT, VRepT} = vvectortype(VRepT)
 
 similar_type(::Type{<:SimplePolyhedron{M, S, HRepT, VRepT}}, d::FullDim{N}, ::Type{T}) where {M, S, HRepT, VRepT, N, T} = SimplePolyhedron{N, T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
 

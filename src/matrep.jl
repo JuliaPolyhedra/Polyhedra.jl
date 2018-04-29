@@ -31,7 +31,7 @@ mutable struct MixedMatHRep{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
 end
 
 similar_type(::Type{<:MixedMatHRep{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = MixedMatHRep{N, T, similar_type(MT, T)}
-arraytype(p::Union{MixedMatHRep{N, T, MT}, Type{MixedMatHRep{N, T, MT}}}) where {N, T, MT} = arraytype(MT)
+hvectortype(p::Type{MixedMatHRep{N, T, MT}}) where {N, T, MT} = vectortype(MT)
 fulltype(::Type{MixedMatHRep{N, T, MT}}) where {N, T, MT} = MixedMatHRep{N, T, MT}
 
 MixedMatHRep{N, T}(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet) where {N, T} = MixedMatHRep{N, T, typeof(A)}(A, b, linset)
@@ -100,7 +100,7 @@ mutable struct MixedMatVRep{N, T, MT<:AbstractMatrix{T}} <: MixedVRep{N, T}
 end
 
 similar_type(::Type{<:MixedMatVRep{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = MixedMatVRep{N, T, similar_type(MT, T)}
-arraytype(p::Union{MixedMatVRep{N, T, MT}, Type{MixedMatVRep{N, T, MT}}}) where {N, T, MT} = arraytype(MT)
+vvectortype(p::Type{MixedMatVRep{N, T, MT}}) where {N, T, MT} = vectortype(MT)
 fulltype(::Type{MixedMatVRep{N, T, MT}}) where {N, T, MT} = MixedMatVRep{N, T, MT}
 
 MixedMatVRep{N, T}(V::MT, R::MT, Rlinset::IntSet) where {N, T, MT<:AbstractMatrix{T}} = MixedMatVRep{N, T, MT}(V, R, Rlinset)

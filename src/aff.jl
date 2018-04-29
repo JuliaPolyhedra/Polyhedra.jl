@@ -47,8 +47,8 @@ struct HyperPlanesIntersection{N, T, AT} <: HAffineSpace{N, T}
         new{N, T, AT}(lazy_collect(hps))
     end
 end
-arraytype(L::Union{HyperPlanesIntersection{N, T, AT}, Type{HyperPlanesIntersection{N, T, AT}}}) where {N, T, AT} = AT
-similar_type(PT::Type{<:HyperPlanesIntersection}, d::FullDim{N}, ::Type{T}) where {N, T} = HyperPlanesIntersection{N, T, similar_type(arraytype(PT), d, T)}
+hvectortype(L::Type{HyperPlanesIntersection{N, T, AT}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:HyperPlanesIntersection}, d::FullDim{N}, ::Type{T}) where {N, T} = HyperPlanesIntersection{N, T, similar_type(hvectortype(PT), d, T)}
 
 HyperPlanesIntersection{N, T, AT}() where {N, T, AT} = HyperPlanesIntersection{N, T, AT}(HyperPlane{N, T, AT}[])
 HyperPlanesIntersection(it::ElemIt{HyperPlane{N, T, AT}}) where {N, T, AT} = HyperPlanesIntersection{N, T, AT}(it)
@@ -92,7 +92,7 @@ end
 
 # V-representation
 struct VEmptySpace{N, T, AT} <: VLinearSpace{N, T} end
-emptyspace(v::VRep{N, T}) where {N, T} = VEmptySpace{N, T, arraytype(v)}()
+emptyspace(v::VRep{N, T}) where {N, T} = VEmptySpace{N, T, vvectortype(typeof(v))}()
 
 Base.in(v::VRepElement, L::VEmptySpace) = isapproxzero(v)
 
@@ -116,8 +116,8 @@ struct LinesHull{N, T, AT} <: VLinearSpace{N, T}
         new{N, T, AT}(lazy_collect(lines))
     end
 end
-arraytype(L::Union{LinesHull{N, T, AT}, Type{LinesHull{N, T, AT}}}) where {N, T, AT} = AT
-similar_type(PT::Type{<:LinesHull}, d::FullDim{N}, ::Type{T}) where {N, T} = LinesHull{N, T, similar_type(arraytype(PT), d, T)}
+vvectortype(::Type{LinesHull{N, T, AT}}) where {N, T, AT} = AT
+similar_type(PT::Type{<:LinesHull}, d::FullDim{N}, ::Type{T}) where {N, T} = LinesHull{N, T, similar_type(vvectortype(PT), d, T)}
 
 LinesHull{N, T, AT}() where {N, T, AT} = LinesHull{N, T, AT}(Line{N, T, AT}[])
 LinesHull(it::ElemIt{Line{N, T, AT}}) where {N, T, AT} = LinesHull{N, T, AT}(it)

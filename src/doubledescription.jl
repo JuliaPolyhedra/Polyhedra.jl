@@ -6,13 +6,13 @@ polytypefor(::Type{T}) where {T <: Integer} = Rational{BigInt}
 polytypefor(::Type{Float32}) = Float64
 polytypefor(::Type{T}) where {T} = T
 
-polyarraytype(a) = a
+polyvectortype(a) = a
 # TODO sparse halfspaces does not mean sparse points
-polyarraytype(::Type{<:SparseVector{T}}) where T = Vector{T}
+polyvectortype(::Type{<:SparseVector{T}}) where T = Vector{T}
 
-dualtype(RepT::Type{<:Representation}) = dualtype(RepT, polyarraytype(arraytype(RepT)))
+dualtype(RepT::Type{<:Representation}) = dualtype(RepT, polyvectortype(vectortype(RepT)))
 function dualfullspace(rep::Representation, d::FullDim, ::Type{T}) where T
-    dualfullspace(rep, d, T, polyarraytype(similar_type(arraytype(rep), d, T)))
+    dualfullspace(rep, d, T, polyvectortype(similar_type(vectortype(rep), d, T)))
 end
 function dualfullspace(rep::Representation{N, T}) where {N, T}
     dualfullspace(rep, FullDim{N}(), polytypefor(T))
