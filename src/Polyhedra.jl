@@ -56,8 +56,8 @@ include("iterators.jl")
 include("polyhedron.jl")
 
 # For retro-compatibility with CDD and LRS, remove in v0.3.4
-vvectortype(RepT::Type{<:Polyhedron}) = vectortype(RepT)
-hvectortype(RepT::Type{<:Polyhedron}) = vectortype(RepT)
+vvectortype(RepT::Type{<:VRep}) = vectortype(RepT)
+hvectortype(RepT::Type{<:HRep}) = vectortype(RepT)
 # TODO Only define vectortype for the type for Polyhedron v0.4
 function vectortype(RepT::Type{<:Polyhedron})
     @assert hvectortype(RepT) == vvectortype(RepT)
