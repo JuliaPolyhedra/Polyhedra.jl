@@ -18,9 +18,9 @@ function sparsetest(lib::PolyhedraLibrary)
                    [0,    -1,  1])
     p = polyhedron(h, lib)
     @test !vrepiscomputed(p)
-    @test p ⊆ HalfSpace([3, 2, 0], 2)
+    @test ⊆(p, HalfSpace([3, 2, 0], 2), lpsolver...)
     @test !vrepiscomputed(p)
-    @test !(p ⊆ HalfSpace([3, 2, 0], 1))
+    @test !⊆(p, HalfSpace([3, 2, 0], 1), lpsolver...)
     @test !vrepiscomputed(p)
     inequality_fulltest(p, h)
     generator_fulltest(p, v)
@@ -30,9 +30,9 @@ function sparsetest(lib::PolyhedraLibrary)
     # If lib supported sparse, hvectortype(q) should be sparse hence hvectortype(p) should also be sparse
     @test Polyhedra.hvectortype(typeof(p)) == Polyhedra.hvectortype(typeof(q))
     @test !vrepiscomputed(q)
-    @test q ⊆ HalfSpace([2, -3], 0) # This also checks that the solver was ot dropped during fixandeliminate
+    @test ⊆(q, HalfSpace([2, -3], 0), lpsolver...) # This also checks that the solver was ot dropped during fixandeliminate
     @test !vrepiscomputed(q)
-    @test !(q ⊆ HalfSpace([2, -3], -1))
+    @test !⊆(q, HalfSpace([2, -3], -1), lpsolver...)
     @test !vrepiscomputed(q)
     hfix = HalfSpace([ 2,  0], -1) ∩
            HalfSpace([ 0, -3],  1) ∩
