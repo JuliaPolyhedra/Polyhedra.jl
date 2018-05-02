@@ -5,7 +5,7 @@ function permutahedrontest(lib::Lib) where Lib<:PolyhedraLibrary
     V = [2 3 1; 1 3 2; 3 1 2; 3 2 1; 2 1 3; 1 2 3]
     ine = hrep(A, b, linset)
     poly = polyhedron(ine, lib)
-    @test !isempty(poly, Polyhedra.solver(poly, lpsolver...))
+    @test !isempty(poly)
     inequality_fulltest(poly, A, b, linset)
     generator_fulltest(poly, V, Array{Int}(0, 3))
 

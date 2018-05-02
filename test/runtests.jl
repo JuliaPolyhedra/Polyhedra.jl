@@ -9,7 +9,6 @@ using StaticArrays
 include("utils.jl")
 
 include("solvers.jl")
-lpsolver = tuple() # TODO remove in v0.3.2
 
 include("elements.jl")
 include("comp.jl")
