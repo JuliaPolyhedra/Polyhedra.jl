@@ -96,16 +96,21 @@ promote_reptype(P::Type{<:Rep}) = P
 # whether Rep has the constructor Rep(::It...; solver=...)
 supportssolver(::Type{<:Rep}) = false
 
-function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim{N}, ::Type{T}, it::It{N, T}...) where {N, T}
-    # Some types in p may not support `d` or `T` so we call `similar_type` after `promote_reptype`
-    RepTout = similar_type(promote_reptype(typeof.(p)...), d, T)
-    if supportssolver(RepTout)
+function constructpolyhedron(RepT::Type{<:Rep{N, T}}, p::Tuple{Vararg{Rep}}, it::It{N, T}...) where {N, T}
+    if supportssolver(RepT)
         solver = default_solver(p...)
         if solver !== nothing && !(solver isa JuMP.UnsetSolver)
-            return RepTout(it..., solver=solver)
+            return RepT(it..., solver=solver)
         end
     end
-    RepTout(it...)::RepTout # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
+    RepT(it...)::RepT # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
+
+end
+
+function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim{N}, ::Type{T}, it::It{N, T}...) where {N, T}
+    # Some types in p may not support `d` or `T` so we call `similar_type` after `promote_reptype`
+    RepT = similar_type(promote_reptype(typeof.(p)...), d, T)
+    constructpolyhedron(RepT, p, it...)
 end
 
 """

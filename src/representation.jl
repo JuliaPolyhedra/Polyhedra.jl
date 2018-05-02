@@ -57,59 +57,36 @@ checkvconsistency(p::Polyhedron) = vrepiscomputed(p) && checkvconsistency(vrep(p
 Base.convert(::Type{T}, p::T) where {T<:HRepresentation} = p
 Base.convert(::Type{T}, p::T) where {T<:VRepresentation} = p
 
-Base.convert(::Type{RepTout}, p::HRepresentation) where RepTout<:HRep = hconvert(RepTout, p)
-Base.convert(::Type{RepTout}, p::HRep) where {RepTout<:HRepresentation} = hconvert(RepTout, p)
+Base.convert(RepT::Type{<:HRep}, p::HRepresentation)            = hconvert(RepT, p)
+Base.convert(RepT::Type{<:HRepresentation}, p::HRep)            = hconvert(RepT, p)
 # avoid ambiguity
-Base.convert(::Type{RepTout}, p::HRepresentation) where {RepTout<:HRepresentation} = hconvert(RepTout, p)
+Base.convert(RepT::Type{<:HRepresentation}, p::HRepresentation) = hconvert(RepT, p)
 
 Base.copy(rep::HRepresentation) = typeof(rep)(hreps(rep)...)
 Base.copy(rep::VRepresentation) = typeof(rep)(vreps(rep)...)
 
 function Polyhedron{N, S}(p::Polyhedron{N, T}) where {N, S, T}
-    RepTout = similar_type(typeof(p), S)
+    RepT = similar_type(typeof(p), S)
     if !hrepiscomputed(p) && vrepiscomputed(p)
-        vconvert(RepTout, p)
+        vconvert(RepT, p)
     else
-        hconvert(RepTout, p)
+        hconvert(RepT, p)
     end
 end
 
-#function vconvert{RepTout<:VRep, RepTin<:VRep}(::Type{RepTout}, p::RepTin)
-#    Nin  = fulldim(RepTin)
-#    Nout = fulldim(RepTout)
-#    if Nin != Nout
-#        error("Different dimension")
-#    end
-#    Tin  = eltype(RepTin)
-#    Tout = eltype(RepTout)
-#    if Tin == Tout
-#        f = nothing
-#    else
-#        f = (i,x) -> similar_type(typeof(x), Tout)(x)
-#    end
-#    if decomposedvfast(p)
-#        RepTout(PointIterator{Nout,Tout,Nin,Tin}([p], f), RayIterator{Nout,Tout,Nin,Tin}([p], f))
-#    else
-#        RepTout(VRepIterator{Nout,Tout,Nin,Tin}([p], f))
-#    end
-#end
-
-Base.convert(::Type{RepTout}, p::VRepresentation) where {RepTout<:VRep} = vconvert(RepTout, p)
-Base.convert(::Type{RepTout}, p::VRep) where {RepTout<:VRepresentation} = vconvert(RepTout, p)
+Base.convert(RepT::Type{<:VRep}, p::VRepresentation)            = vconvert(RepT, p)
+Base.convert(RepT::Type{<:VRepresentation}, p::VRep)            = vconvert(RepT, p)
 # avoid ambiguity
-Base.convert(::Type{RepTout}, p::VRepresentation) where {RepTout<:VRepresentation} = vconvert(RepTout, p)
+Base.convert(RepT::Type{<:VRepresentation}, p::VRepresentation) = vconvert(RepT, p)
 
 # Used by SimpleVRepPolyhedraModel
 Base.convert(::Type{VRep}, p::VRepresentation) = p
 
 MultivariatePolynomials.changecoefficienttype(p::Rep{N,T}, ::Type{T}) where {N,T} = p
-function MultivariatePolynomials.changecoefficienttype(p::RepTin, ::Type{Tout}) where {RepTin<:Rep, Tout}
-    RepTout = similar_type(RepTin, Tout)
-    RepTout(p)
-end
+MultivariatePolynomials.changecoefficienttype(p::Rep, T::Type) = similar_type(typeof(p), T)(p)
 
-VRepresentation{N, T}(v::RepTin) where {N, T, RepTin} = similar_type(RepTin, FullDim{N}(), T)(v)
-HRepresentation{N, T}(h::RepTin) where {N, T, RepTin} = similar_type(RepTin, FullDim{N}(), T)(h)
+VRepresentation{N, T}(v::VRepresentation) where {N, T} = similar_type(typeof(v), FullDim{N}(), T)(v)
+HRepresentation{N, T}(h::HRepresentation) where {N, T} = similar_type(typeof(h), FullDim{N}(), T)(h)
 
 VRep{N, T}(v::VRepresentation) where {N, T} = VRepresentation{N, T}(v)
 VRep{N, T}(p::Polyhedron) where {N, T} = Polyhedron{N, T}(p)
