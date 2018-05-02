@@ -303,12 +303,8 @@ hreps(p::HAffineSpace{N, T}...) where {N, T} = tuple(hyperplanes(p...))
 hmap(f, d::FullDim, ::Type{T}, p::HRep...) where T = maphyperplanes(f, d, T, p...), maphalfspaces(f, d, T, p...)
 hmap(f, d::FullDim, ::Type{T}, p::HAffineSpace...) where T = tuple(maphyperplanes(f, d, T, p...))
 
-function hconvert(::Type{RepTout}, p::HRep{N, T}) where {N, T, RepTout<:HRep{N, T}}
-    RepTout(hreps(p)...)
-end
-function hconvert(::Type{RepTout}, p::HRep{N}) where {N, T, RepTout<:HRep{N, T}}
-    RepTout(RepIterator{N, T}.(hreps(p))...)
-end
+hconvert(RepT::Type{<:HRep{N, T}}, p::HRep{N, T}) where {N, T} = constructpolyhedron(RepT, (p,), hreps(p)...)
+hconvert(RepT::Type{<:HRep{N, T}}, p::HRep{N})    where {N, T} = constructpolyhedron(RepT, (p,), RepIterator{N, T}.(hreps(p))...)
 
 vreps(p...) = preps(p...)..., rreps(p...)...
 preps(p::VRep...) = tuple(points(p...))
@@ -324,9 +320,5 @@ rmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = maplines(f, d, T, p...), ma
 rmap(f, d::FullDim, ::Type{T}, p::VLinearSpace...) where T = tuple(maplines(f, d, T, p...))
 rmap(f, d::FullDim, ::Type, p::VPolytope...) = tuple()
 
-function vconvert(::Type{RepTout}, p::VRep{N, T}) where {N, T, RepTout<:VRep{N, T}}
-    RepTout(vreps(p)...)
-end
-function vconvert(::Type{RepTout}, p::VRep{N}) where {N, T, RepTout<:VRep{N, T}}
-    RepTout(RepIterator{N, T}.(vreps(p))...)
-end
+vconvert(RepT::Type{<:VRep{N, T}}, p::VRep{N, T}) where {N, T} = constructpolyhedron(RepT, (p,), vreps(p)...)
+vconvert(RepT::Type{<:VRep{N, T}}, p::VRep{N})    where {N, T} = constructpolyhedron(RepT, (p,), RepIterator{N, T}.(vreps(p))...)
