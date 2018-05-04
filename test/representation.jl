@@ -405,4 +405,24 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             inequality_fulltest(hc, hr)
         end
     end
+    @testset "Preserving sparsity" begin
+        for h in (HalfSpace(sparsevec([1], [1], 2), 1) ∩ HyperPlane(sparsevec([2], [-1]), 3), hrep(sparse([1, 2], [1, 2], [1, -1]), [1, 3]))
+            @test Polyhedra.Intersection(h) isa Polyhedra.Intersection{2, Int, SparseVector{Int, Int}}
+            @test LPHRepresentation(h) isa LPHRepresentation{2, Int, SparseMatrixCSC{Int, Int}}
+            @test MixedMatHRep(h) isa MixedMatHRep{2, Int, SparseMatrixCSC{Int, Int}}
+            @test LiftedHRepresentation(h) isa LiftedHRepresentation{2, Int, SparseMatrixCSC{Int, Int}}
+            @test Polyhedra.Intersection{2, Float64}(h) isa Polyhedra.Intersection{2, Float64, SparseVector{Float64, Int}}
+            @test LPHRepresentation{2, Float64}(h) isa LPHRepresentation{2, Float64, SparseMatrixCSC{Float64, Int}}
+            @test MixedMatHRep{2, Float64}(h) isa MixedMatHRep{2, Float64, SparseMatrixCSC{Float64, Int}}
+            @test LiftedHRepresentation{2, Float64}(h) isa LiftedHRepresentation{2, Float64, SparseMatrixCSC{Float64, Int}}
+        end
+        for v in (convexhull(sparsevec([1], [1], 2), sparsevec([2], [-1])), vrep(sparse([1, 2], [1, 2], [1, -1])))
+            @test Polyhedra.Hull(v) isa Polyhedra.Hull{2, Int, SparseVector{Int, Int}}
+            @test MixedMatVRep(v) isa MixedMatVRep{2, Int, SparseMatrixCSC{Int, Int}}
+            @test LiftedVRepresentation(v) isa LiftedVRepresentation{2, Int, SparseMatrixCSC{Int, Int}}
+            @test Polyhedra.Hull{2, Float64}(v) isa Polyhedra.Hull{2, Float64, SparseVector{Float64, Int}}
+            @test MixedMatVRep{2, Float64}(v) isa MixedMatVRep{2, Float64, SparseMatrixCSC{Float64, Int}}
+            @test LiftedVRepresentation{2, Float64}(v) isa LiftedVRepresentation{2, Float64, SparseMatrixCSC{Float64, Int}}
+        end
+    end
 end

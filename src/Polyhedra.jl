@@ -72,6 +72,11 @@ vectortype(::Type{<:AbstractMatrix{T}}) where T = Vector{T}
 
 const arraytype = vectortype
 
+hmatrixtype(RepT::Type{<:HRep}, T::Type) = matrixtype(similar_type(hvectortype(RepT), T))
+vmatrixtype(RepT::Type{<:VRep}, T::Type) = matrixtype(similar_type(vvectortype(RepT), T))
+matrixtype(::Type{<:AbstractVector{T}}) where T = Matrix{T}
+matrixtype(::Type{<:AbstractSparseVector{T}}) where T = SparseMatrixCSC{T, Int}
+
 function similar_type(::Type{ET}, ::Type{Tout}) where {Tout, ET<:Union{HRepElement, VRepElement, Rep}}
     similar_type(ET, FullDim(ET), Tout)
 end

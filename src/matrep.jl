@@ -43,7 +43,8 @@ function MixedMatHRep(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet
 end
 MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet) where T <: Real = MixedMatHRep{size(A,2),T}(A, b, linset)
 
-MixedMatHRep(h::HRep{N,T}) where {N,T} = MixedMatHRep{N,T}(h)
+MixedMatHRep(h::HRep{N, T}) where {N, T} = MixedMatHRep{N, T}(h)
+MixedMatHRep{N, T}(h::HRep{N}) where {N, T} = MixedMatHRep{N, T, hmatrixtype(typeof(h), T)}(h)
 
 MixedMatHRep{N, T}(hits::HIt{N, T}...) where {N, T} = MixedMatHRep{N, T, Matrix{T}}(hits...) # FIXME required by CDD and LRS tests
 function MixedMatHRep{N, T, MT}(hyperplanes::HyperPlaneIt{N, T}, halfspaces::HalfSpaceIt{N, T}) where {N, T, MT}
@@ -111,7 +112,8 @@ function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Rlinset::IntSe
     MixedMatVRep(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Rlinset)
 end
 
-MixedMatVRep(v::VRep{N,T}) where {N,T} = MixedMatVRep{N,T}(v)
+MixedMatVRep(v::VRep{N, T}) where {N, T} = MixedMatVRep{N, T}(v)
+MixedMatVRep{N, T}(v::VRep{N}) where {N, T} = MixedMatVRep{N, T, vmatrixtype(typeof(v), T)}(v)
 
 MixedMatVRep{N, T}(vits::VIt{N, T}...) where {N, T} = MixedMatVRep{N, T, Matrix{T}}(vits...) # FIXME required by CDD and LRS tests
 function MixedMatVRep{N, T, MT}(vits::VIt{N, T}...) where {N, T, MT}

@@ -75,9 +75,8 @@ hvectortype(::Type{LPHRepresentation{N, T, MT}}) where {N, T, MT} = vectortype(M
 similar_type(::Type{LPHRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = LPHRepresentation{N, T, similar_type(MT, T)}
 fulltype(::Type{LPHRepresentation{N, T, MT}}) where {N, T, MT} = LPHRepresentation{N, T, MT}
 
-_mattype(::Type{<:AbstractVector{T}}) where T = Matrix{T}
-_mattype(::Type{<:AbstractSparseVector{T}}) where T = SparseMatrixCSC{T, Int}
-LPHRepresentation(rep::HRep{N, T}) where {N, T} = LPHRepresentation{N, T, _mattype(hvectortype(typeof(rep)))}(rep)
+LPHRepresentation(h::HRep{N, T}) where {N, T} = LPHRepresentation{N, T}(h)
+LPHRepresentation{N, T}(h::HRep{N}) where {N, T} = LPHRepresentation{N, T, hmatrixtype(typeof(h), T)}(h)
 
 #function LPHRepresentation{N, T}(it::HRepIterator{N, T}) where {N,T}
 #    A = Matrix{T}(length(it), N)
