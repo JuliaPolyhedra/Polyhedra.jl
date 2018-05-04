@@ -209,6 +209,9 @@ end
 for ElT in (:HyperPlane, :HalfSpace, :Line, :Ray)
     @eval begin
         Base.promote_rule(::Type{$ElT{N, T, AT}}, ::Type{$ElT{N, T, AT}}) where {N, T, AT} = $ElT{N, T, AT}
+        # Allowing mixing e.g. sparse vector with vector would not be helpful as code meant
+        # to use sparse polyhedra would lose sparsity silently. Same thing for SVector
+        Base.promote_rule(::Type{$ElT{N, T, VT}}, ::Type{$ElT{N, T, WT}}) where {N, T, VT, WT} = error("Cannot mix Polyhedra elements of vector type $VT and $WT")
         function Base.promote_rule(::Type{$ElT{N, S, AS}}, ::Type{$ElT{N, T, AT}}) where {N, S, T, AS, AT}
             U = promote_type(S, T)
             promote_type($ElT{N, U, similar_type(AS, U)}, $ElT{N, U, similar_type(AT, U)})
