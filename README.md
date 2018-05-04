@@ -2,8 +2,8 @@
 
 | **Documentation** | **PackageEvaluator** | **Build Status** | **Social** | **References to cite** |
 |:-----------------:|:--------------------:|:----------------:|:----------:|:----------------------:|
-| [![][docs-stable-img]][docs-stable-url] | [![][pkg-0.5-img]][pkg-0.5-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
-| [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.6-img]][pkg-0.6-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
+| [![][docs-stable-img]][docs-stable-url] | [![][pkg-0.7-img]][pkg-0.7-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.7-img]][pkg-0.7-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
 
 [<img src="examples/drakeperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/drakeperm.jl)
 [<img src="examples/glvizperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/glvizperm.jl)
@@ -26,10 +26,10 @@ It defines the abstract type `Polyhedron` and splits the operations on this type
 [docs-stable-url]: https://juliapolyhedra.github.io/Polyhedra.jl/stable
 [docs-latest-url]: https://juliapolyhedra.github.io/Polyhedra.jl/latest
 
-[pkg-0.5-img]: http://pkg.julialang.org/badges/Polyhedra_0.5.svg
-[pkg-0.5-url]: http://pkg.julialang.org/?pkg=Polyhedra
 [pkg-0.6-img]: http://pkg.julialang.org/badges/Polyhedra_0.6.svg
 [pkg-0.6-url]: http://pkg.julialang.org/?pkg=Polyhedra
+[pkg-0.7-img]: http://pkg.julialang.org/badges/Polyhedra_0.7.svg
+[pkg-0.7-url]: http://pkg.julialang.org/?pkg=Polyhedra
 
 [build-img]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl.svg?branch=master
 [build-url]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl
