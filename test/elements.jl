@@ -43,4 +43,10 @@
         @test lift(Ray([2, 3])) == Ray([0, 2, 3])
         @test lift(Ray(@SVector [2, 3])) == Ray(@SVector [0, 2, 3])
     end
+    @testset "Promote" begin
+        @test promote_type(HyperPlane{2, Int, Vector{Int}}, HyperPlane{2, Float64, Vector{Float64}}) == HyperPlane{2, Float64, Vector{Float64}}
+        @test promote_type(HyperPlane{2, Float64, SVector{2, Float64}}, HyperPlane{2, Int, SVector{2, Int}}) == HyperPlane{2, Float64, SVector{2, Float64}}
+        @test_throws ErrorException promote_type(HyperPlane{2, Int, Vector{Int}}, HyperPlane{2, Int, SVector{2, Int}})
+        @test_throws ErrorException promote_type(HyperPlane{2, Int, Vector{Int}}, HyperPlane{2, Float64, SVector{2, Float64}})
+    end
 end
