@@ -35,12 +35,12 @@ end
 
 
 """
-    intersect!(p1::VRep, p2::VRep)
+    intersect!(p::HRep{N}, h::Union{HRepresentation{N}, HRepElement{N}})
 
-Same as [`intersect`](@ref) except that `p1` is modified to be equal to the intersection.
+Same as [`intersect`](@ref) except that `p` is modified to be equal to the intersection.
 """
-Base.intersect!(p::HRep{N}, ::HRepresentation{N}) where {N} = error("intersect! not implemented for $(typeof(p)). It probably does not support in-place modification, try `intersect` (without the `!`) instead.")
-function Base.intersect!(p::Polyhedron{N}, h::HRepresentation{N}) where N
+Base.intersect!(p::HRep{N}, ::Union{HRepresentation{N}, HRepElement{N}}) where {N} = error("intersect! not implemented for $(typeof(p)). It probably does not support in-place modification, try `intersect` (without the `!`) instead.")
+function Base.intersect!(p::Polyhedron{N}, h::Union{HRepresentation{N}, HRepElement{N}}) where N
     resethrep!(p, hrep(p) ∩ h)
 end
 

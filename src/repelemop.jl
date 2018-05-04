@@ -176,20 +176,20 @@ function _pushinout!(ins, out, pr::Union{AbstractPoint, Ray}, h::HalfSpace)
 end
 
 """
-    intersect(v::VRep{N, T}, h::HRepElement)
+    intersect(v::VRepresentation{N, T}, h::HRepElement)
 
 Compute the intersection of `v` with an halfspace or hyperplane `h`.
 The method used by default is to keep the V-representation element of `v`
 that are in `h` and add new ones generated as the intersection between
 the hyperplane defining `h` and the segment between two adjacent
 V-representation elements of `v` that are in either sides of the hyperplane.
-See Lemma 3 of [1] for more detail on the method.
+See Lemma 3 of [FP96] for more detail on the method.
 
-[1] Fukuda, K. and Prodon, A.
-Double description method revisited
+[FP96] Fukuda, K. and Prodon, A.
+**Double description method revisited**
 *Combinatorics and computer science*, *Springer*, **1996**, 91-111
 """
-function Base.intersect(v::VRep{N, T}, h::HRepElement) where {N, T}
+function Base.intersect(v::VRepresentation{N, T}, h::HRepElement) where {N, T}
     PointT = pointtype(v)
     pins = PointT[] # Inside
     pinp = PointT[] # In plane

@@ -85,14 +85,34 @@ function simplextest(lib::PolyhedraLibrary)
     @test sol.status == :Unbounded
     @test sol.attrs[:unboundedray] == [0, 1]
 
-    hcut = intersect(HyperPlane([1, 1], 1))
+    hcutel = HyperPlane([1, 1], 1)
+    hcut = intersect(hcutel)
     vcut = convexhull([1, 0]) + conichull(Line([1, -1]))
     @test !ininterior([1/2, 1/2], hcut)
     @test inrelativeinterior([1/2, 1/2], hcut)
-    intersect!(poly3, hcut)
+
+    poly4 = copy(poly3)
+
+    polycut3 = poly3 ∩ hcutel
+    @test dim(polycut3) == 1
+    inequality_fulltest(polycut3, hsim)
+    generator_fulltest(polycut3, vsim)
+    intersect!(poly3, hcutel)
     @test dim(poly3) == 1
     inequality_fulltest(poly3, hsim)
     generator_fulltest(poly3, vsim)
+
+    # It should not have been cut as it is a copy of poly3
+    @test dim(poly4) == 2
+
+    polycut4 = poly4 ∩ hcut
+    @test dim(polycut4) == 1
+    inequality_fulltest(polycut4, hsim)
+    generator_fulltest(polycut4, vsim)
+    intersect!(poly4, hcut)
+    @test dim(poly4) == 1
+    inequality_fulltest(poly4, hsim)
+    generator_fulltest(poly4, vsim)
 
     # FIXME needs float currently but should be updated
     # poly4 = project(poly1, [1; 0])
