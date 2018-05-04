@@ -58,6 +58,9 @@ Intersection(hyperplanes::ElemIt{HyperPlane{N, T, AT}}, halfspaces::ElemIt{HalfS
 hvectortype(::Type{Intersection{N, T, AT}}) where {N, T, AT} = AT
 similar_type(PT::Type{<:Intersection}, d::FullDim{N}, ::Type{T}) where {N, T} = Intersection{N, T, similar_type(hvectortype(PT), d, T)}
 
+Intersection(h::HRepresentation{N, T}) where {N, T} = Intersection{N, T}(h)
+Intersection{N, T}(h::HRepresentation{N}) where {N, T} = Intersection{N, T, similar_type(hvectortype(typeof(h)), T)}(h)
+
 @subrepelem Intersection HyperPlane hyperplanes
 @vecrepelem Intersection HalfSpace halfspaces
 
@@ -217,6 +220,9 @@ function Hull(points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ra
 end
 vvectortype(::Type{Hull{N, T, AT}}) where {N, T, AT} = AT
 similar_type(PT::Type{<:Hull}, d::FullDim{N}, ::Type{T}) where {N, T} = Hull{N, T, similar_type(vvectortype(PT), d, T)}
+
+Hull(v::VRepresentation{N, T}) where {N, T} = Hull{N, T}(v)
+Hull{N, T}(v::VRepresentation{N}) where {N, T} = Hull{N, T, similar_type(vvectortype(typeof(v)), T)}(v)
 
 @subrepelem Hull Point points
 @subrepelem Hull Line rays

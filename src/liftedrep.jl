@@ -25,9 +25,9 @@ hvectortype(p::Type{LiftedHRepresentation{N, T, MT}}) where {N, T, MT} = vectort
 LiftedHRepresentation{N, T}(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where {N, T} = LiftedHRepresentation{N, T, typeof(A)}(A, linset)
 LiftedHRepresentation{N, T}(A::AbstractMatrix, linset::IntSet=IntSet()) where {N, T} = LiftedHRepresentation{N, T}(AbstractMatrix{T}(A), linset)
 LiftedHRepresentation(A::AbstractMatrix{T}, linset::IntSet=IntSet()) where T = LiftedHRepresentation{size(A, 2) - 1, T}(A, linset)
-function LiftedHRepresentation(h::HRepresentation{N, T}) where {N, T}
-    LiftedHRepresentation{N, T, hvectortype(typeof(h)) <: AbstractSparseVector ? SparseMatrixCSC{T, Int} : Matrix{T}}(h)
-end
+
+LiftedHRepresentation(h::HRepresentation{N, T}) where {N, T} = LiftedHRepresentation{N, T}(h)
+LiftedHRepresentation{N, T}(h::HRepresentation{N}) where {N, T} = LiftedHRepresentation{N, T, hmatrixtype(typeof(h), T)}(h)
 
 function LiftedHRepresentation{N, T, MT}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T, MT}
     nhyperplane = length(hyperplanes)
@@ -74,7 +74,9 @@ vvectortype(p::Type{LiftedVRepresentation{N, T, MT}}) where {N, T, MT} = vectort
 LiftedVRepresentation{N, T}(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where {N, T} = LiftedVRepresentation{N, T, typeof(R)}(R, linset)
 LiftedVRepresentation{N, T}(R::AbstractMatrix, linset::IntSet=IntSet()) where {N, T} = LiftedVRepresentation{N, T}(AbstractMatrix{T}(R), linset)
 LiftedVRepresentation(R::AbstractMatrix{T}, linset::IntSet=IntSet()) where T = LiftedVRepresentation{size(R, 2) - 1, T}(R, linset)
-LiftedVRepresentation(v::VRepresentation{N,T}) where {N, T} = LiftedVRepresentation{N, T, Matrix{T}}(v)
+
+LiftedVRepresentation(v::VRepresentation{N, T}) where {N, T} = LiftedVRepresentation{N, T}(v)
+LiftedVRepresentation{N, T}(v::VRepresentation{N}) where {N, T} = LiftedVRepresentation{N, T, vmatrixtype(typeof(v), T)}(v)
 
 function LiftedVRepresentation{N, T, MT}(vits::VIt{N, T}...) where {N, T, MT}
     points, lines, rays = fillvits(FullDim{N}(), vits...)
