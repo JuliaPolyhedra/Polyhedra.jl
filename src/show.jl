@@ -91,7 +91,7 @@ _has_vrep(p::Polyhedron) = vrepiscomputed(p)
 
 function Base.show(io::IO, rep::Rep)
     first = show_hreps(io, rep, "", " ∩ ", false, "", "", " ∩")
-    if !first && _has_vrep(rep)
+    if _has_vrep(rep) && !first
         print(io, " : ")
     end
     show_vreps(io, rep, "", " + ", false, "convexhull(", ")")
