@@ -66,18 +66,22 @@ function show_reps(io::IO, args::Tuple, start_str::String, join_str::String, fir
     show_reps(io::IO, args, start_str, join_str, first, reps...)
 end
 
-function show_vreps(io::IO, rep::HRepresentation, start_str::String, join_str::String, args...) end
+show_vreps(io::IO, rep::HRepresentation, start_str::String, join_str::String, args...) = true
 show_vreps(io::IO, rep::VRepresentation, start_str::String, join_str::String, args...) = show_reps(io, args, start_str, join_str, true, vreps(rep)...)
 function show_vreps(io::IO, rep::Polyhedron, start_str::String, join_str::String, args...)
     if vrepiscomputed(rep)
         show_reps(io, args, start_str, join_str, true, vreps(rep)...)
+    else
+        true
     end
 end
-function show_hreps(io::IO, rep::VRepresentation, start_str::String, join_str::String, args...) end
+show_hreps(io::IO, rep::VRepresentation, start_str::String, join_str::String, args...) = true
 show_hreps(io::IO, rep::HRepresentation, start_str::String, join_str::String, args...) = show_reps(io, args, start_str, join_str, true, hreps(rep)...)
 function show_hreps(io::IO, rep::Polyhedron, start_str::String, join_str::String, args...)
     if hrepiscomputed(rep)
         show_reps(io, args, start_str, join_str, true, hreps(rep)...)
+    else
+        true
     end
 end
 
@@ -85,13 +89,9 @@ _has_vrep(p::VRepresentation) = true
 _has_vrep(p::HRepresentation) = false
 _has_vrep(p::Polyhedron) = vrepiscomputed(p)
 
-_has_hrep(p::VRepresentation) = false
-_has_hrep(p::HRepresentation) = true
-_has_hrep(p::Polyhedron) = hrepiscomputed(p)
-
 function Base.show(io::IO, rep::Rep)
-    show_hreps(io, rep, "", " ∩ ", false, "", "", " ∩")
-    if _has_vrep(rep) && _has_hrep(rep)
+    first = show_hreps(io, rep, "", " ∩ ", false, "", "", " ∩")
+    if !first && _has_vrep(rep)
         print(io, " : ")
     end
     show_vreps(io, rep, "", " + ", false, "convexhull(", ")")

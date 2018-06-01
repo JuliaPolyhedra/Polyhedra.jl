@@ -2,7 +2,17 @@
 replstr(x, lim=true) = sprint((io,x) -> show(IOContext(io, :limit => lim, :displaysize => (24, 80)), MIME("text/plain"), x), x)
 showstr(x) = sprint((io,x) -> show(IOContext(io, :limit => true, :displaysize => (24, 80)), x), x)
 
+macro test_show(expr)
+    esc(quote
+            @test string($expr) == "$($expr)"
+    end)
+end
+
 @testset "Show" begin
+    @testset "Simple show" begin
+        @test_show convexhull([1, 0]) + convexhull(Line([1, 1]))
+        @test_show HyperPlane([1, 0], 0) ∩ HyperPlane([0, 1], 0) ∩ HalfSpace([1, 1], 1)
+    end
     vshort = vrep([[i, -i] for i in 1:3])
     vlong = vrep([[i, -i] for i in 1:30])
     @testset "Iterator" begin
