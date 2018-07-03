@@ -59,10 +59,10 @@ end
 
 Returns a default linear programming solver for the polyhedron `p` (e.g. CDD has an internal solver which is used by default).
 """
-default_solver(p::Rep) = JuMP.UnsetSolver()
+default_solver(p::Rep) = nothing
 function default_solver(p::Rep, ps::Rep...)
     s = default_solver(p)
-    if s === nothing || s isa JuMP.UnsetSolver
+    if s === nothing
         default_solver(ps...)
     else
         s

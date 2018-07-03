@@ -2,6 +2,8 @@ __precompile__()
 
 module Polyhedra
 
+using Compat
+
 using GeometryTypes
 
 using MultivariatePolynomials
@@ -16,6 +18,9 @@ using StaticArrays.FixedSizeArrays: FixedVector
 
 using MathProgBase
 const MPB = MathProgBase
+
+using MathOptInterface
+const MOI = MathOptInterface
 
 # Similar to StaticArrays.Size
 struct FullDim{N}

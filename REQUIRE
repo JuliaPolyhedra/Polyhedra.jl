@@ -2,6 +2,6 @@ julia 0.6
 GeometryTypes 0.4
 StaticArrays 0.5
 MultivariatePolynomials 0.1.1
-MathProgBase 0.5.10 0.8
-JuMP 0.16
+MathOptInterface
+JuMP 0.19
 RecipesBase 0.2
