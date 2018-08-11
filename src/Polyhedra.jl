@@ -14,8 +14,9 @@ abstract type Polyhedron{N,T} <: GeometryPrimitive{N,T} end
 using StaticArrays
 using StaticArrays.FixedSizeArrays: FixedVector
 
-using MathProgBase
+import MathProgBase
 const MPB = MathProgBase
+const MPBSI = MPB.SolverInterface
 
 using Nullables
 
@@ -106,7 +107,6 @@ include("interval.jl") # 1D polyhedron
 include("simplepolyhedron.jl")
 
 # Optimization
-importall MathProgBase.SolverInterface
 include("opt.jl")
 include("lpqp_to_polyhedra.jl")
 include("polyhedra_to_lpqp.jl")

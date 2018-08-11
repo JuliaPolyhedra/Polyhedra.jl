@@ -5,7 +5,7 @@
 
 # Cheating a bit here
 #PolyhedraModel(s::MathProgbase.AbstractMathProgSolver) = LPQPtoPolyhedraBridge(LinearQuadraticModel(s))
-PolyhedraModel(s) = LPQPtoPolyhedraBridge(LinearQuadraticModel(s))
+PolyhedraModel(s) = LPQPtoPolyhedraBridge(MPBSI.LinearQuadraticModel(s))
 
 struct LPQPtoPolyhedraBridge <: AbstractPolyhedraModel
     lpqpmodel::MPB.AbstractLinearQuadraticModel
@@ -19,11 +19,11 @@ LPQPtoPolyhedraBridge(m::MPB.AbstractLinearQuadraticModel) = LPQPtoPolyhedraBrid
 export LPQPtoPolyhedraBridge
 
 # To transform Polyhedra problems into LinearQuadratic problems
-function loadproblem!(m::LPQPtoPolyhedraBridge, rep::HRep, c, sense)
+function MPBSI.loadproblem!(m::LPQPtoPolyhedraBridge, rep::HRep, c, sense)
     lp = LPHRepresentation(rep)
     loadproblem!(m.lpqpmodel, lp.A, lp.l, lp.u, c, lp.lb, lp.ub, sense)
 end
 
-for f in [:optimize!, :status, :getsolution, :getobjval, :getreducedcost, :getconstrduals]
-    @eval $f(model::LPQPtoPolyhedraBridge) = $f(model.lpqpmodel)
+for f in [:optimize!, :status, :getsolution, :getobjval, :getreducedcosts, :getconstrduals]
+    @eval MPBSI.$f(model::LPQPtoPolyhedraBridge) = MPBSI.$f(model.lpqpmodel)
 end

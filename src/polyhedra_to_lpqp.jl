@@ -25,7 +25,7 @@ export PolyhedraToLPQPBridge
 # st  lb <= Ax <= ub
 #      l <=  x <= u
 # where sense = :Min or :Max
-function loadproblem!(wrap::PolyhedraToLPQPBridge, A, collb, colub, obj, rowlb, rowub, sense)
+function MPBSI.loadproblem!(wrap::PolyhedraToLPQPBridge, A, collb, colub, obj, rowlb, rowub, sense)
     wrap.A = A
     wrap.collb = collb
     wrap.colub = colub
@@ -35,7 +35,7 @@ function loadproblem!(wrap::PolyhedraToLPQPBridge, A, collb, colub, obj, rowlb, 
     wrap.sense = sense
 end
 
-function addquadconstr!(wrap::PolyhedraToLPQPBridge, linearidx, linearval, quadrowidx, quadcolidx, quadval, sense, rhs)
+function MPBSI.addquadconstr!(wrap::PolyhedraToLPQPBridge, linearidx, linearval, quadrowidx, quadcolidx, quadval, sense, rhs)
     error("For polyhedra solvers, no quadratic constraint is supported")
 end
 
@@ -88,7 +88,7 @@ function computeoffsets(lp::LPHRepresentation)
     coloffset, rowoffset
 end
 
-function optimize!(wrap::PolyhedraToLPQPBridge)
+function MPBSI.optimize!(wrap::PolyhedraToLPQPBridge)
     A = wrap.A
     collb = wrap.collb
     colub = wrap.colub
@@ -105,11 +105,11 @@ function optimize!(wrap::PolyhedraToLPQPBridge)
     optimize!(wrap.m)
 end
 
-getsolution(wrap::PolyhedraToLPQPBridge) = getsolution(wrap.m)
-status(wrap::PolyhedraToLPQPBridge) = status(wrap.m)
-getobjval(wrap::PolyhedraToLPQPBridge) = getobjval(wrap.m)
+MPBSI.getsolution(wrap::PolyhedraToLPQPBridge) = getsolution(wrap.m)
+MPBSI.status(wrap::PolyhedraToLPQPBridge) = status(wrap.m)
+MPBSI.getobjval(wrap::PolyhedraToLPQPBridge) = getobjval(wrap.m)
 
-function getconstrsolution(wrap::PolyhedraToLPQPBridge)
+function MPBSI.getconstrsolution(wrap::PolyhedraToLPQPBridge)
     m = length(wrap.rowoffset)
     constrsol = getconstrsolution(wrap.m)
     map(offset -> sign(offset[1]) * constrsol[abs(offset[1])], wrap.rowoffset)
@@ -127,47 +127,47 @@ function getdualsaux(wrap::PolyhedraToLPQPBridge, offsets)
     duals
 end
 
-function getreducedcosts(wrap::PolyhedraToLPQPBridge)
+function MPBSI.getreducedcosts(wrap::PolyhedraToLPQPBridge)
     getdualsaux(wrap, wrap.coloffset)
 end
 
-function getconstrduals(wrap::PolyhedraToLPQPBridge)
+function MPBSI.getconstrduals(wrap::PolyhedraToLPQPBridge)
     getdualsaux(wrap, wrap.rowoffset)
 end
 
-numconstr(wrap::PolyhedraToLPQPBridge) = size(wrap.A, 1)
-numvar(wrap::PolyhedraToLPQPBridge) = size(wrap.A, 2)
-getvarLB(wrap::PolyhedraToLPQPBridge) = wrap.collb
-getvarUB(wrap::PolyhedraToLPQPBridge) = wrap.colub
-getconstrLB(wrap::PolyhedraToLPQPBridge) = wrap.rowlb
-getconstrUB(wrap::PolyhedraToLPQPBridge) = wrap.rowub
-getobj(wrap::PolyhedraToLPQPBridge) = wrap.obj
-getsense(wrap::PolyhedraToLPQPBridge) = wrap.sense
-function setvarLB!(wrap::PolyhedraToLPQPBridge, l)
+MPBSI.numconstr(wrap::PolyhedraToLPQPBridge) = size(wrap.A, 1)
+MPBSI.numvar(wrap::PolyhedraToLPQPBridge) = size(wrap.A, 2)
+MPBSI.getvarLB(wrap::PolyhedraToLPQPBridge) = wrap.collb
+MPBSI.getvarUB(wrap::PolyhedraToLPQPBridge) = wrap.colub
+MPBSI.getconstrLB(wrap::PolyhedraToLPQPBridge) = wrap.rowlb
+MPBSI.getconstrUB(wrap::PolyhedraToLPQPBridge) = wrap.rowub
+MPBSI.getobj(wrap::PolyhedraToLPQPBridge) = wrap.obj
+MPBSI.getsense(wrap::PolyhedraToLPQPBridge) = wrap.sense
+function MPBSI.setvarLB!(wrap::PolyhedraToLPQPBridge, l)
     wrap.collb = l
 end
-function setvarUB!(wrap::PolyhedraToLPQPBridge, u)
+function MPBSI.setvarUB!(wrap::PolyhedraToLPQPBridge, u)
     wrap.colub = u
 end
-function setconstrLB!(wrap::PolyhedraToLPQPBridge, lb)
+function MPBSI.setconstrLB!(wrap::PolyhedraToLPQPBridge, lb)
     wrap.rowlb = lb
 end
-function setconstrUB!(wrap::PolyhedraToLPQPBridge, ub)
+function MPBSI.setconstrUB!(wrap::PolyhedraToLPQPBridge, ub)
     wrap.rowub = ub
 end
-function setobj!(wrap::PolyhedraToLPQPBridge, obj)
+function MPBSI.setobj!(wrap::PolyhedraToLPQPBridge, obj)
     wrap.obj = obj
 end
-function setsense!(wrap::PolyhedraToLPQPBridge, sense)
+function MPBSI.setsense!(wrap::PolyhedraToLPQPBridge, sense)
     wrap.sense = sense
 end
-function addvar!(wrap::PolyhedraToLPQPBridge, constridx::AbstractArray{T}, constrcoef, l, u, objcoef) where T<:Integer
+function MPBSI.addvar!(wrap::PolyhedraToLPQPBridge, constridx::AbstractArray{T}, constrcoef, l, u, objcoef) where T<:Integer
     wrap.A = [wrap.A sparsevec(constridx, constrcoef, size(wrap.A, 1))]
     push!(wrap.collb, l)
     push!(wrap.colub, u)
     push!(wrap.obj, objcoef)
 end
-function addconstr!(wrap::PolyhedraToLPQPBridge, varidx::AbstractArray{T}, coef, lb, ub) where T<:Integer
+function MPBSI.addconstr!(wrap::PolyhedraToLPQPBridge, varidx::AbstractArray{T}, coef, lb, ub) where T<:Integer
     wrap.A = [wrap.A; sparsevec(varidx, coef, size(wrap.A, 2))']
     push!(wrap.rowlb, lb)
     push!(wrap.rowub, ub)
