@@ -27,15 +27,15 @@ function MPB.linprog(c::AbstractVector, p::Rep{N}, solver::MPB.AbstractMathProgS
     if N != length(c)
         throw(DimensionMismatch("length of objective does not match dimension of polyhedron"))
     end
-    loadproblem!(m, p, c, :Min)
-    optimize!(m)
-    stat = status(m)
+    MPBSI.loadproblem!(m, p, c, :Min)
+    MPBSI.optimize!(m)
+    stat = MPBSI.status(m)
     if stat == :Optimal
-        return LinprogSolution(stat, getobjval(m), getsolution(m), Dict())
+        return LinprogSolution(stat, MPBSI.getobjval(m), MPBSI.getsolution(m), Dict())
     elseif stat == :Unbounded
         attrs = Dict()
         try
-            attrs[:unboundedray] = getunboundedray(m)
+            attrs[:unboundedray] = MPBSI.getunboundedray(m)
         catch
             warn("Problem is unbounded, but unbounded ray is unavailable; check that the proper solver options are set.")
         end
@@ -51,5 +51,5 @@ end
 Check whether the polyhedron `p` is empty by using the solver `solver`.
 """
 function Base.isempty(p::Rep{N, T}, solver::MPB.AbstractMathProgSolver=Polyhedra.solver(p)) where {N, T}
-    linprog(zeros(T, N), p, solver).status == :Infeasible
+    MPB.linprog(zeros(T, N), p, solver).status == :Infeasible
 end

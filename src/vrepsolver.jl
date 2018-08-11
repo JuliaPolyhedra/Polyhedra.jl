@@ -23,9 +23,9 @@ mutable struct VRepPolyhedraModel <: AbstractPolyhedraModel
 end
 
 PolyhedraModel(::VRepSolver) = VRepPolyhedraModel()
-LinearQuadraticModel(s::VRepSolver) = PolyhedraToLPQPBridge(PolyhedraModel(s))
+MPBSI.LinearQuadraticModel(s::VRepSolver) = PolyhedraToLPQPBridge(PolyhedraModel(s))
 
-function loadproblem!(lpm::VRepPolyhedraModel, vrep::VRep, obj, sense)
+function MPBSI.loadproblem!(lpm::VRepPolyhedraModel, vrep::VRep, obj, sense)
     if !(sense in [:Max, :Min])
         error("sense should be :Max or :Min")
     end
@@ -38,7 +38,7 @@ function loadproblem!(lpm::VRepPolyhedraModel, vrep::VRep, obj, sense)
     end
 end
 
-function optimize!(lpm::VRepPolyhedraModel)
+function MPBSI.optimize!(lpm::VRepPolyhedraModel)
     if isnull(lpm.vrep)
         error("No problem loaded")
     end
@@ -64,7 +64,7 @@ function optimize!(lpm::VRepPolyhedraModel)
                 lpm.status = :Unbounded
                 lpm.objval = lpm.sense == :Max ? typemax(T) : typemin(T)
             end
-            if status != :Unbounded
+            if lpm.status != :Unbounded
                 for p in points(prob)
                     objval = get(lpm.obj) ⋅ p
                     if lpm.status == :Undecided || better(objval, get(lpm.objval))
