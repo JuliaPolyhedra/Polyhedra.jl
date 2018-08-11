@@ -101,7 +101,7 @@ function _hinv(h::HRepElement{N}, vr::VRep{N}) where N
 end
 function _hinh(h::HalfSpace{N}, hr::HRep{N}, solver) where N
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
-    sol = linprog(-h.a, hr, solver)
+    sol = MPB.linprog(-h.a, hr, solver)
     if sol.status == :Unbounded
         false
     elseif sol.status == :Infeasible

@@ -101,7 +101,7 @@ function MPBSI.optimize!(wrap::PolyhedraToLPQPBridge)
 
     lp = LPHRepresentation(A, collb, colub, rowlb, rowub)
     wrap.coloffset, wrap.rowoffset = computeoffsets(lp)
-    loadproblem!(wrap.m, lp, obj, wrap.sense)
+    MPBSI.loadproblem!(wrap.m, lp, obj, wrap.sense)
     optimize!(wrap.m)
 end
 

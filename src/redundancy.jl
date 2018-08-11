@@ -178,7 +178,7 @@ end
 
 # H-redundancy
 #function ishredundantaux(p::HRep, a, β, strongly, solver)
-#    sol = linprog(-a, p, solver)
+#    sol = MPB.linprog(-a, p, solver)
 #    if sol.status == :Unbounded
 #        false
 #    elseif sol.status == :Optimal
