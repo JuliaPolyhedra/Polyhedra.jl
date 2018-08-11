@@ -64,7 +64,7 @@ function MPBSI.optimize!(lpm::VRepPolyhedraModel)
                 lpm.status = :Unbounded
                 lpm.objval = lpm.sense == :Max ? typemax(T) : typemin(T)
             end
-            if status != :Unbounded
+            if lpm.status != :Unbounded
                 for p in points(prob)
                     objval = get(lpm.obj) ⋅ p
                     if lpm.status == :Undecided || better(objval, get(lpm.objval))
