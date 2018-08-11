@@ -102,23 +102,23 @@ function MPBSI.optimize!(wrap::PolyhedraToLPQPBridge)
     lp = LPHRepresentation(A, collb, colub, rowlb, rowub)
     wrap.coloffset, wrap.rowoffset = computeoffsets(lp)
     MPBSI.loadproblem!(wrap.m, lp, obj, wrap.sense)
-    optimize!(wrap.m)
+    MPBSI.optimize!(wrap.m)
 end
 
-MPBSI.getsolution(wrap::PolyhedraToLPQPBridge) = getsolution(wrap.m)
-MPBSI.status(wrap::PolyhedraToLPQPBridge) = status(wrap.m)
-MPBSI.getobjval(wrap::PolyhedraToLPQPBridge) = getobjval(wrap.m)
+MPBSI.getsolution(wrap::PolyhedraToLPQPBridge) = MPBSI.getsolution(wrap.m)
+MPBSI.status(wrap::PolyhedraToLPQPBridge) = MPBSI.status(wrap.m)
+MPBSI.getobjval(wrap::PolyhedraToLPQPBridge) = MPBSI.getobjval(wrap.m)
 
 function MPBSI.getconstrsolution(wrap::PolyhedraToLPQPBridge)
     m = length(wrap.rowoffset)
-    constrsol = getconstrsolution(wrap.m)
+    constrsol = MPBSI.getconstrsolution(wrap.m)
     map(offset -> sign(offset[1]) * constrsol[abs(offset[1])], wrap.rowoffset)
 end
 
 function getdualsaux(wrap::PolyhedraToLPQPBridge, offsets)
     l = length(offsets)
     duals = zeros(Float64, l)
-    constrduals = getconstrduals(wrap.m)
+    constrduals = MPBSI.getconstrduals(wrap.m)
     for i in 1:l
         for offset in offsets[i]
             duals[i] = sign(offset) * constrduals[abs(offset)]
