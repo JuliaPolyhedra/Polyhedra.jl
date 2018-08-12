@@ -18,21 +18,21 @@ similar_library(lib::SimplePolyhedraLibrary, d::FullDim, ::Type{T}) where T = de
 mutable struct SimplePolyhedron{N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}} <: Polyhedron{N, T}
     hrep::Nullable{HRepT}
     vrep::Nullable{VRepT}
-    solver::MPB.AbstractMathProgSolver
-    function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::Union{HRepT, Nothing}, vrep::Union{VRepT, Nothing}, solver::MPB.AbstractMathProgSolver) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
+    solver::Union{Nothing, MPB.AbstractMathProgSolver}
+    function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::Union{HRepT, Nothing}, vrep::Union{VRepT, Nothing}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
         new{N, T, HRepT, VRepT}(hrep, vrep, solver)
     end
 end
-function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::HRepT, solver::MPB.AbstractMathProgSolver) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
+function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::HRepT, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
     SimplePolyhedron{N, T, HRepT, VRepT}(hrep, nothing, solver)
 end
-function SimplePolyhedron{N, T, HRepT, VRepT}(vrep::VRepT, solver::MPB.AbstractMathProgSolver) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
+function SimplePolyhedron{N, T, HRepT, VRepT}(vrep::VRepT, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
     SimplePolyhedron{N, T, HRepT, VRepT}(nothing, vrep, solver)
 end
-function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::HRepresentation{N}, solver::MPB.AbstractMathProgSolver) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
+function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::HRepresentation{N}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
     SimplePolyhedron{N, T, HRepT, VRepT}(HRepT(hrep), solver)
 end
-function SimplePolyhedron{N, T, HRepT, VRepT}(vrep::VRepresentation{N}, solver::MPB.AbstractMathProgSolver) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
+function SimplePolyhedron{N, T, HRepT, VRepT}(vrep::VRepresentation{N}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
     SimplePolyhedron{N, T, HRepT, VRepT}(VRepT(vrep), solver)
 end
 
@@ -53,13 +53,13 @@ function SimplePolyhedron{N, T, HRepT, VRepT}(vits::VIt...; solver=nothing) wher
 end
 
 # Need fulltype in case the use does `intersect!` with another element
-SimplePolyhedron{N, T}(rep::Representation{N}, solver::MPB.AbstractMathProgSolver) where {N, T} = SimplePolyhedron{N, T}(MultivariatePolynomials.changecoefficienttype(rep, T), solver)
-function SimplePolyhedron{N, T}(rep::HRepresentation{N, T}, solver::MPB.AbstractMathProgSolver) where {N, T}
+SimplePolyhedron{N, T}(rep::Representation{N}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {N, T} = SimplePolyhedron{N, T}(MultivariatePolynomials.changecoefficienttype(rep, T), solver)
+function SimplePolyhedron{N, T}(rep::HRepresentation{N, T}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {N, T}
     HRepT = fulltype(typeof(rep))
     VRepT = dualtype(HRepT)
     SimplePolyhedron{N, T, HRepT, VRepT}(rep, solver)
 end
-function SimplePolyhedron{N, T}(rep::VRepresentation{N, T}, solver::MPB.AbstractMathProgSolver) where {N, T}
+function SimplePolyhedron{N, T}(rep::VRepresentation{N, T}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {N, T}
     VRepT = fulltype(typeof(rep))
     HRepT = dualtype(VRepT)
     SimplePolyhedron{N, T, HRepT, VRepT}(rep, solver)
