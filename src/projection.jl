@@ -48,10 +48,10 @@ eliminate(p::Polyhedron, delset, ::FourierMotzkin)     = error("Fourier-Motzkin 
 supportselimination(p::Polyhedron, ::BlockElimination) = false
 eliminate(p::Polyhedron, delset, ::BlockElimination)   = error("Block elimination not implemented for $(typeof(p))")
 
-eliminate(p::Polyhedron{N}, algo::EliminationAlgorithm) where {N} = eliminate(p, IntSet(N), algo)
+eliminate(p::Polyhedron{N}, algo::EliminationAlgorithm) where {N} = eliminate(p, BitSet(N), algo)
 
 # eliminate the last dimension by default
-eliminate(p::Polyhedron{N}, delset=IntSet(N)) where N = eliminate(p, delset, DefaultElimination())
+eliminate(p::Polyhedron{N}, delset=BitSet(N)) where N = eliminate(p, delset, DefaultElimination())
 
 function eliminate(p::Polyhedron{N}, delset, ::DefaultElimination) where N
     fm = supportselimination(p, FourierMotzkin())
@@ -67,8 +67,8 @@ function eliminate(p::Polyhedron{N}, delset, ::DefaultElimination) where N
 end
 
 function eliminate(p::Polyhedron{N}, delset, ::ProjectGenerators) where N
-    I = eye(Int, N)
-    Iproj = I[collect(setdiff(IntSet(1:N), delset)),:]
+    Id = Matrix(1I, N, N)
+    Iproj = Id[collect(setdiff(BitSet(1:N), delset)),:]
     Iproj * p
 end
 
@@ -99,18 +99,18 @@ function project(p::Polyhedron{N,T}, P::AbstractMatrix) where {N,T}
     else
         # For the rest, we take the canonical basis and we look at
         # I - Proj * I
-        I = eye(Float64, N)
-        R = I - Proj
+        Id = Matrix(1.0I, N, N)
+        R = Id - Proj
         # We take the n-m that have highest norm
         order = sortperm([dot(R[:,i], R[:,i]) for i in 1:N])
-        R = I[:,order[m+1:N]]
+        R = Id[:,order[m+1:N]]
         for i in 1:N-m
             R[:,i] = normalize(R[:,i] - Proj * R[:,i])
             Proj += R[:,i] * R[:,i]'
         end
         basis = [Q R]
     end
-    eliminate(basis \ p, IntSet(m+1:N))
+    eliminate(basis \ p, BitSet(m+1:N))
 end
 
 _fixelim(h::ElemT, I, J, v, dout::FullDim) where ElemT<:HRepElement = similar_type(ElemT, dout)(h.a[J], h.β - dot(h.a[I], v))

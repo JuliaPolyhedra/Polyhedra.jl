@@ -116,7 +116,7 @@ function simplextest(lib::PolyhedraLibrary)
 
     # FIXME needs float currently but should be updated
     # poly4 = project(poly1, [1; 0])
-    # inequality_fulltest(poly4, [-1; 1], [0, 1], IntSet())
+    # inequality_fulltest(poly4, [-1; 1], [0, 1], BitSet())
     # generator_fulltest(poly4, [0; 1], [])
 
     #\
@@ -130,11 +130,11 @@ function simplextest(lib::PolyhedraLibrary)
     inequality_fulltest(plin, hcut)
     generator_fulltest(plin, vcut)
     #ineout = hrep(plin)
-    #@test linset(ineout) == IntSet(1)
+    #@test linset(ineout) == BitSet(1)
     vlin = convexhull([1, 0]) + conichull([1, -1], [-1, 1])
     plin = polyhedron(vlin, lib)
     inequality_fulltest(plin, hcut)
     generator_fulltest(plin, vcut)
     #extout = vrep(plin)
-    #@test linset(extout) == IntSet(1)
+    #@test linset(extout) == BitSet(1)
 end

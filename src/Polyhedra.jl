@@ -2,6 +2,10 @@ __precompile__()
 
 module Polyhedra
 
+using Compat
+using Compat.SparseArrays
+using Compat.LinearAlgebra
+
 using GeometryTypes
 
 using MultivariatePolynomials
@@ -28,9 +32,12 @@ struct FullDim{N}
 end
 fulldim(::FullDim{N}) where N = N
 Base.:+(d1::FullDim{N1}, d2::FullDim{N2}) where {N1, N2} = FullDim{N1+N2}()
-
 FullDim(v::AbstractVector) = FullDim{length(v)}()
 FullDim(::Union{StaticArrays.SVector{N}, Type{<:StaticArrays.SVector{N}}}) where N = FullDim{N}()
+if VERSION >= v"0.7-"
+    Base.broadcastable(fd::FullDim) = Ref(fd)
+end
+
 MultivariatePolynomials.coefficienttype(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
 similar_type(::Type{<:Vector}, ::FullDim, ::Type{T}) where T = Vector{T}
 similar_type(::Type{SparseVector{S, IT}}, ::FullDim, ::Type{T}) where {S, IT, T} = SparseVector{T, IT}
@@ -44,7 +51,7 @@ end
 similar_type(::Type{<:Point}, ::FullDim{N}, ::Type{T}) where {N, T} = Point{N,T}
 similar_type(::Type{<:Vec}, ::FullDim{N}, ::Type{T}) where {N, T} = Vec{N,T}
 
-emptymatrix(::Type{MT}, m, n) where {MT<:AbstractMatrix} = MT(m, n)
+emptymatrix(::Type{MT}, m, n) where {MT<:AbstractMatrix} = MT(undef, m, n)
 emptymatrix(::Type{SparseMatrixCSC{T, Int}}, m, n) where T = spzeros(T, m, n)
 similar_type(::Type{<:Matrix}, ::Type{T}) where T = Matrix{T}
 similar_type(::Type{SparseMatrixCSC{S, I}}, ::Type{T}) where {S, I, T} = SparseMatrixCSC{T, I}

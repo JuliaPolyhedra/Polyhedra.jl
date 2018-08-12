@@ -59,10 +59,10 @@ end
 
 Returns a default linear programming solver for the polyhedron `p` (e.g. CDD has an internal solver which is used by default).
 """
-default_solver(p::Rep) = JuMP.UnsetSolver()
+default_solver(p::Rep) = nothing
 function default_solver(p::Rep, ps::Rep...)
     s = default_solver(p)
-    if s === nothing || s isa JuMP.UnsetSolver
+    if s === nothing
         default_solver(ps...)
     else
         s
@@ -99,12 +99,11 @@ supportssolver(::Type{<:Rep}) = false
 function constructpolyhedron(RepT::Type{<:Rep{N, T}}, p::Tuple{Vararg{Rep}}, it::It{N, T}...) where {N, T}
     if supportssolver(RepT)
         solver = default_solver(p...)
-        if solver !== nothing && !(solver isa JuMP.UnsetSolver)
+        if solver !== nothing
             return RepT(it..., solver=solver)
         end
     end
     RepT(it...)::RepT # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
-
 end
 
 function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim{N}, ::Type{T}, it::It{N, T}...) where {N, T}

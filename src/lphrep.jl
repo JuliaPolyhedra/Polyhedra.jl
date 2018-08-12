@@ -7,14 +7,14 @@ mutable struct LPHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
     A::MT
     l::AbstractVector{T}
     u::AbstractVector{T}
-    colleqs::IntSet
-    colgeqs::IntSet
-    coleqs::IntSet
+    colleqs::BitSet
+    colgeqs::BitSet
+    coleqs::BitSet
     lb::AbstractVector{T}
     ub::AbstractVector{T}
-    rowleqs::IntSet
-    rowgeqs::IntSet
-    roweqs::IntSet
+    rowleqs::BitSet
+    rowgeqs::BitSet
+    roweqs::BitSet
 
     function LPHRepresentation{N, T, MT}(A::MT, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {N, T, MT<:AbstractMatrix{T}}
         if length(l) != length(u) || size(A, 2) != length(l)
@@ -26,9 +26,9 @@ mutable struct LPHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
         if size(A, 2) != N
             throw(DimensionMismatch("Type dimension does not match the number of rows of A"))
         end
-        colleqs = IntSet()
-        colgeqs = IntSet()
-        coleqs = IntSet()
+        colleqs = BitSet()
+        colgeqs = BitSet()
+        coleqs = BitSet()
         for i in 1:N
             leq = u[i] < typemax(T)
             geq = l[i] > typemin(T)
@@ -43,9 +43,9 @@ mutable struct LPHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
                 end
             end
         end
-        rowleqs = IntSet()
-        rowgeqs = IntSet()
-        roweqs = IntSet()
+        rowleqs = BitSet()
+        rowgeqs = BitSet()
+        roweqs = BitSet()
         for i in 1:size(A, 1)
             leq = ub[i] < typemax(T)
             geq = lb[i] > typemin(T)

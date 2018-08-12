@@ -7,7 +7,7 @@ function issue48test(lib::PolyhedraLibrary)
           -3  2
            1  2
           18 -7]
-    inequality_fulltest(p, A, b, IntSet([]))
+    inequality_fulltest(p, A, b, BitSet([]))
     generator_fulltest(p, v)
 
     ind = [3, 4, 6, 1, 7, 8, 9, 2, 5]
@@ -21,9 +21,9 @@ function issue48test(lib::PolyhedraLibrary)
 
     V1 = vrep(v)
     p = polyhedron(V1, lib)
-    inequality_fulltest(p, A, b, IntSet([]))
+    inequality_fulltest(p, A, b, BitSet([]))
 
     V2 = vrep(v[ind, :])
     p = polyhedron(V2, lib)
-    inequality_fulltest(p, A, b, IntSet([]))
+    inequality_fulltest(p, A, b, BitSet([]))
 end

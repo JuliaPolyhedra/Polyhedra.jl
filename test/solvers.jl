@@ -44,5 +44,5 @@ end
 if lp_solver === nothing
     scs = try_import(:SCS)
     scs && (lp_solver = SCS.SCSSolver(eps=1e-6,verbose=0))
-    @assert lp_solver !== nothing
 end
+@assert lp_solver !== nothing

@@ -7,8 +7,8 @@ Default library for polyhedra of dimension larger than 1 ([`IntervalLibrary`](@r
 The library implements the bare minimum and uses the fallback implementation for all operations.
 """
 struct SimplePolyhedraLibrary{T} <: PolyhedraLibrary
-    solver::MPB.AbstractMathProgSolver
-    function SimplePolyhedraLibrary{T}(solver=JuMP.UnsetSolver()) where T
+    solver::Union{Nothing, MPB.AbstractMathProgSolver}
+    function SimplePolyhedraLibrary{T}(solver=nothing) where T
         new{T}(solver)
     end
 end
@@ -19,7 +19,7 @@ mutable struct SimplePolyhedron{N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepr
     hrep::Nullable{HRepT}
     vrep::Nullable{VRepT}
     solver::MPB.AbstractMathProgSolver
-    function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::Union{HRepT, Void}, vrep::Union{VRepT, Void}, solver::MPB.AbstractMathProgSolver) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
+    function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::Union{HRepT, Nothing}, vrep::Union{VRepT, Nothing}, solver::MPB.AbstractMathProgSolver) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
         new{N, T, HRepT, VRepT}(hrep, vrep, solver)
     end
 end
@@ -45,10 +45,10 @@ vvectortype(::Type{SimplePolyhedron{N, T, HRepT, VRepT}}) where {N, T, HRepT, VR
 
 similar_type(::Type{<:SimplePolyhedron{M, S, HRepT, VRepT}}, d::FullDim{N}, ::Type{T}) where {M, S, HRepT, VRepT, N, T} = SimplePolyhedron{N, T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
 
-function SimplePolyhedron{N, T, HRepT, VRepT}(hits::HIt...; solver=JuMP.UnsetSolver()) where {N, T, HRepT, VRepT}
+function SimplePolyhedron{N, T, HRepT, VRepT}(hits::HIt...; solver=nothing) where {N, T, HRepT, VRepT}
     SimplePolyhedron{N, T, HRepT, VRepT}(HRepT(hits...), solver)
 end
-function SimplePolyhedron{N, T, HRepT, VRepT}(vits::VIt...; solver=JuMP.UnsetSolver()) where {N, T, HRepT, VRepT}
+function SimplePolyhedron{N, T, HRepT, VRepT}(vits::VIt...; solver=nothing) where {N, T, HRepT, VRepT}
     SimplePolyhedron{N, T, HRepT, VRepT}(VRepT(vits...), solver)
 end
 

@@ -117,14 +117,14 @@ end
 # Remove redundancy in the H-representation using the V-representation
 # There shouldn't be any duplicates in vrep for this to work
 function removehredundancy(hrep::HRep, vrep::VRep; strongly=true)
-    R = IntSet()
+    R = BitSet()
     d = dim(hrep, true) # TODO dim(hrep)
     typeof(hrep)(removehredundancy.(hreps(hrep), vrep, strongly=strongly, d=d)...)
 end
 
 
 #function gethredundantindices(hrep::HRep; strongly=false, solver=Polyhedra.solver(hrep))
-#    red = IntSet()
+#    red = BitSet()
 #    for (i, h) in enumerate(hreps(hrep))
 #        if ishredundant(hrep, h; strongly=strongly, solver=solver)
 #            push!(red, i)
@@ -133,7 +133,7 @@ end
 #    red
 #end
 #function getvredundantindices(vrep::VRep; strongly = true, solver=Polyhedra.solver(vrep))
-#    red = IntSet()
+#    red = BitSet()
 #    for (i, v) in enumerate(vreps(vrep))
 #        if isvredundant(vrep, v; strongly=strongly, solver=solver)
 #            push!(red, i)
