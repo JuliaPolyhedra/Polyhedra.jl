@@ -200,9 +200,9 @@ Base.:+(p::AbstractPoint, r::Ray) = p + coord(r)
 
 for op in [:dot, :cross]
     @eval begin
-        Base.$op(x::VStruct, y) = $op(x.a, y)
-        Base.$op(x, y::VStruct) = $op(x, y.a)
-        Base.$op(x::VStruct, y::VStruct) = $op(x.a, y.a)
+        Compat.LinearAlgebra.$op(x::VStruct, y) = $op(x.a, y)
+        Compat.LinearAlgebra.$op(x, y::VStruct) = $op(x, y.a)
+        Compat.LinearAlgebra.$op(x::VStruct, y::VStruct) = $op(x.a, y.a)
     end
 end
 

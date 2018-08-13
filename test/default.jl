@@ -8,7 +8,7 @@
         @test default_library(Polyhedra.FullDim{1}(), AbstractFloat) isa IntervalLibrary{Float64}
     end
     @testset "LP Solver" begin
-        @test Polyhedra.default_solver(hrep([HalfSpace((@SVector [1, 2]), 3)])) isa JuMP.UnsetSolver
+        @test Polyhedra.default_solver(hrep([HalfSpace((@SVector [1, 2]), 3)])) === nothing
         @test Polyhedra.solver(hrep([HalfSpace((@SVector [1, 2]), 3)]), lp_solver) === lp_solver
     end
 end

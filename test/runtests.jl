@@ -1,5 +1,9 @@
 using Polyhedra
-using Base.Test
+
+using Compat
+using Compat.SparseArrays
+using Compat.LinearAlgebra
+using Compat.Test
 
 import MultivariatePolynomials
 MP = MultivariatePolynomials

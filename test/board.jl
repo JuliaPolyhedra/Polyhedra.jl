@@ -53,9 +53,9 @@ function boardtest(lib::Lib) where Lib<:PolyhedraLibrary
     #@test !isredundant
     #@test certificate == target
     @test !isredundant(polycut, first(eachindex(halfspaces(polycut))))
-    # @test IntSet() == gethredundantindices(polycut) # TODO reactivate it when I figure out why it makes LRS tests fail
+    # @test BitSet() == gethredundantindices(polycut) # TODO reactivate it when I figure out why it makes LRS tests fail
     #(issredundant, scertificate) = isstronglyredundantinequality(polycut, 1)
     #@test !issredundant
     #@test scertificate == target
-    #@test IntSet([]) == getstronglyredundantinequalities(polycut)
+    #@test BitSet([]) == getstronglyredundantinequalities(polycut)
 end

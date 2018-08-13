@@ -2,21 +2,21 @@ export MixedMatHRep, MixedMatVRep
 
 # H-Representation
 """
-    hrep(A::AbstractMatrix, b::AbstractVector, linset::IntSet=IntSet())
+    hrep(A::AbstractMatrix, b::AbstractVector, linset::BitSet=BitSet())
 
 Creates an H-representation for the polyhedron defined by the inequalities ``\\langle A_i, x \\rangle = b_i`` if `i in linset`
 and ``\\langle A_i, x \\rangle \\le b_i`` otherwise where ``A_i`` is the ``i``th row of `A`, i.e. `A[i,:]` and ``b_i`` is `b[i]`.
 """
-hrep(A::AbstractMatrix, b::AbstractVector, linset::IntSet=IntSet()) = MixedMatHRep(A, b, linset)
+hrep(A::AbstractMatrix, b::AbstractVector, linset::BitSet=BitSet()) = MixedMatHRep(A, b, linset)
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
 mutable struct MixedMatHRep{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
     # Ax <= b
     A::MT
     b::Vector{T}
-    linset::IntSet
+    linset::BitSet
 
-    function MixedMatHRep{N, T, MT}(A::MT, b::AbstractVector, linset::IntSet) where {N, T, MT}
+    function MixedMatHRep{N, T, MT}(A::MT, b::AbstractVector, linset::BitSet) where {N, T, MT}
         if size(A, 1) != length(b)
             error("The length of b must be equal to the number of rows of A")
         end
@@ -34,14 +34,14 @@ similar_type(::Type{<:MixedMatHRep{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M
 hvectortype(p::Type{MixedMatHRep{N, T, MT}}) where {N, T, MT} = vectortype(MT)
 fulltype(::Type{MixedMatHRep{N, T, MT}}) where {N, T, MT} = MixedMatHRep{N, T, MT}
 
-MixedMatHRep{N, T}(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet) where {N, T} = MixedMatHRep{N, T, typeof(A)}(A, b, linset)
-MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet) where T = MixedMatHRep{size(A, 2), T, typeof(A)}(A, b, linset)
-MixedMatHRep{N, U}(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet) where {N, S, T, U} = MixedMatHRep{N, U}(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
-function MixedMatHRep(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::IntSet) where {S, T}
+MixedMatHRep{N, T}(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::BitSet) where {N, T} = MixedMatHRep{N, T, typeof(A)}(A, b, linset)
+MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::BitSet) where T = MixedMatHRep{size(A, 2), T, typeof(A)}(A, b, linset)
+MixedMatHRep{N, U}(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::BitSet) where {N, S, T, U} = MixedMatHRep{N, U}(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
+function MixedMatHRep(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::BitSet) where {S, T}
     U = promote_type(S, T)
     MixedMatHRep(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
 end
-MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::IntSet) where T <: Real = MixedMatHRep{size(A,2),T}(A, b, linset)
+MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::BitSet) where T <: Real = MixedMatHRep{size(A,2),T}(A, b, linset)
 
 MixedMatHRep(h::HRep{N, T}) where {N, T} = MixedMatHRep{N, T}(h)
 MixedMatHRep{N, T}(h::HRep{N}) where {N, T} = MixedMatHRep{N, T, hmatrixtype(typeof(h), T)}(h)
@@ -51,8 +51,8 @@ function MixedMatHRep{N, T, MT}(hyperplanes::HyperPlaneIt{N, T}, halfspaces::Hal
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
     A = emptymatrix(MT, nhrep, N)
-    b = Vector{T}(nhrep)
-    linset = IntSet(1:nhyperplane)
+    b = Vector{T}(undef, nhrep)
+    linset = BitSet(1:nhyperplane)
     for (i, h) in enumerate(hyperplanes)
         A[i,:] = h.a
         b[i] = h.β
@@ -72,21 +72,21 @@ Base.get(hrep::MixedMatHRep{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(i
 
 # V-Representation
 """
-    vrep(V::AbstractMatrix, R::AbstractMatrix, Rlinset::IntSet=IntSet())
+    vrep(V::AbstractMatrix, R::AbstractMatrix, Rlinset::BitSet=BitSet())
 
 Creates a V-representation for the polyhedron defined by the points ``V_i``,
 lines ``R_i`` if `i in Rlinset` and rays ``R_i`` otherwise
 where ``V_i`` (resp. ``R_i``) is the ``i``th row of `V` (resp. `R`), i.e. `V[i,:]` (resp. `R[i,:]`).
 """
-vrep(V::AbstractMatrix, R::AbstractMatrix, Rlinset::IntSet=IntSet()) = MixedMatVRep(V, R, Rlinset)
+vrep(V::AbstractMatrix, R::AbstractMatrix, Rlinset::BitSet=BitSet()) = MixedMatVRep(V, R, Rlinset)
 vrep(V::AbstractMatrix) = vrep(V, similar(V, 0, size(V, 2)))
 
 mutable struct MixedMatVRep{N, T, MT<:AbstractMatrix{T}} <: MixedVRep{N, T}
     V::MT # each row is a vertex
     R::MT # each row is a ray
-    Rlinset::IntSet
+    Rlinset::BitSet
 
-    function MixedMatVRep{N, T, MT}(V::MT, R::MT, Rlinset::IntSet) where {N, T, MT}
+    function MixedMatVRep{N, T, MT}(V::MT, R::MT, Rlinset::BitSet) where {N, T, MT}
         if iszero(size(V, 1)) && !iszero(size(R, 1))
             vconsistencyerror()
         end
@@ -104,10 +104,10 @@ similar_type(::Type{<:MixedMatVRep{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M
 vvectortype(p::Type{MixedMatVRep{N, T, MT}}) where {N, T, MT} = vectortype(MT)
 fulltype(::Type{MixedMatVRep{N, T, MT}}) where {N, T, MT} = MixedMatVRep{N, T, MT}
 
-MixedMatVRep{N, T}(V::MT, R::MT, Rlinset::IntSet) where {N, T, MT<:AbstractMatrix{T}} = MixedMatVRep{N, T, MT}(V, R, Rlinset)
-MixedMatVRep(V::MT, R::MT, Rlinset::IntSet) where {T, MT<:AbstractMatrix{T}} = MixedMatVRep{size(V, 2), T, MT}(V, R, Rlinset)
-MixedMatVRep{N, U}(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Rlinset::IntSet) where {N, S, T, U} = MixedMatVRep{N, U}(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Rlinset)
-function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Rlinset::IntSet) where {S, T}
+MixedMatVRep{N, T}(V::MT, R::MT, Rlinset::BitSet) where {N, T, MT<:AbstractMatrix{T}} = MixedMatVRep{N, T, MT}(V, R, Rlinset)
+MixedMatVRep(V::MT, R::MT, Rlinset::BitSet) where {T, MT<:AbstractMatrix{T}} = MixedMatVRep{size(V, 2), T, MT}(V, R, Rlinset)
+MixedMatVRep{N, U}(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Rlinset::BitSet) where {N, S, T, U} = MixedMatVRep{N, U}(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Rlinset)
+function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Rlinset::BitSet) where {S, T}
     U = promote_type(S, T)
     MixedMatVRep(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Rlinset)
 end
@@ -123,7 +123,7 @@ function MixedMatVRep{N, T, MT}(vits::VIt{N, T}...) where {N, T, MT}
     nray = length(rays)
     V = emptymatrix(MT, npoint, N)
     R = emptymatrix(MT, nline + nray, N)
-    Rlinset = IntSet()
+    Rlinset = BitSet()
     function _fill!(M, linset, offset, ps)
         for (i, p) in enumerate(ps)
             M[offset + i, :] = coord(p)
@@ -153,7 +153,7 @@ Base.get(vrep::MixedMatVRep{N, T}, idx::VIndex{N, T}) where {N, T} = valuetype(i
 dualtype(::Type{MixedMatHRep{N, T, MT}}) where {N, T, MT} = MixedMatVRep{N, T, Matrix{T}}
 dualtype(::Type{MixedMatVRep{N, T, MT}}) where {N, T, MT} = MixedMatHRep{N, T, Matrix{T}}
 function dualfullspace(h::MixedMatHRep, ::FullDim{N}, ::Type{T}) where {N, T}
-    MixedMatVRep{N, T}(zeros(T, 1, N), eye(T, N), IntSet(1:N))
+    MixedMatVRep{N, T}(zeros(T, 1, N), eye(T, N), BitSet(1:N))
 end
 
 export SimpleHRepresentation, SimpleVRepresentation

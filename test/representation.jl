@@ -18,11 +18,11 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
     @testset "MixMatRep with bad arguments" begin
         A = [1 1; -1 0; 0 -1]
         b = [1, 0, 0]
-        linset = IntSet([1])
+        linset = BitSet([1])
 
         @test_throws ErrorException hrep(A, [0, 0], linset)
-        @test_throws ErrorException hrep(A, b, IntSet([4]))
-        @test_throws ErrorException MixedMatHRep{3, Int}(A, b, IntSet())
+        @test_throws ErrorException hrep(A, b, BitSet([4]))
+        @test_throws ErrorException MixedMatHRep{3, Int}(A, b, BitSet())
         ine = hrep(A, b, linset)
         @test fulldim(ine) == 2
         @test (@inferred FullDim(ine)) == FullDim{2}()
@@ -30,10 +30,10 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         @test translate(ine, [1, 0]).b == [2, -1, 0]
 
         V = [0 1; 1 0]
-        @test_throws ErrorException MixedMatVRep{3, Int}(V, [1 0], IntSet())
+        @test_throws ErrorException MixedMatVRep{3, Int}(V, [1 0], BitSet())
         @test_throws ErrorException vrep(zeros(0, 2), [1 0]) # V-consistency
-        @test_throws ErrorException vrep(V, [1 0 0], IntSet())
-        @test_throws ErrorException vrep(V, [1 1], IntSet([2]))
+        @test_throws ErrorException vrep(V, [1 0 0], BitSet())
+        @test_throws ErrorException vrep(V, [1 1], BitSet([2]))
         ext = vrep(V)
         @test fulldim(ext) == 2
         @test (@inferred FullDim(ine)) == FullDim{2}()
@@ -49,9 +49,9 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
 
     @testset "Lifted Representation with bad arguments" begin
         A = [1 -1 -1; 0 1 0; 0 0 1]
-        ls = IntSet([1])
+        ls = BitSet([1])
 
-        @test_throws ErrorException LiftedHRepresentation(A, IntSet([4]))
+        @test_throws ErrorException LiftedHRepresentation(A, BitSet([4]))
         @test_throws ErrorException LiftedHRepresentation{3, Int}(A, ls)
         ine = copy(LiftedHRepresentation(A, ls))
         @test ine.A == A
@@ -63,7 +63,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
 
         A2 = [1 1; -1 0; 0 -1]
         b2 = [1, 0, 0]
-        linset2 = IntSet([1])
+        linset2 = BitSet([1])
         ine2 = hrep(A2, b2, linset2)
 
         ine = LiftedHRepresentation(ine2)
@@ -71,9 +71,9 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         @test ine.linset == ls
 
         V = [1 0 1; 1 1 0]
-        Vlinset = IntSet(2)
+        Vlinset = BitSet(2)
         @test_throws ErrorException LiftedVRepresentation{3, Int}(V, Vlinset)
-        @test_throws ErrorException LiftedVRepresentation(V, IntSet([4]))
+        @test_throws ErrorException LiftedVRepresentation(V, BitSet([4]))
         ext = copy(LiftedVRepresentation(V, Vlinset))
         @test ext.R == V
         @test ext.R !== V
@@ -102,9 +102,9 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
                          ((@inferred hrep(shss)), SVector{3, Float64}),
                          ((@inferred hrep(hps, hss)), Vector{Float64}),
                          ((@inferred hrep(shps, shss)), SVector{3, Float64}),
-                         (hrep([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}),
-                         (hrep(spzeros(2, 3), [7., 8], IntSet([1])), SparseVector{Float64, Int}),
-                         (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8], IntSet([1])), Vector{Float64}),
+                         (hrep([1 2 3; 4 5 6], [7., 8], BitSet([1])), Vector{Float64}),
+                         (hrep(spzeros(2, 3), [7., 8], BitSet([1])), SparseVector{Float64, Int}),
+                         (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8], BitSet([1])), Vector{Float64}),
                          (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8]), Vector{Float64}))
             @test (@inferred coefficienttype(hr)) == Float64
             @test                                               (@inferred eltype(allhalfspaces(hr)))  == HalfSpace{3, Float64, AT}
@@ -149,7 +149,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
                          ((@inferred vrep(sps, sls, srs)), SVector{2, Int}),
                          (vrep([1 2; 3 4]), Vector{Int}),
                          (vrep(spzeros(Int, 2, 2)), SparseVector{Int, Int}),
-                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0), IntSet()), Vector{Int}),
+                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0), BitSet()), Vector{Int}),
                          (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0)), Vector{Int}),
                          (SimpleVRepresentation([1 2; 3 4]), Vector{Int}))
             @test (@inferred coefficienttype(vr)) == Int
@@ -177,7 +177,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         b = [1, 2, 3]
         halfspace = [1, 3]
         hyperplane = [2]
-        linset = IntSet(2)
+        linset = BitSet(2)
         hr = hrep(A, b, linset)
         Aall = [3 4; -3 -4; 1 2; 5 6]
         ball = [2, -2, 1, 3]
@@ -216,15 +216,15 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         a = [7, 8, 9]
         B = [10 11 12; 13 14 15]
         b = [16, 17]
-        p1 = hrep(A, a, IntSet([2]))
-        p2 = hrep(B, b, IntSet([1]))
+        p1 = hrep(A, a, BitSet([2]))
+        p2 = hrep(B, b, BitSet([1]))
         p = p1 * p2
         @test p.A == [A[2,:]' zeros(1, 3)
                       zeros(1, 2) B[1, :]'
                       A[[1,3],:] zeros(2, 3)
                       zeros(1, 2) B[2, :]']
         @test p.b == [a[2]; b[1]; a[[1,3]]; b[2]]
-        @test p.linset == IntSet([1, 2])
+        @test p.linset == BitSet([1, 2])
     end
 
     @testset "isempty not working correctly for iterators #17" begin
@@ -260,17 +260,17 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         end
         htest(hrep(ones(0, 3), zeros(0)), 0, 0)
         htest(hrep(ones(1, 2), zeros(1)), 0, 1)
-        htest(hrep(ones(2, 4), zeros(2), IntSet(1:2)), 2, 0)
-        htest(hrep(ones(3, 1), zeros(3), IntSet([2])), 1, 2)
+        htest(hrep(ones(2, 4), zeros(2), BitSet(1:2)), 2, 0)
+        htest(hrep(ones(3, 1), zeros(3), BitSet([2])), 1, 2)
         htest(LiftedHRepresentation(ones(0, 2)), 0, 0)
         htest(LiftedHRepresentation([0 1; 0 2]), 0, 2)
-        htest(LiftedHRepresentation([0 1; 0 2], IntSet(1:2)), 2, 0)
-        htest(LiftedHRepresentation([0 1; 0 2], IntSet([2])), 1, 1)
+        htest(LiftedHRepresentation([0 1; 0 2], BitSet(1:2)), 2, 0)
+        htest(LiftedHRepresentation([0 1; 0 2], BitSet([2])), 1, 1)
     end
 
     @testset "Building rep with different type" begin
-        @test coefficienttype(MixedMatHRep{2, Float64}([1 2; 3 4], [1, 2], IntSet())) == Float64
-        @test coefficienttype(MixedMatVRep{2, Float64}([1 2; 3 4], [1 2; 3 4], IntSet())) == Float64
+        @test coefficienttype(MixedMatHRep{2, Float64}([1 2; 3 4], [1, 2], BitSet())) == Float64
+        @test coefficienttype(MixedMatVRep{2, Float64}([1 2; 3 4], [1 2; 3 4], BitSet())) == Float64
         @test coefficienttype(LiftedHRepresentation{1, Float64}([1 2; 3 4])) == Float64
         @test coefficienttype(LiftedVRepresentation{1, Float64}([1 2; 3 4])) == Float64
     end
@@ -343,7 +343,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
     @testset "Conversion with different array type" begin
         @testset "V-representation" begin
             vv = convexhull(@SVector [0, 1]) + conichull((@SVector [1, 1]), Line(@SVector [1, 0]))
-            mv = vrep([0 1], [1 1; 1 0], IntSet([2]))
+            mv = vrep([0 1], [1 1; 1 0], BitSet([2]))
             generator_fulltest(vv, mv)
             mvv = @inferred typeof(mv)(vv)
             vmv = @inferred typeof(vv)(mv)
@@ -352,7 +352,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         end
         @testset "H-representation" begin
             vh = HalfSpace((@SVector [1, 0]), 0) ∩ HyperPlane((@SVector [0, 1]), 1)
-            mh = hrep([0 1; 1 0], [1, 0], IntSet(1))
+            mh = hrep([0 1; 1 0], [1, 0], BitSet(1))
             inequality_fulltest(vh, mh)
             mvh = @inferred typeof(mh)(vh)
             vmh = @inferred typeof(vh)(mh)

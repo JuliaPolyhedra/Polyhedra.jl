@@ -129,10 +129,10 @@ end
 #function Base.show(io::IO, rep::Representation{N,T}) where {N,T}
 #    if typeof(rep) <: HRepresentation
 #        print(io, "H")
-#        ls = IntSet(1:nhyperplanes(rep))
+#        ls = BitSet(1:nhyperplanes(rep))
 #    else
 #        print(io, "V")
-#        ls = IntSet(1:nsympoints(rep)) ∪ IntSet(nsympoints(rep) + npoints(rep) + (1:nlines(rep)))
+#        ls = BitSet(1:nsympoints(rep)) ∪ BitSet(nsympoints(rep) + npoints(rep) + (1:nlines(rep)))
 #    end
 #    println(io, "-representation")
 #
