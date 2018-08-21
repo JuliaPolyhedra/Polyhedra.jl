@@ -74,22 +74,23 @@ end
 
 # FIXME the variables need to be defined outside of the local scope of for
 #       for Julia to know them inside the """ ... """ of the docstrings
-HorV = HorVRep = horvrep = singular = singularlin = plural = plurallin = lenp = isnotemptyp = repexem = listexem = :_
+singular = HorV = HorVRep = horvrep = singularlin = plural = plurallin = lenp = isnotemptyp = repexem = listexem = :_
 
-for (isVrep, elt, singular) in [#(true, :SymPoint, :sympoint),
-                                (true, :AbstractPoint, :point),
-                                (true, :Line, :line), (true, :Ray, :ray),
-                                (false, :HyperPlane, :hyperplane), (false, :HalfSpace, :halfspace)]
+for (isVrep, elt, loop_singular) in [#(true, :SymPoint, :sympoint),
+                                     (true, :AbstractPoint, :point),
+                                     (true, :Line, :line), (true, :Ray, :ray),
+                                     (false, :HyperPlane, :hyperplane), (false, :HalfSpace, :halfspace)]
+    global singular = loop_singular
     if isVrep
         vectortype = :vvectortype
-        HorV = :V
-        HorVRep = :VRep
-        horvrep = :vrep
+        global HorV = :V
+        global HorVRep = :VRep
+        global horvrep = :vrep
     else
         vectortype = :hvectortype
-        HorV = :H
-        HorVRep = :HRep
-        horvrep = :hrep
+        global HorV = :H
+        global HorVRep = :HRep
+        global horvrep = :hrep
     end
     typename = :(AbstractRepIterator{N, T, <:$elt})
     singularstr = string(singular)
@@ -98,9 +99,9 @@ for (isVrep, elt, singular) in [#(true, :SymPoint, :sympoint),
     startp = Symbol("start" * singularstr)
     nextp = Symbol("next" * singularstr)
     pluralstr = singularstr * "s"
-    plural = Symbol(pluralstr)
-    lenp = Symbol("n" * pluralstr)
-    isnotemptyp = Symbol("has" * pluralstr)
+    global plural = Symbol(pluralstr)
+    global lenp = Symbol("n" * pluralstr)
+    global isnotemptyp = Symbol("has" * pluralstr)
     mapit = Symbol("map" * pluralstr)
     inc = Symbol("incident" * pluralstr)
     incidx = Symbol("incident" * singularstr * "indices")
@@ -209,26 +210,35 @@ function Base.next(it::AllRepIterator, istate)
     (item, newistate)
 end
 
-for (isVrep, singularlin, singular, repexem, listexem) in [#(true, :sympoint, :point, "convexhull(SymPoint([1, 0]), [0, 1])", "[1, 0], [-1, 0], [0, 1]"),
-                                                           (true, :line, :ray, "Line([1, 0]) + Ray([0, 1])", "Ray([1, 0]), Ray([-1, 0]), Ray([0, 1])"),
-                                                           (false, :hyperplane, :halfspace, "HyperPlane([1, 0], 1) ∩ HalfSpace([0, 1], 1)", "HalfSpace([1, 0]), HalfSpace([-1, 0]), HalfSpace([0, 1])")]
+for (isVrep, loop_singularlin,
+     loop_singular, loop_repexem,
+     loop_listexem) in [#(true, :sympoint, :point, "convexhull(SymPoint([1, 0]), [0, 1])", "[1, 0], [-1, 0], [0, 1]"),
+                   (true, :line, :ray, "Line([1, 0]) + Ray([0, 1])",
+                    "Ray([1, 0]), Ray([-1, 0]), Ray([0, 1])"),
+                   (false, :hyperplane, :halfspace,
+                    "HyperPlane([1, 0], 1) ∩ HalfSpace([0, 1], 1)",
+                    "HalfSpace([1, 0]), HalfSpace([-1, 0]), HalfSpace([0, 1])")]
+    global singularlin = loop_singularlin
+    global singular = loop_singular
+    global repexem = loop_repexem
+    global listexem = loop_listexem
     if isVrep
-        HorV = :V
-        HorVRep = :VRep
-        horvrep = :vrep
+        global HorV = :V
+        global HorVRep = :VRep
+        global horvrep = :vrep
     else
-        HorV = :H
-        HorVRep = :HRep
-        horvrep = :hrep
+        global HorV = :H
+        global HorVRep = :HRep
+        global horvrep = :hrep
     end
     pluralstrlin = string(singularlin) * "s"
-    plurallin = Symbol(pluralstrlin)
+    global plurallin = Symbol(pluralstrlin)
     lenplin = Symbol("n" * pluralstrlin)
     isnotemptyplin = Symbol("has" * pluralstrlin)
     pluralstr = string(singular) * "s"
-    plural = Symbol(pluralstr)
-    lenp = Symbol("n" * pluralstr)
-    isnotemptyp = Symbol("has" * pluralstr)
+    global plural = Symbol(pluralstr)
+    global lenp = Symbol("n" * pluralstr)
+    global isnotemptyp = Symbol("has" * pluralstr)
     allpluralstr = "all" * pluralstr
     allplural = Symbol(allpluralstr)
     alllenp = Symbol("n" * allpluralstr)
@@ -286,7 +296,12 @@ function fillvits(::FullDim{N}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}
     if isempty(points) && !(isempty(lines) && isempty(rays))
         vconsistencyerror()
     end
-    points, lines, rays
+    @show typeof(points)
+    @show typeof(lines)
+    @show typeof(rays)
+    a = points, lines, rays
+    @show typeof(a)
+    a
 end
 function fillvits(::FullDim{N}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}=Ray{N, T, AT}[]) where {N, T, AT}
     if isempty(lines) && isempty(rays)

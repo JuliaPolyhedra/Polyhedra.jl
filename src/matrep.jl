@@ -117,7 +117,22 @@ MixedMatVRep{N, T}(v::VRep{N}) where {N, T} = MixedMatVRep{N, T, vmatrixtype(typ
 
 MixedMatVRep{N, T}(vits::VIt{N, T}...) where {N, T} = MixedMatVRep{N, T, Matrix{T}}(vits...) # FIXME required by CDD and LRS tests
 function MixedMatVRep{N, T, MT}(vits::VIt{N, T}...) where {N, T, MT}
-    points, lines, rays = fillvits(FullDim{N}(), vits...)
+    plr = fillvits(FullDim{N}(), vits...)
+    @show typeof(plr)
+    @show length.(plr)
+    @show typeof(plr[2])
+    @show length(plr[2])
+    tmp1 = Base.indexed_iterate(plr, 1)
+    a = Core.getfield(tmp1, 1)
+    temp1 = Core.getfield(tmp1, 2)
+    li = Base.indexed_iterate(plr, 2, temp1)
+    l = Core.getfield(li, 1)
+    @show typeof(l)
+    @show length(l)
+    points, lines, rays = plr
+    @show typeof(lines)
+    @show length(lines)
+    @assert length(lines) == 0
     npoint = length(points)
     nline = length(lines)
     nray = length(rays)
