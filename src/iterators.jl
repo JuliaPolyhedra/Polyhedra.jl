@@ -296,12 +296,7 @@ function fillvits(::FullDim{N}, points::ElemIt{AT}, lines::ElemIt{Line{N, T, AT}
     if isempty(points) && !(isempty(lines) && isempty(rays))
         vconsistencyerror()
     end
-    @show typeof(points)
-    @show typeof(lines)
-    @show typeof(rays)
-    a = points, lines, rays
-    @show typeof(a)
-    a
+    return points, lines, rays
 end
 function fillvits(::FullDim{N}, lines::ElemIt{Line{N, T, AT}}, rays::ElemIt{Ray{N, T, AT}}=Ray{N, T, AT}[]) where {N, T, AT}
     if isempty(lines) && isempty(rays)
