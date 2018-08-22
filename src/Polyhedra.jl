@@ -22,8 +22,6 @@ import MathProgBase
 const MPB = MathProgBase
 const MPBSI = MPB.SolverInterface
 
-using Nullables
-
 # Similar to StaticArrays.Size
 struct FullDim{N}
     function FullDim{N}() where N

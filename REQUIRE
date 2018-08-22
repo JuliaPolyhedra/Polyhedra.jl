@@ -5,5 +5,4 @@ MultivariatePolynomials 0.1.1
 MathProgBase 0.5.10 0.8
 JuMP 0.16
 RecipesBase 0.2
-Nullables
 Compat 1.0.0
