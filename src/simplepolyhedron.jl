@@ -16,8 +16,8 @@ end
 similar_library(lib::SimplePolyhedraLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to Interval if d is FullDim{1}
 
 mutable struct SimplePolyhedron{N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}} <: Polyhedron{N, T}
-    hrep::Nullable{HRepT}
-    vrep::Nullable{VRepT}
+    hrep::Union{HRepT, Nothing}
+    vrep::Union{VRepT, Nothing}
     solver::Union{Nothing, MPB.AbstractMathProgSolver}
     function SimplePolyhedron{N, T, HRepT, VRepT}(hrep::Union{HRepT, Nothing}, vrep::Union{VRepT, Nothing}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {N, T, HRepT<:HRepresentation{N, T}, VRepT<:VRepresentation{N, T}}
         new{N, T, HRepT, VRepT}(hrep, vrep, solver)
@@ -70,34 +70,34 @@ function polyhedron(rep::Representation{N}, lib::SimplePolyhedraLibrary{T}) wher
 end
 
 function Base.copy(p::SimplePolyhedron{N, T}) where {N, T}
-    if !isnull(p.hrep)
-        SimplePolyhedron{N, T}(get(p.hrep), p.solver)
+    if p.hrep !== nothing
+        SimplePolyhedron{N, T}(p.hrep, p.solver)
     else
-        SimplePolyhedron{N, T}(get(p.vrep), p.solver)
+        SimplePolyhedron{N, T}(p.vrep, p.solver)
     end
 end
 
-hrepiscomputed(p::SimplePolyhedron) = !isnull(p.hrep)
+hrepiscomputed(p::SimplePolyhedron) = p.hrep !== nothing
 function computehrep!(p::SimplePolyhedron)
     # vrep(p) could trigger an infinite loop if both vrep and hrep are null
-    p.hrep = doubledescription(get(p.vrep))
+    p.hrep = doubledescription(p.vrep)
 end
 function hrep(p::SimplePolyhedron)
     if !hrepiscomputed(p)
         computehrep!(p)
     end
-    get(p.hrep)
+    return p.hrep
 end
-vrepiscomputed(p::SimplePolyhedron) = !isnull(p.vrep)
+vrepiscomputed(p::SimplePolyhedron) = p.vrep !== nothing
 function computevrep!(p::SimplePolyhedron)
     # hrep(p) could trigger an infinite loop if both vrep and hrep are null
-    p.vrep = doubledescription(get(p.hrep))
+    p.vrep = doubledescription(p.hrep)
 end
 function vrep(p::SimplePolyhedron)
     if !vrepiscomputed(p)
         computevrep!(p)
     end
-    get(p.vrep)
+    return p.vrep
 end
 
 function sethrep!(p::SimplePolyhedron, h::HRepresentation)

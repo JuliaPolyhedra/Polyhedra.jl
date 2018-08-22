@@ -9,12 +9,12 @@ struct VRepSolver <: MPB.AbstractMathProgSolver
 end
 
 mutable struct VRepPolyhedraModel <: AbstractPolyhedraModel
-    vrep::Nullable{VRep}
-    obj::Nullable{Vector}
+    vrep::Union{VRep, Nothing}
+    obj::Union{Vector, Nothing}
     sense::Symbol
 
-    objval::Nullable
-    solution::Nullable{Vector}
+    objval
+    solution::Union{AbstractVector, Nothing}
     status::Symbol
 
     function VRepPolyhedraModel()
@@ -39,10 +39,10 @@ function MPBSI.loadproblem!(lpm::VRepPolyhedraModel, vrep::VRep, obj, sense)
 end
 
 function MPBSI.optimize!(lpm::VRepPolyhedraModel)
-    if isnull(lpm.vrep)
+    if lpm.vrep === nothing
         error("No problem loaded")
     end
-    prob = get(lpm.vrep)
+    prob = lpm.vrep
     N = fulldim(prob)
     T = MultivariatePolynomials.coefficienttype(prob)
     lpm.status = :Undecided
@@ -54,7 +54,7 @@ function MPBSI.optimize!(lpm::VRepPolyhedraModel)
             _better(a, b) = (lpm.sense == :Max ? _gt(a, b) : _lt(a, b))
             bestobjval = zero(T)
             for r in allrays(prob)
-                objval = get(lpm.obj) ⋅ r
+                objval = lpm.obj ⋅ r
                 if _better(objval, bestobjval)
                     bestobjval = objval
                     lpm.solution = coord(r)
@@ -66,8 +66,8 @@ function MPBSI.optimize!(lpm::VRepPolyhedraModel)
             end
             if lpm.status != :Unbounded
                 for p in points(prob)
-                    objval = get(lpm.obj) ⋅ p
-                    if lpm.status == :Undecided || better(objval, get(lpm.objval))
+                    objval = lpm.obj ⋅ p
+                    if lpm.status == :Undecided || better(objval, lpm.objval)
                         lpm.status = :Optimal
                         lpm.objval = objval
                         lpm.solution = p
@@ -86,11 +86,11 @@ function MPB.status(lpm::VRepPolyhedraModel)
     lpm.status
 end
 function MPB.getobjval(lpm::VRepPolyhedraModel)
-    get(lpm.objval)
+    lpm.objval
 end
 function MPB.getsolution(lpm::VRepPolyhedraModel)
-    copy(get(lpm.solution))
+    copy(lpm.solution)
 end
 function MPB.getunboundedray(lpm::VRepPolyhedraModel)
-    copy(get(lpm.solution))
+    copy(lpm.solution)
 end
