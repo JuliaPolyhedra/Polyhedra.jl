@@ -66,7 +66,7 @@ end
 Base.copy(ine::MixedMatHRep{T, MT}) where {T, MT} = MixedMatHRep{T, MT}(copy(ine.A), copy(ine.b), copy(ine.linset))
 
 Base.isvalid(hrep::MixedMatHRep{T}, idx::HIndex{T}) where {T} = 0 < idx.value <= size(hrep.A, 1) && (idx.value in hrep.linset) == islin(idx)
-Base.done(idxs::HIndices{T, <:MixedMatHRep{T}}, idx::HIndex{T}) where {T} = idx.value > size(idxs.rep.A, 1)
+done(idxs::HIndices{T, <:MixedMatHRep{T}}, idx::HIndex{T}) where {T} = idx.value > size(idxs.rep.A, 1)
 Base.get(hrep::MixedMatHRep{T}, idx::HIndex{T}) where {T} = valuetype(idx)(hrep.A[idx.value,:], hrep.b[idx.value])
 
 # V-Representation
@@ -147,7 +147,7 @@ _islin(hrep::MixedMatVRep, ::PIndex) = false
 _islin(hrep::MixedMatVRep, idx::RIndex) = idx.value in hrep.Rlinset
 
 Base.isvalid(vrep::MixedMatVRep{T}, idx::VIndex{T}) where {T} = 0 < idx.value <= size(_mat(vrep, idx), 1) && _islin(vrep, idx) == islin(idx)
-Base.done(idxs::VIndices{T, <:MixedMatVRep{T}}, idx::VIndex{T}) where {T} = idx.value > size(_mat(idxs.rep, idx), 1)
+done(idxs::VIndices{T, <:MixedMatVRep{T}}, idx::VIndex{T}) where {T} = idx.value > size(_mat(idxs.rep, idx), 1)
 Base.get(vrep::MixedMatVRep{T}, idx::VIndex{T}) where {T} = valuetype(idx)(_mat(vrep, idx)[idx.value, :])
 
 # sparse halfspaces does not mean sparse points

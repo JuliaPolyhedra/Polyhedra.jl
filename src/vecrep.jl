@@ -263,6 +263,6 @@ const AnyIntersection{T, AT, D} = Union{Intersection{T, AT, D}, HyperPlanesInter
 function dualfullspace(h::Union{AnyIntersection, Type{<:AnyIntersection}},
                        d::FullDim, ::Type{T}, ::Type{AT}) where {T, AT}
     Hull{T, AT, typeof(d)}(d, [origin(AT, fulldim(d))],
-                           Line{T, AT}.(basis.(AT, d, 1:fulldim(d))),
+                           Line{T, AT}.(basis.(AT, Ref(d), 1:fulldim(d))),
                            Ray{T, AT}[])
 end

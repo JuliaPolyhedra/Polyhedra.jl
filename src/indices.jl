@@ -54,19 +54,38 @@ const RayIndices{T, RepT} = Indices{T, <:Ray{T}, RepT}
 const RIndices{T, RepT} = Union{LineIndices{T, RepT}, RayIndices{T, RepT}}
 const VIndices{T, RepT} = Union{PIndices{T, RepT}, RIndices{T, RepT}}
 
-function Base.next(idxs::Indices{T, ElemT}, idx::Index{T, ElemT}) where {T, ElemT}
-    nextidx = nextindex(idxs.rep, idx)
-    idx, nextidx
+undouble_it(idx::Nothing) = nothing
+double_it(idx::Nothing) = nothing
+undouble_it(idx::NTuple{2, Index}) = idx[1]
+double_it(idx::Index) = idx, idx
+function Base.iterate(idxs::Indices)
+    return double_it(startindex(idxs))
+end
+function Base.iterate(idxs::Indices{T, ElemT},
+                      idx::Index{T, ElemT}) where {T, ElemT}
+    return double_it(nextindex(idxs.rep, idx))
 end
 
-repfor(p, ::Type{<:HRepElement}) = hrep(p)
-repfor(p, ::Type{<:VRepElement}) = vrep(p)
-Base.length(idxs::Indices{T, ElemT, <:Polyhedron{T}}) where {T, ElemT} = length(Indices{T, ElemT}(repfor(idxs.rep, ElemT)))
-Base.isempty(idxs::Indices{T, ElemT, <:Polyhedron{T}}) where {T, ElemT} = isempty(Indices{T, ElemT}(repfor(idxs.rep, ElemT)))
-Base.start(idxs::Indices{T, ElemT, <:Polyhedron{T}}) where {T, ElemT} = start(Indices{T, ElemT}(repfor(idxs.rep, ElemT)))
-Base.done(idxs::Indices{T, ElemT, <:Polyhedron{T}}, idx::Index{T, ElemT}) where {T, ElemT} = done(Indices{T, ElemT}(repfor(idxs.rep, ElemT)), idx)
-Base.get(p::Polyhedron{T}, idx::Index{T, ElemT}) where {T, ElemT} = get(repfor(p, ElemT), idx)
-nextindex(p::Polyhedron{T}, idx::Index{T, ElemT}) where {T, ElemT} = nextindex(repfor(p, ElemT), idx)
+# For polyhedron, redirect to hrep or vrep depending on whether it is an
+# HRepElement or VRepElement
+repfor(p::Polyhedron, ::Type{<:HRepElement}) = hrep(p)
+repfor(p::Polyhedron, ::Type{<:VRepElement}) = vrep(p)
+function startindex(idxs::Indices{T, ElemT,
+                                  <:Polyhedron{T}}) where {T, ElemT}
+    return startindex(Indices{T, ElemT}(repfor(idxs.rep, ElemT)))
+end
+function nextindex(p::Polyhedron{T}, idx::Index{T, ElemT}) where {T, ElemT}
+    return nextindex(repfor(p, ElemT), idx)
+end
+function Base.length(idxs::Indices{T, ElemT, <:Polyhedron{T}}) where {T, ElemT}
+    return length(Indices{T, ElemT}(repfor(idxs.rep, ElemT)))
+end
+function Base.isempty(idxs::Indices{T, ElemT, <:Polyhedron{T}}) where {T, ElemT}
+    return isempty(Indices{T, ElemT}(repfor(idxs.rep, ElemT)))
+end
+function Base.get(p::Polyhedron{T}, idx::Index{T, ElemT}) where {T, ElemT}
+    return get(repfor(p, ElemT), idx)
+end
 
 """
 The representation `rep` does not contain any `elem`.
@@ -77,8 +96,7 @@ macro norepelem(rep, elem)
     quote
         Base.length(idxs::$idxs{T, <:$rep{T}}) where {T} = 0
         Base.isempty(idxs::$idxs{T, <:$rep{T}}) where {T} = true
-        Base.start(idxs::$idxs{T, <:$rep{T}}) where {T} = eltype(idxs)(0)
-        Base.done(idxs::$idxs{T, <:$rep{T}}, ::$idx{T}) where {T} = true
+        Base.iterate(idxs::$idxs{T, <:$rep{T}}) where {T} = nothing
     end
 end
 
@@ -103,10 +121,9 @@ abstract type VCone{T} <: VRepresentation{T} end
 # See issue #28
 Base.length(idxs::PointIndices{T, <:VCone{T}}) where {T} = hasallrays(idxs.rep) ? 1 : 0
 Base.isempty(idxs::PointIndices{T, <:VCone{T}}) where {T} = !hasallrays(idxs.rep)
-Base.start(idxs::PointIndices{T, <:VCone{T}}) where {T} = eltype(idxs)(hasallrays(idxs.rep) ? 1 : 2)
-Base.done(::PointIndices{T, <:VCone{T}}, idx::PointIndex{T}) where {T} = idx.value > 1
 Base.get(L::VCone{T}, ::PointIndex{T}) where {T} = origin(vvectortype(typeof(L)), fulldim(L))
-nextindex(::VCone{T}, idx::PointIndex{T}) where {T} = typeof(idx)(idx.value + 1)
+startindex(idxs::PointIndices{T, <:VCone{T}}) where {T} = hasallrays(idxs.rep) ? eltype(idxs)(1) : nothing
+nextindex(::VCone{T}, idx::PointIndex{T}) where {T} = nothing
 
 _promote_reptype(P1::Type{<:VCone}, ::Type{<:VCone}) = P1
 _promote_reptype(P1::Type{<:VCone}, ::Type{<:VRep}) = vreptype(P1)
@@ -127,10 +144,21 @@ macro vecrepelem(rep, elem, field)
     esc(quote
         Base.length(idxs::$idxs{T, <:$rep{T}}) where {T} = length(idxs.rep.$field)
         Base.isempty(idxs::$idxs{T, <:$rep{T}}) where {T} = isempty(idxs.rep.$field)
-        Base.start(idxs::$idxs{T, <:$rep{T}}) where {T} = eltype(idxs)(1)
-        Base.done(idxs::$idxs{T, <:$rep{T}}, idx::$idx{T}) where {T} = idx.value > length(idxs)
+        function Polyhedra.startindex(idxs::$idxs{T, <:$rep{T}}) where {T}
+            if isempty(idxs.rep.$field)
+                return nothing
+            else
+                return eltype(idxs)(1)
+            end
+        end
         Base.get(rep::$rep{T}, idx::$idx{T}) where {T} = rep.$field[idx.value]
-        nextindex(::$rep{T}, idx::$idx{T}) where {T} = typeof(idx)(idx.value + 1)
+        function Polyhedra.nextindex(rep::$rep{T}, idx::$idx{T}) where {T}
+            if idx.value >= length(rep.$field)
+                return nothing
+            else
+                return typeof(idx)(idx.value + 1)
+            end
+        end
     end)
 end
 
@@ -146,8 +174,7 @@ macro subrepelem(rep, elem, field)
     esc(quote
         Base.length(idxs::$idxs{T, <:$rep{T}}) where {T} = length($subidxs)
         Base.isempty(idxs::$idxs{T, <:$rep{T}}) where {T} = isempty($subidxs)
-        Base.start(idxs::$idxs{T, <:$rep{T}}) where {T} = start($subidxs)
-        Base.done(idxs::$idxs{T, <:$rep{T}}, idx::$idx{T}) where {T} = done($subidxs, idx)
+        Polyhedra.startindex(idxs::$idxs{T, <:$rep{T}}) where {T} = Polyhedra.startindex($subidxs)
         Base.get(rep::$rep{T}, idx::$idx{T}) where {T} = get(rep.$field, idx)
         Polyhedra.nextindex(rep::$rep{T}, idx::$idx{T}) where {T} = Polyhedra.nextindex(rep.$field, idx)
     end)
