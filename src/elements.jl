@@ -1,71 +1,68 @@
 import GeometryTypes.Point
 export Point
 export HRepElement, HalfSpace, HyperPlane
-export VRepElement, AbstractPoint, AbstractRay, Ray, Line
+export VRepElement, AbstractRay, Ray, Line
 #export SymPoint
 export islin, isray, ispoint, coord, lift, simplify
 
-const MyVec{N,T} = Union{Vec{N,T},AbstractVector{T}}
 _vec(::Type{T}, a::AbstractVector) where {T} = AbstractArray{T}(a)
 _vec(::Type{T}, a::AbstractVector{T}) where {T} = a
-function _vec(::Type{T}, a::StaticArrays.SVector{N}) where {N,T}
-    StaticArrays.SVector{N,T}(a)
+function _vec(::Type{T}, a::StaticArrays.SVector{N}) where {N, T}
+    StaticArrays.SVector{N, T}(a)
 end
-_vec(::Type{T}, a::StaticArrays.SVector{N,T}) where {N,T} = a
-_vec(::Type{T}, a::Vec{N}) where {N,T} = Vec{N,T}(a)
-_vec(::Type{T}, a::Vec{N,T}) where {N,T} = a
+_vec(::Type{T}, a::StaticArrays.SVector{N, T}) where {N, T} = a
+_vec(::Type{T}, a::Vec{N}) where {N, T} = Vec{N, T}(a)
+_vec(::Type{T}, a::Vec{N, T}) where {N, T} = a
 
-abstract type HRepElement{N,T} end
+abstract type HRepElement{T} end
 
 """
-    struct HalfSpace{N, T, AT} <: HRepElement{N, T}
+    struct HalfSpace{T, AT} <: HRepElement{T}
         a::AT
         β::T
     end
 
 An halfspace defined by the set of points ``x`` such that ``\\langle a, x \\rangle \\le \\beta``.
 """
-struct HalfSpace{N, T, AT<:MyVec{N, T}} <: HRepElement{N,T}
+struct HalfSpace{T, AT <: AbstractVector{T}} <: HRepElement{T}
     a::AT
     β::T
-    function HalfSpace{N, T, AT}(a::AT, β::T) where {N, T, AT<:MyVec{N, T}}
-        new{N, T, AT}(a, β)
+    function HalfSpace{T, AT}(a::AT, β::T) where {T, AT<:AbstractVector{T}}
+        new{T, AT}(a, β)
     end
 end
 
-HalfSpace{N, T}(a::AT, β::T) where {N, T, AT <: MyVec{N, T}} = HalfSpace{N, T, AT}(a, β)
-HalfSpace{N, T}(a::MyVec, β) where {N, T} = HalfSpace{N, T}(_vec(T, a), T(β))
+HalfSpace{T}(a::AT, β::T) where {T, AT <: AbstractVector{T}} = HalfSpace{T, AT}(a, β)
+HalfSpace{T}(a::AbstractVector, β) where {T} = HalfSpace{T}(_vec(T, a), T(β))
 
 """
-    struct HyperPlane{N, T, AT} <: HRepElement{N, T}
+    struct HyperPlane{T, AT} <: HRepElement{T}
         a::AT
         β::T
     end
 
 An hyperplane defined by the set of points ``x`` such that ``\\langle a, x \\rangle = \\beta``.
 """
-struct HyperPlane{N, T, AT<:MyVec{N, T}} <: HRepElement{N,T}
+struct HyperPlane{T, AT<:AbstractVector{T}} <: HRepElement{T}
     a::AT
     β::T
-    function HyperPlane{N, T, AT}(a::AT, β::T) where {N, T, AT<:MyVec{N, T}}
-        new{N, T, AT}(a, β)
+    function HyperPlane{T, AT}(a::AT, β::T) where {T, AT<:AbstractVector{T}}
+        new{T, AT}(a, β)
     end
 end
 
-HyperPlane{N, T}(a::AT, β::T) where {N, T, AT <: MyVec{N, T}} = HyperPlane{N, T, AT}(a, β)
-HyperPlane{N, T}(a::MyVec, β) where {N, T} = HyperPlane{N, T}(_vec(T, a), T(β))
+HyperPlane{T}(a::AT, β::T) where {T, AT <: AbstractVector{T}} = HyperPlane{T, AT}(a, β)
+HyperPlane{T}(a::AbstractVector, β) where {T} = HyperPlane{T}(_vec(T, a), T(β))
 
-_HalfSpace(a::MyVec{N, T}, β::T, d::FullDim{N}) where {N, T} = HalfSpace{N, T}(a, β)
-_HalfSpace(a::MyVec{N, S}, β::T, d::FullDim{N}) where {N, S, T} = HalfSpace{N, promote_type(S, T)}(a, β)
-HalfSpace(a, β) = _HalfSpace(a, β, FullDim(a))
-_HyperPlane(a::MyVec{N, T}, β::T, d::FullDim{N}) where {N, T} = HyperPlane{N, T}(a, β)
-_HyperPlane(a::MyVec{N, S}, β::T, d::FullDim{N}) where {N, S, T} = HyperPlane{N, promote_type(S, T)}(a, β)
-HyperPlane(a, β) = _HyperPlane(a, β, FullDim(a))
+HalfSpace(a::AbstractVector{T}, β::T) where {T} = HalfSpace{T}(a, β)
+HalfSpace(a::AbstractVector{S}, β::T) where {S, T} = HalfSpace{promote_type(S, T)}(a, β)
+HyperPlane(a::AbstractVector{T}, β::T) where {T} = HyperPlane{T}(a, β)
+HyperPlane(a::AbstractVector{S}, β::T) where {S, T} = HyperPlane{promote_type(S, T)}(a, β)
 
-Base.convert(::Type{HalfSpace{N, T, AT}}, h::HalfSpace{N}) where {N, T, AT} = HalfSpace{N, T, AT}(AT(h.a), T(h.β))
-Base.convert(::Type{HyperPlane{N, T, AT}}, h::HyperPlane{N}) where {N, T, AT} = HyperPlane{N, T, AT}(AT(h.a), T(h.β))
-Base.convert(::Type{HalfSpace{N, T, AT}}, h::HalfSpace{N, T, AT}) where {N, T, AT} = h
-Base.convert(::Type{HyperPlane{N, T, AT}}, h::HyperPlane{N, T, AT}) where {N, T, AT} = h
+Base.convert(::Type{HalfSpace{T, AT}}, h::HalfSpace) where {T, AT} = HalfSpace{T, AT}(AT(h.a), T(h.β))
+Base.convert(::Type{HyperPlane{T, AT}}, h::HyperPlane) where {T, AT} = HyperPlane{T, AT}(AT(h.a), T(h.β))
+Base.convert(::Type{HalfSpace{T, AT}}, h::HalfSpace{T, AT}) where {T, AT} = h
+Base.convert(::Type{HyperPlane{T, AT}}, h::HyperPlane{T, AT}) where {T, AT} = h
 
 islin(::Union{HalfSpace, Type{<:HalfSpace}}) = false
 islin(::Union{HyperPlane, Type{<:HyperPlane}}) = true
@@ -78,40 +75,36 @@ Base.:(*)(α::Real, h::HyperPlane) = HyperPlane(α * h.a, α * h.β)
 Base.:(*)(h::HalfSpace, α::Real) = HalfSpace(h.a * α, h.β * α)
 Base.:(*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
 
-function Base.:(/)(h::ElemT, P::Matrix) where {N, T, ElemT<:HRepElement{N, T}}
+function Base.:(/)(h::ElemT, P::Matrix) where {T, ElemT<:HRepElement{T}}
     Tout = _promote_type(T, eltype(P))
     ElemTout = similar_type(ElemT, FullDim{size(P, 2)}(), Tout)
     ElemTout(Matrix{Tout}(P) * _vec(Tout, h.a), Tout(h.β))
 end
-function zeropad(h::ElemT, n::Integer) where {N, T, ElemT<:HRepElement{N, T}}
-    if n == 0
-        h
+function zeropad(a::Vector{T}, n::Integer)
+    if n < 0
+        return [zeros(T, -n); a]
     else
-        ElemTout = similar_type(ElemT, FullDim{N+abs(n)}())
-        if n < 0
-            aout = [zeros(T, -n); h.a]
-        else
-            aout = [h.a; zeros(T, n)]
-        end
-        ElemTout(aout, h.β)
+        return [a; zeros(T, n)]
+    end
+end
+noparam_type(::HalfSpace) = HalfSpace
+noparam_type(::HyperPlane) = HyperPlane
+function zeropad(h::HRepElement, n::Integer)
+    if n == 0
+        return h
+    else
+        return noparam_type(zeropad(h.a, n), h.β)
     end
 end
 
 # Point: -> A same Rep should always return the same of the two types so that when points and sympoints will have different accessors it will be type stable
-# Point{N, T} or AbstractVector{T}
+# AbstractVector{T}
 # Linear Point:
-# SymPoint{N,T}
+# SymPoint{T}
 # Ray:
-# Ray{N, T}
+# Ray{T}
 # Linear Ray:
-# Line{N, T}
-
-"""
-    const AbstractPoint{N, T} = Union{Point{N, T}, AbstractVector{T}}
-
-A point in dimension `N` and of coefficient type `T`.
-"""
-const AbstractPoint{N, T} = Union{Point{N, T}, AbstractVector{T}}
+# Line{T}
 
 origin(::Type{<:SparseVector{T}}, ::FullDim{N}) where {N, T} = spzeros(T, N)
 origin(::Type{Vector{T}}, ::FullDim{N}) where {N, T} = zeros(T, N)
@@ -126,61 +119,41 @@ function basis(::Type{SVector{N, T}}, ::FullDim{N}, i::Int) where {N, T}
     SVector{N, T}(ntuple(j -> j == i ? one(T) : zero(T), Val{N}))
 end
 
-#"""
-#    struct SymPoint{N, T, AT <: AbstractPoint{N, T}}
-#        a::AT
-#    end
-#
-#The convex hull of `a` and `-a`.
-#"""
-#struct SymPoint{N, T, AT <: AbstractPoint{N, T}}
-#    a::AT
-#    function SymPoint{N, T, AT}(a::AT) where {N, T, AT<:AbstractPoint{N, T}}
-#        new{N, T, AT}(a)
-#    end
-#end
-#SymPoint{N, T, AT}(sympoint::SymPoint) where {N, T, AT} = SymPoint{N, T, AT}(AT(sympoint.a))
-#SymPoint{N, T}(a::AbstractPoint{N, T}) where {N, T} = SymPoint{N, T, typeof(a)}(a)
-#SymPoint(a::AbstractPoint) = SymPoint{fulldim(a), eltype(a)}(a)
-
-#const AnyPoint{N, T} = Union{SymPoint{N, T}, AbstractPoint{N, T}}
-const AnyPoint{N, T} = AbstractPoint{N, T}
-
 """
-    struct Ray{N, T, AT <: MyVec{N, T}}
+    struct Ray{N, T, AT <: AbstractVector{N, T}}
         a::AT
     end
 
 The conic hull of `a`, i.e. the set of points `λa` where `λ` is any nonnegative real number.
 """
-struct Ray{N, T, AT <: MyVec{N, T}}
+struct Ray{N, T, AT <: AbstractVector{N, T}}
     a::AT
-    function Ray{N, T, AT}(a::AT) where {N, T, AT<:MyVec{N, T}}
+    function Ray{N, T, AT}(a::AT) where {N, T, AT<:AbstractVector{N, T}}
         new{N, T, AT}(a)
     end
 end
 Ray{N, T, AT}(ray::Ray) where {N, T, AT} = Ray{N, T, AT}(AT(ray.a))
 Base.convert(::Type{Ray{N, T, AT}}, ray::Ray) where {N, T, AT} = Ray{N, T, AT}(ray)
-Ray{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Ray{N, T, AT}(a)
-Ray(a::MyVec) = Ray{fulldim(a), eltype(a)}(a)
+Ray{N, T}(a::AT) where {N, T, AT<:AbstractVector{N, T}} = Ray{N, T, AT}(a)
+Ray(a::AbstractVector) = Ray{fulldim(a), eltype(a)}(a)
 
 """
-    struct Line{N, T, AT <: MyVec{N, T}}
+    struct Line{N, T, AT <: AbstractVector{N, T}}
         a::AT
     end
 
 The conic hull of `a` and `-a`, i.e. the set of points `λa` where `λ` is any real number.
 """
-struct Line{N, T, AT<:MyVec{N, T}}
+struct Line{N, T, AT<:AbstractVector{N, T}}
     a::AT
-    function Line{N, T, AT}(a::AT) where {N, T, AT<:MyVec{N, T}}
+    function Line{N, T, AT}(a::AT) where {N, T, AT<:AbstractVector{N, T}}
         new{N, T, AT}(a)
     end
 end
 Line{N, T, AT}(line::Line) where {N, T, AT} = Line{N, T, AT}(AT(line.a))
 Base.convert(::Type{Line{N, T, AT}}, line::Line) where {N, T, AT} = Line{N, T, AT}(line)
-Line{N, T}(a::AT) where {N, T, AT<:MyVec{N, T}} = Line{N, T, AT}(a)
-Line(a::MyVec) = Line{fulldim(a), eltype(a)}(a)
+Line{N, T}(a::AT) where {N, T, AT<:AbstractVector{N, T}} = Line{N, T, AT}(a)
+Line(a::AbstractVector) = Line{fulldim(a), eltype(a)}(a)
 
 #const VStruct{N, T} = Union{SymPoint{N, T}, Line{N, T}, Ray{N, T}}
 const VStruct{N, T} = Union{Line{N, T}, Ray{N, T}}
@@ -196,7 +169,7 @@ Base.:-(p::AbstractVector, l::Line) = p - coord(l)
 # Ray - Line is done in remproj
 Base.:-(r::Ray, s::Union{Ray, Line}) = Ray(r.a - s.a)
 Base.:+(r::Ray, s::Ray) = Ray(r.a + s.a)
-Base.:+(p::AbstractPoint, r::Ray) = p + coord(r)
+Base.:+(p::AbstractVector, r::Ray) = p + coord(r)
 
 for op in [:dot, :cross]
     @eval begin
@@ -235,8 +208,8 @@ MultivariatePolynomials.coefficienttype(::Union{FixedRepElement{N, T}, Type{<:Fi
 
 #islin(::Union{SymPoint, Line, Type{<:Union{SymPoint, Line}}}) = true
 islin(::Union{Line, Type{<:Line}}) = true
-islin(::Union{AbstractPoint, Ray, Type{<:Union{AbstractPoint, Ray}}}) = false
-ispoint(::Union{AnyPoint, Type{<:AnyPoint}}) = true
+islin(::Union{AbstractVector, Ray, Type{<:Union{AbstractVector, Ray}}}) = false
+ispoint(::Union{AbstractVector, Type{<:AbstractVector}}) = true
 ispoint(::Union{Line, Ray, Type{<:Union{Line, Ray}}}) = false
 isray(v) = !ispoint(v)
 
@@ -385,4 +358,4 @@ simplify(h::HalfSpace{N, T}) where {N, T} = HalfSpace{N, T}(_simplify(h.a, h.β)
 simplify(h::HyperPlane{N, T}) where {N, T} = HyperPlane{N, T}(_simplify(h.a, h.β)...)
 simplify(r::T) where {T<:Union{Ray,Line}} = T(_simplify(coord(r)))
 # Cannot scale points
-simplify(p::AnyPoint) = p
+simplify(p::AbstractVector) = p

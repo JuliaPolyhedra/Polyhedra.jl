@@ -8,7 +8,10 @@ function scene(vr::VRep, ::Type{T}) where T
     if width == zero(T)
         width = 2
     end
-    scene = HyperRectangle{3,T}([(xmin+xmax)/2-width, (ymin+ymax)/2-width, (zmin+zmax)/2-width], 2*width*ones(T,3))
+    scene = HyperRectangle{3, T}([(xmin + xmax) / 2 - width,
+                                  (ymin + ymax) / 2 - width,
+                                  (zmin + zmax) / 2 - width],
+                                 2 * width * ones(T, 3))
     # Intersection of rays with the limits of the scene
     (start, ray) -> begin
         times = max.((Vector(minimum(scene))-start) ./ ray, (Vector(maximum(scene))-start) ./ ray)
@@ -30,7 +33,10 @@ function _isdup(zray, triangles)
 end
 _isdup(poly, hidx, triangles) = _isdup(get(poly, hidx).a, triangles)
 
-function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
+function fulldecompose(poly::Polyhedron, ::Type{T}) where T
+    if fulldim(poly) != 3
+        error("Only 3-dimensional polyhedra are supported")
+    end
     exit_point = scene(poly, T)
 
     triangles = Tuple{Tuple{Vector{T},Vector{T},Vector{T}}, Vector{T}}[]
@@ -164,9 +170,9 @@ function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
     end
 
     ntri = length(triangles)
-    pts  = Vector{GeometryTypes.Point{3,T}}(3ntri)
-    faces   = Vector{GeometryTypes.Face{3,Int}}(ntri)
-    ns = Vector{GeometryTypes.Normal{3,T}}(3ntri)
+    pts = Vector{GeometryTypes.Point{3, T}}(3ntri)
+    faces = Vector{GeometryTypes.Face{3, Int}}(ntri)
+    ns = Vector{GeometryTypes.Normal{3, T}}(3ntri)
     for i in 1:ntri
         tri = pop!(triangles)
         normal = tri[2]
@@ -193,20 +199,20 @@ function fulldecompose(poly::Polyhedron{3}, ::Type{T}) where T
     (pts, faces, ns)
 end
 
-fulldecompose(poly::Polyhedron{3, T}) where T = fulldecompose(poly, typeof(one(T)/2))
+fulldecompose(poly::Polyhedron{T}) where T = fulldecompose(poly, typeof(one(T)/2))
 
 GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:Point, S<:Polyhedron} = true
 GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:Face, S<:Polyhedron} = true
 GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:Normal, S<:Polyhedron} = true
-function GeometryTypes.decompose(PT::Type{Point{N, T1}}, poly::Polyhedron{N, T2}) where {N, T1, T2}
+function GeometryTypes.decompose(PT::Type{<:Point}, poly::Polyhedron)
     points = fulldecompose(poly)[1]
     map(PT, points)
 end
-function GeometryTypes.decompose(FT::Type{Face{N, T}}, poly::Polyhedron{3, T2}) where {N, T, T2}
+function GeometryTypes.decompose(FT::Type{<:Face}, poly::Polyhedron)
     faces = fulldecompose(poly)[2]
     decompose(FT, faces)
 end
-function GeometryTypes.decompose(::Type{NT}, poly::Polyhedron{3,T}) where {NT<:Normal, T}
+function GeometryTypes.decompose(NT::Type{<:Normal}, poly::Polyhedron)
     ns = fulldecompose(poly)[3]
     map(NT, ns)
 end
