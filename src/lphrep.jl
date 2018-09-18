@@ -1,7 +1,7 @@
 export LPHRepresentation
 
 # No copy since I do not modify anything and a copy is done when building a polyhedron
-mutable struct LPHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
+mutable struct LPHRepresentation{T, MT<:AbstractMatrix{T}} <: MixedHRep{T}
     # lb <= Ax <= ub
     # l <= x <= u
     A::MT
@@ -16,7 +16,7 @@ mutable struct LPHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
     rowgeqs::BitSet
     roweqs::BitSet
 
-    function LPHRepresentation{N, T, MT}(A::MT, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {N, T, MT<:AbstractMatrix{T}}
+    function LPHRepresentation{T, MT}(A::MT, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {T, MT<:AbstractMatrix{T}}
         if length(l) != length(u) || size(A, 2) != length(l)
             throw(DimensionMismatch("The length of l and u must be equal to the number of rows of A"))
         end
@@ -60,7 +60,7 @@ mutable struct LPHRepresentation{N, T, MT<:AbstractMatrix{T}} <: MixedHRep{N, T}
                 end
             end
         end
-        new{N, T, typeof(A)}(A, l, u, colleqs, colgeqs, coleqs, lb, ub, rowleqs, rowgeqs, roweqs)
+        new{T, typeof(A)}(A, l, u, colleqs, colgeqs, coleqs, lb, ub, rowleqs, rowgeqs, roweqs)
     end
 end
 
@@ -71,14 +71,14 @@ function LPHRepresentation(A::AbstractMatrix, l::AbstractVector, u::AbstractVect
     LPHRepresentation{size(A,2), T, typeof(AT)}(AT, AbstractVector{T}(l), AbstractVector{T}(u), AbstractVector{T}(lb), AbstractVector{T}(ub))
 end
 
-hvectortype(::Type{LPHRepresentation{N, T, MT}}) where {N, T, MT} = vectortype(MT)
-similar_type(::Type{LPHRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, N, T, MT} = LPHRepresentation{N, T, similar_type(MT, T)}
-fulltype(::Type{LPHRepresentation{N, T, MT}}) where {N, T, MT} = LPHRepresentation{N, T, MT}
+hvectortype(::Type{LPHRepresentation{T, MT}}) where {T, MT} = vectortype(MT)
+similar_type(::Type{LPHRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, T, MT} = LPHRepresentation{T, similar_type(MT, T)}
+fulltype(::Type{LPHRepresentation{T, MT}}) where {T, MT} = LPHRepresentation{T, MT}
 
-LPHRepresentation(h::HRep{N, T}) where {N, T} = LPHRepresentation{N, T}(h)
-LPHRepresentation{N, T}(h::HRep{N}) where {N, T} = LPHRepresentation{N, T, hmatrixtype(typeof(h), T)}(h)
+LPHRepresentation(h::HRep{T}) where {T} = LPHRepresentation{T}(h)
+LPHRepresentation{T}(h::HRep{N}) where {T} = LPHRepresentation{T, hmatrixtype(typeof(h), T)}(h)
 
-#function LPHRepresentation{N, T}(it::HRepIterator{N, T}) where {N,T}
+#function LPHRepresentation{T}(it::HRepIterator{T}) where {N,T}
 #    A = Matrix{T}(length(it), N)
 #    lb = Vector{T}(length(it))
 #    ub = Vector{T}(length(it))
@@ -94,9 +94,9 @@ LPHRepresentation{N, T}(h::HRep{N}) where {N, T} = LPHRepresentation{N, T, hmatr
 #            lb[i] = typemin(T)
 #        end
 #    end
-#    LPHRepresentation{N, T}(A, l, u, lb, ub)
+#    LPHRepresentation{T}(A, l, u, lb, ub)
 #end
-function LPHRepresentation{N, T, MT}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, halfspaces::ElemIt{<:HalfSpace{N, T}}) where {N, T, MT}
+function LPHRepresentation{T, MT}(hyperplanes::ElemIt{<:HyperPlane{T}}, halfspaces::ElemIt{<:HalfSpace{T}}) where {T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
     A = emptymatrix(MT, nhrep, N)
@@ -115,13 +115,13 @@ function LPHRepresentation{N, T, MT}(hyperplanes::ElemIt{<:HyperPlane{N, T}}, ha
         lb[nhyperplane+i] = typemin(T)
         ub[nhyperplane+i] = h.β
     end
-    LPHRepresentation{N, T, MT}(A, l, u, lb, ub)
+    LPHRepresentation{T, MT}(A, l, u, lb, ub)
 end
 
-Base.copy(lp::LPHRepresentation{N, T, MT}) where {N, T, MT} = LPHRepresentation{N, T, MT}(copy(lp.A), copy(lp.l), copy(lp.u), copy(lp.colleqs), copy(lp.colgeqs), copy(lp.coleqs), copy(lp.lb), copy(lp.ub), copy(lp.rowleqs), copy(lp.rowgeqs), copy(lp.roweqs))
+Base.copy(lp::LPHRepresentation{T, MT}) where {T, MT} = LPHRepresentation{T, MT}(copy(lp.A), copy(lp.l), copy(lp.u), copy(lp.colleqs), copy(lp.colgeqs), copy(lp.coleqs), copy(lp.lb), copy(lp.ub), copy(lp.rowleqs), copy(lp.rowgeqs), copy(lp.roweqs))
 
-Base.length(idxs::Indices{N, T, <:HyperPlane{N, T}, LPHRepresentation{N, T}}) where {N, T} = length(idxs.rep.coleqs) + length(idxs.rep.roweqs)
-Base.length(idxs::Indices{N, T, <:HalfSpace{N, T}, LPHRepresentation{N, T}}) where {N, T} = length(idxs.rep.colleqs) + length(idxs.rep.colgeqs) + length(idxs.rep.rowleqs) + length(idxs.rep.rowgeqs)
+Base.length(idxs::Indices{T, <:HyperPlane{T}, LPHRepresentation{T}}) where {T} = length(idxs.rep.coleqs) + length(idxs.rep.roweqs)
+Base.length(idxs::Indices{T, <:HalfSpace{T}, LPHRepresentation{T}}) where {T} = length(idxs.rep.colleqs) + length(idxs.rep.colgeqs) + length(idxs.rep.rowleqs) + length(idxs.rep.rowgeqs)
 
 # m rows (constraints) and n columns (variables)
 # state : colrow, i, lgeq
@@ -175,7 +175,7 @@ function _index2state(lp, idx::HalfSpaceIndex)
     end
 end
 
-function Base.isvalid(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T}
+function Base.isvalid(lp::LPHRepresentation{T}, idx::HIndex{T}) where {T}
     colrow, i, lgeq = _index2state(lp, idx)
     if colrow == 1
         lgeqs = (lp.colleqs, lp.colgeqs, lp.coleqs)
@@ -184,9 +184,9 @@ function Base.isvalid(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, 
     end
     1 <= colrow <= 2 && i in lgeqs[lgeq]
 end
-Base.done(idxs::HIndices{N, T, <:LPHRepresentation{N, T}}, idx::HIndex{N, T}) where {N, T} = _index2state(idxs.rep, idx)[1] == 3
+Base.done(idxs::HIndices{T, <:LPHRepresentation{T}}, idx::HIndex{T}) where {T} = _index2state(idxs.rep, idx)[1] == 3
 
-function getaβ(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T}
+function getaβ(lp::LPHRepresentation{T}, idx::HIndex{T}) where {T}
     colrow, i, lgeq = _index2state(lp, idx)
     if colrow == 1
         a = origin(hvectortype(typeof(lp)), FullDim{N}())
@@ -199,7 +199,7 @@ function getaβ(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T}
     end
     a, β
 end
-Base.get(lp::LPHRepresentation{N, T}, idx::HIndex{N, T}) where {N, T} = valuetype(idx)(getaβ(lp, idx)...)
+Base.get(lp::LPHRepresentation{T}, idx::HIndex{T}) where {T} = valuetype(idx)(getaβ(lp, idx)...)
 
-dualtype(::Type{<:LPHRepresentation{N, T}}, ::Type{AT}) where {N, T, AT} = dualtype(Intersection{N, T, AT}, AT)
-dualfullspace(h::LPHRepresentation, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {N, T, AT} = dualfullspace(Intersection{N, T, AT}, d, T, AT)
+dualtype(::Type{<:LPHRepresentation{T}}, ::Type{AT}) where {T, AT} = dualtype(Intersection{T, AT}, AT)
+dualfullspace(h::LPHRepresentation, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {T, AT} = dualfullspace(Intersection{T, AT}, d, T, AT)

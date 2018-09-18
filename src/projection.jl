@@ -29,7 +29,7 @@ struct ProjectGenerators <: EliminationAlgorithm end
 """
     project(p::Polyhedron, pset, algo)
 
-Equivalent to `eliminate(p, setdiff(1:N, pset), algo).
+    Equivalent to `eliminate(p, setdiff(1:fulldim(p), pset), algo).
 """
 function project end
 
@@ -40,20 +40,20 @@ Eliminate the dimensions in `delset` by projecting the polyhedron onto the remai
 """
 function eliminate end
 
-project(p::Polyhedron{N}, pset) where {N} = eliminate(p, setdiff(1:N, pset))
-project(p::Polyhedron{N}, pset, algo) where {N} = eliminate(p, setdiff(1:N, pset), algo)
+project(p::Polyhedron, pset) = eliminate(p, setdiff(1:fulldim(p), pset))
+project(p::Polyhedron, pset, algo) = eliminate(p, setdiff(1:fulldim(p), pset), algo)
 
 supportselimination(p::Polyhedron, ::FourierMotzkin)   = false
 eliminate(p::Polyhedron, delset, ::FourierMotzkin)     = error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
 supportselimination(p::Polyhedron, ::BlockElimination) = false
 eliminate(p::Polyhedron, delset, ::BlockElimination)   = error("Block elimination not implemented for $(typeof(p))")
 
-eliminate(p::Polyhedron{N}, algo::EliminationAlgorithm) where {N} = eliminate(p, BitSet(N), algo)
+eliminate(p::Polyhedron, algo::EliminationAlgorithm) = eliminate(p, BitSet(N), algo)
 
 # eliminate the last dimension by default
-eliminate(p::Polyhedron{N}, delset=BitSet(N)) where N = eliminate(p, delset, DefaultElimination())
+eliminate(p::Polyhedron, delset=BitSet(fulldim(p))) = eliminate(p, delset, DefaultElimination())
 
-function eliminate(p::Polyhedron{N}, delset, ::DefaultElimination) where N
+function eliminate(p::Polyhedron, delset, ::DefaultElimination)
     fm = supportselimination(p, FourierMotzkin())
     be = supportselimination(p, BlockElimination())
     if (!fm && !be) || vrepiscomputed(p)
@@ -66,7 +66,7 @@ function eliminate(p::Polyhedron{N}, delset, ::DefaultElimination) where N
     eliminate(p, delset, algo)
 end
 
-function eliminate(p::Polyhedron{N}, delset, ::ProjectGenerators) where N
+function eliminate(p::Polyhedron, delset, ::ProjectGenerators)
     Id = Matrix(1I, N, N)
     Iproj = Id[collect(setdiff(BitSet(1:N), delset)),:]
     Iproj * p
@@ -78,7 +78,7 @@ end
 Projects the polyhedron `p` into the `size(P, 2)`-dimensional linear subspace spanned by the columns of `P`.
 The new orthonormal basis for this subspace is computed by applying the Gram–Schmidt process to the columns of `P`, starting with the first column.
 """
-function project(p::Polyhedron{N,T}, P::AbstractMatrix) where {N,T}
+function project(p::Polyhedron{}, P::AbstractMatrix) where {T}
     # Function to make x orthogonal to an orthonormal basis in Q
     # We first make the columns of P orthonormal
     if size(P, 1) != N
@@ -116,7 +116,7 @@ end
 _fixelim(h::ElemT, I, J, v, dout::FullDim) where ElemT<:HRepElement = similar_type(ElemT, dout)(h.a[J], h.β - dot(h.a[I], v))
 
 """
-    fixandeliminate(p::HRep{N, T}, I, v)
+    fixandeliminate(p::HRep{T}, I, v)
 
 Fix the variables with indices in `I` to the corresponding value in `v`. This is equivalent to doing the following:
 ```julia
@@ -131,8 +131,8 @@ but it is much more efficient. The code above does a polyhedral projection while
 each halfspace `⟨a, x⟩ ≤ β` (resp. each hyperplane `⟨a, x⟩ = β`) by the halfspace `⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩`
 (resp. the hyperplane `⟨a_J, x⟩ = β - ⟨a_I, v⟩`) where `J = setdiff(1:N, I)`.
 """
-function fixandeliminate(p::HRep{N, S}, I, v) where {N, S}
-    J = setdiff(1:N, I)
+function fixandeliminate(p::HRep{S}, I, v) where {S}
+    J = setdiff(1:fulldim(p), I)
     d = FullDim{length(J)}()
     f = (i, h) -> _fixelim(h, I, J, v, d)
     T = promote_type(S, eltype(v))
@@ -141,11 +141,11 @@ end
 
 # TODO rewrite, it is just cutting a cone with a half-space, nothing more
 # export radialprojectoncut
-# function radialprojectoncut{N}(p::Polyhedron{N}, cut::Vector, at)
+# function radialprojectoncut(p::Polyhedron, cut::Vector, at)
 #   if isapproxzero(at)
 #     error("at is zero")
 #   end
-#   if length(cut) != N
+#   if length(cut) != fulldim(p)
 #     error("The dimensions of the cut and of the polyhedron do not match")
 #   end
 #   ext = MixedMatVRep(getgenerators(p))

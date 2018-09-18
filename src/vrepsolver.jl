@@ -77,7 +77,7 @@ function MPBSI.optimize!(lpm::VRepPolyhedraModel)
         else
             lpm.status = :Optimal
             lpm.objval = zero(T)
-            lpm.solution = spzeros(T,N)
+            lpm.solution = spzeros(T, N)
         end
     end
 end

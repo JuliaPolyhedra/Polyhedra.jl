@@ -4,7 +4,7 @@ Base.show(io::IO, h::HalfSpace) = print(io, "HalfSpace($(h.a), $(h.β))")
 Base.show(io::IO, l::Line) = print(io, "Line($(l.a))")
 Base.show(io::IO, r::Ray) = print(io, "Ray($(r.a))")
 
-Base.summary(it::Polyhedra.AbstractRepIterator{N, T, ElemT}) where {N, T, ElemT} = "$(length(it))-element iterator of $ElemT"
+Base.summary(it::Polyhedra.AbstractRepIterator{T, ElemT}) where {T, ElemT} = "$(length(it))-element iterator of $ElemT"
 
 # Inspired from Base.show_vector
 function show_repit(io::IO, v::Polyhedra.AbstractRepIterator, print_prefix::Bool, start_str::String, end_str::String, join_str::String=",")

@@ -1,7 +1,7 @@
 export convexhull, convexhull!, conichull
 
-const HAny{N, T} = Union{HRep{N, T}, HRepElement{N, T}}
-const VAny{N, T} = Union{VRep{N, T}, VRepElement{N, T}}
+const HAny{T} = Union{HRep{T}, HRepElement{T}}
+const VAny{T} = Union{VRep{T}, VRepElement{T}}
 
 """
     intersect(P1::HRep, P2::HRep)
@@ -24,9 +24,9 @@ Base.intersect(el::HRepElement, p::Rep) = p ∩ el
 
 Base.intersect(hps::HyperPlane...) = hrep([hps...])
 Base.intersect(hss::HalfSpace...) = hrep([hss...])
-Base.intersect(h1::HyperPlane{N, T}, h2::HalfSpace{N, T}) where {N, T} = hrep([h1], [h2])
-Base.intersect(h1::HalfSpace{N, T}, h2::HyperPlane{N, T}) where {N, T} = h2 ∩ h1
-Base.intersect(p1::HAny{N, T}, p2::HAny{N, T}, ps::HAny{N, T}...) where {N, T} = intersect(p1 ∩ p2, ps...)
+Base.intersect(h1::HyperPlane{T}, h2::HalfSpace{T}) where {T} = hrep([h1], [h2])
+Base.intersect(h1::HalfSpace{T}, h2::HyperPlane{T}) where {T} = h2 ∩ h1
+Base.intersect(p1::HAny{T}, p2::HAny{T}, ps::HAny{T}...) where {T} = intersect(p1 ∩ p2, ps...)
 function Base.intersect(p::HAny{N}...) where N
     T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
     f(p) = similar_type(typeof(p), T)(p)
@@ -65,11 +65,11 @@ convexhull(el::VRepElement, p::Rep) = convexhull(p, el)
 convexhull(ps::AbstractPoint...) = vrep([ps...])
 convexhull(ls::Line...) = vrep([ls...])
 convexhull(rs::Ray...) = vrep([rs...])
-convexhull(p::AbstractPoint{N, T}, r::Union{Line{N, T}, Ray{N, T}}) where {N, T} = vrep([p], [r])
-convexhull(r::Union{Line{N, T}, Ray{N, T}}, p::AbstractPoint{N, T}) where {N, T} = convexhull(p, r)
-convexhull(l::Line{N, T}, r::Ray{N, T}) where {N, T} = vrep([l], [r])
-convexhull(r::Ray{N, T}, l::Line{N, T}) where {N, T} = convexhull(l, r)
-convexhull(p1::VAny{N, T}, p2::VAny{N, T}, ps::VAny{N, T}...) where {N, T} = convexhull(convexhull(p1, p2), ps...)
+convexhull(p::AbstractPoint{T}, r::Union{Line{T}, Ray{T}}) where {T} = vrep([p], [r])
+convexhull(r::Union{Line{T}, Ray{T}}, p::AbstractPoint{T}) where {T} = convexhull(p, r)
+convexhull(l::Line{T}, r::Ray{T}) where {T} = vrep([l], [r])
+convexhull(r::Ray{T}, l::Line{T}) where {T} = convexhull(l, r)
+convexhull(p1::VAny{T}, p2::VAny{T}, ps::VAny{T}...) where {T} = convexhull(convexhull(p1, p2), ps...)
 function convexhull(p::VAny{N}...) where N
     T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
     f(p) = similar_type(typeof(p), T)(p)
@@ -94,17 +94,17 @@ conify(r::Union{Line, Ray}) = r
 
 conichull(p...) = convexhull(conify.(p)...)
 
-function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {N, T}
+function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {T}
     _tout(p) = similar_type(typeof(p), T)(p)
     ps = [_tout(po1 + po2) for po1 in points(p1) for po2 in points(p2)]
     tuple(ps)
 end
-sumpoints(::FullDim{N}, ::Type{T}, p1::Rep, p2::VCone) where {N, T} = RepIterator{N, T}.(preps(p1))
-sumpoints(::FullDim{N}, ::Type{T}, p1::VCone, p2::Rep) where {N, T} = RepIterator{N, T}.(preps(p2))
+sumpoints(::FullDim{N}, ::Type{T}, p1::Rep, p2::VCone) where {T} = RepIterator{T}.(preps(p1))
+sumpoints(::FullDim{N}, ::Type{T}, p1::VCone, p2::Rep) where {T} = RepIterator{T}.(preps(p2))
 
-function Base.:+(p1::VRep{N, T1}, p2::VRep{N, T2}) where {N, T1, T2}
+function Base.:+(p1::VRep{T1}, p2::VRep{T2}) where {T1, T2}
     T = typeof(zero(T1) + zero(T2))
-    similar((p1, p2), FullDim{N}(), T, sumpoints(FullDim{N}(), T, p1, p2)..., RepIterator{N, T}.(rreps(p1, p2))...)
+    similar((p1, p2), FullDim{N}(), T, sumpoints(FullDim{N}(), T, p1, p2)..., RepIterator{T}.(rreps(p1, p2))...)
 end
 Base.:+(p::Rep, el::Union{Line, Ray}) = p + vrep([el])
 Base.:+(el::Union{Line, Ray}, p::Rep) = p + el

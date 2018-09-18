@@ -145,18 +145,18 @@ end
 # V-redundancy
 # If p is an H-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 # TODO nlines should be the number of non-redundant lines so something similar to dim
-function isredundant(p::HRep{N,T}, v::Union{AbstractPoint, Line, Ray}; strongly = true, nl::Int=nlines(p), solver=Polyhedra.solver(p)) where {N,T}
+function isredundant(p::HRep{T}, v::Union{AbstractPoint, Line, Ray}; strongly = true, nl::Int=nlines(p), solver=Polyhedra.solver(p)) where {T}
     # v is in every hyperplane otherwise it would not be valid
     hcount = nhyperplanes(p) + count(h -> v in hyperplane(h), halfspaces(p))
-    strong = (isray(v) ? N-1 : N) - nl
+    strong = (isray(v) ? fulldim(p)-1 : fulldim(p)) - nl
     hcount < (strongly ? strong : min(strong, 1))
 end
 # A line is never redundant but it can be a duplicate
-isredundant(p::HRep{N,T}, v::Line; strongly = true, nl::Int=nlines(p), solver=Polyhedra.solver(p)) where {N,T} = false
+isredundant(p::HRep{T}, v::Line; strongly = true, nl::Int=nlines(p), solver=Polyhedra.solver(p)) where {T} = false
 
 # H-redundancy
 # If p is a V-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
-function isredundant(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(p), solver=Polyhedra.solver(p)) where {N,T}
+function isredundant(p::VRep{T}, h::HRepElement; strongly = true, d::Int=dim(p), solver=Polyhedra.solver(p)) where {T}
     checkvconsistency(p)
     hp = hyperplane(h)
     pcount = count(p -> p in hp, points(p))
@@ -165,7 +165,7 @@ function isredundant(p::VRep{N,T}, h::HRepElement; strongly = true, d::Int=dim(p
     pcount < min(d, 1) || (strongly && pcount + rcount < d)
 end
 # An hyperplane is never redundant but it can be a duplicate
-isredundant(p::VRep{N,T}, h::HyperPlane; strongly = true, d::Int=dim(p), solver=Polyhedra.solver(p)) where {N,T} = false
+isredundant(p::VRep{T}, h::HyperPlane; strongly = true, d::Int=dim(p), solver=Polyhedra.solver(p)) where {T} = false
 
 function ishredundant(args...; kws...)
     Base.depwarn("ishredundant is deprecated, use isredundant intead", :ishredundant)
@@ -344,7 +344,7 @@ function hupdatedup!(aff::HAffineSpace, hss, h::HalfSpace)
         false
     end
 end
-function removeduplicates(hrep::HRepresentation{N, T}) where {N, T}
+function removeduplicates(hrep::HRepresentation{T}) where {T}
     aff = affinehull(hrep, true)
     newlin = true
     hs = halfspacetype(hrep)[]

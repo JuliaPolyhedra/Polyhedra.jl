@@ -46,8 +46,8 @@ function similar_type(::Type{SAT}, ::FullDim{D}, ::Type{Tout}) where {SAT <: Sta
     StaticArrays.similar_type(SAT, Tout, StaticArrays.Size(D))
 end
 
-similar_type(::Type{<:Point}, ::FullDim{N}, ::Type{T}) where {N, T} = Point{N,T}
-similar_type(::Type{<:Vec}, ::FullDim{N}, ::Type{T}) where {N, T} = Vec{N,T}
+similar_type(::Type{<:Point}, ::FullDim{N}, ::Type{T}) where {T} = Point{N,T}
+similar_type(::Type{<:Vec}, ::FullDim{N}, ::Type{T}) where {T} = Vec{N,T}
 
 emptymatrix(::Type{MT}, m, n) where {MT<:AbstractMatrix} = MT(undef, m, n)
 emptymatrix(::Type{SparseMatrixCSC{T, Int}}, m, n) where T = spzeros(T, m, n)

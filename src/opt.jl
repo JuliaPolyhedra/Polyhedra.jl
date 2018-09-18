@@ -50,6 +50,6 @@ end
 
 Check whether the polyhedron `p` is empty by using the solver `solver`.
 """
-function Base.isempty(p::Rep{N, T}, solver::MPB.AbstractMathProgSolver=Polyhedra.solver(p)) where {N, T}
+function Base.isempty(p::Rep{T}, solver::MPB.AbstractMathProgSolver=Polyhedra.solver(p)) where {T}
     MPB.linprog(zeros(T, N), p, solver).status == :Infeasible
 end

@@ -7,7 +7,7 @@ halfspace(h::HyperPlane) = HalfSpace(h.a, h.β)
 halfspace(h::HalfSpace) = h
 
 line(r::Ray) = Line(coord(r))
-linetype(::Type{Ray{N, T, AT}}) where {N, T, AT} = Line{N, T, AT}
+linetype(::Type{Ray{T, AT}}) where {T, AT} = Line{T, AT}
 
 ###############
 # TRANSLATION #
@@ -15,14 +15,14 @@ linetype(::Type{Ray{N, T, AT}}) where {N, T, AT} = Line{N, T, AT}
 
 export translate
 
-function htranslate(p::HRep{N, T}, v::Union{AbstractPoint{N, S}}) where {N, S, T}
+function htranslate(p::HRep{T}, v::Union{AbstractPoint{S}}) where {S, T}
     f = (i, h) -> translate(h, v)
     d = FullDim{N}()
     Tout = Base.promote_op(+, T, S)
     similar(p, d, Tout, hmap(f, d, Tout, p)...)
 end
 
-function vtranslate(p::VRep{N, T}, v::Union{AbstractPoint{N, S}}) where {N, S, T}
+function vtranslate(p::VRep{T}, v::Union{AbstractPoint{S}}) where {S, T}
     f = (i, u) -> translate(u, v)
     d = FullDim{N}()
     Tout = Base.promote_op(+, T, S)
@@ -176,7 +176,7 @@ function _pushinout!(ins, out, pr::Union{AbstractPoint, Ray}, h::HalfSpace)
 end
 
 """
-    intersect(v::VRepresentation{N, T}, h::HRepElement)
+    intersect(v::VRepresentation{T}, h::HRepElement)
 
 Compute the intersection of `v` with an halfspace or hyperplane `h`.
 The method used by default is to keep the V-representation element of `v`
@@ -189,7 +189,7 @@ See Lemma 3 of [FP96] for more detail on the method.
 **Double description method revisited**
 *Combinatorics and computer science*, *Springer*, **1996**, 91-111
 """
-function Base.intersect(v::VRepresentation{N, T}, h::HRepElement) where {N, T}
+function Base.intersect(v::VRepresentation{T}, h::HRepElement) where {T}
     PointT = pointtype(v)
     pins = PointT[] # Inside
     pinp = PointT[] # In plane

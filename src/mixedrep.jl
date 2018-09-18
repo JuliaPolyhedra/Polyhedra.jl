@@ -1,11 +1,11 @@
 # Useful for CDD, LRS and matrix representations
 
 # HyperPlanes and HalfSpaces mixed
-abstract type MixedHRep{N, T} <: HRepresentation{N, T} end
+abstract type MixedHRep{T} <: HRepresentation{T} end
 # SymPoints and Points mixed and/or Lines and Rays mixed
-abstract type MixedVRep{N, T} <: VRepresentation{N, T} end
+abstract type MixedVRep{T} <: VRepresentation{T} end
 
-const MixedRep{N, T} = Union{MixedHRep{N, T}, MixedVRep{N, T}}
+const MixedRep{T} = Union{MixedHRep{T}, MixedVRep{T}}
 
 # This could be defined for all types Indices but it is not recommended for reps other than Mixed to use this implementation of length as it is inefficient
 # a MethodError is more helpful than a hidden inefficiency
@@ -16,14 +16,14 @@ function mixedlength(idxs::Indices)
     end
     count
 end
-Base.length(idxs::Indices{N, T, ElemT, <:MixedRep{N, T}}) where {N, T, ElemT} = mixedlength(idxs)
+Base.length(idxs::Indices{T, ElemT, <:MixedRep{T}}) where {T, ElemT} = mixedlength(idxs)
 
-function mixednext(rep::MixedRep{N, T}, idx::IdxT) where {N, T, ElemT, IdxT<:Index{N, T, ElemT}}
+function mixednext(rep::MixedRep{T}, idx::IdxT) where {T, ElemT, IdxT<:Index{T, ElemT}}
     idx = IdxT(idx.value+1)
-    while !done(Indices{N, T, ElemT}(rep), idx) && !isvalid(rep, idx)
+    while !done(Indices{T, ElemT}(rep), idx) && !isvalid(rep, idx)
         idx = IdxT(idx.value+1)
     end
     idx
 end
-Base.start(idx::Indices{N, T, ElemT, <:MixedRep{N, T}}) where {N, T, ElemT} = mixednext(idx.rep, Index{N, T, ElemT}(0))
-nextindex(rep::MixedRep{N, T}, idx::Index{N, T}) where {N, T} = mixednext(rep, idx)
+Base.start(idx::Indices{T, ElemT, <:MixedRep{T}}) where {T, ElemT} = mixednext(idx.rep, Index{T, ElemT}(0))
+nextindex(rep::MixedRep{T}, idx::Index{T}) where {T} = mixednext(rep, idx)
