@@ -43,7 +43,7 @@ supportssolver(::Type{<:SimplePolyhedron}) = true
 hvectortype(::Type{<:SimplePolyhedron{T, HRepT}}) where {T, HRepT} = hvectortype(HRepT)
 vvectortype(::Type{SimplePolyhedron{T, HRepT, VRepT}}) where {T, HRepT, VRepT} = vvectortype(VRepT)
 
-similar_type(::Type{<:SimplePolyhedron{M, S, HRepT, VRepT}}, d::FullDim{N}, ::Type{T}) where {M, S, HRepT, VRepT, T} = SimplePolyhedron{T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
+similar_type(::Type{<:SimplePolyhedron{M, S, HRepT, VRepT}}, d::FullDim, ::Type{T}) where {M, S, HRepT, VRepT, T} = SimplePolyhedron{T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
 
 function SimplePolyhedron{T, HRepT, VRepT}(hits::HIt...; solver=nothing) where {T, HRepT, VRepT}
     SimplePolyhedron{T, HRepT, VRepT}(HRepT(hits...), solver)

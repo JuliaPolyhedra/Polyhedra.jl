@@ -22,9 +22,9 @@ end
 
 Solve the minimization of the objective ``\\langle c, x \\rangle`` over the polyhedron `p`.
 """
-function MPB.linprog(c::AbstractVector, p::Rep{N}, solver::MPB.AbstractMathProgSolver=Polyhedra.solver(p)) where N
+function MPB.linprog(c::AbstractVector, p::Rep, solver::MPB.AbstractMathProgSolver=Polyhedra.solver(p))
     m = PolyhedraModel(solver)
-    if N != length(c)
+    if fulldim(p) != length(c)
         throw(DimensionMismatch("length of objective does not match dimension of polyhedron"))
     end
     MPBSI.loadproblem!(m, p, c, :Min)
@@ -51,5 +51,5 @@ end
 Check whether the polyhedron `p` is empty by using the solver `solver`.
 """
 function Base.isempty(p::Rep{T}, solver::MPB.AbstractMathProgSolver=Polyhedra.solver(p)) where {T}
-    MPB.linprog(zeros(T, N), p, solver).status == :Infeasible
+    MPB.linprog(zeros(T, fulldim(p)), p, solver).status == :Infeasible
 end

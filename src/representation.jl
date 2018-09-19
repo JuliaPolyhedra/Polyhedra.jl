@@ -41,7 +41,9 @@ Returns the dimension of the space in which the representation is defined.
 That is, a straight line in a 3D space has `fulldim` 3.
 """
 fulldim(p) = fulldim(FullDim(p))
-FullDim(rep::Union{Rep{N}, Type{<:Rep{N}}}) where N = FullDim{N}()
+FullDim(rep::Union{VRep, Type{<:VRep}}) = FullDim(vvectortype(rep))
+FullDim(rep::Union{HRep, Type{<:HRep}}) = FullDim(hvectortype(rep))
+FullDim(rep::Union{Polyhedron, Type{<:Polyhedron}}) = FullDim(hvectortype(rep))
 
 # Check that it is either empty or it has a point
 vconsistencyerror() = error("Non-empty V-representation must contain at least one point. If it is a polyhedral cone, the origin should be added.")
@@ -85,8 +87,8 @@ Base.convert(::Type{VRep}, p::VRepresentation) = p
 MultivariatePolynomials.changecoefficienttype(p::Rep{N,T}, ::Type{T}) where {N,T} = p
 MultivariatePolynomials.changecoefficienttype(p::Rep, T::Type) = similar_type(typeof(p), T)(p)
 
-VRepresentation{T}(v::VRepresentation) where {T} = similar_type(typeof(v), FullDim{N}(), T)(v)
-HRepresentation{T}(h::HRepresentation) where {T} = similar_type(typeof(h), FullDim{N}(), T)(h)
+VRepresentation{T}(v::VRepresentation) where {T} = similar_type(typeof(v), FullDim(v), T)(v)
+HRepresentation{T}(h::HRepresentation) where {T} = similar_type(typeof(h), FullDim(h), T)(h)
 
 VRep{T}(v::VRepresentation) where {T} = VRepresentation{T}(v)
 VRep{T}(p::Polyhedron) where {T} = Polyhedron{T}(p)

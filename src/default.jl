@@ -2,30 +2,48 @@ export default_type, default_library, similar_library, library
 export getlibrary, getlibraryfor
 
 """
-    default_type(::FullDim{N}, ::Type{T}) where {N, T}
+    default_type(d::FullDim, ::Type{T}) where {T}
 
-Returns the default polyhedron type for `N`-dimensional polyhedron of coefficient type `T`.
+Returns the default polyhedron type for `d`-dimensional polyhedron of coefficient type `T`.
 """
 function default_type end
 
-default_type(::FullDim{N}, ::Type{T}) where {N, T} = SimplePolyhedron{T, Intersection{T, Vector{T}}, Hull{T, Vector{T}}}
-default_type(::FullDim{1}, ::Type{T}) where T = Interval{T, SVector{1, T}}
+function default_type(::StaticArrays.Size{N}, ::Type{T}) where {T}
+    return SimplePolyhedron{T, Intersection{T, SVector{N, T}}, Hull{T, SVector{N, T}}}
+end
+function default_type(::StaticArrays.Size{1}, ::Type{T}) where T
+    return Interval{T, SVector{1, T}}
+end
+function default_library(fd::Int, ::Type{T})
+    if fd == 1
+        return Interval{T, Vector{T}}
+    else
+        return SimplePolyhedron{T, Intersection{T, Vector{T}}, Hull{T, Vector{T}}}
+    end
+end
 
 """
-    default_library(::FullDim{N}, ::Type{T}) where {N, T}
+    default_library(d::FullDim, ::Type{T}) where {T}
 
-Returns the default polyhedral library for `N`-dimensional polyhedron of coefficient type `T`.
+Returns the default polyhedral library for `d`-dimensional polyhedron of coefficient type `T`.
 """
 function default_library end
 
 _default_type(::Type{T}) where T = T
 # See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/35
 _default_type(::Type{AbstractFloat}) = Float64
-default_library(::FullDim, ::Type{T}) where T = SimplePolyhedraLibrary{_default_type(T)}()
-default_library(::FullDim{1}, ::Type{T}) where T = IntervalLibrary{_default_type(T)}()
+default_library(::StaticArrays.Size, T::Type) = SimplePolyhedraLibrary{_default_type(T)}()
+default_library(::StaticArrays.Size{1}, T::Type) = IntervalLibrary{_default_type(T)}()
+function default_library(fd::Int, ::Type{T})
+    if fd == 1
+        return IntervalLibrary{_default_type(T)}()
+    else
+        return SimplePolyhedraLibrary{_default_type(T)}()
+    end
+end
 
 """
-    similar_library(lib::PolyhedraLibrary, d::FullDim{N}, ::Type{T}) where {N, T}
+    similar_library(lib::PolyhedraLibrary, d::FullDim, T::Type)
 
 Returns a library that supports polyhedra of full dimension `T` with coefficient type `T`. If `lib` does not support it, this commonly calls `default_library(d, T)`.
 """
@@ -102,9 +120,9 @@ function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}
 end
 
 """
-    similar(p::Tuple{Vararg{Polyhedra.Rep}}, ::Polyhedra.FullDim, ::Type{T}, it::Polyhedra.It{T}...)
+    similar(p::Tuple{Vararg{Polyhedra.Rep}}, d::Polyhedra.FullDim, ::Type{T}, it::Polyhedra.It{T}...)
 
-Creates a representation with a type similar to `p` of a polyhedron of full dimension `N`, element type `T` and initialize it with the iterators `it`.
+Creates a representation with a type similar to `p` of a polyhedron of full dimension `d`, element type `T` and initialize it with the iterators `it`.
 The type of the result will be chosen closer to the type of `p[1]`.
 """
 Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...) where {T} = default_similar(p, d, T, it...)
@@ -114,5 +132,8 @@ end
 function Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, it::It...)
     T = promote_coefficienttype(p)
     similar(p, d, T, it...)
+end
+function Base.similar(p::Tuple{Vararg{Rep}}, it::It...)
+    similar(p, FullDim(p[1]), it...)
 end
 Base.similar(p::Rep, args...) = similar((p,), args...)

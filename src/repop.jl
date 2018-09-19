@@ -15,9 +15,9 @@ The type of the result will be chosen closer to the type of `P1`. For instance, 
 If `P1` and `P2` are both polyhedra (resp. H-representation), the resulting polyhedron type (resp. H-representation type) will be computed according to the type of `P1`.
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
-function Base.intersect(p::HRep{N}...) where N
+function Base.intersect(p::HRep...)
     T = promote_coefficienttype(p)
-    similar(p, hmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)
+    similar(p, hmap((i, x) -> similar_type(typeof(x), T)(x), FullDim(p[1]), T, p...)...)
 end
 Base.intersect(p::Rep, el::HRepElement) = p ∩ intersect(el)
 Base.intersect(el::HRepElement, p::Rep) = p ∩ el
@@ -27,7 +27,7 @@ Base.intersect(hss::HalfSpace...) = hrep([hss...])
 Base.intersect(h1::HyperPlane{T}, h2::HalfSpace{T}) where {T} = hrep([h1], [h2])
 Base.intersect(h1::HalfSpace{T}, h2::HyperPlane{T}) where {T} = h2 ∩ h1
 Base.intersect(p1::HAny{T}, p2::HAny{T}, ps::HAny{T}...) where {T} = intersect(p1 ∩ p2, ps...)
-function Base.intersect(p::HAny{N}...) where N
+function Base.intersect(p::HAny...)
     T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
     f(p) = similar_type(typeof(p), T)(p)
     intersect(f.(p)...)
@@ -35,12 +35,14 @@ end
 
 
 """
-    intersect!(p::HRep{N}, h::Union{HRepresentation{N}, HRepElement{N}})
+    intersect!(p::HRep, h::Union{HRepresentation, HRepElement})
 
 Same as [`intersect`](@ref) except that `p` is modified to be equal to the intersection.
 """
-Base.intersect!(p::HRep{N}, ::Union{HRepresentation{N}, HRepElement{N}}) where {N} = error("intersect! not implemented for $(typeof(p)). It probably does not support in-place modification, try `intersect` (without the `!`) instead.")
-function Base.intersect!(p::Polyhedron{N}, h::Union{HRepresentation{N}, HRepElement{N}}) where N
+function Base.intersect!(p::HRep, ::Union{HRepresentation, HRepElement})
+    error("intersect! not implemented for $(typeof(p)). It probably does not support in-place modification, try `intersect` (without the `!`) instead.")
+end
+function Base.intersect!(p::Polyhedron, h::Union{HRepresentation, HRepElement}) where N
     resethrep!(p, hrep(p) ∩ h)
 end
 
@@ -55,9 +57,9 @@ The type of the result will be chosen closer to the type of `P1`. For instance, 
 If `P1` and `P2` are both polyhedra (resp. V-representation), the resulting polyhedron type (resp. V-representation type) will be computed according to the type of `P1`.
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
-function convexhull(p::VRep{N}...) where N
+function convexhull(p::VRep...)
     T = promote_coefficienttype(p)
-    similar(p, vmap((i, x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, p...)...)
+    similar(p, vmap((i, x) -> similar_type(typeof(x), T)(x), FullDim(p[1]), T, p...)...)
 end
 convexhull(p::Rep, el::VRepElement) = convexhull(p, convexhull(el))
 convexhull(el::VRepElement, p::Rep) = convexhull(p, el)
@@ -70,7 +72,7 @@ convexhull(r::Union{Line{T}, Ray{T}}, p::AbstractPoint{T}) where {T} = convexhul
 convexhull(l::Line{T}, r::Ray{T}) where {T} = vrep([l], [r])
 convexhull(r::Ray{T}, l::Line{T}) where {T} = convexhull(l, r)
 convexhull(p1::VAny{T}, p2::VAny{T}, ps::VAny{T}...) where {T} = convexhull(convexhull(p1, p2), ps...)
-function convexhull(p::VAny{N}...) where N
+function convexhull(p::VAny...)
     T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
     f(p) = similar_type(typeof(p), T)(p)
     convexhull(f.(p)...)
@@ -81,8 +83,10 @@ end
 
 Same as [`convexhull`](@ref) except that `p1` is modified to be equal to the convex hull.
 """
-convexhull!(p::VRep{N}, ine::VRepresentation{N}) where {N} = error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
-function convexhull!(p::Polyhedron{N}, v::VRepresentation{N}) where N
+function convexhull!(p::VRep, ine::VRepresentation)
+    error("convexhull! not implemented for $(typeof(p)). It probably does not support in-place modification, try `convexhull` (without the `!`) instead.")
+end
+function convexhull!(p::Polyhedron, v::VRepresentation)
     resetvrep!(p, convexhull(vrep(p), v))
 end
 
@@ -94,17 +98,17 @@ conify(r::Union{Line, Ray}) = r
 
 conichull(p...) = convexhull(conify.(p)...)
 
-function sumpoints(::FullDim{N}, ::Type{T}, p1, p2) where {T}
+function sumpoints(::FullDim, ::Type{T}, p1, p2) where {T}
     _tout(p) = similar_type(typeof(p), T)(p)
     ps = [_tout(po1 + po2) for po1 in points(p1) for po2 in points(p2)]
     tuple(ps)
 end
-sumpoints(::FullDim{N}, ::Type{T}, p1::Rep, p2::VCone) where {T} = RepIterator{T}.(preps(p1))
-sumpoints(::FullDim{N}, ::Type{T}, p1::VCone, p2::Rep) where {T} = RepIterator{T}.(preps(p2))
+sumpoints(::FullDim, ::Type{T}, p1::Rep, p2::VCone) where {T} = RepIterator{T}.(preps(p1))
+sumpoints(::FullDim, ::Type{T}, p1::VCone, p2::Rep) where {T} = RepIterator{T}.(preps(p2))
 
 function Base.:+(p1::VRep{T1}, p2::VRep{T2}) where {T1, T2}
     T = typeof(zero(T1) + zero(T2))
-    similar((p1, p2), FullDim{N}(), T, sumpoints(FullDim{N}(), T, p1, p2)..., RepIterator{T}.(rreps(p1, p2))...)
+    similar((p1, p2), FullDim(p1), T, sumpoints(FullDim(p1), T, p1, p2)..., RepIterator{T}.(rreps(p1, p2))...)
 end
 Base.:+(p::Rep, el::Union{Line, Ray}) = p + vrep([el])
 Base.:+(el::Union{Line, Ray}, p::Rep) = p + el
@@ -114,18 +118,18 @@ function usehrep(p1::Polyhedron, p2::Polyhedron)
     hrepiscomputed(p1) && (!vrepiscomputed(p1) || hrepiscomputed(p2))
 end
 
-function hcartesianproduct(p1::HRep{N1}, p2::HRep{N2}) where {N1, N2}
-    d = FullDim{N1+N2}()
+function hcartesianproduct(p1::HRep, p2::HRep)
+    d = sum_fulldim(FullDim(p1), FullDim(p2))
     T = promote_coefficienttype((p1, p2))
-    f = (i, x) -> zeropad(x, i == 1 ? N2 : -N1)
+    f = (i, x) -> zeropad(x, i == 1 ? FullDim(p2) : neg_fulldim(FullDim(p1)))
     similar((p1, p2), d, T, hmap(f, d, T, p1, p2)...)
 end
-function vcartesianproduct(p1::VRep{N1}, p2::VRep{N2}) where {N1, N2}
-    d = FullDim{N1+N2}()
+function vcartesianproduct(p1::VRep, p2::VRep)
+    d = sum_fulldim(FullDim(p1), FullDim(p2))
     T = promote_coefficienttype((p1, p2))
     # Always type of first arg
-    f1 = (i, x) -> zeropad(x, N2)
-    f2 = (i, x) -> zeropad(x, -N1)
+    f1 = (i, x) -> zeropad(x, FullDim(p2))
+    f2 = (i, x) -> zeropad(x, neg_fulldim(FullDim(p1)))
     q1 = similar(p1, d, T, vmap(f1, d, T, p1)...)
     q2 = similar(p2, d, T, vmap(f2, d, T, p2)...)
     q1 + q2
@@ -160,13 +164,13 @@ Base.:(\)(P::AbstractMatrix, rep::HRep) = rep / P'
 
 Transform the polyhedron represented by ``p`` into ``P^{-T} p`` by transforming each halfspace ``\\langle a, x \\rangle \\le \\beta`` into ``\\langle P a, x \\rangle \\le \\beta`` and each hyperplane ``\\langle a, x \\rangle = \\beta`` into ``\\langle P a, x \\rangle = \\beta``.
 """
-function Base.:(/)(p::HRep{Nin, Tin}, P::AbstractMatrix) where {Nin, Tin}
-    if size(P, 2) != Nin
+function Base.:(/)(p::HRep{Tin}, P::AbstractMatrix) where {Tin}
+    if size(P, 2) != fulldim(p)
         throw(DimensionMismatch("The number of rows of P must match the dimension of the H-representation"))
     end
     f = (i, h) -> h / P
-    # For a matrix P of StaticArrays, `d` should be type stable
-    d = FullDim{size(P, 1)}()
+    # FIXME For a matrix P of StaticArrays, `d` should be type stable
+    d = size(P, 1)
     T = _promote_type(Tin, eltype(P))
     similar(p, d, T, hmap(f, d, T, p)...)
 end
@@ -181,13 +185,13 @@ end
 
 Transform the polyhedron represented by ``p`` into ``P p`` by transforming each element of the V-representation (points, symmetric points, rays and lines) `x` into ``P x``.
 """
-function Base.:(*)(P::AbstractMatrix, p::VRep{Nin, Tin}) where {Nin, Tin}
-    if size(P, 2) != Nin
+function Base.:(*)(P::AbstractMatrix, p::VRep{Tin}) where {Tin}
+    if size(P, 2) != fulldim(P)
         throw(DimensionMismatch("The number of rows of P must match the dimension of the V-representation"))
     end
     f = (i, v) -> P * v
     # For a matrix P of StaticArrays, `d` should be type stable
-    d = FullDim{size(P, 1)}()
+    d = size(P, 1)
     T = _promote_type(Tin, eltype(P))
     similar(p, d, T, vmap(f, d, T, p)...)
 end

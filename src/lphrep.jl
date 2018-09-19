@@ -23,13 +23,10 @@ mutable struct LPHRepresentation{T, MT<:AbstractMatrix{T}} <: MixedHRep{T}
         if length(lb) != length(ub) || size(A, 1) != length(lb)
             throw(DimensionMismatch("The length of lb and ub must be equal to the number of columns of A"))
         end
-        if size(A, 2) != N
-            throw(DimensionMismatch("Type dimension does not match the number of rows of A"))
-        end
         colleqs = BitSet()
         colgeqs = BitSet()
         coleqs = BitSet()
-        for i in 1:N
+        for i in 1:size(A, 2)
             leq = u[i] < typemax(T)
             geq = l[i] > typemin(T)
             if leq && geq && _isapprox(l[i], u[i])
@@ -72,13 +69,13 @@ function LPHRepresentation(A::AbstractMatrix, l::AbstractVector, u::AbstractVect
 end
 
 hvectortype(::Type{LPHRepresentation{T, MT}}) where {T, MT} = vectortype(MT)
-similar_type(::Type{LPHRepresentation{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, T, MT} = LPHRepresentation{T, similar_type(MT, T)}
+similar_type(::Type{LPHRepresentation{M, S, MT}}, ::FullDim, ::Type{T}) where {M, S, T, MT} = LPHRepresentation{T, similar_type(MT, T)}
 fulltype(::Type{LPHRepresentation{T, MT}}) where {T, MT} = LPHRepresentation{T, MT}
 
 LPHRepresentation(h::HRep{T}) where {T} = LPHRepresentation{T}(h)
-LPHRepresentation{T}(h::HRep{N}) where {T} = LPHRepresentation{T, hmatrixtype(typeof(h), T)}(h)
+LPHRepresentation{T}(h::HRep) where {T} = LPHRepresentation{T, hmatrixtype(typeof(h), T)}(h)
 
-#function LPHRepresentation{T}(it::HRepIterator{T}) where {N,T}
+#function LPHRepresentation{T}(it::HRepIterator{T}) where {T}
 #    A = Matrix{T}(length(it), N)
 #    lb = Vector{T}(length(it))
 #    ub = Vector{T}(length(it))
@@ -99,6 +96,7 @@ LPHRepresentation{T}(h::HRep{N}) where {T} = LPHRepresentation{T, hmatrixtype(ty
 function LPHRepresentation{T, MT}(hyperplanes::ElemIt{<:HyperPlane{T}}, halfspaces::ElemIt{<:HalfSpace{T}}) where {T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
+    N = fulldim(hyperplanes, halfspaces)
     A = emptymatrix(MT, nhrep, N)
     lb = Vector{T}(nhrep)
     ub = Vector{T}(nhrep)
@@ -189,7 +187,7 @@ Base.done(idxs::HIndices{T, <:LPHRepresentation{T}}, idx::HIndex{T}) where {T} =
 function getaβ(lp::LPHRepresentation{T}, idx::HIndex{T}) where {T}
     colrow, i, lgeq = _index2state(lp, idx)
     if colrow == 1
-        a = origin(hvectortype(typeof(lp)), FullDim{N}())
+        a = origin(hvectortype(typeof(lp)), fulldim(lp))
         a[i] = lgeq == 2 ? -one(T) : one(T)
         β = lgeq == 2 ? -lp.l[i] : lp.u[i]
     else
@@ -202,4 +200,4 @@ end
 Base.get(lp::LPHRepresentation{T}, idx::HIndex{T}) where {T} = valuetype(idx)(getaβ(lp, idx)...)
 
 dualtype(::Type{<:LPHRepresentation{T}}, ::Type{AT}) where {T, AT} = dualtype(Intersection{T, AT}, AT)
-dualfullspace(h::LPHRepresentation, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {T, AT} = dualfullspace(Intersection{T, AT}, d, T, AT)
+dualfullspace(h::LPHRepresentation, d::FullDim, ::Type{T}, ::Type{AT}) where {T, AT} = dualfullspace(Intersection{T, AT}, d, T, AT)

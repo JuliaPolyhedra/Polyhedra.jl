@@ -17,14 +17,14 @@ export translate
 
 function htranslate(p::HRep{T}, v::Union{AbstractPoint{S}}) where {S, T}
     f = (i, h) -> translate(h, v)
-    d = FullDim{N}()
+    d = FullDim(p)
     Tout = Base.promote_op(+, T, S)
     similar(p, d, Tout, hmap(f, d, Tout, p)...)
 end
 
 function vtranslate(p::VRep{T}, v::Union{AbstractPoint{S}}) where {S, T}
     f = (i, u) -> translate(u, v)
-    d = FullDim{N}()
+    d = FullDim(p)
     Tout = Base.promote_op(+, T, S)
     similar(p, d, Tout, vmap(f, d, Tout, p)...)
 end
@@ -42,7 +42,7 @@ end
 ######
 # IN #
 ######
-function _vinh(v::VRepElement{N}, it::ElemIt{<:HRepElement{N}}, infun) where N
+function _vinh(v::VRepElement, it::ElemIt{<:HRepElement}, infun)
     for h in it
         if !infun(v, h)
             return false
@@ -50,7 +50,7 @@ function _vinh(v::VRepElement{N}, it::ElemIt{<:HRepElement{N}}, infun) where N
     end
     return true
 end
-function _vinh(v::VRepElement{N}, hr::HRep{N}, infun) where N
+function _vinh(v::VRepElement, hr::HRep, infun)
     all(map(it -> _vinh(v, it, infun), hreps(hr)))
 end
 
@@ -65,7 +65,7 @@ If `h` is an halfspace, it returns whether ``\\langle a, x \\rangle \\le \\beta`
 
 Returns whether `p` is in `h`, e.g. in all the hyperplanes and halfspaces supporting `h`.
 """
-Base.in(v::VRepElement{N}, hr::HRep{N}) where {N} = _vinh(v, hr, Base.in)
+Base.in(v::VRepElement, hr::HRep) = _vinh(v, hr, Base.in)
 
 """
     ininterior(p::VRepElement, h::HRepElement)
@@ -78,7 +78,7 @@ If `h` is an halfspace ``\\langle a, x \\rangle \\leq \\beta``, it returns wheth
 
 Returns whether `p` is in the interior of `h`, e.g. in the interior of all the hyperplanes and halfspaces supporting `h`.
 """
-ininterior(v::VRepElement{N}, hr::HRep{N}) where {N} = _vinh(v, hr, ininterior)
+ininterior(v::VRepElement, hr::HRep) = _vinh(v, hr, ininterior)
 
 """
     inrelativeinterior(p::VRepElement, h::HRepElement)
@@ -91,15 +91,15 @@ If `h` is an halfspace, it is equivalent to `ininterior(p, h)`.
 
 Returns whether `p` is in the relative interior of `h`, e.g. in the relative interior of all the hyperplanes and halfspaces supporting `h`.
 """
-inrelativeinterior(v::VRepElement{N}, hr::HRep{N}) where {N} = _vinh(v, hr, inrelativeinterior)
+inrelativeinterior(v::VRepElement, hr::HRep) = _vinh(v, hr, inrelativeinterior)
 
-function _hinv(h::HRepElement{N}, vr::ElemIt{<:VRepElement{N}}) where N
+function _hinv(h::HRepElement, vr::ElemIt{<:VRepElement})
     all(in.(vr, h))
 end
-function _hinv(h::HRepElement{N}, vr::VRep{N}) where N
+function _hinv(h::HRepElement, vr::VRep)
     all(_hinv.(h, vreps(vr)))
 end
-function _hinh(h::HalfSpace{N}, hr::HRep{N}, solver) where N
+function _hinh(h::HalfSpace, hr::HRep, solver)
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
     sol = MPB.linprog(-h.a, hr, solver)
     if sol.status == :Unbounded
@@ -112,19 +112,19 @@ function _hinh(h::HalfSpace{N}, hr::HRep{N}, solver) where N
         error("Solver returned with status $(sol.status)")
     end
 end
-function _hinh(h::HyperPlane{N}, hr::HRep{N}, solver) where N
+function _hinh(h::HyperPlane, hr::HRep, solver)
     _hinh(halfspace(h), hr, solver) && _hinh(halfspace(-h), hr, solver)
 end
 
-Base.issubset(vr::VRepresentation{N}, h::HRepElement{N}) where {N} = _hinv(h, vr)
-Base.issubset(hr::HRepresentation{N}, h::HRepElement{N}) where {N} = _hinh(h, hr)
+Base.issubset(vr::VRepresentation, h::HRepElement) = _hinv(h, vr)
+Base.issubset(hr::HRepresentation, h::HRepElement) = _hinh(h, hr)
 
 """
     issubset(p::Rep, h::HRepElement)
 
 Returns whether `p` is a subset of `h`, i.e. whether `h` supports the polyhedron `p`.
 """
-function Base.issubset(p::Polyhedron{N}, h::HRepElement{N}, solver=Polyhedra.solver(p)) where N
+function Base.issubset(p::Polyhedron, h::HRepElement, solver=Polyhedra.solver(p))
     if vrepiscomputed(p)
         _hinv(h, p)
     else

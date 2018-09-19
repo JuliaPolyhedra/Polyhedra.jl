@@ -105,7 +105,7 @@ Base.length(idxs::PointIndices{T, <:VCone{T}}) where {T} = hasallrays(idxs.rep) 
 Base.isempty(idxs::PointIndices{T, <:VCone{T}}) where {T} = !hasallrays(idxs.rep)
 Base.start(idxs::PointIndices{T, <:VCone{T}}) where {T} = eltype(idxs)(hasallrays(idxs.rep) ? 1 : 2)
 Base.done(::PointIndices{T, <:VCone{T}}, idx::PointIndex{T}) where {T} = idx.value > 1
-Base.get(L::VCone{T}, ::PointIndex{T}) where {T} = origin(vvectortype(typeof(L)), FullDim{N}())
+Base.get(L::VCone{T}, ::PointIndex{T}) where {T} = origin(vvectortype(typeof(L)), fulldim(L))
 nextindex(::VCone{T}, idx::PointIndex{T}) where {T} = typeof(idx)(idx.value + 1)
 
 _promote_reptype(P1::Type{<:VCone}, ::Type{<:VCone}) = P1

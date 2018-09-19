@@ -23,14 +23,11 @@ mutable struct MixedMatHRep{T, MT<:AbstractMatrix{T}} <: MixedHRep{T}
         if !isempty(linset) && last(linset) > length(b)
             error("The elements of linset should be between 1 and the number of rows of A/length of b")
         end
-        if size(A, 2) != N
-            error("dimension does not match")
-        end
         new{T, typeof(A)}(A, b, linset)
     end
 end
 
-similar_type(::Type{<:MixedMatHRep{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, T, MT} = MixedMatHRep{T, similar_type(MT, T)}
+similar_type(::Type{<:MixedMatHRep{M, S, MT}}, ::FullDim, ::Type{T}) where {M, S, T, MT} = MixedMatHRep{T, similar_type(MT, T)}
 hvectortype(p::Type{MixedMatHRep{T, MT}}) where {T, MT} = vectortype(MT)
 fulltype(::Type{MixedMatHRep{T, MT}}) where {T, MT} = MixedMatHRep{T, MT}
 
@@ -44,12 +41,13 @@ end
 MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::BitSet) where T <: Real = MixedMatHRep{size(A,2),T}(A, b, linset)
 
 MixedMatHRep(h::HRep{T}) where {T} = MixedMatHRep{T}(h)
-MixedMatHRep{T}(h::HRep{N}) where {T} = MixedMatHRep{T, hmatrixtype(typeof(h), T)}(h)
+MixedMatHRep{T}(h::HRep) where {T} = MixedMatHRep{T, hmatrixtype(typeof(h), T)}(h)
 
 MixedMatHRep{T}(hits::HIt{T}...) where {T} = MixedMatHRep{T, Matrix{T}}(hits...) # FIXME required by CDD and LRS tests
 function MixedMatHRep{T, MT}(hyperplanes::HyperPlaneIt{T}, halfspaces::HalfSpaceIt{T}) where {T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
+    N = fulldim(hyperplanes, halfspaces)
     A = emptymatrix(MT, nhrep, N)
     b = Vector{T}(undef, nhrep)
     linset = BitSet(1:nhyperplane)
@@ -90,8 +88,8 @@ mutable struct MixedMatVRep{T, MT<:AbstractMatrix{T}} <: MixedVRep{T}
         if iszero(size(V, 1)) && !iszero(size(R, 1))
             vconsistencyerror()
         end
-        if (length(R) > 0 && size(R, 2) != N) || (length(V) > 0 && size(V, 2) != N)
-            error("dimension does not match")
+        if (length(R) > 0 && length(V) > 0 && size(R, 2) != size(V, 2))
+            error("Dimension of rays does not match and dimension of points")
         end
         if !isempty(Rlinset) && last(Rlinset) > size(R, 1)
             error("The elements of Rlinset should be between 1 and the number of rows of R")
@@ -100,7 +98,7 @@ mutable struct MixedMatVRep{T, MT<:AbstractMatrix{T}} <: MixedVRep{T}
     end
 end
 
-similar_type(::Type{<:MixedMatVRep{M, S, MT}}, ::FullDim{N}, ::Type{T}) where {M, S, T, MT} = MixedMatVRep{T, similar_type(MT, T)}
+similar_type(::Type{<:MixedMatVRep{M, S, MT}}, ::FullDim, ::Type{T}) where {M, S, T, MT} = MixedMatVRep{T, similar_type(MT, T)}
 vvectortype(p::Type{MixedMatVRep{T, MT}}) where {T, MT} = vectortype(MT)
 fulltype(::Type{MixedMatVRep{T, MT}}) where {T, MT} = MixedMatVRep{T, MT}
 
@@ -113,11 +111,11 @@ function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Rlinset::BitSe
 end
 
 MixedMatVRep(v::VRep{T}) where {T} = MixedMatVRep{T}(v)
-MixedMatVRep{T}(v::VRep{N}) where {T} = MixedMatVRep{T, vmatrixtype(typeof(v), T)}(v)
+MixedMatVRep{T}(v::VRep) where {T} = MixedMatVRep{T, vmatrixtype(typeof(v), T)}(v)
 
 MixedMatVRep{T}(vits::VIt{T}...) where {T} = MixedMatVRep{T, Matrix{T}}(vits...) # FIXME required by CDD and LRS tests
 function MixedMatVRep{T, MT}(vits::VIt{T}...) where {T, MT}
-    points, lines, rays = fillvits(FullDim{N}(), vits...)
+    N, points, lines, rays = fillvits(vits...)
     npoint = length(points)
     nline = length(lines)
     nray = length(rays)
@@ -152,7 +150,8 @@ Base.get(vrep::MixedMatVRep{T}, idx::VIndex{T}) where {T} = valuetype(idx)(_mat(
 # sparse halfspaces does not mean sparse points
 dualtype(::Type{MixedMatHRep{T, MT}}) where {T, MT} = MixedMatVRep{T, Matrix{T}}
 dualtype(::Type{MixedMatVRep{T, MT}}) where {T, MT} = MixedMatHRep{T, Matrix{T}}
-function dualfullspace(h::MixedMatHRep, ::FullDim{N}, ::Type{T}) where {T}
+function dualfullspace(h::MixedMatHRep, d::FullDim, ::Type{T}) where {T}
+    N = fulldim(d)
     MixedMatVRep{T}(zeros(T, 1, N), eye(T, N), BitSet(1:N))
 end
 

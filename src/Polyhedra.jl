@@ -6,48 +6,53 @@ using Compat
 using Compat.SparseArrays
 using Compat.LinearAlgebra
 
-using GeometryTypes
-
 using MultivariatePolynomials
 
-export PolyhedraLibrary, Polyhedron, FullDim
+export PolyhedraLibrary, Polyhedron
 
 abstract type PolyhedraLibrary end
-abstract type Polyhedron{N,T} <: GeometryPrimitive{N,T} end
-
-using StaticArrays
-using StaticArrays.FixedSizeArrays: FixedVector
+abstract type Polyhedron{N, T} <: GeometryPrimitive{N, T} end
 
 import MathProgBase
 const MPB = MathProgBase
 const MPBSI = MPB.SolverInterface
 
-# Similar to StaticArrays.Size
-struct FullDim{N}
-    function FullDim{N}() where N
-        new{N::Int}()
-    end
+import StaticArrays
+function similar_type(SAT::Type{<:StaticArrays.SVector},
+                      size::StaticArrays.Size, T::Type)
+    StaticArrays.similar_type(SAT, T, size)
 end
-fulldim(::FullDim{N}) where N = N
-Base.:+(d1::FullDim{N1}, d2::FullDim{N2}) where {N1, N2} = FullDim{N1+N2}()
-FullDim(v::AbstractVector) = FullDim{length(v)}()
-FullDim(::Union{StaticArrays.SVector{N}, Type{<:StaticArrays.SVector{N}}}) where N = FullDim{N}()
-if VERSION >= v"0.7-"
-    Base.broadcastable(fd::FullDim) = Ref(fd)
-end
+
+"""
+    FullDim(p)::FullDim
+
+Similar to [`fulldim`](@ref) but used for type stability with the vector type.
+If the vector type is `StaticArrays.SVector` then it returns a
+`StaticArrays.Size`.
+"""
+function FullDim end
+
+"""
+    fulldim(p)::Int
+
+Returns the full dimension of the polyhedron, polyhedron representation,
+polyhedron representation element or vector.
+"""
+function fulldim end
+
+# The dimension is Int for Vector, SparseVector and
+# StaticArrays.Size for SVector
+# This allows similar_type to be compiled as only one method for Vector
+# and SparseVector and be type stable for SVector
+const FullDim = Union{Int, StaticArrays.Size}
+fulldim(N::Int) = N
+fulldim(::StaticArrays.Size{N}) where N = N
+FullDim(v::AbstractVector) = length(v)
+FullDim(v::Union{StaticArrays.SVector{N}, Type{<:StaticArrays.SVector{N}}}) where N = StaticArrays.Size(v)
 
 MultivariatePolynomials.coefficienttype(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
-similar_type(::Type{<:Vector}, ::FullDim, ::Type{T}) where T = Vector{T}
-similar_type(::Type{SparseVector{S, IT}}, ::FullDim, ::Type{T}) where {S, IT, T} = SparseVector{T, IT}
-# We define the following method to avoid the fallback to call FullDim(Vector{...})
-similar_type(::Type{<:Vector}, ::Type{T}) where T = Vector{T}
-similar_type(::Type{SparseVector{S, IT}}, ::Type{T}) where {S, IT, T} = SparseVector{T, IT}
-function similar_type(::Type{SAT}, ::FullDim{D}, ::Type{Tout}) where {SAT <: StaticArrays.SVector, D, Tout}
-    StaticArrays.similar_type(SAT, Tout, StaticArrays.Size(D))
-end
-
-similar_type(::Type{<:Point}, ::FullDim{N}, ::Type{T}) where {T} = Point{N,T}
-similar_type(::Type{<:Vec}, ::FullDim{N}, ::Type{T}) where {T} = Vec{N,T}
+similar_type(::Type{<:Vector}, ::Int, ::Type{T}) where T = Vector{T}
+similar_type(::Type{SparseVector{S, IT}}, ::Int, ::Type{T}) where {S, IT, T} = SparseVector{T, IT}
 
 emptymatrix(::Type{MT}, m, n) where {MT<:AbstractMatrix} = MT(undef, m, n)
 emptymatrix(::Type{SparseMatrixCSC{T, Int}}, m, n) where T = spzeros(T, m, n)

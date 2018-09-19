@@ -1,3 +1,23 @@
+import GeometryTypes
+
+struct PolyhedronGeometry{N, T, PT <: Polyhedron{T}} <: GeometryTypes.GeometryPrimitive{N, T}
+    polyhedron::PT
+end
+function PolyhedronGeometry{N}(polyhedron::Polyhedron{T}) where {N, T}
+    return PolyhedronGeometry{N, T, typeof(polyhedron)}(polyhedron)
+end
+function PolyhedronGeometry(polyhedron::Polyhedron, StaticArrays.Size{N}) where N
+    return PolyhedronGeometry{N}(polyhedron)
+end
+function PolyhedronGeometry(polyhedron::Polyhedron, N::Int)
+    # This is type unstable but there is no way around that,
+    # use polyhedron built from StaticArrays vector to avoid that.
+    return PolyhedronGeometry{N}(polyhedron)
+end
+function PolyhedronGeometry(polyhedron::Polyhedron)
+    return PolyhedronGeometry(polyhedron, FullDim(polyhedron))
+end
+
 # Creates a scene for the vizualisation to be used to truncate the lines and rays
 function scene(vr::VRep, ::Type{T}) where T
     # First compute the smallest rectangle containing the P-representation (i.e. the points).
@@ -100,7 +120,7 @@ function fulldecompose(poly::Polyhedron, ::Type{T}) where T
 
         if line !== nothing
             if isempty(face_vert)
-                center = origin(pointtype(poly), FullDim{3}())
+                center = origin(pointtype(poly), 3)
             else
                 center = first(face_vert)
             end

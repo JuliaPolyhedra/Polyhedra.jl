@@ -4,9 +4,9 @@ abstract type AbstractRepIterator{T, ElemT, PT} end
 # For a RepIterator with only one representation, we fallback to the indexing interface, the index being the iterator state
 # A representation can overwrite this if it can do something more efficient or if it simply does not support indexing
 const SingleRepIterator{T, ElemT, RepT} = AbstractRepIterator{T, ElemT, Tuple{RepT}}
-# With MapRepIterator, we could have RepT<:Rep{N', T'} with N' != N or T' != T, with eachindex, we need to replace everything with N', T'
-Base.eachindex(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT}) where {T, ElemT, RepT<:Rep{T}} = Indices{T, similar_type(ElemT, FullDim{N}(), T)}(it.ps[1])
-Base.start(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT})     where {T, ElemT, RepT<:Rep{T}} = start(eachindex(it))::Index{T, similar_type(ElemT, FullDim{N}(), T)}
+# With MapRepIterator, we could have fulldim(RepT) != N or T' != T, with eachindex, we need to replace everything with fulldim(RepT), T'
+Base.eachindex(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT}) where {T, ElemT, RepT<:Rep{T}} = Indices{T, similar_type(ElemT, FullDim(RepT), T)}(it.ps[1])
+Base.start(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT})     where {T, ElemT, RepT<:Rep{T}} = start(eachindex(it))::Index{T, similar_type(ElemT, FullDim(RepT), T)}
 Base.done(it::SingleRepIterator, idx::Index) = done(eachindex(it), idx)
 function Base.next(it::SingleRepIterator, idx::Index)
     #mapitem(it, 1, get(it.ps[1], idx)), nextindex(it.ps[1], idx)
@@ -62,14 +62,14 @@ mapitem(it::MapRepIterator, i, item) = it.f(i, item)
 function Base.first(it::AbstractRepIterator)
     next(it, start(it))[1]
 end
-FullDim(it::AbstractRepIterator{N}) where N = FullDim{N}()
+FullDim(it::AbstractRepIterator{T, ElemT}) where {T, ElemT} = FullDim(ElemT)
 Base.eltype(it::AbstractRepIterator{T, ElemT}) where {T, ElemT} = ElemT
-function typed_map(f, d::FullDim{N}, ::Type{T}, it::RepIterator{Nin, Tin, ElemT}) where {T, Nin, Tin, ElemT}
+function typed_map(f, d::FullDim, ::Type{T}, it::RepIterator{Tin, ElemT}) where {T, Tin, ElemT}
     MapRepIterator{T, similar_type(ElemT, d, T)}(it.ps, f)
 end
 
 function RepIterator{T}(it::RepIterator) where {T}
-    typed_map((i,x) -> similar_type(typeof(x), T)(x), FullDim{N}(), T, it)
+    typed_map((i,x) -> similar_type(typeof(x), T)(x), FullDim(it), T, it)
 end
 
 # FIXME the variables need to be defined outside of the local scope of for
@@ -157,7 +157,7 @@ for (isVrep, elt, loop_singular) in [#(true, :SymPoint, :sympoint),
             RepIterator{T, ElemT}(p)
         end
 
-        function $mapit(f::Function, d::FullDim{N}, ::Type{T}, p::$HorVRep...) where {T}
+        function $mapit(f::Function, d::FullDim, ::Type{T}, p::$HorVRep...) where {T}
             ElemT = promote_type(similar_type.($elemtype.(p), d, T)...)
             MapRepIterator{T, ElemT}(p, f)
         end
@@ -292,19 +292,31 @@ const VIt{T} = Union{PIt{T}, RIt{T}}
 
 const It{T} = Union{HIt{T}, VIt{T}}
 
-function fillvits(::FullDim{N}, points::ElemIt{AT}, lines::ElemIt{Line{T, AT}}=Line{T, AT}[], rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT<:AbstractPoint{T}}
-    if isempty(points) && !(isempty(lines) && isempty(rays))
-        vconsistencyerror()
-    end
-    return points, lines, rays
-end
-function fillvits(::FullDim{N}, lines::ElemIt{Line{T, AT}}, rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT}
-    if isempty(lines) && isempty(rays)
-        ps = AT[]
+function fillvits(points::ElemIt{AT}, lines::ElemIt{Line{T, AT}}=Line{T, AT}[], rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT<:AbstractPoint{T}}
+    if isempty(points)
+        if isempty(lines) && isempty(rays)
+            N = 0
+        else
+            vconsistencyerror()
+        end
     else
-        ps = [origin(AT, FullDim{N}())]
+        N = fulldim(points[1])
     end
-    ps, lines, rays
+    return N, points, lines, rays
+end
+function fillvits(lines::ElemIt{Line{T, AT}}, rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT}
+    if isempty(lines) && isempty(rays)
+        N = 0
+        points = AT[]
+    else
+        if isempty(lines)
+            N = fulldim(rays[1])
+        else
+            N = fulldim(lines[1])
+        end
+        points = [origin(AT, N)]
+    end
+    return N, points, lines, rays
 end
 
 hreps(p::HRep{T}...) where {T} = hyperplanes(p...), halfspaces(p...)
@@ -314,7 +326,7 @@ hmap(f, d::FullDim, ::Type{T}, p::HRep...) where T = maphyperplanes(f, d, T, p..
 hmap(f, d::FullDim, ::Type{T}, p::HAffineSpace...) where T = tuple(maphyperplanes(f, d, T, p...))
 
 hconvert(RepT::Type{<:HRep{T}}, p::HRep{T}) where {T} = constructpolyhedron(RepT, (p,), hreps(p)...)
-hconvert(RepT::Type{<:HRep{T}}, p::HRep{N})    where {T} = constructpolyhedron(RepT, (p,), RepIterator{T}.(hreps(p))...)
+hconvert(RepT::Type{<:HRep{T}}, p::HRep)    where {T} = constructpolyhedron(RepT, (p,), RepIterator{T}.(hreps(p))...)
 
 vreps(p...) = preps(p...)..., rreps(p...)...
 preps(p::VRep...) = tuple(points(p...))
@@ -331,4 +343,4 @@ rmap(f, d::FullDim, ::Type{T}, p::VLinearSpace...) where T = tuple(maplines(f, d
 rmap(f, d::FullDim, ::Type, p::VPolytope...) = tuple()
 
 vconvert(RepT::Type{<:VRep{T}}, p::VRep{T}) where {T} = constructpolyhedron(RepT, (p,), vreps(p)...)
-vconvert(RepT::Type{<:VRep{T}}, p::VRep{N})    where {T} = constructpolyhedron(RepT, (p,), RepIterator{T}.(vreps(p))...)
+vconvert(RepT::Type{<:VRep{T}}, p::VRep)    where {T} = constructpolyhedron(RepT, (p,), RepIterator{T}.(vreps(p))...)

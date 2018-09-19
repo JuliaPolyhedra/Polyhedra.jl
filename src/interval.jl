@@ -53,7 +53,7 @@ function Interval{T, AT}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) 
             if haslb
                 push!(rs, Ray(SVector(one(T))))
             else
-                push!(ps, origin(AT, FullDim{1}()))
+                push!(ps, origin(AT, 1))
                 push!(ls, Line(SVector(one(T))))
             end
         end

@@ -56,7 +56,7 @@ mutable struct Intersection{T, AT} <: HRepresentation{T}
 end
 Intersection(hyperplanes::ElemIt{HyperPlane{T, AT}}, halfspaces::ElemIt{HalfSpace{T, AT}}) where {T, AT} = Intersection{T, AT}(hyperplanes, halfspaces)
 hvectortype(::Type{Intersection{T, AT}}) where {T, AT} = AT
-similar_type(PT::Type{<:Intersection}, d::FullDim{N}, ::Type{T}) where {T} = Intersection{T, similar_type(hvectortype(PT), d, T)}
+similar_type(PT::Type{<:Intersection}, d::FullDim, ::Type{T}) where {T} = Intersection{T, similar_type(hvectortype(PT), d, T)}
 
 Intersection(h::HRepresentation{T}) where {T} = Intersection{T}(h)
 Intersection{T}(h::HRepresentation) where {T} = Intersection{T, similar_type(hvectortype(typeof(h)), T)}(h)
@@ -89,7 +89,7 @@ fulltype(::Type{<:Union{Intersection{T, AT}, HyperPlanesIntersection{T, AT}}}) w
 #end
 #SymPointsHull(ps::ElemIt{SymPoint{T, AT}}) where {T, AT<:AbstractPoint{T}} = SymPointsHull{T, AT}(collect(ps))
 #vectortype(::Union{SymPointsHull{T, AT}, Type{SymPointsHull{T, AT}}}) where {T, AT} = AT
-#similar_type(PT::Type{<:SymPointsHull}, d::FullDim{N}, ::Type{T}) where {T} = SymPointsHull{T, similar_type(vectortype(PT), d, T)}
+#similar_type(PT::Type{<:SymPointsHull}, d::FullDim, ::Type{T}) where {T} = SymPointsHull{T, similar_type(vectortype(PT), d, T)}
 #
 #SymPointsHull{T, AT}(sympoints::SymPointIt, points::PointIt, lines::LineIt, rays::RayIt) where {T, AT} = Hull{T, AT}(sympoints, points, lines, rays)
 #SymPointsHull{T, AT}(sympoints::SymPointIt, lines::LineIt, rays::RayIt) where {T, AT} = Hull{T, AT}(sympoints, AT[], lines, rays)
@@ -146,7 +146,7 @@ function PointsHull(points::PointIt)
     PointsHull{length(first(points)), coefficienttype(eltype(points)), eltype(points)}(points)
 end
 vvectortype(::Type{PointsHull{T, AT}}) where {T, AT} = AT
-similar_type(PT::Type{<:PointsHull}, d::FullDim{N}, ::Type{T}) where {T} = PointsHull{T, similar_type(vvectortype(PT), d, T)}
+similar_type(PT::Type{<:PointsHull}, d::FullDim, ::Type{T}) where {T} = PointsHull{T, similar_type(vvectortype(PT), d, T)}
 
 vreptype(::Type{PointsHull{T, AT}}) where {T, AT} = Hull{T, AT}
 
@@ -189,7 +189,7 @@ function RaysHull(ls::ElemIt{Line{T, AT}}, rs::ElemIt{Ray{T, AT}}) where {T, AT}
     RaysHull{T, AT}(ls, rs)
 end
 vvectortype(::Type{RaysHull{T, AT}}) where {T, AT} = AT
-similar_type(PT::Type{<:RaysHull}, d::FullDim{N}, ::Type{T}) where {T} = RaysHull{T, similar_type(vvectortype(PT), d, T)}
+similar_type(PT::Type{<:RaysHull}, d::FullDim, ::Type{T}) where {T} = RaysHull{T, similar_type(vvectortype(PT), d, T)}
 
 @vecrepelem RaysHull Ray rays
 @subrepelem RaysHull Line lines
@@ -209,7 +209,7 @@ mutable struct Hull{T, AT} <: VRepresentation{T}
     points::PointsHull{T, AT}
     rays::RaysHull{T, AT}
     function Hull{T, AT}(vits::VIt{T}...) where {T, AT}
-        points, lines, rays = fillvits(FullDim{N}(), vits...)
+        N, points, lines, rays = fillvits(vits...)
         # If points is empty and its eltype is Vector, by doing PointsHull(points), we loose the dimension information
         # If it is non-empty, we still have something type unstable
         new{T, AT}(PointsHull{T, AT}(points), RaysHull(lines, rays))
@@ -219,7 +219,7 @@ function Hull(points::ElemIt{AT}, lines::ElemIt{Line{T, AT}}, rays::ElemIt{Ray{T
     Hull{T, AT}(points, lines, rays)
 end
 vvectortype(::Type{Hull{T, AT}}) where {T, AT} = AT
-similar_type(PT::Type{<:Hull}, d::FullDim{N}, ::Type{T}) where {T} = Hull{T, similar_type(vvectortype(PT), d, T)}
+similar_type(PT::Type{<:Hull}, d::FullDim, ::Type{T}) where {T} = Hull{T, similar_type(vvectortype(PT), d, T)}
 
 Hull(v::VRepresentation{T}) where {T} = Hull{T}(v)
 Hull{T}(v::VRepresentation) where {T} = Hull{T, similar_type(vvectortype(typeof(v)), T)}(v)
@@ -233,8 +233,9 @@ fulltype(::Type{<:Union{Hull{T, AT}, PointsHull{T, AT}, LinesHull{T, AT}, RaysHu
 dualtype(::Type{<:Intersection{T}}, ::Type{AT}) where {T, AT} = Hull{T, AT}
 dualtype(::Type{<:Hull{T}}, ::Type{AT}) where {T, AT} = Intersection{T, AT}
 const AnyIntersection{T, AT} = Union{Intersection{T, AT}, HyperPlanesIntersection{T, AT}}
-function dualfullspace(h::Union{AnyIntersection, Type{<:AnyIntersection}}, d::FullDim{N}, ::Type{T}, ::Type{AT}) where {T, AT}
-    Hull{T, AT}([origin(AT, d)],
-                 Line{T, AT}.(basis.(AT, d, 1:N)),
-                 Ray{T, AT}[])
+function dualfullspace(h::Union{AnyIntersection, Type{<:AnyIntersection}},
+                       d::FullDim, ::Type{T}, ::Type{AT}) where {T, AT}
+    Hull{T, AT}([origin(AT, fulldim(d))],
+                Line{T, AT}.(basis.(AT, d, 1:fulldim(d))),
+                Ray{T, AT}[])
 end
