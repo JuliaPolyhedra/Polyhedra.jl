@@ -48,7 +48,7 @@ eliminate(p::Polyhedron, delset, ::FourierMotzkin)     = error("Fourier-Motzkin 
 supportselimination(p::Polyhedron, ::BlockElimination) = false
 eliminate(p::Polyhedron, delset, ::BlockElimination)   = error("Block elimination not implemented for $(typeof(p))")
 
-eliminate(p::Polyhedron, algo::EliminationAlgorithm) = eliminate(p, BitSet(N), algo)
+eliminate(p::Polyhedron, algo::EliminationAlgorithm) = eliminate(p, BitSet(fulldim(p)), algo)
 
 # eliminate the last dimension by default
 eliminate(p::Polyhedron, delset=BitSet(fulldim(p))) = eliminate(p, delset, DefaultElimination())
@@ -58,7 +58,7 @@ function eliminate(p::Polyhedron, delset, ::DefaultElimination)
     be = supportselimination(p, BlockElimination())
     if (!fm && !be) || vrepiscomputed(p)
         algo = ProjectGenerators()
-    elseif fm && (!be || (length(delset) == 1 && N in delset))
+    elseif fm && (!be || (length(delset) == 1 && fulldim(p) in delset))
         algo = FourierMotzkin()
     else
         algo = BlockElimination()
@@ -67,6 +67,7 @@ function eliminate(p::Polyhedron, delset, ::DefaultElimination)
 end
 
 function eliminate(p::Polyhedron, delset, ::ProjectGenerators)
+    N = fulldim(p)
     Id = Matrix(1I, N, N)
     Iproj = Id[collect(setdiff(BitSet(1:N), delset)),:]
     Iproj * p
@@ -78,9 +79,10 @@ end
 Projects the polyhedron `p` into the `size(P, 2)`-dimensional linear subspace spanned by the columns of `P`.
 The new orthonormal basis for this subspace is computed by applying the Gram–Schmidt process to the columns of `P`, starting with the first column.
 """
-function project(p::Polyhedron{}, P::AbstractMatrix) where {T}
+function project(p::Polyhedron, P::AbstractMatrix)
     # Function to make x orthogonal to an orthonormal basis in Q
     # We first make the columns of P orthonormal
+    N = fulldim(p)
     if size(P, 1) != N
         throw(DimensionMismatch("The columns of P should have the same dimension than the polyhedron"))
     end
@@ -121,7 +123,7 @@ _fixelim(h::ElemT, I, J, v, dout::FullDim) where ElemT<:HRepElement = similar_ty
 Fix the variables with indices in `I` to the corresponding value in `v`. This is equivalent to doing the following:
 ```julia
 function ei(i)
-    a = zeros(T, N)
+    a = zeros(T, fulldim(p))
     a[i] = one(T)
     a
 end
@@ -129,11 +131,11 @@ eliminate(p ∩ HyperPlane(ei(I[1], v[1]) ∩ ... ∩ HyperPlane(ei(I[1], v[1]))
 ```
 but it is much more efficient. The code above does a polyhedral projection while this function simply replace
 each halfspace `⟨a, x⟩ ≤ β` (resp. each hyperplane `⟨a, x⟩ = β`) by the halfspace `⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩`
-(resp. the hyperplane `⟨a_J, x⟩ = β - ⟨a_I, v⟩`) where `J = setdiff(1:N, I)`.
+(resp. the hyperplane `⟨a_J, x⟩ = β - ⟨a_I, v⟩`) where `J = setdiff(1:fulldim(p), I)`.
 """
 function fixandeliminate(p::HRep{S}, I, v) where {S}
     J = setdiff(1:fulldim(p), I)
-    d = FullDim{length(J)}()
+    d = length(J)
     f = (i, h) -> _fixelim(h, I, J, v, d)
     T = promote_type(S, eltype(v))
     similar(p, d, T, hmap(f, d, T, p)...)

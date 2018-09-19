@@ -26,19 +26,20 @@ mutable struct MixedMatHRep{T, MT<:AbstractMatrix{T}} <: MixedHRep{T}
         new{T, typeof(A)}(A, b, linset)
     end
 end
+FullDim(rep::MixedMatHRep) = size(rep.A, 2)
 
-similar_type(::Type{<:MixedMatHRep{M, S, MT}}, ::FullDim, ::Type{T}) where {M, S, T, MT} = MixedMatHRep{T, similar_type(MT, T)}
+similar_type(::Type{<:MixedMatHRep{S, MT}}, ::FullDim, ::Type{T}) where {S, T, MT} = MixedMatHRep{T, similar_type(MT, T)}
 hvectortype(p::Type{MixedMatHRep{T, MT}}) where {T, MT} = vectortype(MT)
 fulltype(::Type{MixedMatHRep{T, MT}}) where {T, MT} = MixedMatHRep{T, MT}
 
 MixedMatHRep{T}(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::BitSet) where {T} = MixedMatHRep{T, typeof(A)}(A, b, linset)
-MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::BitSet) where T = MixedMatHRep{size(A, 2), T, typeof(A)}(A, b, linset)
+MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::BitSet) where T = MixedMatHRep{T, typeof(A)}(A, b, linset)
 MixedMatHRep{U}(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::BitSet) where {S, T, U} = MixedMatHRep{U}(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
 function MixedMatHRep(A::AbstractMatrix{S}, b::AbstractVector{T}, linset::BitSet) where {S, T}
     U = promote_type(S, T)
     MixedMatHRep(AbstractMatrix{U}(A), AbstractVector{U}(b), linset)
 end
-MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::BitSet) where T <: Real = MixedMatHRep{size(A,2),T}(A, b, linset)
+MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::BitSet) where T <: Real = MixedMatHRep{T}(A, b, linset)
 
 MixedMatHRep(h::HRep{T}) where {T} = MixedMatHRep{T}(h)
 MixedMatHRep{T}(h::HRep) where {T} = MixedMatHRep{T, hmatrixtype(typeof(h), T)}(h)
@@ -97,13 +98,14 @@ mutable struct MixedMatVRep{T, MT<:AbstractMatrix{T}} <: MixedVRep{T}
         new{T, MT}(V, R, Rlinset)
     end
 end
+FullDim(rep::MixedMatVRep) = size(rep.V, 2)
 
-similar_type(::Type{<:MixedMatVRep{M, S, MT}}, ::FullDim, ::Type{T}) where {M, S, T, MT} = MixedMatVRep{T, similar_type(MT, T)}
-vvectortype(p::Type{MixedMatVRep{T, MT}}) where {T, MT} = vectortype(MT)
+similar_type(::Type{<:MixedMatVRep{S, MT}}, ::FullDim, ::Type{T}) where {S, T, MT} = MixedMatVRep{T, similar_type(MT, T)}
+vvectortype(::Type{MixedMatVRep{T, MT}}) where {T, MT} = vectortype(MT)
 fulltype(::Type{MixedMatVRep{T, MT}}) where {T, MT} = MixedMatVRep{T, MT}
 
 MixedMatVRep{T}(V::MT, R::MT, Rlinset::BitSet) where {T, MT<:AbstractMatrix{T}} = MixedMatVRep{T, MT}(V, R, Rlinset)
-MixedMatVRep(V::MT, R::MT, Rlinset::BitSet) where {T, MT<:AbstractMatrix{T}} = MixedMatVRep{size(V, 2), T, MT}(V, R, Rlinset)
+MixedMatVRep(V::MT, R::MT, Rlinset::BitSet) where {T, MT<:AbstractMatrix{T}} = MixedMatVRep{T, MT}(V, R, Rlinset)
 MixedMatVRep{U}(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Rlinset::BitSet) where {S, T, U} = MixedMatVRep{U}(AbstractMatrix{U}(V), AbstractMatrix{U}(R), Rlinset)
 function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Rlinset::BitSet) where {S, T}
     U = promote_type(S, T)
@@ -153,15 +155,4 @@ dualtype(::Type{MixedMatVRep{T, MT}}) where {T, MT} = MixedMatHRep{T, Matrix{T}}
 function dualfullspace(h::MixedMatHRep, d::FullDim, ::Type{T}) where {T}
     N = fulldim(d)
     MixedMatVRep{T}(zeros(T, 1, N), eye(T, N), BitSet(1:N))
-end
-
-export SimpleHRepresentation, SimpleVRepresentation
-
-function SimpleHRepresentation(args...)
-    Base.depwarn("`SimpleHRepresentation` is deprecated, it has been renamed to `MixedMatHRep`. It is recommended to use `hrep` to build a `MixedMatHRep`, e.g. `hrep([1 2; 3 4], [5, 6])` for `x + 2y ≤ 5` and `3x + 4y ≤ 6`.", :SimpleHRepresentation)
-    hrep(args...)
-end
-function SimpleVRepresentation(args...)
-    Base.depwarn("`SimpleVRepresentation` is deprecated, it has been renamed to `MixedMatVRep` It is recommended to use `vrep` to build a `MixedMatVRep`, e.g. `vrep([1 2; 3 4])` for the convex hull of `(1, 2)` and `(3, 4)`.", :SimpleVRepresentation)
-    vrep(args...)
 end

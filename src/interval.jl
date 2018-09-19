@@ -9,16 +9,16 @@ The library is also used as a fallback for libraries that do not support 1-dimen
 struct IntervalLibrary{T} <: PolyhedraLibrary
 end
 
-similar_library(lib::IntervalLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to SimplePolyhedraLibrary if d is not FullDim{1}
+similar_library(lib::IntervalLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to SimplePolyhedraLibrary if d is not FullDim(1)
 
-mutable struct Interval{T, AT} <: Polyhedron{1, T}
-    hrep::Intersection{1, T, AT}
-    vrep::Hull{1, T, AT}
+mutable struct Interval{T, AT} <: Polyhedron{T}
+    hrep::Intersection{T, AT}
+    vrep::Hull{T, AT}
     length::T
 end
 
-Interval{T, AT}(it::HIt{1}...) where {T, AT} = _hinterval(Intersection{1, T, AT}(it...), AT)
-Interval{T, AT}(it::VIt{1}...) where {T, AT} = _vinterval(Hull{1, T, AT}(it...), AT)
+Interval{T, AT}(it::HIt...) where {T, AT} = _hinterval(Intersection{T, AT}(it...), AT)
+Interval{T, AT}(it::VIt...) where {T, AT} = _vinterval(Hull{T, AT}(it...), AT)
 
 library(::Union{Interval{T}, Type{<:Interval{T}}}) where T = IntervalLibrary{T}()
 
@@ -33,40 +33,40 @@ function Interval{T, AT}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) 
     if haslb && hasub && _gt(lb, ub)
         isempty = true
     end
-    hps = HyperPlane{1, T, AT}[]
-    hss = HalfSpace{1, T, AT}[]
+    hps = HyperPlane{T, AT}[]
+    hss = HalfSpace{T, AT}[]
     ps = AT[]
-    ls = Line{1, T, AT}[]
-    rs = Ray{1, T, AT}[]
+    ls = Line{T, AT}[]
+    rs = Ray{T, AT}[]
     if !isempty
         if hasub
-            push!(ps, SVector(ub))
+            push!(ps, StaticArrays.SVector(ub))
             if haslb && _isapprox(lb, ub)
-                push!(hps, HyperPlane(SVector(one(T)), ub))
+                push!(hps, HyperPlane(StaticArrays.SVector(one(T)), ub))
             else
-                push!(hss, HalfSpace(SVector(one(T)), ub))
+                push!(hss, HalfSpace(StaticArrays.SVector(one(T)), ub))
             end
             if !haslb
-                push!(rs, Ray(SVector(-one(T))))
+                push!(rs, Ray(StaticArrays.SVector(-one(T))))
             end
         else
             if haslb
-                push!(rs, Ray(SVector(one(T))))
+                push!(rs, Ray(StaticArrays.SVector(one(T))))
             else
                 push!(ps, origin(AT, 1))
-                push!(ls, Line(SVector(one(T))))
+                push!(ls, Line(StaticArrays.SVector(one(T))))
             end
         end
         if haslb
             if !_isapprox(lb, ub)
-                push!(hss, HalfSpace(SVector(-one(T)), -lb))
-                push!(ps, SVector(lb))
+                push!(hss, HalfSpace(StaticArrays.SVector(-one(T)), -lb))
+                push!(ps, StaticArrays.SVector(lb))
             end
         end
     else
         # The dimension should be -1 so 1 - nhyperplanes == -1 so nhyperplanes == 2
-        push!(hps, HyperPlane(SVector(one(T)), zero(T)))
-        push!(hps, HyperPlane(SVector(zero(T)), one(T)))
+        push!(hps, HyperPlane(StaticArrays.SVector(one(T)), zero(T)))
+        push!(hps, HyperPlane(StaticArrays.SVector(zero(T)), one(T)))
     end
     h = hrep(hps, hss)
     v = vrep(ps, ls, rs)
@@ -74,7 +74,7 @@ function Interval{T, AT}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) 
     Interval{T, AT}(h, v, volume)
 end
 
-function _hinterval(rep::HRep{1, T}, ::Type{AT}) where {T, AT}
+function _hinterval(rep::HRep{T}, ::Type{AT}) where {T, AT}
     haslb = false
     lb = zero(T)
     hasub = false
@@ -122,7 +122,7 @@ function _hinterval(rep::HRep{1, T}, ::Type{AT}) where {T, AT}
     Interval{T, AT}(haslb, lb, hasub, ub, empty)
 end
 
-function _vinterval(v::VRep{1, T}, ::Type{AT}) where {T, AT}
+function _vinterval(v::VRep{T}, ::Type{AT}) where {T, AT}
     haslb = true
     lb = zero(T)
     hasub = true
@@ -160,9 +160,9 @@ function _vinterval(v::VRep{1, T}, ::Type{AT}) where {T, AT}
     Interval{T, AT}(haslb, lb, hasub, ub, isempty)
 end
 
-Interval{T, AT}(p::HRepresentation{1, T}) where {T, AT} = _hinterval(p, AT)
-Interval{T, AT}(p::VRepresentation{1, T}) where {T, AT} = _vinterval(p, AT)
-function Interval{T, AT}(p::Polyhedron{1, T}) where {T, AT}
+Interval{T, AT}(p::HRepresentation{T}) where {T, AT} = _hinterval(p, AT)
+Interval{T, AT}(p::VRepresentation{T}) where {T, AT} = _vinterval(p, AT)
+function Interval{T, AT}(p::Polyhedron{T}) where {T, AT}
     if hrepiscomputed(p)
         _hinterval(p, AT)
     else
@@ -170,8 +170,8 @@ function Interval{T, AT}(p::Polyhedron{1, T}) where {T, AT}
     end
 end
 
-function polyhedron(rep::Rep{1, T}, ::IntervalLibrary{T}) where T
-    Interval{T, SVector{1, T}}(rep)
+function polyhedron(rep::Rep{T}, ::IntervalLibrary{T}) where T
+    Interval{T, StaticArrays.SVector{T}}(rep)
 end
 
 hrep(p::Interval) = p.hrep

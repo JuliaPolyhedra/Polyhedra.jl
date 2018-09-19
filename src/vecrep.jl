@@ -87,7 +87,7 @@ fulltype(::Type{<:Union{Intersection{T, AT}, HyperPlanesIntersection{T, AT}}}) w
 #        new{T, AT}(lazy_collect(sympoints))
 #    end
 #end
-#SymPointsHull(ps::ElemIt{SymPoint{T, AT}}) where {T, AT<:AbstractPoint{T}} = SymPointsHull{T, AT}(collect(ps))
+#SymPointsHull(ps::ElemIt{SymPoint{T, AT}}) where {T, AT<:AbstractVector{T}} = SymPointsHull{T, AT}(collect(ps))
 #vectortype(::Union{SymPointsHull{T, AT}, Type{SymPointsHull{T, AT}}}) where {T, AT} = AT
 #similar_type(PT::Type{<:SymPointsHull}, d::FullDim, ::Type{T}) where {T} = SymPointsHull{T, similar_type(vectortype(PT), d, T)}
 #
@@ -128,11 +128,6 @@ vrep([[0, 0], [0, 1], [1/2, 1/2]])
 ```
 """
 vrep(points::PointIt) = PointsHull(points)
-#sympointtype(points::ElemIt{StaticArrays.SVector{T}}) where {T} = SymPoint{T, StaticArrays.SVector{T}}
-#function sympointtype(points::PointIt)
-#    isempty(points) && throw(ArgumentError("Cannot create a V-representation from an empty collection of points represented by $(eltype(points)) as the dimension cannot be computed. Use StaticArrays.SVector to represent points instead"))
-#    SymPoint{length(first(points)), coefficienttype(eltype(points)), eltype(points)}
-#end
 
 mutable struct PointsHull{T, AT} <: VPolytope{T}
     points::Vector{AT}
@@ -142,8 +137,7 @@ mutable struct PointsHull{T, AT} <: VPolytope{T}
 end
 PointsHull(points::ElemIt{StaticArrays.SVector{T}}) where {T} = PointsHull{T, StaticArrays.SVector{T}}(points)
 function PointsHull(points::PointIt)
-    isempty(points) && throw(ArgumentError("Cannot create a V-representation from an empty collection of points represented by $(eltype(points)) as the dimension cannot be computed. Use StaticArrays.SVector to represent points instead"))
-    PointsHull{length(first(points)), coefficienttype(eltype(points)), eltype(points)}(points)
+    return PointsHull{coefficienttype(eltype(points)), eltype(points)}(points)
 end
 vvectortype(::Type{PointsHull{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:PointsHull}, d::FullDim, ::Type{T}) where {T} = PointsHull{T, similar_type(vvectortype(PT), d, T)}

@@ -29,10 +29,10 @@ end
 function SimplePolyhedron{T, HRepT, VRepT}(vrep::VRepT, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
     SimplePolyhedron{T, HRepT, VRepT}(nothing, vrep, solver)
 end
-function SimplePolyhedron{T, HRepT, VRepT}(hrep::HRepresentation{N}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+function SimplePolyhedron{T, HRepT, VRepT}(hrep::HRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
     SimplePolyhedron{T, HRepT, VRepT}(HRepT(hrep), solver)
 end
-function SimplePolyhedron{T, HRepT, VRepT}(vrep::VRepresentation{N}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+function SimplePolyhedron{T, HRepT, VRepT}(vrep::VRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
     SimplePolyhedron{T, HRepT, VRepT}(VRepT(vrep), solver)
 end
 
@@ -43,7 +43,7 @@ supportssolver(::Type{<:SimplePolyhedron}) = true
 hvectortype(::Type{<:SimplePolyhedron{T, HRepT}}) where {T, HRepT} = hvectortype(HRepT)
 vvectortype(::Type{SimplePolyhedron{T, HRepT, VRepT}}) where {T, HRepT, VRepT} = vvectortype(VRepT)
 
-similar_type(::Type{<:SimplePolyhedron{M, S, HRepT, VRepT}}, d::FullDim, ::Type{T}) where {M, S, HRepT, VRepT, T} = SimplePolyhedron{T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
+similar_type(::Type{<:SimplePolyhedron{S, HRepT, VRepT}}, d::FullDim, ::Type{T}) where {S, HRepT, VRepT, T} = SimplePolyhedron{T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
 
 function SimplePolyhedron{T, HRepT, VRepT}(hits::HIt...; solver=nothing) where {T, HRepT, VRepT}
     SimplePolyhedron{T, HRepT, VRepT}(HRepT(hits...), solver)
@@ -53,7 +53,7 @@ function SimplePolyhedron{T, HRepT, VRepT}(vits::VIt...; solver=nothing) where {
 end
 
 # Need fulltype in case the use does `intersect!` with another element
-SimplePolyhedron{T}(rep::Representation{N}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T} = SimplePolyhedron{T}(MultivariatePolynomials.changecoefficienttype(rep, T), solver)
+SimplePolyhedron{T}(rep::Representation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T} = SimplePolyhedron{T}(MultivariatePolynomials.changecoefficienttype(rep, T), solver)
 function SimplePolyhedron{T}(rep::HRepresentation{T}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T}
     HRepT = fulltype(typeof(rep))
     VRepT = dualtype(HRepT)
@@ -65,15 +65,15 @@ function SimplePolyhedron{T}(rep::VRepresentation{T}, solver::Union{Nothing, MPB
     SimplePolyhedron{T, HRepT, VRepT}(rep, solver)
 end
 
-function polyhedron(rep::Representation{N}, lib::SimplePolyhedraLibrary{T}) where {T}
+function polyhedron(rep::Representation, lib::SimplePolyhedraLibrary{T}) where {T}
     SimplePolyhedron{polytypefor(T)}(rep, lib.solver)
 end
 
 function Base.copy(p::SimplePolyhedron{T}) where {T}
     if p.hrep !== nothing
-        SimplePolyhedron{N, T}(p.hrep, p.solver)
+        SimplePolyhedron{T}(p.hrep, p.solver)
     else
-        SimplePolyhedron{N, T}(p.vrep, p.solver)
+        SimplePolyhedron{T}(p.vrep, p.solver)
     end
 end
 

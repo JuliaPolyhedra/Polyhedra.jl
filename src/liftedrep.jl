@@ -15,18 +15,19 @@ mutable struct LiftedHRepresentation{T, MT<:AbstractMatrix{T}} <: MixedHRep{T}
         new{T, MT}(A, linset)
     end
 end
+FullDim(rep::LiftedHRepresentation) = size(rep.A, 2) - 1
 
-similar_type(::Type{LiftedHRepresentation{M, S, MT}}, ::FullDim, ::Type{T}) where {M, S, T, MT} = LiftedHRepresentation{T, similar_type(MT, T)}
+similar_type(::Type{LiftedHRepresentation{S, MT}}, ::FullDim, ::Type{T}) where {S, T, MT} = LiftedHRepresentation{T, similar_type(MT, T)}
 hvectortype(p::Type{LiftedHRepresentation{T, MT}}) where {T, MT} = vectortype(MT)
 
 LiftedHRepresentation{T}(A::AbstractMatrix{T}, linset::BitSet=BitSet()) where {T} = LiftedHRepresentation{T, typeof(A)}(A, linset)
 LiftedHRepresentation{T}(A::AbstractMatrix, linset::BitSet=BitSet()) where {T} = LiftedHRepresentation{T}(AbstractMatrix{T}(A), linset)
-LiftedHRepresentation(A::AbstractMatrix{T}, linset::BitSet=BitSet()) where T = LiftedHRepresentation{size(A, 2) - 1, T}(A, linset)
+LiftedHRepresentation(A::AbstractMatrix{T}, linset::BitSet=BitSet()) where T = LiftedHRepresentation{T}(A, linset)
 
 LiftedHRepresentation(h::HRepresentation{T}) where {T} = LiftedHRepresentation{T}(h)
 LiftedHRepresentation{T}(h::HRepresentation) where {T} = LiftedHRepresentation{T, hmatrixtype(typeof(h), T)}(h)
 
-function LiftedHRepresentation{T, MT}(hyperplanes::ElemIt{<:HyperPlane{T}}, halfspaces::ElemIt{<:HalfSpace{T}}) where {T, MT}
+function LiftedHRepresentation{T, MT}(hyperplanes::HyperPlaneIt{T}, halfspaces::HalfSpaceIt{T}) where {T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
     N = fulldim(hyperplanes, halfspaces)
@@ -62,13 +63,14 @@ mutable struct LiftedVRepresentation{T, MT<:AbstractMatrix{T}} <: MixedVRep{T}
         new{T, MT}(R, linset)
     end
 end
+FullDim(rep::LiftedHRepresentation) = size(rep.R, 2) - 1
 
-similar_type(::Type{LiftedVRepresentation{M, S, MT}}, ::FullDim, ::Type{T}) where {M, S, T, MT} = LiftedVRepresentation{T, similar_type(MT, T)}
-vvectortype(p::Type{LiftedVRepresentation{T, MT}}) where {T, MT} = vectortype(MT)
+similar_type(::Type{LiftedVRepresentation{S, MT}}, ::FullDim, ::Type{T}) where {S, T, MT} = LiftedVRepresentation{T, similar_type(MT, T)}
+vvectortype(::Type{LiftedVRepresentation{T, MT}}) where {T, MT} = vectortype(MT)
 
 LiftedVRepresentation{T}(R::AbstractMatrix{T}, linset::BitSet=BitSet()) where {T} = LiftedVRepresentation{T, typeof(R)}(R, linset)
 LiftedVRepresentation{T}(R::AbstractMatrix, linset::BitSet=BitSet()) where {T} = LiftedVRepresentation{T}(AbstractMatrix{T}(R), linset)
-LiftedVRepresentation(R::AbstractMatrix{T}, linset::BitSet=BitSet()) where T = LiftedVRepresentation{size(R, 2) - 1, T}(R, linset)
+LiftedVRepresentation(R::AbstractMatrix{T}, linset::BitSet=BitSet()) where T = LiftedVRepresentation{T}(R, linset)
 
 LiftedVRepresentation(v::VRepresentation{T}) where {T} = LiftedVRepresentation{T}(v)
 LiftedVRepresentation{T}(v::VRepresentation) where {T} = LiftedVRepresentation{T, vmatrixtype(typeof(v), T)}(v)

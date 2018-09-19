@@ -1,8 +1,5 @@
-import GeometryTypes.Point
-export Point
 export HRepElement, HalfSpace, HyperPlane
-export VRepElement, AbstractRay, Ray, Line
-#export SymPoint
+export VRepElement, Ray, Line
 export islin, isray, ispoint, coord, lift, simplify
 
 _vec(::Type{T}, a::AbstractVector) where {T} = AbstractArray{T}(a)
@@ -12,17 +9,17 @@ function _vec(::Type{T}, a::StaticArrays.SVector{N}) where {N, T}
 end
 _vec(::Type{T}, a::StaticArrays.SVector{N, T}) where {N, T} = a
 
-abstract type HRepElement{T} end
+abstract type HRepElement{T, AT} end
 
 """
-    struct HalfSpace{T, AT} <: HRepElement{T}
+    struct HalfSpace{T, AT} <: HRepElement{T, AT}
         a::AT
         β::T
     end
 
 An halfspace defined by the set of points ``x`` such that ``\\langle a, x \\rangle \\le \\beta``.
 """
-struct HalfSpace{T, AT <: AbstractVector{T}} <: HRepElement{T}
+struct HalfSpace{T, AT <: AbstractVector{T}} <: HRepElement{T, AT}
     a::AT
     β::T
     function HalfSpace{T, AT}(a::AT, β::T) where {T, AT<:AbstractVector{T}}
@@ -34,14 +31,14 @@ HalfSpace{T}(a::AT, β::T) where {T, AT <: AbstractVector{T}} = HalfSpace{T, AT}
 HalfSpace{T}(a::AbstractVector, β) where {T} = HalfSpace{T}(_vec(T, a), T(β))
 
 """
-    struct HyperPlane{T, AT} <: HRepElement{T}
+    struct HyperPlane{T, AT} <: HRepElement{T, AT}
         a::AT
         β::T
     end
 
 An hyperplane defined by the set of points ``x`` such that ``\\langle a, x \\rangle = \\beta``.
 """
-struct HyperPlane{T, AT<:AbstractVector{T}} <: HRepElement{T}
+struct HyperPlane{T, AT<:AbstractVector{T}} <: HRepElement{T, AT}
     a::AT
     β::T
     function HyperPlane{T, AT}(a::AT, β::T) where {T, AT<:AbstractVector{T}}
@@ -75,10 +72,10 @@ Base.:(*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
 
 function Base.:(/)(h::ElemT, P::Matrix) where {T, ElemT<:HRepElement{T}}
     Tout = _promote_type(T, eltype(P))
-    ElemTout = similar_type(ElemT, FullDim{size(P, 2)}(), Tout)
+    ElemTout = similar_type(ElemT, size(P, 2), Tout)
     ElemTout(Matrix{Tout}(P) * _vec(Tout, h.a), Tout(h.β))
 end
-function zeropad(a::Vector{T}, n::Integer)
+function zeropad(a::Vector{T}, n::Integer) where T
     if n < 0
         return [zeros(T, -n); a]
     else
@@ -97,8 +94,6 @@ end
 
 # Point: -> A same Rep should always return the same of the two types so that when points and sympoints will have different accessors it will be type stable
 # AbstractVector{T}
-# Linear Point:
-# SymPoint{T}
 # Ray:
 # Ray{T}
 # Linear Ray:
@@ -106,15 +101,15 @@ end
 
 origin(::Type{<:SparseVector{T}}, N::Int) where {T} = spzeros(T, N)
 origin(::Type{Vector{T}}, N::Int) where {T} = zeros(T, N)
-origin(VT::Type{<:AbstractVector}, ::FullDim) = zeros(VT)
+origin(VT::Type{<:AbstractVector}, ::Int) = zeros(VT)
 # Canonical basis vector
 function basis(::Type{Vector{T}}, N::Int, i::Int) where {T}
     v = zeros(T, N)
     v[i] = one(T)
     v
 end
-function basis(::Type{SVector{N, T}}, ::Int, i::Int) where {N, T}
-    SVector{N, T}(ntuple(j -> j == i ? one(T) : zero(T), Val(N)))
+function basis(::Type{StaticArrays.SVector{N, T}}, ::Int, i::Int) where {N, T}
+    StaticArrays.SVector{N, T}(ntuple(j -> j == i ? one(T) : zero(T), Val(N)))
 end
 
 """
@@ -133,7 +128,7 @@ end
 Ray{T, AT}(ray::Ray) where {T, AT} = Ray{T, AT}(AT(ray.a))
 Base.convert(::Type{Ray{T, AT}}, ray::Ray) where {T, AT} = Ray{T, AT}(ray)
 Ray{T}(a::AT) where {T, AT<:AbstractVector{T}} = Ray{T, AT}(a)
-Ray(a::AbstractVector) = Ray{fulldim(a), eltype(a)}(a)
+Ray(a::AbstractVector) = Ray{eltype(a)}(a)
 
 """
     struct Line{T, AT <: AbstractVector{T}}
@@ -151,10 +146,9 @@ end
 Line{T, AT}(line::Line) where {T, AT} = Line{T, AT}(AT(line.a))
 Base.convert(::Type{Line{T, AT}}, line::Line) where {T, AT} = Line{T, AT}(line)
 Line{T}(a::AT) where {T, AT<:AbstractVector{T}} = Line{T, AT}(a)
-Line(a::AbstractVector) = Line{fulldim(a), eltype(a)}(a)
+Line(a::AbstractVector) = Line{eltype(a)}(a)
 
-#const VStruct{T} = Union{SymPoint{T}, Line{T}, Ray{T}}
-const VStruct{T} = Union{Line{T}, Ray{T}}
+const VStruct{T, AT} = Union{Line{T, AT}, Ray{T, AT}}
 
 Base.:(==)(a::T, b::T) where T<:VStruct = coord(a) == coord(b)
 Base.getindex(x::VStruct, i) = x.a[i]
@@ -181,7 +175,7 @@ for ElT in (:HyperPlane, :HalfSpace, :Line, :Ray)
     @eval begin
         Base.promote_rule(::Type{$ElT{T, AT}}, ::Type{$ElT{T, AT}}) where {T, AT} = $ElT{T, AT}
         # Allowing mixing e.g. sparse vector with vector would not be helpful as code meant
-        # to use sparse polyhedra would lose sparsity silently. Same thing for SVector
+        # to use sparse polyhedra would lose sparsity silently. Same thing for StaticArrays.SVector
         Base.promote_rule(::Type{$ElT{T, VT}}, ::Type{$ElT{T, WT}}) where {T, VT, WT} = error("Cannot mix Polyhedra elements of vector type $VT and $WT")
         function Base.promote_rule(::Type{$ElT{S, AS}}, ::Type{$ElT{T, AT}}) where {S, T, AS, AT}
             U = promote_type(S, T)
@@ -196,23 +190,24 @@ Base.:(/)(r::T, α) where T<:VStruct = T(r.a / α)
 
 const VRepElement{T} = Union{VStruct{T}, AbstractVector{T}}
 const RepElement{T} = Union{HRepElement{T}, VRepElement{T}}
+const StructElement{T, AT} = Union{VStruct{T, AT}, HRepElement{T, AT}}
 
-FullDim(el::Union{RepElement, Type{<:RepElement}}) = FullDim(el)
+FullDim(::Type{<:StructElement{T, AT}}) where {T, AT} = FullDim(AT)
+FullDim(el::StructElement) = FullDim(coord(el))
 MultivariatePolynomials.coefficienttype(::Union{RepElement{T}, Type{<:RepElement{T}}}) where {T} = T
 
-#islin(::Union{SymPoint, Line, Type{<:Union{SymPoint, Line}}}) = true
 islin(::Union{Line, Type{<:Line}}) = true
 islin(::Union{AbstractVector, Ray, Type{<:Union{AbstractVector, Ray}}}) = false
 ispoint(::Union{AbstractVector, Type{<:AbstractVector}}) = true
 ispoint(::Union{Line, Ray, Type{<:Union{Line, Ray}}}) = false
 isray(v) = !ispoint(v)
 
-coord(v::ElemT) where {ElemT<:Union{Point,AbstractVector}} = v
-coord(v::ElemT) where {ElemT<:Union{HRepElement,VStruct}} = v.a
+coord(v::AbstractVector) = v
+coord(v::Union{HRepElement, VStruct}) = v.a
 
 function Base.:*(P::AbstractMatrix, v::ElemT) where {T, ElemT<:VStruct{T}}
       Tout = _promote_type(T, eltype(P))
-      ElemTout = similar_type(ElemT, FullDim{size(P, 1)}(), Tout)
+      ElemTout = similar_type(ElemT, size(P, 1), Tout)
       return ElemTout(P * v.a)
 end
 # FIXME there seem to be a Julia bug, with Vector, it does not recognize that the zeropad method
@@ -234,7 +229,7 @@ end
 zeropad(v::ElemT, n::Integer) where {T, ElemT <: VRepElement{T}} = _zeropad(v, n)
 zeropad(v::AbstractVector, n::Integer) = _zeropad(v, n)
 
-for ElemT in [:HalfSpace, :HyperPlane, :Ray, :Line] # , :SymPoint
+for ElemT in [:HalfSpace, :HyperPlane, :Ray, :Line]
     @eval begin
         function similar_type(::Type{$ElemT{T, AT}}, dout::FullDim, ::Type{Tout}) where {T, AT, Tout}
             return $ElemT{Tout, similar_type(AT, dout, Tout)}
@@ -244,29 +239,20 @@ end
 
 ininterior(r::Ray, h::HalfSpace) = _neg(h.a ⋅ r)
 ininterior(l::Line, h::HalfSpace) = _neg(h.a ⋅ l)
-ininterior(p::Point, h::HalfSpace) = _lt(h.a ⋅ p, h.β)
 ininterior(p::AbstractVector, h::HalfSpace) = _lt(h.a ⋅ p, h.β)
-#ininterior(p::SymPoint, h::HalfSpace) = _lt(h.a ⋅ p.p, h.β)
 
 inrelativeinterior(p::VRepElement, h::HalfSpace) = ininterior(p, h)
 
 Base.in(r::Ray, h::HalfSpace) = _nonpos(h.a ⋅ r)
 Base.in(l::Line, h::HalfSpace) = _nonpos(h.a ⋅ l)
-Base.in(p::Point, h::HalfSpace) = _leq(h.a ⋅ p, h.β)
 Base.in(p::AbstractVector, h::HalfSpace) = _leq(h.a ⋅ p, h.β)
-#function Base.in(p::SymPoint, h::HalfSpace)
-#    ap = h.a ⋅ p.p
-#    _leq(ap, h.β) && _leq(-ap, h.β)
-#end
 
 ininterior(p::VRepElement, h::HyperPlane) = false
 inrelativeinterior(p::VRepElement, h::HyperPlane) = p in h
 
 Base.in(r::Ray, h::HyperPlane) = isapproxzero(h.a ⋅ r)
 Base.in(l::Line, h::HyperPlane) = isapproxzero(h.a ⋅ l)
-Base.in(p::Point, h::HyperPlane) = _isapprox(h.a ⋅ p, h.β)
 Base.in(p::AbstractVector, h::HyperPlane) = _isapprox(h.a ⋅ p, h.β)
-#Base.in(p::SymPoint, h::HyperPlane) = isapproxzero(h.β) && isapproxzero(h.a ⋅ p.a)
 
 #function Base.vec(x::FixedVector{T}) where {T}
 #    y = Vector{T}(N)
@@ -284,22 +270,23 @@ function pushbefore(a::AbstractSparseVector{T}, β::T) where T
     b
 end
 pushbefore(a::AbstractVector, β) = [β; a]
-function pushbefore(a::ElemT, β, ElemTout = similar_type(ElemT, increment(FullDim(a))))
-    ElemTout([β; vec(a)])
+function pushbefore(a::StaticArrays.SVector, β)
+    StaticArrays.SVector(β, a...)
 end
+
+constructor(::HyperPlane) = HyperPlane
+constructor(::HalfSpace) = HalfSpace
+constructor(::Ray) = Ray
+constructor(::Line) = Line
 
 function lift(h::HRepElement{T}) where {T}
-    similar_type(typeof(h), increment(FullDim(h)), T)(pushbefore(h.a, -h.β), zero(T))
+    constructor(h)(pushbefore(h.a, -h.β), zero(T))
 end
-lift(h::Ray{T}) where {T} = Ray{T}(pushbefore(h.a, zero(T)))
-lift(h::Line{T}) where {T} = Line{T}(pushbefore(h.a, zero(T)))
-lift(h::Point{T}) where {T} = pushbefore(h, one(T))
-lift(h::AbstractVector{T}) where {T} = pushbefore(h, one(T))
-#lift(h::SymPoint{T}) where {T} = SymPoint{T}(pushbefore(h.a, one(T)))
+lift(v::VStruct{T}) where {T} = constructor(v)(pushbefore(v.a, zero(T)))
+lift(v::AbstractVector{T}) where {T} = pushbefore(v, one(T))
 
-#translate(p::Union{Point,AbstractVector,SymPoint}, v) = p + v
-translate(p::Union{Point,AbstractVector}, v) = p + v
-translate(r::Union{Ray,Line}, v) = r
+translate(p::AbstractVector, v) = p + v
+translate(r::VStruct, v) = r
 
 translate(h::ElemT, p) where {ElemT<:HRepElement} = ElemT(h.a, h.β + h.a ⋅ p)
 
@@ -352,6 +339,6 @@ end
 
 simplify(h::HalfSpace{T}) where {T} = HalfSpace{T}(_simplify(h.a, h.β)...)
 simplify(h::HyperPlane{T}) where {T} = HyperPlane{T}(_simplify(h.a, h.β)...)
-simplify(r::T) where {T<:Union{Ray,Line}} = T(_simplify(coord(r)))
+simplify(r::VStruct) = constructor(r)(_simplify(coord(r)))
 # Cannot scale points
 simplify(p::AbstractVector) = p

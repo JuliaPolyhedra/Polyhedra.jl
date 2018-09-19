@@ -14,8 +14,8 @@ include("utils.jl")
 
 include("solvers.jl")
 
-include("elements.jl")
-include("comp.jl")
+#include("elements.jl")
+#include("comp.jl")
 include("representation.jl")
 include("polyhedron.jl")
 

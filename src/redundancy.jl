@@ -145,7 +145,7 @@ end
 # V-redundancy
 # If p is an H-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 # TODO nlines should be the number of non-redundant lines so something similar to dim
-function isredundant(p::HRep{T}, v::Union{AbstractPoint, Line, Ray}; strongly = true, nl::Int=nlines(p), solver=Polyhedra.solver(p)) where {T}
+function isredundant(p::HRep{T}, v::Union{AbstractVector, Line, Ray}; strongly = true, nl::Int=nlines(p), solver=Polyhedra.solver(p)) where {T}
     # v is in every hyperplane otherwise it would not be valid
     hcount = nhyperplanes(p) + count(h -> v in hyperplane(h), halfspaces(p))
     strong = (isray(v) ? fulldim(p)-1 : fulldim(p)) - nl
@@ -166,15 +166,6 @@ function isredundant(p::VRep{T}, h::HRepElement; strongly = true, d::Int=dim(p),
 end
 # An hyperplane is never redundant but it can be a duplicate
 isredundant(p::VRep{T}, h::HyperPlane; strongly = true, d::Int=dim(p), solver=Polyhedra.solver(p)) where {T} = false
-
-function ishredundant(args...; kws...)
-    Base.depwarn("ishredundant is deprecated, use isredundant intead", :ishredundant)
-    isredundant(args...; kws...)
-end
-function isvredundant(args...; kws...)
-    Base.depwarn("isvredundant is deprecated, use isredundant intead", :isvredundant)
-    isredundant(args...; kws...)
-end
 
 # H-redundancy
 #function ishredundantaux(p::HRep, a, β, strongly, solver)
@@ -243,7 +234,7 @@ function removeduplicates end
 #        push!(sympoints, p)
 #    end
 #end
-function vpupdatedup!(aff, points, p::AbstractPoint)
+function vpupdatedup!(aff, points, p::AbstractVector)
     if !any(point -> (point - p) in aff, points)
         push!(points, p)
     end

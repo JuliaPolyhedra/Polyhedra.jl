@@ -60,16 +60,17 @@ mutable struct LPHRepresentation{T, MT<:AbstractMatrix{T}} <: MixedHRep{T}
         new{T, typeof(A)}(A, l, u, colleqs, colgeqs, coleqs, lb, ub, rowleqs, rowgeqs, roweqs)
     end
 end
+FullDim(rep::LPHRepresentation) = size(rep.A, 2)
 
-LPHRepresentation(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {T <: Real} = LPHRepresentation{size(A,2), T, typeof(A)}(A, l, u, lb, ub)
+LPHRepresentation(A::AbstractMatrix{T}, l::AbstractVector{T}, u::AbstractVector{T}, lb::AbstractVector{T}, ub::AbstractVector{T}) where {T <: Real} = LPHRepresentation{T, typeof(A)}(A, l, u, lb, ub)
 function LPHRepresentation(A::AbstractMatrix, l::AbstractVector, u::AbstractVector, lb::AbstractVector, ub::AbstractVector)
     T = promote_type(eltype(A), eltype(l), eltype(u), eltype(lb), eltype(ub))
     AT = AbstractMatrix{T}(A)
-    LPHRepresentation{size(A,2), T, typeof(AT)}(AT, AbstractVector{T}(l), AbstractVector{T}(u), AbstractVector{T}(lb), AbstractVector{T}(ub))
+    LPHRepresentation{T, typeof(AT)}(AT, AbstractVector{T}(l), AbstractVector{T}(u), AbstractVector{T}(lb), AbstractVector{T}(ub))
 end
 
 hvectortype(::Type{LPHRepresentation{T, MT}}) where {T, MT} = vectortype(MT)
-similar_type(::Type{LPHRepresentation{M, S, MT}}, ::FullDim, ::Type{T}) where {M, S, T, MT} = LPHRepresentation{T, similar_type(MT, T)}
+similar_type(::Type{LPHRepresentation{S, MT}}, ::FullDim, ::Type{T}) where {S, T, MT} = LPHRepresentation{T, similar_type(MT, T)}
 fulltype(::Type{LPHRepresentation{T, MT}}) where {T, MT} = LPHRepresentation{T, MT}
 
 LPHRepresentation(h::HRep{T}) where {T} = LPHRepresentation{T}(h)

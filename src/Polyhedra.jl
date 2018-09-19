@@ -11,44 +11,13 @@ using MultivariatePolynomials
 export PolyhedraLibrary, Polyhedron
 
 abstract type PolyhedraLibrary end
-abstract type Polyhedron{N, T} <: GeometryPrimitive{N, T} end
+abstract type Polyhedron{T} end
 
 import MathProgBase
 const MPB = MathProgBase
 const MPBSI = MPB.SolverInterface
 
-import StaticArrays
-function similar_type(SAT::Type{<:StaticArrays.SVector},
-                      size::StaticArrays.Size, T::Type)
-    StaticArrays.similar_type(SAT, T, size)
-end
-
-"""
-    FullDim(p)::FullDim
-
-Similar to [`fulldim`](@ref) but used for type stability with the vector type.
-If the vector type is `StaticArrays.SVector` then it returns a
-`StaticArrays.Size`.
-"""
-function FullDim end
-
-"""
-    fulldim(p)::Int
-
-Returns the full dimension of the polyhedron, polyhedron representation,
-polyhedron representation element or vector.
-"""
-function fulldim end
-
-# The dimension is Int for Vector, SparseVector and
-# StaticArrays.Size for SVector
-# This allows similar_type to be compiled as only one method for Vector
-# and SparseVector and be type stable for SVector
-const FullDim = Union{Int, StaticArrays.Size}
-fulldim(N::Int) = N
-fulldim(::StaticArrays.Size{N}) where N = N
-FullDim(v::AbstractVector) = length(v)
-FullDim(v::Union{StaticArrays.SVector{N}, Type{<:StaticArrays.SVector{N}}}) where N = StaticArrays.Size(v)
+include("dimension.jl")
 
 MultivariatePolynomials.coefficienttype(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
 similar_type(::Type{<:Vector}, ::Int, ::Type{T}) where T = Vector{T}
@@ -68,9 +37,24 @@ include("incidence.jl")
 include("iterators.jl")
 include("polyhedron.jl")
 
-# For retro-compatibility with CDD and LRS, remove in v0.3.4
-vvectortype(RepT::Type{<:VRep}) = vectortype(RepT)
-hvectortype(RepT::Type{<:HRep}) = vectortype(RepT)
+function fulldim(hyperplanes::HyperPlaneIt{T, StaticArrays.SVector{N, T}},
+                 halfspaces::HalfSpaceIt{T, StaticArrays.SVector{N, T}}) where {N, T}
+    return N
+end
+function fulldim(hyperplanes::HyperPlaneIt{T}, halfspaces::HalfSpaceIt{T}) where T
+    if isempty(hyperplanes)
+        if isempty(halfspaces)
+            return 0
+        else
+            return fulldim(first(halfspaces))
+        end
+    else
+        return fulldim(first(hyperplanes))
+    end
+end
+
+vvectortype(rep::Rep) = vvectortype(typeof(rep))
+hvectortype(rep::Rep) = hvectortype(typeof(rep))
 # TODO Only define vectortype for the type for Polyhedron v0.4
 function vectortype(RepT::Type{<:Polyhedron})
     @assert hvectortype(RepT) == vvectortype(RepT)
@@ -82,8 +66,6 @@ vectortype(p::Rep) = vectortype(typeof(p))
 
 vectortype(::Type{<:AbstractSparseArray{T}}) where T = SparseVector{T, Int}
 vectortype(::Type{<:AbstractMatrix{T}}) where T = Vector{T}
-
-const arraytype = vectortype
 
 hmatrixtype(RepT::Type{<:HRep}, T::Type) = matrixtype(similar_type(hvectortype(RepT), T))
 vmatrixtype(RepT::Type{<:VRep}, T::Type) = matrixtype(similar_type(vvectortype(RepT), T))

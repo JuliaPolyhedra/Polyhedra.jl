@@ -8,7 +8,7 @@ export volume, surface
 
 Creates a polyhedron from the representation `rep` using the default library including in the Polyhedra package.
 """
-polyhedron(rep::Representation{T}) where {T} = polyhedron(rep, default_library(FullDim{N}(), T))
+polyhedron(rep::Representation{T}) where {T} = polyhedron(rep, default_library(FullDim(rep), T))
 
 """
     hrepiscomputed(p::Polyhedron)
@@ -41,7 +41,7 @@ vrep(p::Polyhedron) = error("`vrep` not implemented for `$(eltype(p))`")
 """
     volume(p::Polyhedron{T}) where {T}
 
-Returns the `N`-dimensional hyper-volume of the polyhedron `p`.
+Returns the `fulldim(p)`-dimensional hyper-volume of the polyhedron `p`.
 Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
 """
 function volume end
@@ -49,7 +49,7 @@ function volume end
 """
     surface(p::Polyhedron{T}) where {T}
 
-Returns the `N-1`-dimensional hyper-volume of the surface of the polyhedron `p`.
+Returns the `fulldim(p)-1`-dimensional hyper-volume of the surface of the polyhedron `p`.
 Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
 """
 function surface end

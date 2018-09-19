@@ -126,7 +126,7 @@ end
 #    end
 #end
 #
-#function Base.show(io::IO, rep::Representation{N,T}) where {N,T}
+#function Base.show(io::IO, rep::Representation{T}) where {T}
 #    if typeof(rep) <: HRepresentation
 #        print(io, "H")
 #        ls = BitSet(1:nhyperplanes(rep))

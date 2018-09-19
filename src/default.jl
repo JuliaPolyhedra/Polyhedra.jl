@@ -8,13 +8,13 @@ Returns the default polyhedron type for `d`-dimensional polyhedron of coefficien
 """
 function default_type end
 
-function default_type(::StaticArrays.Size{N}, ::Type{T}) where {T}
-    return SimplePolyhedron{T, Intersection{T, SVector{N, T}}, Hull{T, SVector{N, T}}}
+function default_type(::StaticArrays.Size{N}, ::Type{T}) where {N, T}
+    return SimplePolyhedron{T, Intersection{T, StaticArrays.SVector{N[1], T}}, Hull{T, StaticArrays.SVector{N[1], T}}}
 end
-function default_type(::StaticArrays.Size{1}, ::Type{T}) where T
-    return Interval{T, SVector{1, T}}
+function default_type(::StaticArrays.Size{(1,)}, ::Type{T}) where T
+    return Interval{T, StaticArrays.SVector{1, T}}
 end
-function default_library(fd::Int, ::Type{T})
+function default_type(fd::Int, ::Type{T}) where T
     if fd == 1
         return Interval{T, Vector{T}}
     else
@@ -34,7 +34,7 @@ _default_type(::Type{T}) where T = T
 _default_type(::Type{AbstractFloat}) = Float64
 default_library(::StaticArrays.Size, T::Type) = SimplePolyhedraLibrary{_default_type(T)}()
 default_library(::StaticArrays.Size{1}, T::Type) = IntervalLibrary{_default_type(T)}()
-function default_library(fd::Int, ::Type{T})
+function default_library(fd::Int, ::Type{T}) where T
     if fd == 1
         return IntervalLibrary{_default_type(T)}()
     else

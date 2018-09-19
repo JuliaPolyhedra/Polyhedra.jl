@@ -15,14 +15,14 @@ linetype(::Type{Ray{T, AT}}) where {T, AT} = Line{T, AT}
 
 export translate
 
-function htranslate(p::HRep{T}, v::Union{AbstractPoint{S}}) where {S, T}
+function htranslate(p::HRep{T}, v::Union{AbstractVector{S}}) where {S, T}
     f = (i, h) -> translate(h, v)
     d = FullDim(p)
     Tout = Base.promote_op(+, T, S)
     similar(p, d, Tout, hmap(f, d, Tout, p)...)
 end
 
-function vtranslate(p::VRep{T}, v::Union{AbstractPoint{S}}) where {S, T}
+function vtranslate(p::VRep{T}, v::Union{AbstractVector{S}}) where {S, T}
     f = (i, u) -> translate(u, v)
     d = FullDim(p)
     Tout = Base.promote_op(+, T, S)
@@ -132,11 +132,6 @@ function Base.issubset(p::Polyhedron, h::HRepElement, solver=Polyhedra.solver(p)
     end
 end
 
-function Base.in(h::HRepElement, p::Rep)
-    warn("in(h::HRepElement, p::Rep) is deprecated. Use issubset(p, h) instead.")
-    issubset(p, h)
-end
-
 ################
 # INTERSECTION #
 ################
@@ -167,7 +162,7 @@ _intres(h::HalfSpace, ins, inp) = [ins; inp]
 #    end
 #end
 
-function _pushinout!(ins, out, pr::Union{AbstractPoint, Ray}, h::HalfSpace)
+function _pushinout!(ins, out, pr::Union{AbstractVector, Ray}, h::HalfSpace)
     if pr in h
         push!(ins, pr)
     else

@@ -5,8 +5,8 @@ abstract type AbstractRepIterator{T, ElemT, PT} end
 # A representation can overwrite this if it can do something more efficient or if it simply does not support indexing
 const SingleRepIterator{T, ElemT, RepT} = AbstractRepIterator{T, ElemT, Tuple{RepT}}
 # With MapRepIterator, we could have fulldim(RepT) != N or T' != T, with eachindex, we need to replace everything with fulldim(RepT), T'
-Base.eachindex(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT}) where {T, ElemT, RepT<:Rep{T}} = Indices{T, similar_type(ElemT, FullDim(RepT), T)}(it.ps[1])
-Base.start(it::SingleRepIterator{<:Any, <:Any, ElemT, RepT})     where {T, ElemT, RepT<:Rep{T}} = start(eachindex(it))::Index{T, similar_type(ElemT, FullDim(RepT), T)}
+Base.eachindex(it::SingleRepIterator{<:Any, ElemT, RepT}) where {T, ElemT, RepT<:Rep{T}} = Indices{T, similar_type(ElemT, FullDim(RepT), T)}(it.ps[1])
+Base.start(it::SingleRepIterator{<:Any, ElemT, RepT})     where {T, ElemT, RepT<:Rep{T}} = start(eachindex(it))::Index{T, similar_type(ElemT, FullDim(RepT), T)}
 Base.done(it::SingleRepIterator, idx::Index) = done(eachindex(it), idx)
 function Base.next(it::SingleRepIterator, idx::Index)
     #mapitem(it, 1, get(it.ps[1], idx)), nextindex(it.ps[1], idx)
@@ -76,8 +76,7 @@ end
 #       for Julia to know them inside the """ ... """ of the docstrings
 singular = HorV = HorVRep = horvrep = singularlin = plural = plurallin = lenp = isnotemptyp = repexem = listexem = :_
 
-for (isVrep, elt, loop_singular) in [#(true, :SymPoint, :sympoint),
-                                     (true, :AbstractPoint, :point),
+for (isVrep, elt, loop_singular) in [(true, :AbstractVector, :point),
                                      (true, :Line, :line), (true, :Ray, :ray),
                                      (false, :HyperPlane, :hyperplane), (false, :HalfSpace, :halfspace)]
     global singular = loop_singular
@@ -276,15 +275,13 @@ for (isVrep, loop_singularlin,
     end
 end
 
-const ElemIt{ElemT} = Union{AllRepIterator{<:Any, <:Any, ElemT}, AbstractRepIterator{<:Any, <:Any, ElemT}, AbstractVector{ElemT}}
+const ElemIt{ElemT} = Union{AllRepIterator{<:Any, ElemT}, AbstractRepIterator{<:Any, ElemT}, AbstractVector{ElemT}}
 const HyperPlaneIt{T} = ElemIt{<:HyperPlane{T}}
 const HalfSpaceIt{T} = ElemIt{<:HalfSpace{T}}
 const HIt{T} = Union{HyperPlaneIt{T}, HalfSpaceIt{T}}
 
-#const SymPointIt{T} = ElemIt{<:SymPoint{T}}
-const PointIt{T} = ElemIt{<:AbstractPoint{T}}
+const PointIt{T} = ElemIt{<:AbstractVector{T}}
 const PIt{T} = PointIt{T}
-#const PIt{T} = Union{SymPointIt{T}, PointIt{T}}
 const LineIt{T} = ElemIt{<:Line{T}}
 const RayIt{T} = ElemIt{<:Ray{T}}
 const RIt{T} = Union{LineIt{T}, RayIt{T}}
@@ -292,7 +289,7 @@ const VIt{T} = Union{PIt{T}, RIt{T}}
 
 const It{T} = Union{HIt{T}, VIt{T}}
 
-function fillvits(points::ElemIt{AT}, lines::ElemIt{Line{T, AT}}=Line{T, AT}[], rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT<:AbstractPoint{T}}
+function fillvits(points::ElemIt{AT}, lines::ElemIt{Line{T, AT}}=Line{T, AT}[], rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT<:AbstractVector{T}}
     if isempty(points)
         if isempty(lines) && isempty(rays)
             N = 0
@@ -300,7 +297,7 @@ function fillvits(points::ElemIt{AT}, lines::ElemIt{Line{T, AT}}=Line{T, AT}[], 
             vconsistencyerror()
         end
     else
-        N = fulldim(points[1])
+        N = fulldim(first(points))
     end
     return N, points, lines, rays
 end
@@ -310,9 +307,9 @@ function fillvits(lines::ElemIt{Line{T, AT}}, rays::ElemIt{Ray{T, AT}}=Ray{T, AT
         points = AT[]
     else
         if isempty(lines)
-            N = fulldim(rays[1])
+            N = fulldim(first(rays))
         else
-            N = fulldim(lines[1])
+            N = fulldim(first(lines))
         end
         points = [origin(AT, N)]
     end

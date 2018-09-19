@@ -6,8 +6,8 @@ end
 function PolyhedronGeometry{N}(polyhedron::Polyhedron{T}) where {N, T}
     return PolyhedronGeometry{N, T, typeof(polyhedron)}(polyhedron)
 end
-function PolyhedronGeometry(polyhedron::Polyhedron, StaticArrays.Size{N}) where N
-    return PolyhedronGeometry{N}(polyhedron)
+function PolyhedronGeometry(polyhedron::Polyhedron, ::StaticArrays.Size{N}) where N
+    return PolyhedronGeometry{N[1]}(polyhedron)
 end
 function PolyhedronGeometry(polyhedron::Polyhedron, N::Int)
     # This is type unstable but there is no way around that,
@@ -221,18 +221,18 @@ end
 
 fulldecompose(poly::Polyhedron{T}) where T = fulldecompose(poly, typeof(one(T)/2))
 
-GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:Point, S<:Polyhedron} = true
-GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:Face, S<:Polyhedron} = true
-GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:Normal, S<:Polyhedron} = true
-function GeometryTypes.decompose(PT::Type{<:Point}, poly::Polyhedron)
+GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:GeometryTypes.Point, S<:Polyhedron} = true
+GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:GeometryTypes.Face, S<:Polyhedron} = true
+GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:GeometryTypes.Normal, S<:Polyhedron} = true
+function GeometryTypes.decompose(PT::Type{<:GeometryTypes.Point}, poly::Polyhedron)
     points = fulldecompose(poly)[1]
     map(PT, points)
 end
-function GeometryTypes.decompose(FT::Type{<:Face}, poly::Polyhedron)
+function GeometryTypes.decompose(FT::Type{<:GeometryTypes.Face}, poly::Polyhedron)
     faces = fulldecompose(poly)[2]
     decompose(FT, faces)
 end
-function GeometryTypes.decompose(NT::Type{<:Normal}, poly::Polyhedron)
+function GeometryTypes.decompose(NT::Type{<:GeometryTypes.Normal}, poly::Polyhedron)
     ns = fulldecompose(poly)[3]
     map(NT, ns)
 end

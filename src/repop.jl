@@ -42,7 +42,7 @@ Same as [`intersect`](@ref) except that `p` is modified to be equal to the inter
 function Base.intersect!(p::HRep, ::Union{HRepresentation, HRepElement})
     error("intersect! not implemented for $(typeof(p)). It probably does not support in-place modification, try `intersect` (without the `!`) instead.")
 end
-function Base.intersect!(p::Polyhedron, h::Union{HRepresentation, HRepElement}) where N
+function Base.intersect!(p::Polyhedron, h::Union{HRepresentation, HRepElement})
     resethrep!(p, hrep(p) ∩ h)
 end
 
@@ -64,11 +64,11 @@ end
 convexhull(p::Rep, el::VRepElement) = convexhull(p, convexhull(el))
 convexhull(el::VRepElement, p::Rep) = convexhull(p, el)
 
-convexhull(ps::AbstractPoint...) = vrep([ps...])
+convexhull(ps::AbstractVector...) = vrep([ps...])
 convexhull(ls::Line...) = vrep([ls...])
 convexhull(rs::Ray...) = vrep([rs...])
-convexhull(p::AbstractPoint{T}, r::Union{Line{T}, Ray{T}}) where {T} = vrep([p], [r])
-convexhull(r::Union{Line{T}, Ray{T}}, p::AbstractPoint{T}) where {T} = convexhull(p, r)
+convexhull(p::AbstractVector{T}, r::Union{Line{T}, Ray{T}}) where {T} = vrep([p], [r])
+convexhull(r::Union{Line{T}, Ray{T}}, p::AbstractVector{T}) where {T} = convexhull(p, r)
 convexhull(l::Line{T}, r::Ray{T}) where {T} = vrep([l], [r])
 convexhull(r::Ray{T}, l::Line{T}) where {T} = convexhull(l, r)
 convexhull(p1::VAny{T}, p2::VAny{T}, ps::VAny{T}...) where {T} = convexhull(convexhull(p1, p2), ps...)
@@ -93,7 +93,7 @@ end
 # conify: same than conichull except that conify(::VRepElement) returns a VRepElement and not a V-representation
 conify(v::VRep) = vrep(lines(v), [collect(rays(v)); Ray.(collect(points(v)))])
 conify(v::VCone) = v
-conify(p::AbstractPoint) = Ray(p)
+conify(p::AbstractVector) = Ray(p)
 conify(r::Union{Line, Ray}) = r
 
 conichull(p...) = convexhull(conify.(p)...)
@@ -173,11 +173,6 @@ function Base.:(/)(p::HRep{Tin}, P::AbstractMatrix) where {Tin}
     d = size(P, 1)
     T = _promote_type(Tin, eltype(P))
     similar(p, d, T, hmap(f, d, T, p)...)
-end
-
-function Base.:(*)(rep::HRep, P::AbstractMatrix)
-    warn("`*(p::HRep, P::AbstractMatrix)` is deprecated. Use `P \\ p` or `p / P'` instead.")
-    P \ rep
 end
 
 """
