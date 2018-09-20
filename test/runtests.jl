@@ -17,8 +17,8 @@ include("solvers.jl")
 include("elements.jl")
 include("comp.jl")
 include("representation.jl")
-#include("polyhedron.jl")
-#
+include("polyhedron.jl")
+
 #include("redundancy.jl")
 #include("doubledescription.jl")
 #
