@@ -82,13 +82,11 @@ function zeropad(a::Vector{T}, n::Integer) where T
         return [a; zeros(T, n)]
     end
 end
-noparam_type(::HalfSpace) = HalfSpace
-noparam_type(::HyperPlane) = HyperPlane
 function zeropad(h::HRepElement, n::Integer)
     if n == 0
         return h
     else
-        return noparam_type(zeropad(h.a, n), h.β)
+        return constructor(h)(zeropad(h.a, n), h.β)
     end
 end
 

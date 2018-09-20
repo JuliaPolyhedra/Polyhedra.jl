@@ -37,22 +37,6 @@ include("incidence.jl")
 include("iterators.jl")
 include("polyhedron.jl")
 
-function fulldim(hyperplanes::HyperPlaneIt{T, StaticArrays.SVector{N, T}},
-                 halfspaces::HalfSpaceIt{T, StaticArrays.SVector{N, T}}) where {N, T}
-    return N
-end
-function fulldim(hyperplanes::HyperPlaneIt{T}, halfspaces::HalfSpaceIt{T}) where T
-    if isempty(hyperplanes)
-        if isempty(halfspaces)
-            return 0
-        else
-            return fulldim(first(halfspaces))
-        end
-    else
-        return fulldim(first(hyperplanes))
-    end
-end
-
 vvectortype(rep::Rep) = vvectortype(typeof(rep))
 hvectortype(rep::Rep) = hvectortype(typeof(rep))
 # TODO Only define vectortype for the type for Polyhedron v0.4
@@ -97,6 +81,36 @@ include("liftedrep.jl")
 include("doubledescription.jl") # FIXME move it after projection.jl once it stops depending on LiftedRep
 include("interval.jl") # 1D polyhedron
 include("simplepolyhedron.jl")
+
+# -1 is the dimension of an empty polyhedron, here it is used as the
+# *full* dimension of a polyhedron with no element
+fulldim_rec() = -1
+function fulldim_rec(rep::Rep{T}, its::Union{Rep{T}, It{T}}...) where T
+    N = fulldim(rep)
+    if N == -1
+        return fulldim_rec(its...)
+    else
+        return N
+    end
+end
+function fulldim_rec(it::It{T}, its::Union{Rep{T}, It{T}}...) where T
+    if isempty(it)
+        return fulldim_rec(its...)
+    else
+        return fulldim(first(it))
+    end
+end
+function FullDim(::Union{HyperPlanesIntersection{T, AT},
+                         LinesHull{T, AT},
+                         VEmptySpace{T, AT},
+                         Intersection{T, AT},
+                         PointsHull{T, AT},
+                         RaysHull{T, AT},
+                         Hull{T, AT}}) where {T, AT <: StaticArrays.SVector}
+    return FullDim(AT)
+end
+
+
 
 # Optimization
 include("opt.jl")

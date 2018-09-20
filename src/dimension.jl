@@ -17,7 +17,7 @@ If the vector type is `StaticArrays.SVector` then it returns a
 """
 const FullDim = Union{Int, StaticArrays.Size}
 
-FullDim(::Type{<:AbstractVector}) = 0 # Shouldn't hurt as it will not be used
+FullDim(::Type{<:AbstractVector}) = -1 # Shouldn't hurt as it will not be used
 FullDim(v::AbstractVector) = length(v)
 FullDim(v::Union{StaticArrays.SVector{N}, Type{<:StaticArrays.SVector{N}}}) where N = StaticArrays.Size(v)
 

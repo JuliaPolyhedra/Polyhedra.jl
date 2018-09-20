@@ -30,7 +30,7 @@ LiftedHRepresentation{T}(h::HRepresentation) where {T} = LiftedHRepresentation{T
 function LiftedHRepresentation{T, MT}(hyperplanes::HyperPlaneIt{T}, halfspaces::HalfSpaceIt{T}) where {T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
-    N = fulldim(hyperplanes, halfspaces)
+    N = fulldim_rec(hyperplanes, halfspaces)
     A = emptymatrix(MT, nhrep, N+1)
     linset = BitSet(1:nhyperplane)
     for (i, h) in enumerate(hyperplanes)
@@ -63,7 +63,7 @@ mutable struct LiftedVRepresentation{T, MT<:AbstractMatrix{T}} <: MixedVRep{T}
         new{T, MT}(R, linset)
     end
 end
-FullDim(rep::LiftedHRepresentation) = size(rep.R, 2) - 1
+FullDim(rep::LiftedVRepresentation) = size(rep.R, 2) - 1
 
 similar_type(::Type{LiftedVRepresentation{S, MT}}, ::FullDim, ::Type{T}) where {S, T, MT} = LiftedVRepresentation{T, similar_type(MT, T)}
 vvectortype(::Type{LiftedVRepresentation{T, MT}}) where {T, MT} = vectortype(MT)

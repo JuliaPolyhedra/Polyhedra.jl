@@ -97,7 +97,7 @@ LPHRepresentation{T}(h::HRep) where {T} = LPHRepresentation{T, hmatrixtype(typeo
 function LPHRepresentation{T, MT}(hyperplanes::ElemIt{<:HyperPlane{T}}, halfspaces::ElemIt{<:HalfSpace{T}}) where {T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
-    N = fulldim(hyperplanes, halfspaces)
+    N = fulldim_rec(hyperplanes, halfspaces)
     A = emptymatrix(MT, nhrep, N)
     lb = Vector{T}(nhrep)
     ub = Vector{T}(nhrep)

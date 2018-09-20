@@ -48,7 +48,7 @@ MixedMatHRep{T}(hits::HIt{T}...) where {T} = MixedMatHRep{T, Matrix{T}}(hits...)
 function MixedMatHRep{T, MT}(hyperplanes::HyperPlaneIt{T}, halfspaces::HalfSpaceIt{T}) where {T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
-    N = fulldim(hyperplanes, halfspaces)
+    N = fulldim_rec(hyperplanes, halfspaces)
     A = emptymatrix(MT, nhrep, N)
     b = Vector{T}(undef, nhrep)
     linset = BitSet(1:nhyperplane)
