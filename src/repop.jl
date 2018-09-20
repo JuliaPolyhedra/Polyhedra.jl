@@ -181,7 +181,7 @@ end
 Transform the polyhedron represented by ``p`` into ``P p`` by transforming each element of the V-representation (points, symmetric points, rays and lines) `x` into ``P x``.
 """
 function Base.:(*)(P::AbstractMatrix, p::VRep{Tin}) where {Tin}
-    if size(P, 2) != fulldim(P)
+    if size(P, 2) != fulldim(p)
         throw(DimensionMismatch("The number of rows of P must match the dimension of the V-representation"))
     end
     f = (i, v) -> P * v

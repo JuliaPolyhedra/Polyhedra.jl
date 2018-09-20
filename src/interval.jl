@@ -171,7 +171,7 @@ function Interval{T, AT}(p::Polyhedron{T}) where {T, AT}
 end
 
 function polyhedron(rep::Rep{T}, ::IntervalLibrary{T}) where T
-    Interval{T, StaticArrays.SVector{T}}(rep)
+    Interval{T, StaticArrays.SVector{1, T}}(rep)
 end
 
 hrep(p::Interval) = p.hrep

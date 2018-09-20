@@ -51,5 +51,15 @@ end
 Check whether the polyhedron `p` is empty by using the solver `solver`.
 """
 function Base.isempty(p::Rep{T}, solver::MPB.AbstractMathProgSolver=Polyhedra.solver(p)) where {T}
-    MPB.linprog(zeros(T, fulldim(p)), p, solver).status == :Infeasible
+    N = fulldim(p)
+    if N == -1
+        if p isa VRepresentation || (p isa Polyhedron && fulldim(vrep(p)) == -1)
+            # Empty V-representation means empty polyhedron
+            return true
+        else
+            # Empty H-representation means the polyhedron the full space
+            return false
+        end
+    end
+    return MPB.linprog(zeros(T, fulldim(p)), p, solver).status == :Infeasible
 end

@@ -30,7 +30,7 @@ function MPBSI.loadproblem!(lpm::VRepPolyhedraModel, vrep::VRep, obj, sense)
         error("sense should be :Max or :Min")
     end
     lpm.vrep = vrep
-    if isapproxzero(obj)
+    if isempty(obj) || isapproxzero(obj)
         lpm.sense = :Feas
     else
         lpm.obj = copy(obj)

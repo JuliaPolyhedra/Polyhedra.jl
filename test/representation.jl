@@ -24,7 +24,6 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
 
         @test_throws ErrorException hrep(A, [0, 0], linset)
         @test_throws ErrorException hrep(A, b, BitSet([4]))
-        @test_throws ErrorException MixedMatHRep{Int}(A, b, BitSet())
         ine = hrep(A, b, linset)
         @test fulldim(ine) == 2
         @test (@inferred Polyhedra.FullDim(ine)) == 2
@@ -32,7 +31,6 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         @test translate(ine, [1, 0]).b == [2, -1, 0]
 
         V = [0 1; 1 0]
-        @test_throws ErrorException MixedMatVRep{Int}(V, [1 0], BitSet())
         @test_throws ErrorException vrep(zeros(0, 2), [1 0]) # V-consistency
         @test_throws ErrorException vrep(V, [1 0 0], BitSet())
         @test_throws ErrorException vrep(V, [1 1], BitSet([2]))
@@ -46,7 +44,6 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
     @testset "LPHRepresentation with bad arguments" begin
         @test_throws DimensionMismatch LPHRepresentation(ones(2, 2), [1], [1], [1, 2], [1, 2])
         @test_throws DimensionMismatch LPHRepresentation(ones(2, 2), [1, 2], [1, 2], [1], [1])
-        @test_throws DimensionMismatch LPHRepresentation{Int, Matrix{Int}}(ones(Int, 1, 1), [1], [1], [1], [1])
     end
 
     @testset "Lifted Representation with bad arguments" begin
@@ -54,7 +51,6 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         ls = BitSet([1])
 
         @test_throws ErrorException LiftedHRepresentation(A, BitSet([4]))
-        @test_throws ErrorException LiftedHRepresentation{Int}(A, ls)
         ine = copy(LiftedHRepresentation(A, ls))
         @test ine.A == A
         @test ine.A !== A
@@ -74,7 +70,6 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
 
         V = [1 0 1; 1 1 0]
         Vlinset = BitSet(2)
-        @test_throws ErrorException LiftedVRepresentation{Int}(V, Vlinset)
         @test_throws ErrorException LiftedVRepresentation(V, BitSet([4]))
         ext = copy(LiftedVRepresentation(V, Vlinset))
         @test ext.R == V
@@ -98,16 +93,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         hss = [HalfSpace([4, 5, 6.], 8)]
         shss = [@inferred HalfSpace((@SVector [4., 5., 6.]), 8)]
         @test eltype(shss) == HalfSpace{Float64, SVector{3, Float64}}
-        for (hr, AT) in (((@inferred hrep(hps)), Vector{Float64}),
-                         ((@inferred hrep(shps)), SVector{3, Float64}),
-                         ((@inferred hrep(hss)), Vector{Float64}),
-                         ((@inferred hrep(shss)), SVector{3, Float64}),
-                         ((@inferred hrep(hps, hss)), Vector{Float64}),
-                         ((@inferred hrep(shps, shss)), SVector{3, Float64}),
-                         (hrep([1 2 3; 4 5 6], [7., 8], BitSet([1])), Vector{Float64}),
-                         (hrep(spzeros(2, 3), [7., 8], BitSet([1])), SparseVector{Float64, Int}),
-                         (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8], BitSet([1])), Vector{Float64}),
-                         (SimpleHRepresentation([1 2 3; 4 5 6], [7., 8]), Vector{Float64}))
+        function htest(hr::Polyhedra.HRepresentation, AT::Type{<:AbstractVector})
             @test (@inferred coefficienttype(hr)) == Float64
             @test                                               (@inferred eltype(allhalfspaces(hr)))  == HalfSpace{Float64, AT}
             @test                                               (@inferred collect(allhalfspaces(hr))) isa Vector{HalfSpace{Float64, AT}}
@@ -118,10 +104,17 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test (@inferred Polyhedra.hyperplanetype(hr))   == (@inferred eltype(hyperplanes(hr)))    == HyperPlane{Float64, AT}
             @test                                               (@inferred collect(hyperplanes(hr)))   isa Vector{HyperPlane{Float64, AT}}
             @test isempty(hyperplanes(hr)) == iszero(nhyperplanes(hr))
-            @test_throws DimensionMismatch hr * ones(2, 3) # TODO replace by ones(2, 3) \ hr
+            @test_throws DimensionMismatch ones(2, 3) \ hr
         end
-        #symps = [SymPoint([0, 1])]
-        #ssymps = [SymPoint(@SVector [0, 1])]
+        htest((@inferred hrep(hps)), Vector{Float64})
+        htest((@inferred hrep(shps)), SVector{3, Float64})
+        htest((@inferred hrep(hss)), Vector{Float64})
+        htest((@inferred hrep(shss)), SVector{3, Float64})
+        htest((@inferred hrep(hps, hss)), Vector{Float64})
+        htest((@inferred hrep(shps, shss)), SVector{3, Float64})
+        htest(hrep([1 2 3; 4 5 6], [7., 8], BitSet([1])), Vector{Float64})
+        htest(hrep(spzeros(2, 3), [7., 8], BitSet([1])), SparseVector{Float64, Int})
+        htest(hrep([1 2 3; 4 5 6], [7., 8]), Vector{Float64})
         ps = [[1, 2], [3, 4]]
         sps = [(@SVector [1, 2]), (@SVector [3, 4])]
         rs = [Ray([0, 1])]
@@ -129,35 +122,8 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         ls = [Line([0, 1])]
         sls = [Line(@SVector [0, 1])]
         @test eltype(sps) == SVector{2, Int}
-        for (vr, AT) in (#((@inferred vrep(symps)), Vector{Int}),
-                         #((@inferred vrep(ssymps)), SVector{2, Int}),
-                         (vrep(ps), Vector{Int}),
-                         ((@inferred vrep(sps)), SVector{2, Int}),
-                         #((@inferred vrep(symps, ps)), Vector{Int}),
-                         #(convexhull(symps..., ps...), Vector{Int}),
-                         #(convexhull(ps..., symps...), Vector{Int}),
-                         (convexhull(ps...), Vector{Int}),
-                         #((@inferred vrep(ssymps, sps)), SVector{2, Int}),
-                         #((@inferred convexhull(ssymps..., sps...)), SVector{2, Int}),
-                         #((@inferred convexhull(sps..., ssymps...)), SVector{2, Int}),
-                         ((@inferred convexhull(sps...)), SVector{2, Int}),
-                         ((@inferred vrep(ls)), Vector{Int}),
-                         ((@inferred vrep(sls)), SVector{2, Int}),
-                         ((@inferred vrep(rs)), Vector{Int}),
-                         ((@inferred vrep(srs)), SVector{2, Int}),
-                         ((@inferred vrep(ls, rs)), Vector{Int}),
-                         ((@inferred vrep(sls, srs)), SVector{2, Int}),
-                         ((@inferred vrep(ps, ls, rs)), Vector{Int}),
-                         ((@inferred vrep(sps, sls, srs)), SVector{2, Int}),
-                         (vrep([1 2; 3 4]), Vector{Int}),
-                         (vrep(spzeros(Int, 2, 2)), SparseVector{Int, Int}),
-                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0), BitSet()), Vector{Int}),
-                         (SimpleVRepresentation([1 2; 3 4], zeros(Int, 0, 0)), Vector{Int}),
-                         (SimpleVRepresentation([1 2; 3 4]), Vector{Int}))
+        function vtest(vr::VRepresentation, AT::Type{<:AbstractVector})
             @test (@inferred coefficienttype(vr)) == Int
-#            @test (@inferred Polyhedra.sympointtype(vr)) == (@inferred eltype(sympoints(vr)))  == SymPoint{2, Int, AT}
-#            @test                                           (@inferred collect(sympoints(vr))) isa Vector{SymPoint{2, Int, AT}}
-#            @test isempty(sympoints(vr)) == iszero(nsympoints(vr))
             @test (@inferred Polyhedra.pointtype(vr))    == (@inferred eltype(points(vr)))     == AT
             @test                                           (@inferred collect(points(vr)))    isa Vector{AT}
             @test isempty(points(vr)) == iszero(npoints(vr))
@@ -172,6 +138,23 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test isempty(rays(vr)) == iszero(nrays(vr))
             @test_throws DimensionMismatch ones(2, 1) * vr
         end
+        vtest(vrep(ps), Vector{Int})
+        vtest((@inferred vrep(sps)), SVector{2, Int})
+        vtest(convexhull(ps...), Vector{Int})
+        vtest((@inferred convexhull(sps...)), SVector{2, Int})
+        vtest((@inferred vrep(ls)), Vector{Int})
+        vtest((@inferred vrep(sls)), SVector{2, Int})
+        vtest((@inferred vrep(rs)), Vector{Int})
+        vtest((@inferred vrep(srs)), SVector{2, Int})
+        vtest((@inferred vrep(ls, rs)), Vector{Int})
+        vtest((@inferred vrep(sls, srs)), SVector{2, Int})
+        vtest((@inferred vrep(ps, ls, rs)), Vector{Int})
+        vtest((@inferred vrep(sps, sls, srs)), SVector{2, Int})
+        vtest(vrep([1 2; 3 4]), Vector{Int})
+        vtest(vrep(spzeros(Int, 2, 2)), SparseVector{Int, Int})
+        vtest(vrep([1 2; 3 4], zeros(Int, 0, 0), BitSet()), Vector{Int})
+        vtest(vrep([1 2; 3 4], zeros(Int, 0, 0)), Vector{Int})
+        vtest(vrep([1 2; 3 4]), Vector{Int})
     end
 
     @testset "Iterating over halfspaces of a MixedMatHRep broken #9" begin
@@ -207,7 +190,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         reps = [MixedMatHRep{T, Matrix{T}}, MixedMatVRep{T, Matrix{T}}, LiftedHRepresentation{T, Matrix{T}}, LiftedVRepresentation{T, Matrix{T}}]
         for rep in reps
             @test fulldim(rep) == -1
-            @test MP.coefficienttype(changedrep) == T
+            @test MP.coefficienttype(rep) == T
             changedrep = Polyhedra.similar_type(rep, M)
             @test fulldim(changedrep) == -1
             @test Polyhedra.FullDim(changedrep) == -1
