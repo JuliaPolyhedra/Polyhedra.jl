@@ -19,9 +19,9 @@ include("comp.jl")
 include("representation.jl")
 include("polyhedron.jl")
 
-#include("redundancy.jl")
-#include("doubledescription.jl")
-#
+include("redundancy.jl")
+include("doubledescription.jl")
+
 #include("interval.jl")
 #
 #include("polyhedra_to_lpqp.jl")

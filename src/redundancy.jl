@@ -5,7 +5,6 @@
 # Redundancy
 export detecthlinearity!, detectvlinearity!, dim
 export isredundant, removevredundancy!, removehredundancy!, gethredundantindices, getvredundantindices
-export isvredundant, ishredundant # deprecated
 
 """
     detecthlinearity!(p::VRep)

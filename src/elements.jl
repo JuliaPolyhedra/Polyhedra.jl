@@ -106,7 +106,7 @@ function basis(::Type{Vector{T}}, N::Int, i::Int) where {T}
     v[i] = one(T)
     v
 end
-function basis(::Type{StaticArrays.SVector{N, T}}, ::Int, i::Int) where {N, T}
+function basis(::Type{StaticArrays.SVector{N, T}}, ::StaticArrays.Size, i::Int) where {N, T}
     StaticArrays.SVector{N, T}(ntuple(j -> j == i ? one(T) : zero(T), Val(N)))
 end
 
