@@ -55,7 +55,7 @@ mutable struct Intersection{T, AT} <: HRepresentation{T}
     end
 end
 Intersection(hyperplanes::ElemIt{HyperPlane{T, AT}}, halfspaces::ElemIt{HalfSpace{T, AT}}) where {T, AT} = Intersection{T, AT}(hyperplanes, halfspaces)
-FullDim(h::Intersection) = fulldim_rec(h.hyperplanes, h.halfspaces)
+FullDim(h::Intersection) = FullDim_rec(h.hyperplanes, h.halfspaces)
 hvectortype(::Type{Intersection{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:Intersection}, d::FullDim, ::Type{T}) where {T} = Intersection{T, similar_type(hvectortype(PT), d, T)}
 
@@ -140,7 +140,7 @@ PointsHull(points::ElemIt{StaticArrays.SVector{T}}) where {T} = PointsHull{T, St
 function PointsHull(points::PointIt)
     return PointsHull{coefficienttype(eltype(points)), eltype(points)}(points)
 end
-FullDim(v::PointsHull) = fulldim_rec(v.points)
+FullDim(v::PointsHull) = FullDim_rec(v.points)
 vvectortype(::Type{PointsHull{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:PointsHull}, d::FullDim, ::Type{T}) where {T} = PointsHull{T, similar_type(vvectortype(PT), d, T)}
 
@@ -184,7 +184,7 @@ end
 function RaysHull(ls::ElemIt{Line{T, AT}}, rs::ElemIt{Ray{T, AT}}) where {T, AT}
     RaysHull{T, AT}(ls, rs)
 end
-FullDim(v::RaysHull) = fulldim_rec(v.lines, v.rays)
+FullDim(v::RaysHull) = FullDim_rec(v.lines, v.rays)
 vvectortype(::Type{RaysHull{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:RaysHull}, d::FullDim, ::Type{T}) where {T} = RaysHull{T, similar_type(vvectortype(PT), d, T)}
 
@@ -215,7 +215,7 @@ end
 function Hull(points::ElemIt{AT}, lines::ElemIt{Line{T, AT}}, rays::ElemIt{Ray{T, AT}}) where {T, AT}
     Hull{T, AT}(points, lines, rays)
 end
-FullDim(v::Hull) = fulldim_rec(v.points, v.rays)
+FullDim(v::Hull) = FullDim_rec(v.points, v.rays)
 vvectortype(::Type{Hull{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:Hull}, d::FullDim, ::Type{T}) where {T} = Hull{T, similar_type(vvectortype(PT), d, T)}
 

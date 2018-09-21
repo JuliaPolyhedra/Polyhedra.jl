@@ -75,20 +75,6 @@ function Base.:(/)(h::ElemT, P::Matrix) where {T, ElemT<:HRepElement{T}}
     ElemTout = similar_type(ElemT, size(P, 2), Tout)
     ElemTout(Matrix{Tout}(P) * _vec(Tout, h.a), Tout(h.β))
 end
-function zeropad(a::Vector{T}, n::Integer) where T
-    if n < 0
-        return [zeros(T, -n); a]
-    else
-        return [a; zeros(T, n)]
-    end
-end
-function zeropad(h::HRepElement, n::Integer)
-    if n == 0
-        return h
-    else
-        return constructor(h)(zeropad(h.a, n), h.β)
-    end
-end
 
 # Point: -> A same Rep should always return the same of the two types so that when points and sympoints will have different accessors it will be type stable
 # AbstractVector{T}
@@ -208,24 +194,19 @@ function Base.:*(P::AbstractMatrix, v::ElemT) where {T, ElemT<:VStruct{T}}
       ElemTout = similar_type(ElemT, size(P, 1), Tout)
       return ElemTout(P * v.a)
 end
-# FIXME there seem to be a Julia bug, with Vector, it does not recognize that the zeropad method
-#       works
-function _zeropad(v, n::Integer)
-    if n == 0
-        v
+
+# TODO zeropad for SparseVector and StaticArrays.SVector
+function zeropad(a::Vector{T}, n::Integer) where T
+    if iszero(n)
+        return a
+    elseif n < 0
+        return [zeros(T, -n); a]
     else
-        T = MultivariatePolynomials.coefficienttype(v)
-        ElemTout = similar_type(typeof(v), FullDim(v) + FullDim{abs(n)}())
-        if n < 0
-            aout = [zeros(T, -n); coord(v)]
-        else
-            aout = [coord(v); zeros(T, n)]
-        end
-        ElemTout(aout)
+        return [a; zeros(T, n)]
     end
 end
-zeropad(v::ElemT, n::Integer) where {T, ElemT <: VRepElement{T}} = _zeropad(v, n)
-zeropad(v::AbstractVector, n::Integer) = _zeropad(v, n)
+zeropad(h::HRepElement, d::FullDim) = constructor(h)(zeropad(h.a, d), h.β)
+zeropad(v::VStruct, d::FullDim)     = constructor(v)(zeropad(v.a, d))
 
 for ElemT in [:HalfSpace, :HyperPlane, :Ray, :Line]
     @eval begin

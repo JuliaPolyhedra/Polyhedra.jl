@@ -47,7 +47,7 @@ struct HyperPlanesIntersection{T, AT} <: HAffineSpace{T}
         new{T, AT}(lazy_collect(hps))
     end
 end
-FullDim(h::HyperPlanesIntersection) = fulldim_rec(h.hyperplanes)
+FullDim(h::HyperPlanesIntersection) = FullDim_rec(h.hyperplanes)
 hvectortype(L::Type{HyperPlanesIntersection{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:HyperPlanesIntersection}, d::FullDim, ::Type{T}) where T = HyperPlanesIntersection{T, similar_type(hvectortype(PT), d, T)}
 
@@ -117,7 +117,7 @@ struct LinesHull{T, AT} <: VLinearSpace{T}
         new{T, AT}(lazy_collect(lines))
     end
 end
-FullDim(v::LinesHull) = fulldim_rec(v.lines)
+FullDim(v::LinesHull) = FullDim_rec(v.lines)
 vvectortype(::Type{LinesHull{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:LinesHull}, d::FullDim, ::Type{T}) where T = LinesHull{T, similar_type(vvectortype(PT), d, T)}
 

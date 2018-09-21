@@ -1,5 +1,4 @@
 export default_type, default_library, similar_library, library
-export getlibrary, getlibraryfor
 
 """
     default_type(d::FullDim, ::Type{T}) where {T}
@@ -33,7 +32,7 @@ _default_type(::Type{T}) where T = T
 # See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/35
 _default_type(::Type{AbstractFloat}) = Float64
 default_library(::StaticArrays.Size, T::Type) = SimplePolyhedraLibrary{_default_type(T)}()
-default_library(::StaticArrays.Size{1}, T::Type) = IntervalLibrary{_default_type(T)}()
+default_library(::StaticArrays.Size{(1,)}, T::Type) = IntervalLibrary{_default_type(T)}()
 function default_library(fd::Int, ::Type{T}) where T
     if fd == 1
         return IntervalLibrary{_default_type(T)}()

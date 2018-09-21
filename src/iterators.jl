@@ -290,27 +290,18 @@ const VIt{T} = Union{PIt{T}, RIt{T}}
 const It{T} = Union{HIt{T}, VIt{T}}
 
 function fillvits(points::ElemIt{AT}, lines::ElemIt{Line{T, AT}}=Line{T, AT}[], rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT<:AbstractVector{T}}
-    if isempty(points)
-        if isempty(lines) && isempty(rays)
-            N = 0
-        else
-            vconsistencyerror()
-        end
-    else
-        N = fulldim(first(points))
+    if isempty(points) && !(isempty(lines) && isempty(rays))
+        vconsistencyerror()
     end
-    return N, points, lines, rays
+    d = FullDim_rec(points, lines, rays)
+    return fulldim(d), points, lines, rays
 end
 function fillvits(lines::ElemIt{Line{T, AT}}, rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT}
+    d = FullDim_rec(lines, rays)
+    N = fulldim(d)
     if isempty(lines) && isempty(rays)
-        N = 0
         points = AT[]
     else
-        if isempty(lines)
-            N = fulldim(first(rays))
-        else
-            N = fulldim(first(lines))
-        end
         points = [origin(AT, N)]
     end
     return N, points, lines, rays

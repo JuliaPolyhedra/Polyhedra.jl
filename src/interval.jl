@@ -20,6 +20,8 @@ end
 Interval{T, AT}(it::HIt...) where {T, AT} = _hinterval(Intersection{T, AT}(it...), AT)
 Interval{T, AT}(it::VIt...) where {T, AT} = _vinterval(Hull{T, AT}(it...), AT)
 
+FullDim(::Interval) = 1
+
 library(::Union{Interval{T}, Type{<:Interval{T}}}) where T = IntervalLibrary{T}()
 
 hvectortype(::Type{Interval{T, AT}}) where {T, AT} = AT

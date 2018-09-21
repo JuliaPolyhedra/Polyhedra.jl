@@ -30,7 +30,7 @@ LiftedHRepresentation{T}(h::HRepresentation) where {T} = LiftedHRepresentation{T
 function LiftedHRepresentation{T, MT}(hyperplanes::HyperPlaneIt{T}, halfspaces::HalfSpaceIt{T}) where {T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
-    N = fulldim_rec(hyperplanes, halfspaces)
+    N = FullDim_rec(hyperplanes, halfspaces)
     A = emptymatrix(MT, nhrep, N+1)
     linset = BitSet(1:nhyperplane)
     for (i, h) in enumerate(hyperplanes)

@@ -17,8 +17,6 @@ import MathProgBase
 const MPB = MathProgBase
 const MPBSI = MPB.SolverInterface
 
-include("dimension.jl")
-
 MultivariatePolynomials.coefficienttype(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
 similar_type(::Type{<:Vector}, ::Int, ::Type{T}) where T = Vector{T}
 similar_type(::Type{SparseVector{S, IT}}, ::Int, ::Type{T}) where {S, IT, T} = SparseVector{T, IT}
@@ -29,6 +27,7 @@ similar_type(::Type{<:Matrix}, ::Type{T}) where T = Matrix{T}
 similar_type(::Type{SparseMatrixCSC{S, I}}, ::Type{T}) where {S, I, T} = SparseMatrixCSC{T, I}
 
 # Interface/Definitions
+include("dimension.jl")
 include("elements.jl")
 include("comp.jl")
 include("representation.jl")
@@ -82,35 +81,7 @@ include("doubledescription.jl") # FIXME move it after projection.jl once it stop
 include("interval.jl") # 1D polyhedron
 include("simplepolyhedron.jl")
 
-# -1 is the dimension of an empty polyhedron, here it is used as the
-# *full* dimension of a polyhedron with no element
-fulldim_rec() = -1
-function fulldim_rec(rep::Rep{T}, its::Union{Rep{T}, It{T}}...) where T
-    N = fulldim(rep)
-    if N == -1
-        return fulldim_rec(its...)
-    else
-        return N
-    end
-end
-function fulldim_rec(it::It{T}, its::Union{Rep{T}, It{T}}...) where T
-    if isempty(it)
-        return fulldim_rec(its...)
-    else
-        return fulldim(first(it))
-    end
-end
-function FullDim(::Union{HyperPlanesIntersection{T, AT},
-                         LinesHull{T, AT},
-                         VEmptySpace{T, AT},
-                         Intersection{T, AT},
-                         PointsHull{T, AT},
-                         RaysHull{T, AT},
-                         Hull{T, AT}}) where {T, AT <: StaticArrays.SVector}
-    return FullDim(AT)
-end
-
-
+include("fulldim.jl")
 
 # Optimization
 include("opt.jl")
