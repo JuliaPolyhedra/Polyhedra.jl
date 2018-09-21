@@ -53,11 +53,11 @@ vvectortype(::Type{SimplePolyhedron{T, HRepT, VRepT}}) where {T, HRepT, VRepT} =
 
 similar_type(::Type{<:SimplePolyhedron{S, HRepT, VRepT}}, d::FullDim, ::Type{T}) where {S, HRepT, VRepT, T} = SimplePolyhedron{T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
 
-function SimplePolyhedron{T, HRepT, VRepT}(hits::HIt...; solver=nothing) where {T, HRepT, VRepT}
-    SimplePolyhedron{T, HRepT, VRepT}(HRepT(hits...), solver)
+function SimplePolyhedron{T, HRepT, VRepT}(d::FullDim, hits::HIt...; solver=nothing) where {T, HRepT, VRepT}
+    SimplePolyhedron{T, HRepT, VRepT}(HRepT(d, hits...), solver)
 end
-function SimplePolyhedron{T, HRepT, VRepT}(vits::VIt...; solver=nothing) where {T, HRepT, VRepT}
-    SimplePolyhedron{T, HRepT, VRepT}(VRepT(vits...), solver)
+function SimplePolyhedron{T, HRepT, VRepT}(d::FullDim, vits::VIt...; solver=nothing) where {T, HRepT, VRepT}
+    SimplePolyhedron{T, HRepT, VRepT}(VRepT(d, vits...), solver)
 end
 
 # Need fulltype in case the use does `intersect!` with another element

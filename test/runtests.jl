@@ -27,6 +27,7 @@ include("interval.jl")
 include("polyhedra_to_lpqp.jl")
 include("default.jl")
 
+# TODO fix on Julia v1.0
 #include("show.jl")
 
 include("polyhedra.jl")

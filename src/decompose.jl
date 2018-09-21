@@ -230,7 +230,7 @@ function GeometryTypes.decompose(PT::Type{<:GeometryTypes.Point}, poly::Polyhedr
 end
 function GeometryTypes.decompose(FT::Type{<:GeometryTypes.Face}, poly::Polyhedron)
     faces = fulldecompose(poly)[2]
-    decompose(FT, faces)
+    GeometryTypes.decompose(FT, faces)
 end
 function GeometryTypes.decompose(NT::Type{<:GeometryTypes.Normal}, poly::Polyhedron)
     ns = fulldecompose(poly)[3]
