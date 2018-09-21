@@ -6,7 +6,7 @@ struct InconsistentVRep{T, AT} <: VRepresentation{T}
     end
 end
 Polyhedra.FullDim(rep::InconsistentVRep{T, AT}) where {T, AT <: StaticArrays.SVector} = FullDim(AT)
-Polyhedra.FullDim(rep::InconsistentVRep) = Polyhedra.fulldim_rec(rep.points, rep.rays)
+Polyhedra.FullDim(rep::InconsistentVRep) = Polyhedra.FullDim_rec(rep.points, rep.rays)
 Polyhedra.dualtype(::Type{InconsistentVRep{T,AT}}, ::Type{AT}) where {T, AT} = Polyhedra.Intersection{T, AT}
 Polyhedra.hvectortype(::Type{InconsistentVRep{T, AT}}) where {T, AT} = AT
 Polyhedra.vvectortype(::Type{InconsistentVRep{T, AT}}) where {T, AT} = AT
