@@ -18,9 +18,10 @@ end
 # H-representation
 
 """
-    hrep(hyperplanes::HyperPlaneIt)
+    hrep(hyperplanes::HyperPlaneIt; d::FullDim)
 
-Creates an affine space from the list of hyperplanes `hyperplanes`.
+Creates an affine space of full dimension `d` from the list of hyperplanes
+`hyperplanes`.
 
 ### Examples
 ```julia
@@ -33,26 +34,33 @@ hrep([HyperPlane([1, 1], 1), HyperPlane([1, 0], 0)])
 ```
 creates the 0-dimensional affine subspace only containing the point ``(0, 1)``.
 """
-hrep(hyperplanes::HyperPlaneIt) = HyperPlanesIntersection(hyperplanes)
+function hrep(hyperplanes::HyperPlaneIt; d::FullDim = FullDim_rec(hyperplanes))
+    return HyperPlanesIntersection(d, hyperplanes)
+end
 
 # Representation of an affine space as the intersection of hyperplanes.
 # Also called affine set, affine manifold, affine variety, linear variety or flat.
 # An affine space L satisfies:
 # λx + (1-λ)y ∈ L, ∀x, y ∈ L, ∀ λ ∈ R
 # Note that λ is not rhyperplaneuired to be between 0 and 1 as in convex sets.
-struct HyperPlanesIntersection{T, AT} <: HAffineSpace{T}
+struct HyperPlanesIntersection{T, AT, D<:FullDim} <: HAffineSpace{T}
+    d::D
     # HyperPlanes whose intersection is the affine space
     hyperplanes::Vector{HyperPlane{T, AT}}
-    function HyperPlanesIntersection{T, AT}(hps::HyperPlaneIt{T}) where {T, AT}
-        new{T, AT}(lazy_collect(hps))
+    function HyperPlanesIntersection{T, AT, D}(d::FullDim,
+                                               hps::HyperPlaneIt{T}) where {T, AT, D}
+        new{T, AT, D}(FullDim_convert(D, d), lazy_collect(hps))
     end
 end
-FullDim(h::HyperPlanesIntersection) = FullDim_rec(h.hyperplanes)
-hvectortype(L::Type{HyperPlanesIntersection{T, AT}}) where {T, AT} = AT
-similar_type(PT::Type{<:HyperPlanesIntersection}, d::FullDim, ::Type{T}) where T = HyperPlanesIntersection{T, similar_type(hvectortype(PT), d, T)}
+function HyperPlanesIntersection(d::FullDim,
+                                 it::ElemIt{HyperPlane{T, AT}}) where {T, AT}
+    return HyperPlanesIntersection{T, AT, typeof(d)}(d, it)
+end
+HyperPlanesIntersection{T, AT}(d::FullDim) where {T, AT} = HyperPlanesIntersection(d, HyperPlane{T, AT}[])
 
-HyperPlanesIntersection{T, AT}() where {T, AT} = HyperPlanesIntersection{T, AT}(HyperPlane{T, AT}[])
-HyperPlanesIntersection(it::ElemIt{HyperPlane{T, AT}}) where {T, AT} = HyperPlanesIntersection{T, AT}(it)
+FullDim(h::HyperPlanesIntersection) = h.d
+hvectortype(L::Type{<:HyperPlanesIntersection{T, AT}}) where {T, AT} = AT
+similar_type(PT::Type{<:HyperPlanesIntersection}, d::FullDim, ::Type{T}) where T = HyperPlanesIntersection{T, similar_type(hvectortype(PT), d, T), typeof(d)}
 
 Base.intersect!(L::HyperPlanesIntersection, h::HyperPlane) = push!(L.hyperplanes, h)
 
@@ -67,7 +75,7 @@ function affinehull(h::HRep, current=false)
     if !current
         detecthlinearity!(h)
     end
-    HyperPlanesIntersection(hyperplanes(h))
+    HyperPlanesIntersection(FullDim(h), hyperplanes(h))
 end
 
 function remproj(h::HRepElement, L::HyperPlanesIntersection)
@@ -82,7 +90,7 @@ function Base.in(h::HRepElement, L::HyperPlanesIntersection)
 end
 
 function removeduplicates(L::HyperPlanesIntersection{T, AT}) where {T, AT}
-    H = HyperPlanesIntersection{T, AT}()
+    H = HyperPlanesIntersection{T, AT}(FullDim(L))
     for h in hyperplanes(L)
         if !(h in H)
             intersect!(H, h)
@@ -92,15 +100,21 @@ function removeduplicates(L::HyperPlanesIntersection{T, AT}) where {T, AT}
 end
 
 # V-representation
-struct VEmptySpace{T, AT} <: VLinearSpace{T} end
-emptyspace(v::VRep{T}) where {T} = VEmptySpace{T, vvectortype(typeof(v))}()
+struct VEmptySpace{T, AT, D <: FullDim} <: VLinearSpace{T}
+    d::D
+end
+FullDim(v::VEmptySpace) = v.d
+function emptyspace(v::VRep{T}) where {T}
+    d = FullDim(v)
+    return VEmptySpace{T, vvectortype(typeof(v)), typeof(d)}(d)
+end
 
 Base.in(v::VRepElement, L::VEmptySpace) = isapproxzero(v)
 
 """
-    vrep(lines::LineIt)
+    vrep(lines::LineIt; d::FullDim)
 
-Creates an affine space from the list of lines `lines`.
+Creates an affine space of full dimension `d` from the list of lines `lines`.
 
 ### Examples
 ```julia
@@ -108,28 +122,31 @@ vrep([Line([1, 0, 0]), Line([0, 1, 0])])
 ```
 creates the 2-dimensional affine subspace containing all the points ``(x_1, x_2, 0)``, i.e. the ``x_1````x_2``-plane.
 """
-vrep(lines::LineIt) = LinesHull(lines)
+vrep(lines::LineIt; d::FullDim = FullDim_rec(lines)) = LinesHull(d, lines)
 
 # Representation of an affine space containing the origin by the minkowsky sum of lines
-struct LinesHull{T, AT} <: VLinearSpace{T}
+struct LinesHull{T, AT, D<:FullDim} <: VLinearSpace{T}
+    d::D
     lines::Vector{Line{T, AT}}
-    function LinesHull{T, AT}(lines::LineIt{T}) where {T, AT}
-        new{T, AT}(lazy_collect(lines))
+    function LinesHull{T, AT, D}(d::FullDim, lines::LineIt{T}) where {T, AT, D}
+        new{T, AT, D}(FullDim_convert(D, d), lazy_collect(lines))
     end
 end
-FullDim(v::LinesHull) = FullDim_rec(v.lines)
-vvectortype(::Type{LinesHull{T, AT}}) where {T, AT} = AT
-similar_type(PT::Type{<:LinesHull}, d::FullDim, ::Type{T}) where T = LinesHull{T, similar_type(vvectortype(PT), d, T)}
+function LinesHull(d::FullDim, it::ElemIt{Line{T, AT}}) where {T, AT}
+    return LinesHull{T, AT, typeof(d)}(d, it)
+end
+LinesHull{T, AT}(d::FullDim) where {T, AT} = LinesHull(d, Line{T, AT}[])
 
-LinesHull{T, AT}() where {T, AT} = LinesHull{T, AT}(Line{T, AT}[])
-LinesHull(it::ElemIt{Line{T, AT}}) where {T, AT} = LinesHull{T, AT}(it)
+FullDim(v::LinesHull) = v.d
+vvectortype(::Type{<:LinesHull{T, AT}}) where {T, AT} = AT
+similar_type(PT::Type{<:LinesHull}, d::FullDim, ::Type{T}) where T = LinesHull{T, similar_type(vvectortype(PT), d, T), typeof(d)}
 
 convexhull!(L::LinesHull, l::Line) = push!(L.lines, l)
 
 @vecrepelem LinesHull Line lines
 
-conetype(::Type{LinesHull{T, AT}}) where {T, AT} = RaysHull{T, AT}
-vreptype(::Type{LinesHull{T, AT}}) where {T, AT} = Hull{T, AT}
+conetype(::Type{LinesHull{T, AT, D}}) where {T, AT, D} = RaysHull{T, AT, D}
+vreptype(::Type{LinesHull{T, AT, D}}) where {T, AT, D} = Hull{T, AT, D}
 
 # Returns a LinesHull representing the following set (TODO does it have a name?, does someone has a reference talking about it ?)
 # {x | ⟨a, x⟩ = 0 ∀ a such that (α, β) is a valid hyperplane for p}
@@ -137,7 +154,7 @@ function linespace(v::VRep, current=false)
     if !current
         detectvlinearity!(v)
     end
-    LinesHull(lines(v))
+    LinesHull(FullDim(v), lines(v))
 end
 
 function remproj(v::VRepElement, L::LinesHull)

@@ -21,6 +21,19 @@ FullDim(::Type{<:AbstractVector}) = -1 # Shouldn't hurt as it will not be used
 FullDim(v::AbstractVector) = length(v)
 FullDim(v::Union{StaticArrays.SVector{N}, Type{<:StaticArrays.SVector{N}}}) where N = StaticArrays.Size(v)
 
+function FullDim_convert(::Type{StaticArrays.Size{N}}, d::Int) where N
+    @assert N[1] == d
+    return StaticArrays.Size{N}()
+end
+function FullDim_convert(::Type{StaticArrays.Size{N}},
+                         d::StaticArrays.Size{N}) where N
+    return d
+end
+FullDim_convert(::Type{Int}, d::Int) = d
+function FullDim_convert(::Type{Int}, d::StaticArrays.Size{N}) where N
+    return N[1]
+end
+
 """
     fulldim(rep::Rep)::Int
 

@@ -57,8 +57,8 @@ Base.convert(RepT::Type{<:HRepresentation}, p::HRep)            = hconvert(RepT,
 # avoid ambiguity
 Base.convert(RepT::Type{<:HRepresentation}, p::HRepresentation) = hconvert(RepT, p)
 
-Base.copy(rep::HRepresentation) = typeof(rep)(hreps(rep)...)
-Base.copy(rep::VRepresentation) = typeof(rep)(vreps(rep)...)
+Base.copy(rep::HRepresentation) = typeof(rep)(FullDim_hreps(rep)...)
+Base.copy(rep::VRepresentation) = typeof(rep)(FullDim_vreps(rep)...)
 
 function Polyhedron{S}(p::Polyhedron{T}) where {S, T}
     RepT = similar_type(typeof(p), S)

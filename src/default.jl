@@ -7,17 +7,17 @@ Returns the default polyhedron type for `d`-dimensional polyhedron of coefficien
 """
 function default_type end
 
-function default_type(::StaticArrays.Size{N}, ::Type{T}) where {N, T}
-    return SimplePolyhedron{T, Intersection{T, StaticArrays.SVector{N[1], T}}, Hull{T, StaticArrays.SVector{N[1], T}}}
+function default_type(d::StaticArrays.Size{N}, ::Type{T}) where {N, T}
+    return SimplePolyhedron{T, Intersection{T, StaticArrays.SVector{N[1], T}, typeof(d)}, Hull{T, StaticArrays.SVector{N[1], T}}, typeof(d)}
 end
 function default_type(::StaticArrays.Size{(1,)}, ::Type{T}) where T
     return Interval{T, StaticArrays.SVector{1, T}}
 end
-function default_type(fd::Int, ::Type{T}) where T
-    if fd == 1
+function default_type(d::Int, ::Type{T}) where T
+    if d == 1
         return Interval{T, Vector{T}}
     else
-        return SimplePolyhedron{T, Intersection{T, Vector{T}}, Hull{T, Vector{T}}}
+        return SimplePolyhedron{T, Intersection{T, Vector{T}, typeof(d)}, Hull{T, Vector{T}, typeof(d)}}
     end
 end
 
@@ -33,8 +33,8 @@ _default_type(::Type{T}) where T = T
 _default_type(::Type{AbstractFloat}) = Float64
 default_library(::StaticArrays.Size, T::Type) = SimplePolyhedraLibrary{_default_type(T)}()
 default_library(::StaticArrays.Size{(1,)}, T::Type) = IntervalLibrary{_default_type(T)}()
-function default_library(fd::Int, ::Type{T}) where T
-    if fd == 1
+function default_library(d::Int, ::Type{T}) where T
+    if d == 1
         return IntervalLibrary{_default_type(T)}()
     else
         return SimplePolyhedraLibrary{_default_type(T)}()
@@ -102,20 +102,20 @@ promote_reptype(P::Type{<:Rep}) = P
 # whether Rep has the constructor Rep(::It...; solver=...)
 supportssolver(::Type{<:Rep}) = false
 
-function constructpolyhedron(RepT::Type{<:Rep{T}}, p::Tuple{Vararg{Rep}}, it::It{T}...) where T
+function constructpolyhedron(RepT::Type{<:Rep{T}}, d::FullDim, p::Tuple{Vararg{Rep}}, it::It{T}...) where T
     if supportssolver(RepT)
         solver = default_solver(p...)
         if solver !== nothing
-            return RepT(it..., solver=solver)
+            return RepT(d, it..., solver=solver)
         end
     end
-    RepT(it...)::RepT # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
+    RepT(d, it...)::RepT # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
 end
 
 function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...) where T
     # Some types in p may not support `d` or `T` so we call `similar_type` after `promote_reptype`
     RepT = similar_type(promote_reptype(typeof.(p)...), d, T)
-    constructpolyhedron(RepT, p, it...)
+    constructpolyhedron(RepT, d, p, it...)
 end
 
 """

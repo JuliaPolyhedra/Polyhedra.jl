@@ -289,14 +289,16 @@ const VIt{T} = Union{PIt{T}, RIt{T}}
 
 const It{T} = Union{HIt{T}, VIt{T}}
 
-function fillvits(points::ElemIt{AT}, lines::ElemIt{Line{T, AT}}=Line{T, AT}[], rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT<:AbstractVector{T}}
+function fillvits(d::FullDim, points::ElemIt{AT},
+                  lines::ElemIt{Line{T, AT}}=Line{T, AT}[],
+                  rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT<:AbstractVector{T}}
     if isempty(points) && !(isempty(lines) && isempty(rays))
         vconsistencyerror()
     end
-    d = FullDim_rec(points, lines, rays)
-    return fulldim(d), points, lines, rays
+    return points, lines, rays
 end
-function fillvits(lines::ElemIt{Line{T, AT}}, rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT}
+function fillvits(d::FullDim, lines::ElemIt{Line{T, AT}},
+                  rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT}
     d = FullDim_rec(lines, rays)
     N = fulldim(d)
     if isempty(lines) && isempty(rays)
@@ -304,8 +306,11 @@ function fillvits(lines::ElemIt{Line{T, AT}}, rays::ElemIt{Ray{T, AT}}=Ray{T, AT
     else
         points = [origin(AT, N)]
     end
-    return N, points, lines, rays
+    return points, lines, rays
 end
+
+FullDim_hreps(p...) = FullDim_rec(p...), hreps(p...)...
+FullDim_vreps(p...) = FullDim_rec(p...), vreps(p...)...
 
 hreps(p::HRep{T}...) where {T} = hyperplanes(p...), halfspaces(p...)
 hreps(p::HAffineSpace{T}...) where {T} = tuple(hyperplanes(p...))
@@ -313,8 +318,8 @@ hreps(p::HAffineSpace{T}...) where {T} = tuple(hyperplanes(p...))
 hmap(f, d::FullDim, ::Type{T}, p::HRep...) where T = maphyperplanes(f, d, T, p...), maphalfspaces(f, d, T, p...)
 hmap(f, d::FullDim, ::Type{T}, p::HAffineSpace...) where T = tuple(maphyperplanes(f, d, T, p...))
 
-hconvert(RepT::Type{<:HRep{T}}, p::HRep{T}) where {T} = constructpolyhedron(RepT, (p,), hreps(p)...)
-hconvert(RepT::Type{<:HRep{T}}, p::HRep)    where {T} = constructpolyhedron(RepT, (p,), RepIterator{T}.(hreps(p))...)
+hconvert(RepT::Type{<:HRep{T}}, p::HRep{T}) where {T} = constructpolyhedron(RepT, FullDim(p), (p,), hreps(p)...)
+hconvert(RepT::Type{<:HRep{T}}, p::HRep)    where {T} = constructpolyhedron(RepT, FullDim(p), (p,), RepIterator{T}.(hreps(p))...)
 
 vreps(p...) = preps(p...)..., rreps(p...)...
 preps(p::VRep...) = tuple(points(p...))
@@ -330,5 +335,5 @@ rmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = maplines(f, d, T, p...), ma
 rmap(f, d::FullDim, ::Type{T}, p::VLinearSpace...) where T = tuple(maplines(f, d, T, p...))
 rmap(f, d::FullDim, ::Type, p::VPolytope...) = tuple()
 
-vconvert(RepT::Type{<:VRep{T}}, p::VRep{T}) where {T} = constructpolyhedron(RepT, (p,), vreps(p)...)
-vconvert(RepT::Type{<:VRep{T}}, p::VRep)    where {T} = constructpolyhedron(RepT, (p,), RepIterator{T}.(vreps(p))...)
+vconvert(RepT::Type{<:VRep{T}}, p::VRep{T}) where {T} = constructpolyhedron(RepT, FullDim(p), (p,), vreps(p)...)
+vconvert(RepT::Type{<:VRep{T}}, p::VRep)    where {T} = constructpolyhedron(RepT, FullDim(p), (p,), RepIterator{T}.(vreps(p))...)

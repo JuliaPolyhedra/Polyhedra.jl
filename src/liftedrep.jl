@@ -27,10 +27,10 @@ LiftedHRepresentation(A::AbstractMatrix{T}, linset::BitSet=BitSet()) where T = L
 LiftedHRepresentation(h::HRepresentation{T}) where {T} = LiftedHRepresentation{T}(h)
 LiftedHRepresentation{T}(h::HRepresentation) where {T} = LiftedHRepresentation{T, hmatrixtype(typeof(h), T)}(h)
 
-function LiftedHRepresentation{T, MT}(hyperplanes::HyperPlaneIt{T}, halfspaces::HalfSpaceIt{T}) where {T, MT}
+function LiftedHRepresentation{T, MT}(d::FullDim, hyperplanes::HyperPlaneIt{T},
+                                      halfspaces::HalfSpaceIt{T}) where {T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
-    d = FullDim_rec(hyperplanes, halfspaces)
     A = emptymatrix(MT, nhrep, fulldim(d)+1)
     linset = BitSet(1:nhyperplane)
     for (i, h) in enumerate(hyperplanes)
@@ -75,13 +75,14 @@ LiftedVRepresentation(R::AbstractMatrix{T}, linset::BitSet=BitSet()) where T = L
 LiftedVRepresentation(v::VRepresentation{T}) where {T} = LiftedVRepresentation{T}(v)
 LiftedVRepresentation{T}(v::VRepresentation) where {T} = LiftedVRepresentation{T, vmatrixtype(typeof(v), T)}(v)
 
-function LiftedVRepresentation{T, MT}(vits::VIt{T}...) where {T, MT}
-    N, points, lines, rays = fillvits(vits...)
+function LiftedVRepresentation{T, MT}(d::FullDim,
+                                      vits::VIt{T}...) where {T, MT}
+    points, lines, rays = fillvits(d, vits...)
     npoint = length(points)
     nline = length(lines)
     nray = length(rays)
     nvrep = npoint + nline + nray
-    R = emptymatrix(MT, nvrep, N+1)
+    R = emptymatrix(MT, nvrep, fulldim(d) + 1)
     linset = BitSet()
     function _fill(offset, z, ps)
         for (i, p) in enumerate(ps)

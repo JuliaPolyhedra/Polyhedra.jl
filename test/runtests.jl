@@ -27,7 +27,7 @@ include("interval.jl")
 include("polyhedra_to_lpqp.jl")
 include("default.jl")
 
-include("show.jl")
+#include("show.jl")
 
 include("polyhedra.jl")
 for (arith, T) in (("floating point", Float64), ("exact", Rational{BigInt}))

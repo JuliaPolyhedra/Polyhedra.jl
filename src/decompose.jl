@@ -28,10 +28,10 @@ function scene(vr::VRep, ::Type{T}) where T
     if width == zero(T)
         width = 2
     end
-    scene = HyperRectangle{3, T}([(xmin + xmax) / 2 - width,
-                                  (ymin + ymax) / 2 - width,
-                                  (zmin + zmax) / 2 - width],
-                                 2 * width * ones(T, 3))
+    scene = GeometryTypes.HyperRectangle{3, T}([(xmin + xmax) / 2 - width,
+                                                (ymin + ymax) / 2 - width,
+                                                (zmin + zmax) / 2 - width],
+                                               2 * width * ones(T, 3))
     # Intersection of rays with the limits of the scene
     (start, ray) -> begin
         times = max.((Vector(minimum(scene))-start) ./ ray, (Vector(maximum(scene))-start) ./ ray)

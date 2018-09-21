@@ -94,10 +94,11 @@ LPHRepresentation{T}(h::HRep) where {T} = LPHRepresentation{T, hmatrixtype(typeo
 #    end
 #    LPHRepresentation{T}(A, l, u, lb, ub)
 #end
-function LPHRepresentation{T, MT}(hyperplanes::ElemIt{<:HyperPlane{T}}, halfspaces::ElemIt{<:HalfSpace{T}}) where {T, MT}
+function LPHRepresentation{T, MT}(d::FullDim,
+                                  hyperplanes::ElemIt{<:HyperPlane{T}},
+                                  halfspaces::ElemIt{<:HalfSpace{T}}) where {T, MT}
     nhyperplane = length(hyperplanes)
     nhrep = nhyperplane + length(halfspaces)
-    d = FullDim_rec(hyperplanes, halfspaces)
     N = fulldim(d)
     A = emptymatrix(MT, nhrep, N)
     lb = Vector{T}(nhrep)
@@ -201,5 +202,5 @@ function getaβ(lp::LPHRepresentation{T}, idx::HIndex{T}) where {T}
 end
 Base.get(lp::LPHRepresentation{T}, idx::HIndex{T}) where {T} = valuetype(idx)(getaβ(lp, idx)...)
 
-dualtype(::Type{<:LPHRepresentation{T}}, ::Type{AT}) where {T, AT} = dualtype(Intersection{T, AT}, AT)
-dualfullspace(h::LPHRepresentation, d::FullDim, ::Type{T}, ::Type{AT}) where {T, AT} = dualfullspace(Intersection{T, AT}, d, T, AT)
+dualtype(::Type{<:LPHRepresentation{T}}, ::Type{AT}) where {T, AT} = dualtype(Intersection{T, AT, Int}, AT)
+dualfullspace(h::LPHRepresentation, d::FullDim, ::Type{T}, ::Type{AT}) where {T, AT} = dualfullspace(Intersection{T, AT, Int}, d, T, AT)

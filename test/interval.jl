@@ -8,8 +8,9 @@
     pp = polyhedron(vrep(v0), SimplePolyhedraLibrary{Float64}())
     @test !hrepiscomputed(pp)
     @test vrepiscomputed(pp)
-    for p in (Interval{Float64, SVector{1, Float64}}(pp),
-              Interval{Float64, SVector{1, Float64}}(Polyhedra.vreps(pp)...))
+    d = StaticArrays.Size{(1,)}()
+    for p in (Interval{Float64, SVector{1, Float64}, typeof(d)}(pp),
+              Interval{Float64, SVector{1, Float64}, typeof(d)}(d, Polyhedra.vreps(pp)...))
         @test similar_library(pp, 1) == IntervalLibrary{Float64}()
         @test similar_library(pp, StaticArrays.Size((1,))) == IntervalLibrary{Float64}()
         @test library(p) == IntervalLibrary{Float64}()
@@ -28,8 +29,8 @@
     pp = polyhedron(h, SimplePolyhedraLibrary{Float64}())
     @test hrepiscomputed(pp)
     @test !vrepiscomputed(pp)
-    for p in (Interval{Float64, SVector{1, Float64}}(pp),
-              Interval{Float64, SVector{1, Float64}}(Polyhedra.hreps(pp)...))
+    for p in (Interval{Float64, SVector{1, Float64}, typeof(d)}(pp),
+              Interval{Float64, SVector{1, Float64}, typeof(d)}(d, Polyhedra.hreps(pp)...))
         @test hrepiscomputed(p)
         @test vrepiscomputed(p)
         @test p isa Interval{Float64}

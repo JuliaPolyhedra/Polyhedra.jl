@@ -106,7 +106,8 @@ end
 # There shouldn't be any duplicates in hrep for this to work
 function removevredundancy(vrep::VRep, hrep::HRep; kws...)
     nl = nlines(vrep)
-    typeof(vrep)(removevredundancy.(vreps(vrep), hrep; nl=nl, kws...)...)::typeof(vrep)
+    typeof(vrep)(FullDim(vrep),
+                 removevredundancy.(vreps(vrep), hrep; nl=nl, kws...)...)::typeof(vrep)
 end
 
 function removehredundancy(hrepit::HIt, vrep::VRep; strongly=true, d=dim(vrep))
@@ -118,7 +119,9 @@ end
 function removehredundancy(hrep::HRep, vrep::VRep; strongly=true)
     R = BitSet()
     d = dim(hrep, true) # TODO dim(hrep)
-    typeof(hrep)(removehredundancy.(hreps(hrep), vrep, strongly=strongly, d=d)...)
+    typeof(hrep)(FullDim(hrep),
+                 removehredundancy.(hreps(hrep), vrep,
+                                    strongly=strongly, d=d)...)
 end
 
 
@@ -280,7 +283,7 @@ function premovedups(vrep::VRepresentation, aff::VLinearSpace)
     tuple(ps)
 end
 function removeduplicates(vrep::VPolytope)
-    typeof(vrep)(premovedups(vrep, emptyspace(vrep))...)
+    typeof(vrep)(FullDim(vrep), premovedups(vrep, emptyspace(vrep))...)
 end
 function removeduplicates(vrep::VRepresentation)
     aff = linespace(vrep, true)
@@ -293,7 +296,7 @@ function removeduplicates(vrep::VRepresentation)
             newlin |= vrupdatedup!(aff, rs, r)
         end
     end
-    typeof(vrep)(premovedups(vrep, aff)..., aff.lines, rs)
+    typeof(vrep)(FullDim(vrep), premovedups(vrep, aff)..., aff.lines, rs)
 end
 
 # H-duplicates
@@ -346,5 +349,5 @@ function removeduplicates(hrep::HRepresentation{T}) where {T}
             newlin |= hupdatedup!(aff, hs, h)
         end
     end
-    typeof(hrep)(aff.hyperplanes, hs)
+    typeof(hrep)(FullDim(hrep), aff.hyperplanes, hs)
 end

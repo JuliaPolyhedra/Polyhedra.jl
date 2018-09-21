@@ -1,7 +1,7 @@
 @testset "Dual Type" begin
     h = LPHRepresentation(spzeros(Int, 2, 2), [1, 2], [3, 4], [4, 5], [6, 7])
     p = polyhedron(h)
-    @test p isa SimplePolyhedron{Rational{BigInt}, LPHRepresentation{Rational{BigInt}, SparseMatrixCSC{Rational{BigInt},Int}}, Polyhedra.Hull{Rational{BigInt}, Vector{Rational{BigInt}}}}
+    @test p isa SimplePolyhedron{Rational{BigInt}, LPHRepresentation{Rational{BigInt}, SparseMatrixCSC{Rational{BigInt},Int}}, Polyhedra.Hull{Rational{BigInt}, Vector{Rational{BigInt}}, Int}}
     h = hrep(zeros(2, 2), zeros(2))
     p = polyhedron(h)
     @test p isa SimplePolyhedron{Float64, MixedMatHRep{Float64, Matrix{Float64}}, MixedMatVRep{Float64, Matrix{Float64}}}

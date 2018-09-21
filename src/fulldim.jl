@@ -22,13 +22,13 @@ function FullDim_rec(it::It, its::Union{Rep, It}...)
         return FullDim(first(it))
     end
 end
-function FullDim(::Union{HyperPlanesIntersection{T, AT},
-                         LinesHull{T, AT},
-                         VEmptySpace{T, AT},
-                         Intersection{T, AT},
-                         PointsHull{T, AT},
-                         RaysHull{T, AT},
-                         Hull{T, AT},
-                         Interval{T, AT}}) where {T, AT <: StaticArrays.SVector}
-    return FullDim(AT)
-end
+#function FullDim(::Union{HyperPlanesIntersection{T, AT},
+#                         LinesHull{T, AT},
+#                         VEmptySpace{T, AT},
+#                         Intersection{T, AT},
+#                         PointsHull{T, AT},
+#                         RaysHull{T, AT},
+#                         Hull{T, AT},
+#                         Interval{T, AT}}) where {T, AT <: StaticArrays.SVector}
+#    return FullDim(AT)
+#end

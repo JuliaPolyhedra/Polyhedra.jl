@@ -57,7 +57,7 @@ end
     for v in (#removeduplicates(convexhull([1, 2], [2, 1], SymPoint([1, 2]), [-1, 1]) + Line([0, 1])),
               #removeduplicates(Line([0, 1]) + convexhull([1, 2], [2, 1], SymPoint([1, 2]), [-1, 1])),
               removeduplicates(Line([0, 1]) + convexhull([-1, -2], [2, 1], [1, 2], [-1, 1], [-1, -2])),)
-        @test typeof(v) == Polyhedra.Hull{Int, Vector{Int}}
+        @test typeof(v) == Polyhedra.Hull{Int, Vector{Int}, Int}
         #@test collect(sympoints(v)) == [SymPoint([1, 2])]
         @test collect(points(v)) == [[-1, -2], [2, 1], [1, 2]]
         @test !hasrays(v)
