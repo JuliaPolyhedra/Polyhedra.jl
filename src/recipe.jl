@@ -28,7 +28,10 @@ function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray = nothin
 end
 
 
-@recipe function f(p::Polyhedron{2})
+@recipe function f(p::Polyhedron)
+    if fulldim(p) != 2
+        error("Plotting 3-dimensional polyhedron with Plots is not supported, use Makie, MeshCat or DrakeVisualizer")
+    end
     removevredundancy!(p)
     if hasrays(p)
         warn("Rays not supported yet in the 2D plotting recipe")

@@ -8,11 +8,14 @@
     pp = polyhedron(vrep(v0), SimplePolyhedraLibrary{Float64}())
     @test !hrepiscomputed(pp)
     @test vrepiscomputed(pp)
-    for p in (Interval{Float64, SVector{1, Float64}}(pp),
-              Interval{Float64, SVector{1, Float64}}(Polyhedra.vreps(pp)...))
-        @test similar_library(pp, FullDim{1}()) == IntervalLibrary{Float64}()
-        @test getlibrary(p) == IntervalLibrary{Float64}()
-        @test getlibraryfor(p, FullDim{2}()) == SimplePolyhedraLibrary{Float64}()
+    d = StaticArrays.Size{(1,)}()
+    for p in (Interval{Float64, SVector{1, Float64}, typeof(d)}(pp),
+              Interval{Float64, SVector{1, Float64}, typeof(d)}(d, Polyhedra.vreps(pp)...))
+        @test similar_library(pp, 1) == IntervalLibrary{Float64}()
+        @test similar_library(pp, StaticArrays.Size((1,))) == IntervalLibrary{Float64}()
+        @test library(p) == IntervalLibrary{Float64}()
+        @test similar_library(p, 2) == SimplePolyhedraLibrary{Float64}()
+        @test similar_library(p, StaticArrays.Size((2,))) == SimplePolyhedraLibrary{Float64}()
         @test hrepiscomputed(p)
         @test vrepiscomputed(p)
         @test p isa Interval{Float64}
@@ -26,8 +29,8 @@
     pp = polyhedron(h, SimplePolyhedraLibrary{Float64}())
     @test hrepiscomputed(pp)
     @test !vrepiscomputed(pp)
-    for p in (Interval{Float64, SVector{1, Float64}}(pp),
-              Interval{Float64, SVector{1, Float64}}(Polyhedra.hreps(pp)...))
+    for p in (Interval{Float64, SVector{1, Float64}, typeof(d)}(pp),
+              Interval{Float64, SVector{1, Float64}, typeof(d)}(d, Polyhedra.hreps(pp)...))
         @test hrepiscomputed(p)
         @test vrepiscomputed(p)
         @test p isa Interval{Float64}
@@ -96,6 +99,7 @@
     generator_fulltest(p, v)
 
     p = polyhedron(HalfSpace([-3.], -6) ∩ HalfSpace([-2.], -2))
+    # TODO test value of p
     p = polyhedron(h)
     @test p isa Interval{Float64}
     @test !isempty(p)
@@ -106,7 +110,7 @@
 
     # Empty
     h = HyperPlane([0], 1) ∩ HyperPlane([1], 0)
-    v = vrep(Line{1, Int, Vector{Int}}[])
+    v = vrep(Line{Int, StaticArrays.SVector{1, Int}}[])
 
     p = polyhedron(v)
     @test p isa Interval{Int}
@@ -145,7 +149,7 @@
     inequality_fulltest(p, h)
 
     # Line
-    h = hrep(HyperPlane{1, Int, Vector{Int}}[])
+    h = hrep(HyperPlane{Int, SVector{1, Int}}[])
     v = conichull(Line([1]))
 
     p = polyhedron(v)

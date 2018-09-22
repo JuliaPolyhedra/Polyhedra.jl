@@ -1,72 +1,72 @@
 # Index of representation element of type ElemT
 """
-    Index{N, T, ElemT}
+    Index{T, ElemT}
 
-Index of an element of type `ElemT` in a `Rep{N, T}`.
+Index of an element of type `ElemT` in a `Rep{T}`.
 """
-struct Index{N, T, ElemT}
+struct Index{T, ElemT}
     value::Int
 end
 
 # Type of the value associated to this index
-valuetype(::Union{Index{N, T, ElemT}, Type{Index{N, T, ElemT}}}) where {N, T, ElemT} = ElemT
+valuetype(::Union{Index{T, ElemT}, Type{Index{T, ElemT}}}) where {T, ElemT} = ElemT
 
-const HyperPlaneIndex{N, T} = Index{N, T, <:HyperPlane{N, T}}
-const HalfSpaceIndex{N, T} = Index{N, T, <:HalfSpace{N, T}}
-const HIndex{N, T} = Union{HyperPlaneIndex{N, T}, HalfSpaceIndex{N, T}}
+const HyperPlaneIndex{T} = Index{T, <:HyperPlane{T}}
+const HalfSpaceIndex{T} = Index{T, <:HalfSpace{T}}
+const HIndex{T} = Union{HyperPlaneIndex{T}, HalfSpaceIndex{T}}
 
-#const SymPointIndex{N, T} = Index{N, T, <:SymPoint{N, T}}
-const PointIndex{N, T} = Index{N, T, <:AbstractPoint{N, T}}
-#const PIndex{N, T} = Union{SymPointIndex{N, T}, PointIndex{N, T}}
-const PIndex{N, T} = PointIndex{N, T}
-const LineIndex{N, T} = Index{N, T, <:Line{N, T}}
-const RayIndex{N, T} = Index{N, T, <:Ray{N, T}}
-const RIndex{N, T} = Union{LineIndex{N, T}, RayIndex{N, T}}
-const VIndex{N, T} = Union{PIndex{N, T}, RIndex{N, T}}
-islin(::Union{Index{N, T, ElemT}, Type{Index{N, T, ElemT}}}) where {N, T, ElemT} = islin(ElemT)
-ispoint(::Union{Index{N, T, ElemT}, Type{Index{N, T, ElemT}}}) where {N, T, ElemT} = ispoint(ElemT)
+#const SymPointIndex{T} = Index{T, <:SymPoint{T}}
+const PointIndex{T} = Index{T, <:AbstractVector{T}}
+#const PIndex{T} = Union{SymPointIndex{T}, PointIndex{T}}
+const PIndex{T} = PointIndex{T}
+const LineIndex{T} = Index{T, <:Line{T}}
+const RayIndex{T} = Index{T, <:Ray{T}}
+const RIndex{T} = Union{LineIndex{T}, RayIndex{T}}
+const VIndex{T} = Union{PIndex{T}, RIndex{T}}
+islin(::Union{Index{T, ElemT}, Type{Index{T, ElemT}}}) where {T, ElemT} = islin(ElemT)
+ispoint(::Union{Index{T, ElemT}, Type{Index{T, ElemT}}}) where {T, ElemT} = ispoint(ElemT)
 
 """
-    Indices{N, T, ElemT, RepT<:Rep{N, T}}
+    Indices{T, ElemT, RepT<:Rep{T}}
 
 Iterator over the indices of the elements of type `ElemT` of the field `rep`.
 """
-struct Indices{N, T, ElemT, RepT<:Rep{N, T}}
+struct Indices{T, ElemT, RepT<:Rep{T}}
     rep::RepT
-    function Indices{N, T, ElemT}(rep) where {N, T, ElemT}
-        new{N, T, ElemT, typeof(rep)}(rep)
+    function Indices{T, ElemT}(rep) where {T, ElemT}
+        new{T, ElemT, typeof(rep)}(rep)
     end
 end
 
-Base.eltype(::Indices{N, T, ElemT}) where {N, T, ElemT} = Index{N, T, ElemT}
+Base.eltype(::Indices{T, ElemT}) where {T, ElemT} = Index{T, ElemT}
 valuetype(idxs::Indices) = valuetype(eltype(idxs))
 
-const HyperPlaneIndices{N, T, RepT} = Indices{N, T, <:HyperPlane{N, T}, RepT}
-const HalfSpaceIndices{N, T, RepT} = Indices{N, T, <:HalfSpace{N, T}, RepT}
-const HIndices{N, T, RepT} = Union{HyperPlaneIndices{N, T, RepT}, HalfSpaceIndices{N, T, RepT}}
+const HyperPlaneIndices{T, RepT} = Indices{T, <:HyperPlane{T}, RepT}
+const HalfSpaceIndices{T, RepT} = Indices{T, <:HalfSpace{T}, RepT}
+const HIndices{T, RepT} = Union{HyperPlaneIndices{T, RepT}, HalfSpaceIndices{T, RepT}}
 
-#const SymPointIndices{N, T, RepT} = Indices{N, T, <:SymPoint{N, T}, RepT}
-const PointIndices{N, T, RepT} = Indices{N, T, <:AbstractPoint{N, T}, RepT}
-#const PIndices{N, T, RepT} = Union{SymPointIndices{N, T, RepT}, PointIndices{N, T, RepT}}
-const PIndices{N, T, RepT} = PointIndices{N, T, RepT}
-const LineIndices{N, T, RepT} = Indices{N, T, <:Line{N, T}, RepT}
-const RayIndices{N, T, RepT} = Indices{N, T, <:Ray{N, T}, RepT}
-const RIndices{N, T, RepT} = Union{LineIndices{N, T, RepT}, RayIndices{N, T, RepT}}
-const VIndices{N, T, RepT} = Union{PIndices{N, T, RepT}, RIndices{N, T, RepT}}
+#const SymPointIndices{T, RepT} = Indices{T, <:SymPoint{T}, RepT}
+const PointIndices{T, RepT} = Indices{T, <:AbstractVector{T}, RepT}
+#const PIndices{T, RepT} = Union{SymPointIndices{T, RepT}, PointIndices{T, RepT}}
+const PIndices{T, RepT} = PointIndices{T, RepT}
+const LineIndices{T, RepT} = Indices{T, <:Line{T}, RepT}
+const RayIndices{T, RepT} = Indices{T, <:Ray{T}, RepT}
+const RIndices{T, RepT} = Union{LineIndices{T, RepT}, RayIndices{T, RepT}}
+const VIndices{T, RepT} = Union{PIndices{T, RepT}, RIndices{T, RepT}}
 
-function Base.next(idxs::Indices{N, T, ElemT}, idx::Index{N, T, ElemT}) where {N, T, ElemT}
+function Base.next(idxs::Indices{T, ElemT}, idx::Index{T, ElemT}) where {T, ElemT}
     nextidx = nextindex(idxs.rep, idx)
     idx, nextidx
 end
 
 repfor(p, ::Type{<:HRepElement}) = hrep(p)
 repfor(p, ::Type{<:VRepElement}) = vrep(p)
-Base.length(idxs::Indices{N, T, ElemT, <:Polyhedron{N, T}}) where {N, T, ElemT} = length(Indices{N, T, ElemT}(repfor(idxs.rep, ElemT)))
-Base.isempty(idxs::Indices{N, T, ElemT, <:Polyhedron{N, T}}) where {N, T, ElemT} = isempty(Indices{N, T, ElemT}(repfor(idxs.rep, ElemT)))
-Base.start(idxs::Indices{N, T, ElemT, <:Polyhedron{N, T}}) where {N, T, ElemT} = start(Indices{N, T, ElemT}(repfor(idxs.rep, ElemT)))
-Base.done(idxs::Indices{N, T, ElemT, <:Polyhedron{N, T}}, idx::Index{N, T, ElemT}) where {N, T, ElemT} = done(Indices{N, T, ElemT}(repfor(idxs.rep, ElemT)), idx)
-Base.get(p::Polyhedron{N, T}, idx::Index{N, T, ElemT}) where {N, T, ElemT} = get(repfor(p, ElemT), idx)
-nextindex(p::Polyhedron{N, T}, idx::Index{N, T, ElemT}) where {N, T, ElemT} = nextindex(repfor(p, ElemT), idx)
+Base.length(idxs::Indices{T, ElemT, <:Polyhedron{T}}) where {T, ElemT} = length(Indices{T, ElemT}(repfor(idxs.rep, ElemT)))
+Base.isempty(idxs::Indices{T, ElemT, <:Polyhedron{T}}) where {T, ElemT} = isempty(Indices{T, ElemT}(repfor(idxs.rep, ElemT)))
+Base.start(idxs::Indices{T, ElemT, <:Polyhedron{T}}) where {T, ElemT} = start(Indices{T, ElemT}(repfor(idxs.rep, ElemT)))
+Base.done(idxs::Indices{T, ElemT, <:Polyhedron{T}}, idx::Index{T, ElemT}) where {T, ElemT} = done(Indices{T, ElemT}(repfor(idxs.rep, ElemT)), idx)
+Base.get(p::Polyhedron{T}, idx::Index{T, ElemT}) where {T, ElemT} = get(repfor(p, ElemT), idx)
+nextindex(p::Polyhedron{T}, idx::Index{T, ElemT}) where {T, ElemT} = nextindex(repfor(p, ElemT), idx)
 
 """
 The representation `rep` does not contain any `elem`.
@@ -75,43 +75,43 @@ macro norepelem(rep, elem)
     idxs = Symbol(string(elem) * "Indices")
     idx = Symbol(string(elem) * "Index")
     quote
-        Base.length(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = 0
-        Base.isempty(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = true
-        Base.start(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = eltype(idxs)(0)
-        Base.done(idxs::$idxs{N, T, <:$rep{N, T}}, ::$idx{N, T}) where {N, T} = true
+        Base.length(idxs::$idxs{T, <:$rep{T}}) where {T} = 0
+        Base.isempty(idxs::$idxs{T, <:$rep{T}}) where {T} = true
+        Base.start(idxs::$idxs{T, <:$rep{T}}) where {T} = eltype(idxs)(0)
+        Base.done(idxs::$idxs{T, <:$rep{T}}, ::$idx{T}) where {T} = true
     end
 end
 
-abstract type HAffineSpace{N, T} <: HRepresentation{N, T} end
+abstract type HAffineSpace{T} <: HRepresentation{T} end
 @norepelem HAffineSpace HalfSpace
 
 _promote_reptype(P1::Type{<:HAffineSpace}, ::Type{<:HAffineSpace}) = P1
 _promote_reptype(P1::Type{<:HAffineSpace}, ::Type{<:HRep}) = hreptype(P1)
 
-abstract type VPolytope{N, T} <: VRepresentation{N, T} end
+abstract type VPolytope{T} <: VRepresentation{T} end
 @norepelem VPolytope Line
 @norepelem VPolytope Ray
 
 _promote_reptype(P1::Type{<:VPolytope}, ::Type{<:VPolytope}) = P1
 _promote_reptype(P1::Type{<:VPolytope}, ::Type{<:VRep}) = vreptype(P1)
 
-abstract type VSymPolytope{N, T} <: VPolytope{N, T} end
+abstract type VSymPolytope{T} <: VPolytope{T} end
 @norepelem VSymPolytope Point
 
-abstract type VCone{N, T} <: VRepresentation{N, T} end
+abstract type VCone{T} <: VRepresentation{T} end
 #@norepelem VCone SymPoint
 # See issue #28
-Base.length(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = hasallrays(idxs.rep) ? 1 : 0
-Base.isempty(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = !hasallrays(idxs.rep)
-Base.start(idxs::PointIndices{N, T, <:VCone{N, T}}) where {N, T} = eltype(idxs)(hasallrays(idxs.rep) ? 1 : 2)
-Base.done(::PointIndices{N, T, <:VCone{N, T}}, idx::PointIndex{N, T}) where {N, T} = idx.value > 1
-Base.get(L::VCone{N, T}, ::PointIndex{N, T}) where {N, T} = origin(vvectortype(typeof(L)), FullDim{N}())
-nextindex(::VCone{N, T}, idx::PointIndex{N, T}) where {N, T} = typeof(idx)(idx.value + 1)
+Base.length(idxs::PointIndices{T, <:VCone{T}}) where {T} = hasallrays(idxs.rep) ? 1 : 0
+Base.isempty(idxs::PointIndices{T, <:VCone{T}}) where {T} = !hasallrays(idxs.rep)
+Base.start(idxs::PointIndices{T, <:VCone{T}}) where {T} = eltype(idxs)(hasallrays(idxs.rep) ? 1 : 2)
+Base.done(::PointIndices{T, <:VCone{T}}, idx::PointIndex{T}) where {T} = idx.value > 1
+Base.get(L::VCone{T}, ::PointIndex{T}) where {T} = origin(vvectortype(typeof(L)), fulldim(L))
+nextindex(::VCone{T}, idx::PointIndex{T}) where {T} = typeof(idx)(idx.value + 1)
 
 _promote_reptype(P1::Type{<:VCone}, ::Type{<:VCone}) = P1
 _promote_reptype(P1::Type{<:VCone}, ::Type{<:VRep}) = vreptype(P1)
 
-abstract type VLinearSpace{N, T} <: VCone{N, T} end
+abstract type VLinearSpace{T} <: VCone{T} end
 @norepelem VLinearSpace Ray
 
 _promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VLinearSpace}) = P1
@@ -125,12 +125,12 @@ macro vecrepelem(rep, elem, field)
     idxs = Symbol(string(elem) * "Indices")
     idx = Symbol(string(elem) * "Index")
     esc(quote
-        Base.length(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = length(idxs.rep.$field)
-        Base.isempty(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = isempty(idxs.rep.$field)
-        Base.start(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = eltype(idxs)(1)
-        Base.done(idxs::$idxs{N, T, <:$rep{N, T}}, idx::$idx{N, T}) where {N, T} = idx.value > length(idxs)
-        Base.get(rep::$rep{N, T}, idx::$idx{N, T}) where {N, T} = rep.$field[idx.value]
-        nextindex(::$rep{N, T}, idx::$idx{N, T}) where {N, T} = typeof(idx)(idx.value + 1)
+        Base.length(idxs::$idxs{T, <:$rep{T}}) where {T} = length(idxs.rep.$field)
+        Base.isempty(idxs::$idxs{T, <:$rep{T}}) where {T} = isempty(idxs.rep.$field)
+        Base.start(idxs::$idxs{T, <:$rep{T}}) where {T} = eltype(idxs)(1)
+        Base.done(idxs::$idxs{T, <:$rep{T}}, idx::$idx{T}) where {T} = idx.value > length(idxs)
+        Base.get(rep::$rep{T}, idx::$idx{T}) where {T} = rep.$field[idx.value]
+        nextindex(::$rep{T}, idx::$idx{T}) where {T} = typeof(idx)(idx.value + 1)
     end)
 end
 
@@ -142,13 +142,13 @@ macro subrepelem(rep, elem, field)
     idxs = :(Polyhedra.$idxst)
     idxt = Symbol(string(elem) * "Index")
     idx = :(Polyhedra.$idxt)
-    subidxs = :(Polyhedra.Indices{N, T, Polyhedra.valuetype(idxs)}(idxs.rep.$field))
+    subidxs = :(Polyhedra.Indices{T, Polyhedra.valuetype(idxs)}(idxs.rep.$field))
     esc(quote
-        Base.length(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = length($subidxs)
-        Base.isempty(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = isempty($subidxs)
-        Base.start(idxs::$idxs{N, T, <:$rep{N, T}}) where {N, T} = start($subidxs)
-        Base.done(idxs::$idxs{N, T, <:$rep{N, T}}, idx::$idx{N, T}) where {N, T} = done($subidxs, idx)
-        Base.get(rep::$rep{N, T}, idx::$idx{N, T}) where {N, T} = get(rep.$field, idx)
-        Polyhedra.nextindex(rep::$rep{N, T}, idx::$idx{N, T}) where {N, T} = Polyhedra.nextindex(rep.$field, idx)
+        Base.length(idxs::$idxs{T, <:$rep{T}}) where {T} = length($subidxs)
+        Base.isempty(idxs::$idxs{T, <:$rep{T}}) where {T} = isempty($subidxs)
+        Base.start(idxs::$idxs{T, <:$rep{T}}) where {T} = start($subidxs)
+        Base.done(idxs::$idxs{T, <:$rep{T}}, idx::$idx{T}) where {T} = done($subidxs, idx)
+        Base.get(rep::$rep{T}, idx::$idx{T}) where {T} = get(rep.$field, idx)
+        Polyhedra.nextindex(rep::$rep{T}, idx::$idx{T}) where {T} = Polyhedra.nextindex(rep.$field, idx)
     end)
 end

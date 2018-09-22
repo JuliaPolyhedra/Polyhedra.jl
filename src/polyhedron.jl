@@ -4,11 +4,11 @@ export hrepiscomputed, hrep, vrepiscomputed, vrep
 export volume, surface
 
 """
-    polyhedron(rep::Representation{N, T})
+    polyhedron(rep::Representation{T})
 
 Creates a polyhedron from the representation `rep` using the default library including in the Polyhedra package.
 """
-polyhedron(rep::Representation{N, T}) where {N, T} = polyhedron(rep, default_library(FullDim{N}(), T))
+polyhedron(rep::Representation{T}) where {T} = polyhedron(rep, default_library(FullDim(rep), T))
 
 """
     hrepiscomputed(p::Polyhedron)
@@ -39,17 +39,17 @@ Returns a V-representation for the polyhedron `p`.
 vrep(p::Polyhedron) = error("`vrep` not implemented for `$(eltype(p))`")
 
 """
-    volume(p::Polyhedron{N, T}) where {N, T}
+    volume(p::Polyhedron{T}) where {T}
 
-Returns the `N`-dimensional hyper-volume of the polyhedron `p`.
+Returns the `fulldim(p)`-dimensional hyper-volume of the polyhedron `p`.
 Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
 """
 function volume end
 
 """
-    surface(p::Polyhedron{N, T}) where {N, T}
+    surface(p::Polyhedron{T}) where {T}
 
-Returns the `N-1`-dimensional hyper-volume of the surface of the polyhedron `p`.
+Returns the `fulldim(p)-1`-dimensional hyper-volume of the surface of the polyhedron `p`.
 Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
 """
 function surface end

@@ -14,8 +14,8 @@ dualtype(RepT::Type{<:Representation}) = dualtype(RepT, polyvectortype(vectortyp
 function dualfullspace(rep::Representation, d::FullDim, ::Type{T}) where T
     dualfullspace(rep, d, T, polyvectortype(similar_type(vectortype(rep), d, T)))
 end
-function dualfullspace(rep::Representation{N, T}) where {N, T}
-    dualfullspace(rep, FullDim{N}(), polytypefor(T))
+function dualfullspace(rep::Representation{T}) where T
+    dualfullspace(rep, FullDim(rep), polytypefor(T))
 end
 
 """
@@ -66,10 +66,10 @@ function doubledescription(h::HRepresentation)
     v
 end
 
-function doubledescription(v::VRepresentation{N, T}) where {N, T}
+function doubledescription(v::VRepresentation{T}) where {T}
     checkvconsistency(v)
-    lv = LiftedVRepresentation{N, T, Matrix{T}}(v)
+    lv = LiftedVRepresentation{T, Matrix{T}}(v)
     R = -lv.R
-    vl = doubledescription(MixedMatHRep{N+1, T}(R, zeros(T, size(R, 1)), lv.linset))
-    LiftedHRepresentation{N, T}(vl.R, vl.Rlinset)
+    vl = doubledescription(MixedMatHRep{T}(R, zeros(T, size(R, 1)), lv.linset))
+    LiftedHRepresentation{T}(vl.R, vl.Rlinset)
 end

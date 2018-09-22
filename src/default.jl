@@ -1,40 +1,57 @@
 export default_type, default_library, similar_library, library
-export getlibrary, getlibraryfor
 
 """
-    default_type(::FullDim{N}, ::Type{T}) where {N, T}
+    default_type(d::FullDim, ::Type{T}) where {T}
 
-Returns the default polyhedron type for `N`-dimensional polyhedron of coefficient type `T`.
+Returns the default polyhedron type for `d`-dimensional polyhedron of coefficient type `T`.
 """
 function default_type end
 
-default_type(::FullDim{N}, ::Type{T}) where {N, T} = SimplePolyhedron{N, T, Intersection{N, T, Vector{T}}, Hull{N, T, Vector{T}}}
-default_type(::FullDim{1}, ::Type{T}) where T = Interval{T, SVector{1, T}}
+function default_type(d::StaticArrays.Size{N}, ::Type{T}) where {N, T}
+    return SimplePolyhedron{T, Intersection{T, StaticArrays.SVector{N[1], T}, typeof(d)}, Hull{T, StaticArrays.SVector{N[1], T}}, typeof(d)}
+end
+function default_type(::StaticArrays.Size{(1,)}, ::Type{T}) where T
+    return Interval{T, StaticArrays.SVector{1, T}}
+end
+function default_type(d::Int, ::Type{T}) where T
+    if d == 1
+        return Interval{T, Vector{T}}
+    else
+        return SimplePolyhedron{T, Intersection{T, Vector{T}, typeof(d)}, Hull{T, Vector{T}, typeof(d)}}
+    end
+end
 
 """
-    default_library(::FullDim{N}, ::Type{T}) where {N, T}
+    default_library(d::FullDim, ::Type{T}) where {T}
 
-Returns the default polyhedral library for `N`-dimensional polyhedron of coefficient type `T`.
+Returns the default polyhedral library for `d`-dimensional polyhedron of coefficient type `T`.
 """
 function default_library end
 
 _default_type(::Type{T}) where T = T
 # See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/35
 _default_type(::Type{AbstractFloat}) = Float64
-default_library(::FullDim, ::Type{T}) where T = SimplePolyhedraLibrary{_default_type(T)}()
-default_library(::FullDim{1}, ::Type{T}) where T = IntervalLibrary{_default_type(T)}()
+default_library(::StaticArrays.Size, T::Type) = SimplePolyhedraLibrary{_default_type(T)}()
+default_library(::StaticArrays.Size{(1,)}, T::Type) = IntervalLibrary{_default_type(T)}()
+function default_library(d::Int, ::Type{T}) where T
+    if d == 1
+        return IntervalLibrary{_default_type(T)}()
+    else
+        return SimplePolyhedraLibrary{_default_type(T)}()
+    end
+end
 
 """
-    similar_library(lib::PolyhedraLibrary, d::FullDim{N}, ::Type{T}) where {N, T}
+    similar_library(lib::PolyhedraLibrary, d::FullDim, T::Type)
 
 Returns a library that supports polyhedra of full dimension `T` with coefficient type `T`. If `lib` does not support it, this commonly calls `default_library(d, T)`.
 """
 function similar_library end
 
 # Shortcuts
-similar_library(p::Polyhedron{N}, d::FullDim, ::Type{T}) where {N, T} = similar_library(library(p), d, T)
-similar_library(p::Polyhedron{N}, ::Type{T}) where {N, T} = similar_library(p, FullDim{N}(), T)
-similar_library(p::Polyhedron{N, T}, d::FullDim) where {N, T} = similar_library(p, d, T)
+similar_library(p::Polyhedron, d::FullDim, ::Type{T}) where T = similar_library(library(p), d, T)
+similar_library(p::Polyhedron, ::Type{T}) where T = similar_library(library(p), T)
+similar_library(p::Polyhedron{T}, d::FullDim) where T = similar_library(p, d, T)
 
 """
     library(p::Polyhedron)
@@ -42,17 +59,6 @@ similar_library(p::Polyhedron{N, T}, d::FullDim) where {N, T} = similar_library(
 Returns the library used by `p`.
 """
 function library end
-
-function getlibrary(args...)
-    Base.depwarn("getlibrary is deprecated, use library instead", :getlibrary)
-    library(args...)
-end
-
-function getlibraryfor(args...)
-    Base.depwarn("getlibraryfor is deprecated, use similar_library instead. Note that the dimension `N` now needs to be given as `FullDim{N}()`.", :getlibraryfor)
-    similar_library(args...)
-end
-
 
 """
     default_solver(p::Rep)
@@ -96,37 +102,37 @@ promote_reptype(P::Type{<:Rep}) = P
 # whether Rep has the constructor Rep(::It...; solver=...)
 supportssolver(::Type{<:Rep}) = false
 
-function constructpolyhedron(RepT::Type{<:Rep{N, T}}, p::Tuple{Vararg{Rep}}, it::It{N, T}...) where {N, T}
+function constructpolyhedron(RepT::Type{<:Rep{T}}, d::FullDim, p::Tuple{Vararg{Rep}}, it::It{T}...) where T
     if supportssolver(RepT)
         solver = default_solver(p...)
         if solver !== nothing
-            return RepT(it..., solver=solver)
+            return RepT(d, it..., solver=solver)
         end
     end
-    RepT(it...)::RepT # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
+    RepT(d, it...)::RepT # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
 end
 
-function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim{N}, ::Type{T}, it::It{N, T}...) where {N, T}
+function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...) where T
     # Some types in p may not support `d` or `T` so we call `similar_type` after `promote_reptype`
     RepT = similar_type(promote_reptype(typeof.(p)...), d, T)
-    constructpolyhedron(RepT, p, it...)
+    constructpolyhedron(RepT, d, p, it...)
 end
 
 """
-    similar(p::Tuple{Vararg{Polyhedra.Rep}}, ::Polyhedra.FullDim{N}, ::Type{T}, it::Polyhedra.It{N, T}...)
+    similar(p::Tuple{Vararg{Polyhedra.Rep}}, d::Polyhedra.FullDim, ::Type{T}, it::Polyhedra.It{T}...)
 
-Creates a representation with a type similar to `p` of a polyhedron of full dimension `N`, element type `T` and initialize it with the iterators `it`.
+Creates a representation with a type similar to `p` of a polyhedron of full dimension `d`, element type `T` and initialize it with the iterators `it`.
 The type of the result will be chosen closer to the type of `p[1]`.
 """
-Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim{N}, ::Type{T}, it::It{N, T}...) where {N, T} = default_similar(p, d, T, it...)
+Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...) where {T} = default_similar(p, d, T, it...)
 function promote_coefficienttype(p::Tuple{Vararg{Rep}})
     promote_type(MultivariatePolynomials.coefficienttype.(p)...)
 end
-function Base.similar(p::Tuple{Vararg{Rep{N}}}, d::FullDim{N}, it::It{N}...) where N
+function Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, it::It...)
     T = promote_coefficienttype(p)
     similar(p, d, T, it...)
 end
-function Base.similar(p::Tuple{Vararg{Rep{N}}}, it::It{N}...) where N
-    similar(p, FullDim{N}(), it...)
+function Base.similar(p::Tuple{Vararg{Rep}}, it::It...)
+    similar(p, FullDim(p[1]), it...)
 end
 Base.similar(p::Rep, args...) = similar((p,), args...)
