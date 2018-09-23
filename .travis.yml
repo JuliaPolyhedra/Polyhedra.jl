@@ -4,11 +4,8 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
   - 0.7
-matrix:
-  allow_failures:
-    - julia: 0.7
+  - 1.7
 #addons:
 #  apt_packages:
 #    - libgmp-dev # For CDDLib and LRSLib
