@@ -351,8 +351,8 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             vv = convexhull(@SVector [0, 1]) + conichull((@SVector [1, 1]), Line(@SVector [1, 0]))
             mv = vrep([0 1], [1 1; 1 0], BitSet([2]))
             generator_fulltest(vv, mv)
-            mvv = @inferred typeof(mv)(vv)
-            vmv = @inferred typeof(vv)(mv)
+            mvv = @inferred convert(typeof(mv), vv)
+            vmv = @inferred convert(typeof(vv), mv)
             generator_fulltest(vv, mvv)
             generator_fulltest(vmv, vv)
         end
@@ -360,8 +360,8 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             vh = HalfSpace((@SVector [1, 0]), 0) ∩ HyperPlane((@SVector [0, 1]), 1)
             mh = hrep([0 1; 1 0], [1, 0], BitSet(1))
             inequality_fulltest(vh, mh)
-            mvh = @inferred typeof(mh)(vh)
-            vmh = @inferred typeof(vh)(mh)
+            mvh = @inferred convert(typeof(mh), vh)
+            vmh = @inferred convert(typeof(vh), mh)
             inequality_fulltest(vh, mvh)
             inequality_fulltest(vmh, vh)
         end
