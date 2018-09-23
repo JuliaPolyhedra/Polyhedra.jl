@@ -157,7 +157,7 @@ for (isVrep, elt, loop_singular) in [(true, :AbstractVector, :point),
         end
 
         function $mapit(f::Function, d::FullDim, ::Type{T}, p::$HorVRep...) where {T}
-            ElemT = promote_type(similar_type.($elemtype.(p), d, T)...)
+            ElemT = promote_type(similar_type.($elemtype.(p), Ref(d), T)...)
             MapRepIterator{T, ElemT}(p, f)
         end
 
