@@ -5,7 +5,7 @@ os:
   - osx
 julia:
   - 0.7
-  - 1.7
+  - 1.0
 #addons:
 #  apt_packages:
 #    - libgmp-dev # For CDDLib and LRSLib
