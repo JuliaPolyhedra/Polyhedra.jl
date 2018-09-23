@@ -35,7 +35,7 @@ function scene(vr::VRep, ::Type{T}) where T
     # Intersection of rays with the limits of the scene
     (start, ray) -> begin
         times = max.((Vector(minimum(scene))-start) ./ ray, (Vector(maximum(scene))-start) ./ ray)
-        times[ray .== 0] = Inf # To avoid -Inf with .../(-0)
+        times[ray .== 0] .= Inf # To avoid -Inf with .../(-0)
         time = minimum(times)
         start + time * ray
     end
