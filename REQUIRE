@@ -2,7 +2,7 @@ julia 0.6
 StaticArrays 0.5
 MultivariatePolynomials 0.1.1
 MathProgBase 0.5.10 0.8
-JuMP 0.16
+#JuMP 0.16 # no release of JuMP supports Julia v0.7 yet
 GeometryTypes 0.4
 RecipesBase 0.2
 Compat 1.0.0
