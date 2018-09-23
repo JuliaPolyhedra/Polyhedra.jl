@@ -17,10 +17,10 @@ The coefficient type however, will be promoted as required taking both the coeff
 """
 function Base.intersect(p::HRep...)
     T = promote_coefficienttype(p)
-    similar(p, hmap((i, x) -> similar_type(typeof(x), T)(x), FullDim(p[1]), T, p...)...)
+    similar(p, hmap((i, x) -> convert(similar_type(typeof(x), T), x), FullDim(p[1]), T, p...)...)
 end
-Base.intersect(p::Rep, el::HRepElement) = p ∩ intersect(el)
-Base.intersect(el::HRepElement, p::Rep) = p ∩ el
+Base.intersect(p::HRep, el::HRepElement) = p ∩ intersect(el)
+Base.intersect(el::HRepElement, p::HRep) = p ∩ el
 
 Base.intersect(hps::HyperPlane...) = hrep([hps...])
 Base.intersect(hss::HalfSpace...) = hrep([hss...])
@@ -29,7 +29,7 @@ Base.intersect(h1::HalfSpace{T}, h2::HyperPlane{T}) where {T} = h2 ∩ h1
 Base.intersect(p1::HAny{T}, p2::HAny{T}, ps::HAny{T}...) where {T} = intersect(p1 ∩ p2, ps...)
 function Base.intersect(p::HAny...)
     T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
-    f(p) = similar_type(typeof(p), T)(p)
+    f(p) = convert(similar_type(typeof(p), T), p)
     intersect(f.(p)...)
 end
 
@@ -59,10 +59,10 @@ The coefficient type however, will be promoted as required taking both the coeff
 """
 function convexhull(p::VRep...)
     T = promote_coefficienttype(p)
-    similar(p, vmap((i, x) -> similar_type(typeof(x), T)(x), FullDim(p[1]), T, p...)...)
+    similar(p, vmap((i, x) -> convert(similar_type(typeof(x), T), x), FullDim(p[1]), T, p...)...)
 end
-convexhull(p::Rep, el::VRepElement) = convexhull(p, convexhull(el))
-convexhull(el::VRepElement, p::Rep) = convexhull(p, el)
+convexhull(p::VRep, el::VRepElement) = convexhull(p, convexhull(el))
+convexhull(el::VRepElement, p::VRep) = convexhull(p, el)
 
 convexhull(ps::AbstractVector...) = vrep([ps...])
 convexhull(ls::Line...) = vrep([ls...])
@@ -74,7 +74,7 @@ convexhull(r::Ray{T}, l::Line{T}) where {T} = convexhull(l, r)
 convexhull(p1::VAny{T}, p2::VAny{T}, ps::VAny{T}...) where {T} = convexhull(convexhull(p1, p2), ps...)
 function convexhull(p::VAny...)
     T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
-    f(p) = similar_type(typeof(p), T)(p)
+    f(p) = convert(similar_type(typeof(p), T), p)
     convexhull(f.(p)...)
 end
 
@@ -99,7 +99,7 @@ conify(r::Union{Line, Ray}) = r
 conichull(p...) = convexhull(conify.(p)...)
 
 function sumpoints(::FullDim, ::Type{T}, p1, p2) where {T}
-    _tout(p) = similar_type(typeof(p), T)(p)
+    _tout(p) = convert(similar_type(typeof(p), T), p)
     ps = [_tout(po1 + po2) for po1 in points(p1) for po2 in points(p2)]
     tuple(ps)
 end

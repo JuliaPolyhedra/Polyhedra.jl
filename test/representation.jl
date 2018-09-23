@@ -1,3 +1,4 @@
+using LinearAlgebra # for I
 struct InconsistentVRep{T, AT, D<:Polyhedra.FullDim} <: VRepresentation{T}
     points::Polyhedra.PointsHull{T, AT, D}
     rays::Polyhedra.RaysHull{T, AT, D}
@@ -281,7 +282,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
     end
 
     @testset "Chebyshev center" begin
-        p = hrep(eye(2), zeros(2))
+        p = hrep(Matrix(1I, 2, 2), zeros(2))
         @test_throws ErrorException chebyshevcenter(p, lp_solver) # unbounded
 
         p = hrep([1 1; -1 -1], [0, -1])

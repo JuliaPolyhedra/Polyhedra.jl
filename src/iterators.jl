@@ -69,7 +69,7 @@ function typed_map(f, d::FullDim, ::Type{T}, it::RepIterator{Tin, ElemT}) where 
 end
 
 function RepIterator{T}(it::RepIterator) where {T}
-    typed_map((i,x) -> similar_type(typeof(x), T)(x), FullDim(it), T, it)
+    typed_map((i,x) -> convert(similar_type(typeof(x), T), x), FullDim(it), T, it)
 end
 
 # FIXME the variables need to be defined outside of the local scope of for

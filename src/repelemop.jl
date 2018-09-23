@@ -51,7 +51,16 @@ function _vinh(v::VRepElement, it::ElemIt{<:HRepElement}, infun)
     return true
 end
 function _vinh(v::VRepElement, hr::HRep, infun)
-    all(map(it -> _vinh(v, it, infun), hreps(hr)))
+    # The line below fails on Julia v0.7. On the simplextest,
+    # map(...) returns (false,) and then all((false,)) returns true
+    # because (false,)[1] returns true...
+    # all(map(it -> _vinh(v, it, infun), hreps(hr)))
+    for it in hreps(hr)
+        if !_vinh(v, it, infun)
+            return false
+        end
+    end
+    return true
 end
 
 """

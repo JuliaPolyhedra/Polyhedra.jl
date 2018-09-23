@@ -74,7 +74,7 @@ similar_type(::Type{LPHRepresentation{S, MT}}, ::FullDim, ::Type{T}) where {S, T
 fulltype(::Type{LPHRepresentation{T, MT}}) where {T, MT} = LPHRepresentation{T, MT}
 
 LPHRepresentation(h::HRep{T}) where {T} = LPHRepresentation{T}(h)
-LPHRepresentation{T}(h::HRep) where {T} = LPHRepresentation{T, hmatrixtype(typeof(h), T)}(h)
+LPHRepresentation{T}(h::HRep) where {T} = convert(LPHRepresentation{T, hmatrixtype(typeof(h), T)}, h)
 
 #function LPHRepresentation{T}(it::HRepIterator{T}) where {T}
 #    A = Matrix{T}(length(it), N)
@@ -101,8 +101,8 @@ function LPHRepresentation{T, MT}(d::FullDim,
     nhrep = nhyperplane + length(halfspaces)
     N = fulldim(d)
     A = emptymatrix(MT, nhrep, N)
-    lb = Vector{T}(nhrep)
-    ub = Vector{T}(nhrep)
+    lb = Vector{T}(undef, nhrep)
+    ub = Vector{T}(undef, nhrep)
     MPB.HighLevelInterface.warn_no_inf(T)
     l = fill(typemin(T), N)
     u = fill(typemax(T), N)

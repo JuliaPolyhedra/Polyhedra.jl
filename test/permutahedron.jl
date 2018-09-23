@@ -7,7 +7,7 @@ function permutahedrontest(lib::Lib) where Lib<:PolyhedraLibrary
     poly = polyhedron(ine, lib)
     @test !isempty(poly)
     inequality_fulltest(poly, A, b, linset)
-    generator_fulltest(poly, V, Array{Int}(0, 3))
+    generator_fulltest(poly, V, Matrix{Int}(undef, 0, 3))
 
     isa(lib, SimplePolyhedraLibrary) && return
     # x1___x4____________1

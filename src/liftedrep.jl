@@ -25,7 +25,7 @@ LiftedHRepresentation{T}(A::AbstractMatrix, linset::BitSet=BitSet()) where {T} =
 LiftedHRepresentation(A::AbstractMatrix{T}, linset::BitSet=BitSet()) where T = LiftedHRepresentation{T}(A, linset)
 
 LiftedHRepresentation(h::HRepresentation{T}) where {T} = LiftedHRepresentation{T}(h)
-LiftedHRepresentation{T}(h::HRepresentation) where {T} = LiftedHRepresentation{T, hmatrixtype(typeof(h), T)}(h)
+LiftedHRepresentation{T}(h::HRepresentation) where {T} = convert(LiftedHRepresentation{T, hmatrixtype(typeof(h), T)}, h)
 
 function LiftedHRepresentation{T, MT}(d::FullDim, hyperplanes::HyperPlaneIt{T},
                                       halfspaces::HalfSpaceIt{T}) where {T, MT}
@@ -73,7 +73,7 @@ LiftedVRepresentation{T}(R::AbstractMatrix, linset::BitSet=BitSet()) where {T} =
 LiftedVRepresentation(R::AbstractMatrix{T}, linset::BitSet=BitSet()) where T = LiftedVRepresentation{T}(R, linset)
 
 LiftedVRepresentation(v::VRepresentation{T}) where {T} = LiftedVRepresentation{T}(v)
-LiftedVRepresentation{T}(v::VRepresentation) where {T} = LiftedVRepresentation{T, vmatrixtype(typeof(v), T)}(v)
+LiftedVRepresentation{T}(v::VRepresentation) where {T} = convert(LiftedVRepresentation{T, vmatrixtype(typeof(v), T)}, v)
 
 function LiftedVRepresentation{T, MT}(d::FullDim,
                                       vits::VIt{T}...) where {T, MT}

@@ -73,7 +73,7 @@ hvectortype(::Type{<:Intersection{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:Intersection}, d::FullDim, ::Type{T}) where {T} = Intersection{T, similar_type(hvectortype(PT), d, T), typeof(d)}
 
 Intersection(h::HRepresentation{T}) where {T} = Intersection{T}(h)
-Intersection{T}(h::HRepresentation) where {T} = Intersection{T, similar_type(hvectortype(typeof(h)), T), typeof(FullDim(h))}(h)
+Intersection{T}(h::HRepresentation) where {T} = convert(Intersection{T, similar_type(hvectortype(typeof(h)), T), typeof(FullDim(h))}, h)
 
 @subrepelem Intersection HyperPlane hyperplanes
 @vecrepelem Intersection HalfSpace halfspaces
@@ -249,7 +249,7 @@ vvectortype(::Type{<:Hull{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:Hull}, d::FullDim, ::Type{T}) where {T} = Hull{T, similar_type(vvectortype(PT), d, T), typeof(d)}
 
 Hull(v::VRepresentation{T}) where {T} = Hull{T}(v)
-Hull{T}(v::VRepresentation) where {T} = Hull{T, similar_type(vvectortype(typeof(v)), T), typeof(FullDim(v))}(v)
+Hull{T}(v::VRepresentation) where {T} = convert(Hull{T, similar_type(vvectortype(typeof(v)), T), typeof(FullDim(v))}, v)
 
 @subrepelem Hull Point points
 @subrepelem Hull Line rays

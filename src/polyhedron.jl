@@ -60,7 +60,7 @@ loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ex
 loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Symbol) = loadpolyhedron!(p, filename, Val{extension})
 
 function loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::AbstractString)
-    s = findfirst(["ext", "ine"], extension)
+    s = something(findfirst(["ext", "ine"], extension), 0)
     if s == 0
         error("Invalid extension $extension, please give 'ext' for V-representation or 'ine' for H-representation")
     end

@@ -1,7 +1,8 @@
+using LinearAlgebra # for I
 function boardtest(lib::Lib) where Lib<:PolyhedraLibrary
-    A1 = -eye(Int, 9) # x >= 0
+    A1 = -Matrix(1I, 9, 9) # x >= 0
     b1 = zeros(Int, 9)
-    A2 = eye(Int, 9) # x <= 1
+    A2 = Matrix(1I, 9, 9) # x <= 1
     b2 = ones(Int, 9)
     A3 = zeros(Int, 9, 9)
     b3 = 3 * ones(Int, 9)

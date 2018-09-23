@@ -68,7 +68,7 @@ end
 
 function doubledescription(v::VRepresentation{T}) where {T}
     checkvconsistency(v)
-    lv = LiftedVRepresentation{T, Matrix{T}}(v)
+    lv = convert(LiftedVRepresentation{T, Matrix{T}}, v)
     R = -lv.R
     vl = doubledescription(MixedMatHRep{T}(R, zeros(T, size(R, 1)), lv.linset))
     LiftedHRepresentation{T}(vl.R, vl.Rlinset)
