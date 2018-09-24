@@ -1,3 +1,5 @@
+import GeometryTypes
+
 struct Face
     points::Vector{Vector{Float64}}
 end
@@ -32,7 +34,7 @@ function test_decompose(p::Polyhedron, d::Dict)
     for i in eachindex(faces)
         a, b, c = faces[i]
         @test normals[3i] == normals[3i-1] == normals[3i-2]
-        normal = map(x -> x === -0.0 ? 0.0 : x, round.(normals[3i], 6))
+        normal = map(x -> x === -0.0 ? 0.0 : x, round.(normals[3i], digits=6))
         face = Face(points[3i-2],
                     points[3i-1],
                     points[3i])
@@ -110,10 +112,10 @@ function largedecomposetest(lib::PolyhedraLibrary)
     R = [0 0 1]
     v = vrep(V, R)
     p = polyhedron(v, lib)
-    d13 = round(1/3, 6)
-    d23 = round(2/3, 6)
-    md13 = round(-1/3, 6)
-    md23 = round(-2/3, 6)
+    d13 = round(1/3, digits=6)
+    d23 = round(2/3, digits=6)
+    md13 = round(-1/3, digits=6)
+    md23 = round(-2/3, digits=6)
     d = Dict([ 1.0, 0.0, 0.0] => [Face([1.0,1.0,1.0], [1.0,-1.0,1.0], [1.0,1.0,2.0]),
                                   Face([1.0,-1.0,1.0], [1.0,-1.0,2.0], [1.0,1.0,2.0]),
                                   Face([1.0,1.0,1.0], [1.0,0.0,-1.0], [1.0,-1.0,1.0])],

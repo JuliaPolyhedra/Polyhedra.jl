@@ -40,8 +40,8 @@ function MPBSI.addquadconstr!(wrap::PolyhedraToLPQPBridge, linearidx, linearval,
 end
 
 function computeoffsets(lp::LPHRepresentation)
-    coloffset = Vector{Vector{Int}}(size(lp.A, 2))
-    rowoffset = Vector{Vector{Int}}(size(lp.A, 1))
+    coloffset = Vector{Vector{Int}}(undef, size(lp.A, 2))
+    rowoffset = Vector{Vector{Int}}(undef, size(lp.A, 1))
     # Assumes that hyperplanes are in first indices
     # and halfspaces in following indices
     curoffset = 0

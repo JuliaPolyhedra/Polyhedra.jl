@@ -1,3 +1,4 @@
+import RecipesBase
 function doctest(lib::PolyhedraLibrary)
     A = [1 1;1 -1;-1 0]
     b = [1,0,0]

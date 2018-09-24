@@ -35,7 +35,7 @@ function scene(vr::VRep, ::Type{T}) where T
     # Intersection of rays with the limits of the scene
     (start, ray) -> begin
         times = max.((Vector(minimum(scene))-start) ./ ray, (Vector(maximum(scene))-start) ./ ray)
-        times[ray .== 0] = Inf # To avoid -Inf with .../(-0)
+        times[ray .== 0] .= Inf # To avoid -Inf with .../(-0)
         time = minimum(times)
         start + time * ray
     end
@@ -190,9 +190,9 @@ function fulldecompose(poly::Polyhedron, ::Type{T}) where T
     end
 
     ntri = length(triangles)
-    pts = Vector{GeometryTypes.Point{3, T}}(3ntri)
-    faces = Vector{GeometryTypes.Face{3, Int}}(ntri)
-    ns = Vector{GeometryTypes.Normal{3, T}}(3ntri)
+    pts = Vector{GeometryTypes.Point{3, T}}(undef, 3ntri)
+    faces = Vector{GeometryTypes.Face{3, Int}}(undef, ntri)
+    ns = Vector{GeometryTypes.Normal{3, T}}(undef, 3ntri)
     for i in 1:ntri
         tri = pop!(triangles)
         normal = tri[2]
@@ -201,7 +201,7 @@ function fulldecompose(poly::Polyhedron, ::Type{T}) where T
             #ns[idx] = -normal
             ns[idx] = normal
         end
-        faces[i] = collect(3*(i-1)+(1:3))
+        faces[i] = collect(3*(i-1) .+ (1:3))
         k = 1
         for k = 1:3
             # reverse order of the 3 vertices so that if I compute the

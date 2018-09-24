@@ -42,7 +42,7 @@ end
 MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::BitSet) where T <: Real = MixedMatHRep{T}(A, b, linset)
 
 MixedMatHRep(h::HRep{T}) where {T} = MixedMatHRep{T}(h)
-MixedMatHRep{T}(h::HRep) where {T} = MixedMatHRep{T, hmatrixtype(typeof(h), T)}(h)
+MixedMatHRep{T}(h::HRep) where {T} = convert(MixedMatHRep{T, hmatrixtype(typeof(h), T)}, h)
 
 MixedMatHRep{T}(hits::HIt{T}...) where {T} = MixedMatHRep{T, Matrix{T}}(hits...) # FIXME required by CDD and LRS tests
 function MixedMatHRep{T, MT}(d::FullDim, hyperplanes::HyperPlaneIt{T},
@@ -113,7 +113,7 @@ function MixedMatVRep(V::AbstractMatrix{S}, R::AbstractMatrix{T}, Rlinset::BitSe
 end
 
 MixedMatVRep(v::VRep{T}) where {T} = MixedMatVRep{T}(v)
-MixedMatVRep{T}(v::VRep) where {T} = MixedMatVRep{T, vmatrixtype(typeof(v), T)}(v)
+MixedMatVRep{T}(v::VRep) where {T} = convert(MixedMatVRep{T, vmatrixtype(typeof(v), T)}, v)
 
 MixedMatVRep{T}(vits::VIt{T}...) where {T} = MixedMatVRep{T, Matrix{T}}(vits...) # FIXME required by CDD and LRS tests
 function MixedMatVRep{T, MT}(d::FullDim, vits::VIt{T}...) where {T, MT}
@@ -155,5 +155,5 @@ dualtype(::Type{MixedMatHRep{T, MT}}) where {T, MT} = MixedMatVRep{T, Matrix{T}}
 dualtype(::Type{MixedMatVRep{T, MT}}) where {T, MT} = MixedMatHRep{T, Matrix{T}}
 function dualfullspace(h::MixedMatHRep, d::FullDim, ::Type{T}) where {T}
     N = fulldim(d)
-    MixedMatVRep{T}(zeros(T, 1, N), eye(T, N), BitSet(1:N))
+    MixedMatVRep{T}(zeros(T, 1, N), Matrix(one(T) * I, N, N), BitSet(1:N))
 end

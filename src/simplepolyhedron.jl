@@ -30,10 +30,10 @@ function SimplePolyhedron{T, HRepT, VRepT}(vrep::VRepT, solver::Union{Nothing, M
     SimplePolyhedron{T, HRepT, VRepT}(nothing, vrep, solver)
 end
 function SimplePolyhedron{T, HRepT, VRepT}(hrep::HRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
-    SimplePolyhedron{T, HRepT, VRepT}(HRepT(hrep), solver)
+    SimplePolyhedron{T, HRepT, VRepT}(convert(HRepT, hrep), solver)
 end
 function SimplePolyhedron{T, HRepT, VRepT}(vrep::VRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
-    SimplePolyhedron{T, HRepT, VRepT}(VRepT(vrep), solver)
+    SimplePolyhedron{T, HRepT, VRepT}(convert(VRepT, vrep), solver)
 end
 
 function FullDim(p::SimplePolyhedron)

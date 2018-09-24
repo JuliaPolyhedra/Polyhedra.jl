@@ -4,21 +4,15 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
   - 0.7
-matrix:
-  allow_failures:
-    - julia: 0.7
+  - 1.0
 #addons:
 #  apt_packages:
 #    - libgmp-dev # For CDDLib and LRSLib
 notifications:
   email: false
-# uncomment the following lines to override the default test script
-# script:
-#   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#   - julia -e 'Pkg.clone(pwd())'
-#   - julia -e 'Pkg.build("Polyhedra"); Pkg.test("Polyhedra"; coverage=true)'
+before_script:
+  - julia -e 'using Pkg; Pkg.add(PackageSpec(name="JuMP", rev="release-0.18"))'
 after_success:
   # push coverage results to Coveralls
   - julia -e 'cd(Pkg.dir("Polyhedra")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'

@@ -78,10 +78,10 @@ Base.convert(RepT::Type{<:VRepresentation}, p::VRepresentation) = vconvert(RepT,
 Base.convert(::Type{VRep}, p::VRepresentation) = p
 
 MultivariatePolynomials.changecoefficienttype(p::Rep{T}, ::Type{T}) where {T} = p
-MultivariatePolynomials.changecoefficienttype(p::Rep, T::Type) = similar_type(typeof(p), T)(p)
+MultivariatePolynomials.changecoefficienttype(p::Rep, T::Type) = convert(similar_type(typeof(p), T), p)
 
-VRepresentation{T}(v::VRepresentation) where {T} = similar_type(typeof(v), FullDim(v), T)(v)
-HRepresentation{T}(h::HRepresentation) where {T} = similar_type(typeof(h), FullDim(h), T)(h)
+VRepresentation{T}(v::VRepresentation) where {T} = convert(similar_type(typeof(v), FullDim(v), T), v)
+HRepresentation{T}(h::HRepresentation) where {T} = convert(similar_type(typeof(h), FullDim(h), T), h)
 
 VRep{T}(v::VRepresentation) where {T} = VRepresentation{T}(v)
 VRep{T}(p::Polyhedron) where {T} = Polyhedron{T}(p)
