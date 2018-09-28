@@ -185,7 +185,6 @@ function Base.isvalid(lp::LPHRepresentation{T}, idx::HIndex{T}) where {T}
     end
     1 <= colrow <= 2 && i in lgeqs[lgeq]
 end
-Base.done(idxs::HIndices{T, <:LPHRepresentation{T}}, idx::HIndex{T}) where {T} = _index2state(idxs.rep, idx)[1] == 3
 
 function getaβ(lp::LPHRepresentation{T}, idx::HIndex{T}) where {T}
     colrow, i, lgeq = _index2state(lp, idx)
@@ -200,6 +199,7 @@ function getaβ(lp::LPHRepresentation{T}, idx::HIndex{T}) where {T}
     end
     a, β
 end
+done(idxs::HIndices{T, <:LPHRepresentation{T}}, idx::HIndex{T}) where {T} = _index2state(idxs.rep, idx)[1] == 3
 Base.get(lp::LPHRepresentation{T}, idx::HIndex{T}) where {T} = valuetype(idx)(getaβ(lp, idx)...)
 
 dualtype(::Type{<:LPHRepresentation{T}}, ::Type{AT}) where {T, AT} = dualtype(Intersection{T, AT, Int}, AT)

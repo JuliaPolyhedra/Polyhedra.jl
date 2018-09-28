@@ -23,7 +23,11 @@ function mixednext(rep::MixedRep{T}, idx::IdxT) where {T, ElemT, IdxT<:Index{T, 
     while !done(Indices{T, ElemT}(rep), idx) && !isvalid(rep, idx)
         idx = IdxT(idx.value+1)
     end
-    idx
+    if done(Indices{T, ElemT}(rep), idx)
+        return nothing
+    else
+        return idx
+    end
 end
-Base.start(idx::Indices{T, ElemT, <:MixedRep{T}}) where {T, ElemT} = mixednext(idx.rep, Index{T, ElemT}(0))
+startindex(idx::Indices{T, ElemT, <:MixedRep{T}}) where {T, ElemT} = mixednext(idx.rep, Index{T, ElemT}(0))
 nextindex(rep::MixedRep{T}, idx::Index{T}) where {T} = mixednext(rep, idx)

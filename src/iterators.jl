@@ -4,37 +4,44 @@ abstract type AbstractRepIterator{T, ElemT, PT} end
 # For a RepIterator with only one representation, we fallback to the indexing interface, the index being the iterator state
 # A representation can overwrite this if it can do something more efficient or if it simply does not support indexing
 const SingleRepIterator{T, ElemT, RepT} = AbstractRepIterator{T, ElemT, Tuple{RepT}}
-# With MapRepIterator, we could have fulldim(RepT) != N or T' != T, with eachindex, we need to replace everything with fulldim(RepT), T'
-Base.eachindex(it::SingleRepIterator{<:Any, ElemT, RepT}) where {T, ElemT, RepT<:Rep{T}} = Indices{T, similar_type(ElemT, FullDim(RepT), T)}(it.ps[1])
-Base.start(it::SingleRepIterator{<:Any, ElemT, RepT})     where {T, ElemT, RepT<:Rep{T}} = start(eachindex(it))::Index{T, similar_type(ElemT, FullDim(RepT), T)}
-Base.done(it::SingleRepIterator, idx::Index) = done(eachindex(it), idx)
-function Base.next(it::SingleRepIterator, idx::Index)
-    #mapitem(it, 1, get(it.ps[1], idx)), nextindex(it.ps[1], idx)
+function Base.eachindex(it::SingleRepIterator{<:Any, ElemT,
+                                              RepT}) where {T, ElemT, RepT<:Rep{T}}
+    return Indices{T, similar_type(ElemT, FullDim(RepT), T)}(it.ps[1])
+end
+element_and_index(it, idx::Nothing) = nothing
+function element_and_index(it::SingleRepIterator, idx::Index)
     x = get(it.ps[1], idx)
     a = mapitem(it, 1, x)
-    b = nextindex(it.ps[1], idx)
-    a, b
+    return a, idx
+end
+function Base.iterate(it::SingleRepIterator{<:Any, ElemT,
+                                            RepT}) where {T, ElemT, RepT<:Rep{T}}
+    idx = undouble_it(iterate(eachindex(it)))::Union{Nothing, Index{T, similar_type(ElemT, FullDim(RepT), T)}}
+    return element_and_index(it, idx)
+end
+function Base.iterate(it::SingleRepIterator, idx::Index)
+    idx = undouble_it(iterate(eachindex(it), idx))::Union{Nothing, typeof(idx)}
+    return element_and_index(it, idx)
 end
 
 # If there are multiple representations, we need to iterate.
 # Builds a SingleRepIterator{ElemT} from p
-function checknext(it::AbstractRepIterator, i::Int, state)
-    while i <= length(it.ps) && (i == 0 || done(repit(it, i), state))
+function checknext(it::AbstractRepIterator, i::Int, item_state)
+    while i <= length(it.ps) && item_state === nothing
         i += 1
         if i <= length(it.ps)
-            state = start(repit(it, i))
+            item_state = iterate(repit(it, i))
         end
     end
-    i > length(it.ps) ? (i, nothing) : (i, state)
+    if item_state === nothing
+        return nothing
+    else
+        return item_state[1], (i, item_state[2])
+    end
 end
-Base.start(it::AbstractRepIterator) = checknext(it, 0, nothing)
-Base.done(it::AbstractRepIterator, state) = state[1] > length(it.ps)
-
-function Base.next(it::AbstractRepIterator, state)
-    i, substate = state
-    item, newsubstate = next(repit(it, i), substate)
-    newstate = checknext(it, i, newsubstate)
-    item, newstate
+Base.iterate(it::AbstractRepIterator) = checknext(it, 0, nothing)
+function Base.iterate(it::AbstractRepIterator, state)
+    return checknext(it, state[1], iterate(repit(it, state[1]), state[2]))
 end
 
 # RepIterator
@@ -59,9 +66,9 @@ end
 repit(it::MapRepIterator{T, ElemT}, i::Int) where {T, ElemT} = MapRepIterator{T, ElemT}((it.ps[i],), (j, item) -> it.f(i, item)) # j should be 1
 mapitem(it::MapRepIterator, i, item) = it.f(i, item)
 
-function Base.first(it::AbstractRepIterator)
-    next(it, start(it))[1]
-end
+#function Base.first(it::AbstractRepIterator)
+#    next(it, start(it))[1]
+#end
 FullDim(it::AbstractRepIterator{T, ElemT}) where {T, ElemT} = FullDim(ElemT)
 Base.eltype(it::AbstractRepIterator{T, ElemT}) where {T, ElemT} = ElemT
 function typed_map(f, d::FullDim, ::Type{T}, it::RepIterator{Tin, ElemT}) where {T, Tin, ElemT}
@@ -177,36 +184,45 @@ Base.eltype(it::AllRepIterator{T, ElemT}) where {T, ElemT} = ElemT
 Base.length(it::AllRepIterator) = 2length(it.itlin) + length(it.it)
 Base.isempty(it::AllRepIterator) = isempty(it.itlin) && isempty(it.it)
 
-function checknext(it::AllRepIterator, i, state)
-    while i <= 3 && ((i <= 2 && done(it.itlin, state)) || (i == 3 && done(it.it, state)))
+function checknext(it::AllRepIterator, i, item_state)
+    while i <= 3 && item_state === nothing
         i += 1
         if i <= 2
-            state = start(it.itlin)
+            @assert i >= 1
+            item_state = iterate(it.itlin)
         elseif i == 3
-            state = start(it.it)
-        end # Otherwise we leave state as it is to be type stable
+            item_state = iterate(it.it)
+        end
     end
-    i, state
+    if item_state === nothing
+        return nothing
+    else
+        if i <= 2
+            @assert i >= 1
+            item = splitlin(item_state[1], i)
+        else
+            @assert i == 3
+            item = item_state[1]
+        end
+        return item, (i, item_state[2])
+    end
 end
 
 splitlin(h::HyperPlane, i) = (i == 1 ? HalfSpace(h.a, h.β) : HalfSpace(-h.a, -h.β))
 #splitlin(s::SymPoint, i) = (i == 1 ? coord(s) : -coord(s))
 splitlin(l::Line, i) = (i == 1 ? Ray(coord(l)) : Ray(-coord(l)))
 
-Base.start(it::AllRepIterator) = checknext(it, 1, start(it.itlin))
-Base.done(::AllRepIterator, state) = state[1] > 3
-function Base.next(it::AllRepIterator, istate)
+Base.iterate(it::AllRepIterator) = checknext(it, 0, nothing)
+function Base.iterate(it::AllRepIterator, istate)
     i, state = istate
     if i <= 2
         @assert i >= 1
-        itemlin, newstate = next(it.itlin, state)
-        item = splitlin(itemlin, i)
+        item_state = iterate(it.itlin, state)
     else
         @assert i == 3
-        item, newstate = next(it.it, state)
+        item_state = iterate(it.it, state)
     end
-    newistate = checknext(it, i, newstate)
-    (item, newistate)
+    return checknext(it, i, item_state)
 end
 
 for (isVrep, loop_singularlin,

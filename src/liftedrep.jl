@@ -47,7 +47,7 @@ end
 Base.copy(ine::LiftedHRepresentation{T}) where {T} = LiftedHRepresentation{T}(copy(ine.A), copy(ine.linset))
 
 Base.isvalid(hrep::LiftedHRepresentation{T}, idx::HIndex{T}) where {T} = 0 < idx.value <= size(hrep.A, 1) && (idx.value in hrep.linset) == islin(idx)
-Base.done(idxs::HIndices{T, <:LiftedHRepresentation{T}}, idx::HIndex{T}) where {T} = idx.value > size(idxs.rep.A, 1)
+done(idxs::HIndices{T, <:LiftedHRepresentation{T}}, idx::HIndex{T}) where {T} = idx.value > size(idxs.rep.A, 1)
 Base.get(hrep::LiftedHRepresentation{T}, idx::HIndex{T}) where {T} = valuetype(idx)(-hrep.A[idx.value,2:end], hrep.A[idx.value,1])
 
 # V-Representation
@@ -115,5 +115,5 @@ function Base.isvalid(vrep::LiftedVRepresentation{T}, idx::VIndex{T}) where {T}
     @assert !isp || !isl # if isp && isl, it is a symmetric point but it is not allowed to mix symmetric points and points
     0 < idx.value <= nvreps(vrep) && isp == ispoint(idx) && isl == islin(idx)
 end
-Base.done(idxs::VIndices{T, <:LiftedVRepresentation{T}}, idx::VIndex{T}) where {T} = idx.value > size(idxs.rep.R, 1)
+done(idxs::VIndices{T, <:LiftedVRepresentation{T}}, idx::VIndex{T}) where {T} = idx.value > size(idxs.rep.R, 1)
 Base.get(vrep::LiftedVRepresentation{T}, idx::VIndex{T}) where {T} = valuetype(idx)(vrep.R[idx.value,2:end])
