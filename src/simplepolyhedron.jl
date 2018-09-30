@@ -61,7 +61,7 @@ function SimplePolyhedron{T, HRepT, VRepT}(d::FullDim, vits::VIt...; solver=noth
 end
 
 # Need fulltype in case the use does `intersect!` with another element
-SimplePolyhedron{T}(rep::Representation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T} = SimplePolyhedron{T}(MultivariatePolynomials.changecoefficienttype(rep, T), solver)
+SimplePolyhedron{T}(rep::Representation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T} = SimplePolyhedron{T}(change_coefficient_type(rep, T), solver)
 function SimplePolyhedron{T}(rep::HRepresentation{T}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T}
     HRepT = fulltype(typeof(rep))
     VRepT = dualtype(HRepT)

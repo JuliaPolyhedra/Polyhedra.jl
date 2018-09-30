@@ -28,7 +28,7 @@ Base.intersect(h1::HyperPlane{T}, h2::HalfSpace{T}) where {T} = hrep([h1], [h2])
 Base.intersect(h1::HalfSpace{T}, h2::HyperPlane{T}) where {T} = h2 ∩ h1
 Base.intersect(p1::HAny{T}, p2::HAny{T}, ps::HAny{T}...) where {T} = intersect(p1 ∩ p2, ps...)
 function Base.intersect(p::HAny...)
-    T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
+    T = promote_type(coefficient_type.(p)...)
     f(p) = convert(similar_type(typeof(p), T), p)
     intersect(f.(p)...)
 end
@@ -73,7 +73,7 @@ convexhull(l::Line{T}, r::Ray{T}) where {T} = vrep([l], [r])
 convexhull(r::Ray{T}, l::Line{T}) where {T} = convexhull(l, r)
 convexhull(p1::VAny{T}, p2::VAny{T}, ps::VAny{T}...) where {T} = convexhull(convexhull(p1, p2), ps...)
 function convexhull(p::VAny...)
-    T = promote_type(MultivariatePolynomials.coefficienttype.(p)...)
+    T = promote_type(coefficient_type.(p)...)
     f(p) = convert(similar_type(typeof(p), T), p)
     convexhull(f.(p)...)
 end

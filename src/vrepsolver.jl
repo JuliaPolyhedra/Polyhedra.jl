@@ -44,7 +44,7 @@ function MPBSI.optimize!(lpm::VRepPolyhedraModel)
     end
     prob = lpm.vrep
     N = fulldim(prob)
-    T = MultivariatePolynomials.coefficienttype(prob)
+    T = coefficient_type(prob)
     lpm.status = :Undecided
     if !haspoints(prob) && !haslines(prob) && !hasrays(prob)
         lpm.status = :Infeasible

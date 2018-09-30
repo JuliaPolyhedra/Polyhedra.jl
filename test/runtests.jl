@@ -5,9 +5,6 @@ using Compat.SparseArrays
 using Compat.LinearAlgebra
 using Compat.Test
 
-import MultivariatePolynomials
-MP = MultivariatePolynomials
-
 using StaticArrays
 
 include("utils.jl")

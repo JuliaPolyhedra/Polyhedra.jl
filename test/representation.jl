@@ -39,7 +39,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         ext = vrep(V)
         @test fulldim(ext) == 2
         @test (@inferred Polyhedra.FullDim(ine)) == 2
-        @test MP.coefficienttype(ext) == Int
+        @test coefficienttype(ext) == Int
         @test translate(ext, [1, 0]).V == [1 1; 2 0]
     end
 
@@ -85,7 +85,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
 
     @testset "eltype for some iterators is incorrect #7" begin
         function collecttest(it, exp_type)
-            @test MP.coefficienttype(it) == exp_type
+            @test Polyhedra.coefficient_type(it) == exp_type
             a = collect(it)
             @test typeof(a) = Vector{exp_type}
         end
@@ -208,12 +208,12 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         reps = [MixedMatHRep{T, Matrix{T}}, MixedMatVRep{T, Matrix{T}}, LiftedHRepresentation{T, Matrix{T}}, LiftedVRepresentation{T, Matrix{T}}]
         for rep in reps
             @test fulldim(rep) == -1
-            @test MP.coefficienttype(rep) == T
+            @test Polyhedra.coefficient_type(rep) == T
             changedrep = Polyhedra.similar_type(rep, M)
             @test fulldim(changedrep) == -1
             @test Polyhedra.FullDim(changedrep) == -1
             #@test (@inferred Polyhedra.FullDim(changedrep)) == M
-            @test MP.coefficienttype(changedrep) == T
+            @test Polyhedra.coefficient_type(changedrep) == T
         end
     end
 

@@ -6,8 +6,6 @@ using Compat
 using Compat.SparseArrays
 using Compat.LinearAlgebra
 
-using MultivariatePolynomials
-
 export PolyhedraLibrary, Polyhedron
 
 abstract type PolyhedraLibrary end
@@ -17,7 +15,7 @@ import MathProgBase
 const MPB = MathProgBase
 const MPBSI = MPB.SolverInterface
 
-MultivariatePolynomials.coefficienttype(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
+coefficient_type(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
 similar_type(::Type{<:Vector}, ::Int, ::Type{T}) where T = Vector{T}
 similar_type(::Type{SparseVector{S, IT}}, ::Int, ::Type{T}) where {S, IT, T} = SparseVector{T, IT}
 

@@ -178,7 +178,7 @@ const StructElement{T, AT} = Union{VStruct{T, AT}, HRepElement{T, AT}}
 
 FullDim(::Type{<:StructElement{T, AT}}) where {T, AT} = FullDim(AT)
 FullDim(el::StructElement) = FullDim(coord(el))
-MultivariatePolynomials.coefficienttype(::Union{RepElement{T}, Type{<:RepElement{T}}}) where {T} = T
+coefficient_type(::Union{RepElement{T}, Type{<:RepElement{T}}}) where {T} = T
 
 islin(::Union{Line, Type{<:Line}}) = true
 islin(::Union{AbstractVector, Ray, Type{<:Union{AbstractVector, Ray}}}) = false

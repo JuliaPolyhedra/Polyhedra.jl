@@ -34,7 +34,7 @@ Base.broadcastable(x::Union{Rep, PolyhedraLibrary}) = Ref(x)
 
 Returns the type of the coefficients used in the representation of `rep`.
 """
-MultivariatePolynomials.coefficienttype(rep::Union{Rep{T}, Type{<:Rep{T}}}) where {T} = T
+coefficient_type(rep::Union{Rep{T}, Type{<:Rep{T}}}) where {T} = T
 
 FullDim(rep::Type{<:VRep}) = FullDim(vvectortype(rep))
 FullDim(rep::Type{<:HRep}) = FullDim(hvectortype(rep))
@@ -79,8 +79,8 @@ Base.convert(RepT::Type{<:VRepresentation}, p::VRepresentation) = vconvert(RepT,
 # Used by SimpleVRepPolyhedraModel
 Base.convert(::Type{VRep}, p::VRepresentation) = p
 
-MultivariatePolynomials.changecoefficienttype(p::Rep{T}, ::Type{T}) where {T} = p
-MultivariatePolynomials.changecoefficienttype(p::Rep, T::Type) = convert(similar_type(typeof(p), T), p)
+change_coefficient_type(p::Rep{T}, ::Type{T}) where {T} = p
+change_coefficient_type(p::Rep, T::Type) = convert(similar_type(typeof(p), T), p)
 
 VRepresentation{T}(v::VRepresentation) where {T} = convert(similar_type(typeof(v), FullDim(v), T), v)
 HRepresentation{T}(h::HRepresentation) where {T} = convert(similar_type(typeof(h), FullDim(h), T), h)
