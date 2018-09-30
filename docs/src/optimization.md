@@ -5,7 +5,7 @@ The program is infeasible when the polyhedron is empty.
 
 ```@docs
 isempty
-MathProgBase.linprog
+Polyhedra.MathProgBase.linprog
 ```
 
 If the V-representation of the polyhedron has been computed, it can be used to solve the linear program.

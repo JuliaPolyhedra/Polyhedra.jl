@@ -16,7 +16,7 @@ In `Polyhedra.jl`, those representations are given the respective abstract types
 These functions can be called on both H-representation and V-representation
 ```@docs
 fulldim
-coefficient_type
+Polyhedra.coefficient_type
 ```
 
 ## H-representation
@@ -93,9 +93,9 @@ hasallhalfspaces
 
 ## V-representation
 
-The fundamental elements of an V-representation are the points and rays
+The fundamental elements of an V-representation are the points (represented by
+`AbstractVector`s and and rays
 ```@docs
-AbstractPoint
 Ray
 ```
 
