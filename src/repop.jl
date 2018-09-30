@@ -16,7 +16,7 @@ If `P1` and `P2` are both polyhedra (resp. H-representation), the resulting poly
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
 function Base.intersect(p::HRep...)
-    T = promote_coefficienttype(p)
+    T = promote_coefficient_type(p)
     similar(p, hmap((i, x) -> convert(similar_type(typeof(x), T), x), FullDim(p[1]), T, p...)...)
 end
 Base.intersect(p::HRep, el::HRepElement) = p ∩ intersect(el)
@@ -58,7 +58,7 @@ If `P1` and `P2` are both polyhedra (resp. V-representation), the resulting poly
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
 function convexhull(p::VRep...)
-    T = promote_coefficienttype(p)
+    T = promote_coefficient_type(p)
     similar(p, vmap((i, x) -> convert(similar_type(typeof(x), T), x), FullDim(p[1]), T, p...)...)
 end
 convexhull(p::VRep, el::VRepElement) = convexhull(p, convexhull(el))
@@ -120,13 +120,13 @@ end
 
 function hcartesianproduct(p1::HRep, p2::HRep)
     d = sum_fulldim(FullDim(p1), FullDim(p2))
-    T = promote_coefficienttype((p1, p2))
+    T = promote_coefficient_type((p1, p2))
     f = (i, x) -> zeropad(x, i == 1 ? FullDim(p2) : neg_fulldim(FullDim(p1)))
     similar((p1, p2), d, T, hmap(f, d, T, p1, p2)...)
 end
 function vcartesianproduct(p1::VRep, p2::VRep)
     d = sum_fulldim(FullDim(p1), FullDim(p2))
-    T = promote_coefficienttype((p1, p2))
+    T = promote_coefficient_type((p1, p2))
     # Always type of first arg
     f1 = (i, x) -> zeropad(x, FullDim(p2))
     f2 = (i, x) -> zeropad(x, neg_fulldim(FullDim(p1)))

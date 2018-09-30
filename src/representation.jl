@@ -1,4 +1,4 @@
-export Representation, HRepresentation, VRepresentation, coefficienttype, fulldim
+export Representation, HRepresentation, VRepresentation, fulldim
 export RepIterator
 export Rep
 
@@ -30,7 +30,7 @@ const VRep{T} = Union{VRepresentation{T}, Polyhedron{T}}
 Base.broadcastable(x::Union{Rep, PolyhedraLibrary}) = Ref(x)
 
 """
-    coefficienttype(rep::Rep)
+    coefficient_type(rep::Rep)
 
 Returns the type of the coefficients used in the representation of `rep`.
 """
@@ -90,22 +90,22 @@ VRep{T}(p::Polyhedron) where {T} = Polyhedron{T}(p)
 HRep{T}(h::HRepresentation) where {T} = HRepresentation{T}(h)
 HRep{T}(p::Polyhedron) where {T} = Polyhedron{T}(p)
 
-# FIXME it does not get called. The calls always go throug vconvert and hconvert. Use changecoefficienttype instead
+# FIXME it does not get called. The calls always go throug vconvert and hconvert. Use changecoefficient_type instead
 #function Base.convert{T, RepT<:Representation}(::Type{Representation{T}}, rep::RepT)
 #  if fulldim(RepT) != N
 #    error("Cannot convert representations of the same dimension")
 #  end
-#  Base.convert(changecoefficienttype(RepT, T), rep)
+#  Base.convert(changecoefficient_type(RepT, T), rep)
 #end
 #function Base.convert{T, RepT<:HRepresentation}(::Type{HRepresentation{T}}, rep::RepT)
 #  if fulldim(RepT) != N
 #    error("Cannot convert representations of the same dimension")
 #  end
-#  Base.convert(changecoefficienttype(RepT, T), rep)
+#  Base.convert(changecoefficient_type(RepT, T), rep)
 #end
 #function Base.convert{S, RepT<:VRepresentation}(::Type{VRepresentation{S}}, rep::RepT)
 #  if fulldim(RepT) != M
 #    error("Cannot convert representations of the same dimension")
 #  end
-#  Base.convert(changecoefficienttype(RepT, S), rep)
+#  Base.convert(changecoefficient_type(RepT, S), rep)
 #end

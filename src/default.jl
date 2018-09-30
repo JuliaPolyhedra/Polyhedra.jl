@@ -134,11 +134,11 @@ Creates a representation with a type similar to `p` of a polyhedron of full dime
 The type of the result will be chosen closer to the type of `p[1]`.
 """
 Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...) where {T} = default_similar(p, d, T, it...)
-function promote_coefficienttype(p::Tuple{Vararg{Rep}})
+function promote_coefficient_type(p::Tuple{Vararg{Rep}})
     promote_type(coefficient_type.(p)...)
 end
 function Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, it::It...)
-    T = promote_coefficienttype(p)
+    T = promote_coefficient_type(p)
     similar(p, d, T, it...)
 end
 function Base.similar(p::Tuple{Vararg{Rep}}, it::It...)

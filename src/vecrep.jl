@@ -152,7 +152,7 @@ mutable struct PointsHull{T, AT, D<:FullDim} <: VPolytope{T}
     end
 end
 function PointsHull(d::FullDim, points::PointIt)
-    return PointsHull{coefficienttype(eltype(points)), eltype(points),
+    return PointsHull{coefficient_type(eltype(points)), eltype(points),
                       typeof(d)}(d, points)
 end
 FullDim(v::PointsHull) = v.d

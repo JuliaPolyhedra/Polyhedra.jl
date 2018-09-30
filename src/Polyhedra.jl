@@ -57,7 +57,7 @@ function similar_type(::Type{ET}, ::Type{Tout}) where {Tout, ET<:Union{HRepEleme
     similar_type(ET, FullDim(ET), Tout)
 end
 function similar_type(::Type{ET}, d::FullDim) where {ET<:Union{HRepElement, VRepElement, Rep}}
-    similar_type(ET, d, coefficienttype(ET))
+    similar_type(ET, d, coefficient_type(ET))
 end
 
 # Operations

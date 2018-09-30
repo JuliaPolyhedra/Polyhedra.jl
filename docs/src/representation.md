@@ -16,7 +16,7 @@ In `Polyhedra.jl`, those representations are given the respective abstract types
 These functions can be called on both H-representation and V-representation
 ```@docs
 fulldim
-coefficienttype
+coefficient_type
 ```
 
 ## H-representation
