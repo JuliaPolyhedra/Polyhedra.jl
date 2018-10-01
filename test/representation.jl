@@ -29,7 +29,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         ine = hrep(A, b, linset)
         @test fulldim(ine) == 2
         @test (@inferred Polyhedra.FullDim(ine)) == 2
-        @test Polyhedra.coefficient_type *(ine) == Int
+        @test Polyhedra.coefficient_type(ine) == Int
         @test translate(ine, [1, 0]).b == [2, -1, 0]
 
         V = [0 1; 1 0]
@@ -39,7 +39,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         ext = vrep(V)
         @test fulldim(ext) == 2
         @test (@inferred Polyhedra.FullDim(ine)) == 2
-        @test Polyhedra.coefficient_type *(ext) == Int
+        @test Polyhedra.coefficient_type(ext) == Int
         @test translate(ext, [1, 0]).V == [1 1; 2 0]
     end
 
@@ -96,7 +96,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         shss = [@inferred HalfSpace((@SVector [4., 5., 6.]), 8)]
         @test eltype(shss) == HalfSpace{Float64, SVector{3, Float64}}
         function htest(hr::Polyhedra.HRepresentation, AT::Type{<:AbstractVector})
-            @test (@inferred Polyhedra.coefficient_type *(hr)) == Float64
+            @test (@inferred Polyhedra.coefficient_type(hr)) == Float64
             @test                                               (@inferred eltype(allhalfspaces(hr)))  == HalfSpace{Float64, AT}
             @test                                               (@inferred collect(allhalfspaces(hr))) isa Vector{HalfSpace{Float64, AT}}
             @test isempty(allhalfspaces(hr)) == iszero(nallhalfspaces(hr))
@@ -131,7 +131,7 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
         sls = [Line(@SVector [0, 1])]
         @test eltype(sps) == SVector{2, Int}
         function vtest(vr::VRepresentation, AT::Type{<:AbstractVector})
-            @test (@inferred Polyhedra.coefficient_type *(vr)) == Int
+            @test (@inferred Polyhedra.coefficient_type(vr)) == Int
             @test (@inferred Polyhedra.pointtype(vr))    == (@inferred eltype(points(vr)))     == AT
             @test                                           (@inferred collect(points(vr)))    isa Vector{AT}
             @test isempty(points(vr)) == iszero(npoints(vr))
@@ -275,10 +275,10 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
     end
 
     @testset "Building rep with different type" begin
-        @test Polyhedra.coefficient_type *(MixedMatHRep{Float64}([1 2; 3 4], [1, 2], BitSet())) == Float64
-        @test Polyhedra.coefficient_type *(MixedMatVRep{Float64}([1 2; 3 4], [1 2; 3 4], BitSet())) == Float64
-        @test Polyhedra.coefficient_type *(LiftedHRepresentation{Float64}([1 2; 3 4])) == Float64
-        @test Polyhedra.coefficient_type *(LiftedVRepresentation{Float64}([1 2; 3 4])) == Float64
+        @test Polyhedra.coefficient_type(MixedMatHRep{Float64}([1 2; 3 4], [1, 2], BitSet())) == Float64
+        @test Polyhedra.coefficient_type(MixedMatVRep{Float64}([1 2; 3 4], [1 2; 3 4], BitSet())) == Float64
+        @test Polyhedra.coefficient_type(LiftedHRepresentation{Float64}([1 2; 3 4])) == Float64
+        @test Polyhedra.coefficient_type(LiftedVRepresentation{Float64}([1 2; 3 4])) == Float64
     end
 
     @testset "Chebyshev center" begin
