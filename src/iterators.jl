@@ -17,6 +17,7 @@ end
 function Base.iterate(it::SingleRepIterator{<:Any, ElemT,
                                             RepT}) where {T, ElemT, RepT<:Rep{T}}
     idx = undouble_it(iterate(eachindex(it)))::Union{Nothing, Index{T, similar_type(ElemT, FullDim(RepT), T)}}
+    ccall(:jl_breakpoint, Cvoid, (Any,), idx)
     return element_and_index(it, idx)
 end
 function Base.iterate(it::SingleRepIterator, idx::Index)
@@ -325,8 +326,8 @@ function fillvits(d::FullDim, lines::ElemIt{Line{T, AT}},
     return points, lines, rays
 end
 
-FullDim_hreps(p...) = FullDim_rec(p...), hreps(p...)...
-FullDim_vreps(p...) = FullDim_rec(p...), vreps(p...)...
+FullDim_hreps(p...) = FullDim(p[1]), hreps(p...)...
+FullDim_vreps(p...) = FullDim(p[1]), vreps(p...)...
 
 hreps(p::HRep{T}...) where {T} = hyperplanes(p...), halfspaces(p...)
 hreps(p::HAffineSpace{T}...) where {T} = tuple(hyperplanes(p...))

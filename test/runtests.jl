@@ -1,9 +1,8 @@
 using Polyhedra
 
-using Compat
-using Compat.SparseArrays
-using Compat.LinearAlgebra
-using Compat.Test
+using SparseArrays
+using LinearAlgebra
+using Test
 
 using StaticArrays
 

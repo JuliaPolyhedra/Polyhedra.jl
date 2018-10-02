@@ -36,14 +36,7 @@ function SimplePolyhedron{T, HRepT, VRepT}(vrep::VRepresentation, solver::Union{
     SimplePolyhedron{T, HRepT, VRepT}(convert(VRepT, vrep), solver)
 end
 
-function FullDim(p::SimplePolyhedron)
-    if p.hrep === nothing || FullDim(p.hrep) == -1
-        return FullDim(p.vrep)
-    else
-        return FullDim(p.hrep)
-    end
-end
-
+FullDim(p::SimplePolyhedron) = FullDim_rep(p.hrep, p.vrep)
 library(::Union{SimplePolyhedron{T}, Type{<:SimplePolyhedron{T}}}) where {T} = SimplePolyhedraLibrary{T}()
 default_solver(p::SimplePolyhedron) = p.solver
 supportssolver(::Type{<:SimplePolyhedron}) = true

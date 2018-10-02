@@ -1,3 +1,5 @@
+using SparseArrays
+
 function sparsetest(lib::PolyhedraLibrary)
     # Sparse H-representation, fixandeliminate and ⊆
     # 3x_1 + 2x_2        ≤  2

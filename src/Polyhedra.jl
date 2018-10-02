@@ -2,9 +2,8 @@ __precompile__()
 
 module Polyhedra
 
-using Compat
-using Compat.SparseArrays
-using Compat.LinearAlgebra
+using SparseArrays
+using LinearAlgebra
 
 export PolyhedraLibrary, Polyhedron
 
