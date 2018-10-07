@@ -1,36 +1,10 @@
 using Polyhedra
-
-using Compat
-using Compat.SparseArrays
-using Compat.LinearAlgebra
-using Compat.Test
-
-using StaticArrays
-
-include("utils.jl")
-
-include("solvers.jl")
-
-include("elements.jl")
-include("comp.jl")
-include("representation.jl")
-include("polyhedron.jl")
-
-include("redundancy.jl")
-include("doubledescription.jl")
-
-include("interval.jl")
-
-include("polyhedra_to_lpqp.jl")
-include("default.jl")
-
-# TODO fix on Julia v1.0
-#include("show.jl")
-
-include("polyhedra.jl")
-for (arith, T) in (("floating point", Float64), ("exact", Rational{BigInt}))
-    @testset "Polyhedra tests in $arith arithmetic" begin
-        # TODO readd empty
-        polyhedratest(SimplePolyhedraLibrary{T}(lp_solver), ["empty", "board"])
+using Test
+h = Polyhedra.HyperPlanesIntersection(2, [Polyhedra.HyperPlane{Int}([0, 1], 1), Polyhedra.HyperPlane{Int}([0, 1], -1)])
+let
+    i = 0
+    for a in hyperplanes(h)
+        i += 1
     end
+    @test i == 0
 end
