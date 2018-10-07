@@ -1,8 +1,6 @@
-export HyperPlanesIntersection, LinesHull, affinehull, linespace
-
 # It is easy to go from H-rep of affine space to V-rep of affine space by computing the kernel of a matrix using RowEchelon
 # However, it is really worth it since Base.in for an HRepElement in HyperPlanesIntersection and Base.in for an VRepElement in LinesHull are false already.
-function remproj(x::RepElement{<:Integer}, l::RepElement{<:Integer})
+function remproj(x::HRepElement{<:Integer}, l::HRepElement{<:Integer})
     # generates large numbers but keeps the type integer
     x * dot(coord(l), coord(l)) - l * dot(coord(x), coord(l))
 end
@@ -94,85 +92,6 @@ function removeduplicates(L::HyperPlanesIntersection{T, AT}) where {T, AT}
     for h in hyperplanes(L)
         if !(h in H)
             intersect!(H, h)
-        end
-    end
-    H
-end
-
-# V-representation
-struct VEmptySpace{T, AT, D <: FullDim} <: VLinearSpace{T}
-    d::D
-end
-FullDim(v::VEmptySpace) = v.d
-function emptyspace(v::VRep{T}) where {T}
-    d = FullDim(v)
-    return VEmptySpace{T, vvectortype(typeof(v)), typeof(d)}(d)
-end
-
-Base.in(v::VRepElement, L::VEmptySpace) = isapproxzero(v)
-
-"""
-    vrep(lines::LineIt; d::FullDim)
-
-Creates an affine space of full dimension `d` from the list of lines `lines`.
-
-### Examples
-```julia
-vrep([Line([1, 0, 0]), Line([0, 1, 0])])
-```
-creates the 2-dimensional affine subspace containing all the points ``(x_1, x_2, 0)``, i.e. the ``x_1````x_2``-plane.
-"""
-vrep(lines::LineIt; d::FullDim = FullDim_rec(lines)) = LinesHull(d, lines)
-
-# Representation of an affine space containing the origin by the minkowsky sum of lines
-struct LinesHull{T, AT, D<:FullDim} <: VLinearSpace{T}
-    d::D
-    lines::Vector{Line{T, AT}}
-    function LinesHull{T, AT, D}(d::FullDim, lines::LineIt{T}) where {T, AT, D}
-        new{T, AT, D}(FullDim_convert(D, d), lazy_collect(lines))
-    end
-end
-function LinesHull(d::FullDim, it::ElemIt{Line{T, AT}}) where {T, AT}
-    return LinesHull{T, AT, typeof(d)}(d, it)
-end
-LinesHull{T, AT}(d::FullDim) where {T, AT} = LinesHull(d, Line{T, AT}[])
-
-FullDim(v::LinesHull) = v.d
-vvectortype(::Type{<:LinesHull{T, AT}}) where {T, AT} = AT
-similar_type(PT::Type{<:LinesHull}, d::FullDim, ::Type{T}) where T = LinesHull{T, similar_type(vvectortype(PT), d, T), typeof(d)}
-
-convexhull!(L::LinesHull, l::Line) = push!(L.lines, l)
-
-@vecrepelem LinesHull Line lines
-
-conetype(::Type{LinesHull{T, AT, D}}) where {T, AT, D} = RaysHull{T, AT, D}
-vreptype(::Type{LinesHull{T, AT, D}}) where {T, AT, D} = Hull{T, AT, D}
-
-# Returns a LinesHull representing the following set (TODO does it have a name?, does someone has a reference talking about it ?)
-# {x | ⟨a, x⟩ = 0 ∀ a such that (α, β) is a valid hyperplane for p}
-function linespace(v::VRep, current=false)
-    if !current
-        detectvlinearity!(v)
-    end
-    LinesHull(FullDim(v), lines(v))
-end
-
-function remproj(v::VRepElement, L::LinesHull)
-    for l in lines(L)
-        v = remproj(v, l)
-    end
-    v
-end
-function Base.in(v::VRepElement, L::LinesHull)
-    v = remproj(v, L)
-    isapproxzero(v)
-end
-
-function removeduplicates(L::LinesHull{T, AT}) where {T, AT}
-    V = LinesHull{T, AT}()
-    for l in lines(L)
-        if !(l in H)
-            convexhull!(H, h)
         end
     end
     H

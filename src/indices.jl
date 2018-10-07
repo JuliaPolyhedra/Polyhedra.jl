@@ -15,17 +15,6 @@ const HyperPlaneIndex{T} = Index{T, <:HyperPlane{T}}
 const HalfSpaceIndex{T} = Index{T, <:HalfSpace{T}}
 const HIndex{T} = Union{HyperPlaneIndex{T}, HalfSpaceIndex{T}}
 
-#const SymPointIndex{T} = Index{T, <:SymPoint{T}}
-const PointIndex{T} = Index{T, <:AbstractVector{T}}
-#const PIndex{T} = Union{SymPointIndex{T}, PointIndex{T}}
-const PIndex{T} = PointIndex{T}
-const LineIndex{T} = Index{T, <:Line{T}}
-const RayIndex{T} = Index{T, <:Ray{T}}
-const RIndex{T} = Union{LineIndex{T}, RayIndex{T}}
-const VIndex{T} = Union{PIndex{T}, RIndex{T}}
-islin(::Union{Index{T, ElemT}, Type{Index{T, ElemT}}}) where {T, ElemT} = islin(ElemT)
-ispoint(::Union{Index{T, ElemT}, Type{Index{T, ElemT}}}) where {T, ElemT} = ispoint(ElemT)
-
 """
     Indices{T, ElemT, RepT<:Rep{T}}
 
@@ -45,15 +34,6 @@ const HyperPlaneIndices{T, RepT} = Indices{T, <:HyperPlane{T}, RepT}
 const HalfSpaceIndices{T, RepT} = Indices{T, <:HalfSpace{T}, RepT}
 const HIndices{T, RepT} = Union{HyperPlaneIndices{T, RepT}, HalfSpaceIndices{T, RepT}}
 
-#const SymPointIndices{T, RepT} = Indices{T, <:SymPoint{T}, RepT}
-const PointIndices{T, RepT} = Indices{T, <:AbstractVector{T}, RepT}
-#const PIndices{T, RepT} = Union{SymPointIndices{T, RepT}, PointIndices{T, RepT}}
-const PIndices{T, RepT} = PointIndices{T, RepT}
-const LineIndices{T, RepT} = Indices{T, <:Line{T}, RepT}
-const RayIndices{T, RepT} = Indices{T, <:Ray{T}, RepT}
-const RIndices{T, RepT} = Union{LineIndices{T, RepT}, RayIndices{T, RepT}}
-const VIndices{T, RepT} = Union{PIndices{T, RepT}, RIndices{T, RepT}}
-
 undouble_it(idx::Nothing) = nothing
 double_it(idx::Nothing) = nothing
 undouble_it(idx::NTuple{2, Index}) = idx[1]
@@ -69,7 +49,6 @@ end
 # For polyhedron, redirect to hrep or vrep depending on whether it is an
 # HRepElement or VRepElement
 repfor(p::Polyhedron, ::Type{<:HRepElement}) = hrep(p)
-repfor(p::Polyhedron, ::Type{<:VRepElement}) = vrep(p)
 function startindex(idxs::Indices{T, ElemT,
                                   <:Polyhedron{T}}) where {T, ElemT}
     return startindex(Indices{T, ElemT}(repfor(idxs.rep, ElemT)))
@@ -105,35 +84,6 @@ abstract type HAffineSpace{T} <: HRepresentation{T} end
 
 _promote_reptype(P1::Type{<:HAffineSpace}, ::Type{<:HAffineSpace}) = P1
 _promote_reptype(P1::Type{<:HAffineSpace}, ::Type{<:HRep}) = hreptype(P1)
-
-abstract type VPolytope{T} <: VRepresentation{T} end
-@norepelem VPolytope Line
-@norepelem VPolytope Ray
-
-_promote_reptype(P1::Type{<:VPolytope}, ::Type{<:VPolytope}) = P1
-_promote_reptype(P1::Type{<:VPolytope}, ::Type{<:VRep}) = vreptype(P1)
-
-abstract type VSymPolytope{T} <: VPolytope{T} end
-@norepelem VSymPolytope Point
-
-abstract type VCone{T} <: VRepresentation{T} end
-#@norepelem VCone SymPoint
-# See issue #28
-Base.length(idxs::PointIndices{T, <:VCone{T}}) where {T} = hasallrays(idxs.rep) ? 1 : 0
-Base.isempty(idxs::PointIndices{T, <:VCone{T}}) where {T} = !hasallrays(idxs.rep)
-Base.get(L::VCone{T}, ::PointIndex{T}) where {T} = origin(vvectortype(typeof(L)), fulldim(L))
-startindex(idxs::PointIndices{T, <:VCone{T}}) where {T} = hasallrays(idxs.rep) ? eltype(idxs)(1) : nothing
-nextindex(::VCone{T}, idx::PointIndex{T}) where {T} = nothing
-
-_promote_reptype(P1::Type{<:VCone}, ::Type{<:VCone}) = P1
-_promote_reptype(P1::Type{<:VCone}, ::Type{<:VRep}) = vreptype(P1)
-
-abstract type VLinearSpace{T} <: VCone{T} end
-@norepelem VLinearSpace Ray
-
-_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VLinearSpace}) = P1
-_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VCone}) = conetype(P1)
-_promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VRep}) = vreptype(P1)
 
 """
 The representation `rep` contain the elements `elem` inside a vector in the field `field`.

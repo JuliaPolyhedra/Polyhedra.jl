@@ -83,9 +83,7 @@ end
 #       for Julia to know them inside the """ ... """ of the docstrings
 singular = HorV = HorVRep = horvrep = singularlin = plural = plurallin = lenp = isnotemptyp = repexem = listexem = :_
 
-for (isVrep, elt, loop_singular) in [(true, :AbstractVector, :point),
-                                     (true, :Line, :line), (true, :Ray, :ray),
-                                     (false, :HyperPlane, :hyperplane), (false, :HalfSpace, :halfspace)]
+for (isVrep, elt, loop_singular) in [(false, :HyperPlane, :hyperplane), (false, :HalfSpace, :halfspace)]
     global singular = loop_singular
     if isVrep
         vectortype = :vvectortype
@@ -210,7 +208,6 @@ end
 
 splitlin(h::HyperPlane, i) = (i == 1 ? HalfSpace(h.a, h.β) : HalfSpace(-h.a, -h.β))
 #splitlin(s::SymPoint, i) = (i == 1 ? coord(s) : -coord(s))
-splitlin(l::Line, i) = (i == 1 ? Ray(coord(l)) : Ray(-coord(l)))
 
 Base.iterate(it::AllRepIterator) = checknext(it, 0, nothing)
 function Base.iterate(it::AllRepIterator, istate)
@@ -228,8 +225,6 @@ end
 for (isVrep, loop_singularlin,
      loop_singular, loop_repexem,
      loop_listexem) in [#(true, :sympoint, :point, "convexhull(SymPoint([1, 0]), [0, 1])", "[1, 0], [-1, 0], [0, 1]"),
-                   (true, :line, :ray, "Line([1, 0]) + Ray([0, 1])",
-                    "Ray([1, 0]), Ray([-1, 0]), Ray([0, 1])"),
                    (false, :hyperplane, :halfspace,
                     "HyperPlane([1, 0], 1) ∩ HalfSpace([0, 1], 1)",
                     "HalfSpace([1, 0]), HalfSpace([-1, 0]), HalfSpace([0, 1])")]
@@ -296,37 +291,9 @@ const HyperPlaneIt{T} = ElemIt{<:HyperPlane{T}}
 const HalfSpaceIt{T} = ElemIt{<:HalfSpace{T}}
 const HIt{T} = Union{HyperPlaneIt{T}, HalfSpaceIt{T}}
 
-const PointIt{T} = ElemIt{<:AbstractVector{T}}
-const PIt{T} = PointIt{T}
-const LineIt{T} = ElemIt{<:Line{T}}
-const RayIt{T} = ElemIt{<:Ray{T}}
-const RIt{T} = Union{LineIt{T}, RayIt{T}}
-const VIt{T} = Union{PIt{T}, RIt{T}}
-
-const It{T} = Union{HIt{T}, VIt{T}}
-
-function fillvits(d::FullDim, points::ElemIt{AT},
-                  lines::ElemIt{Line{T, AT}}=Line{T, AT}[],
-                  rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT<:AbstractVector{T}}
-    if isempty(points) && !(isempty(lines) && isempty(rays))
-        vconsistencyerror()
-    end
-    return points, lines, rays
-end
-function fillvits(d::FullDim, lines::ElemIt{Line{T, AT}},
-                  rays::ElemIt{Ray{T, AT}}=Ray{T, AT}[]) where {T, AT}
-    d = FullDim_rec(lines, rays)
-    N = fulldim(d)
-    if isempty(lines) && isempty(rays)
-        points = AT[]
-    else
-        points = [origin(AT, N)]
-    end
-    return points, lines, rays
-end
+const It{T} = HIt{T}
 
 FullDim_hreps(p...) = FullDim_rec(p...), hreps(p...)...
-FullDim_vreps(p...) = FullDim_rec(p...), vreps(p...)...
 
 hreps(p::HRep{T}...) where {T} = hyperplanes(p...), halfspaces(p...)
 hreps(p::HAffineSpace{T}...) where {T} = tuple(hyperplanes(p...))
@@ -336,20 +303,3 @@ hmap(f, d::FullDim, ::Type{T}, p::HAffineSpace...) where T = tuple(maphyperplane
 
 hconvert(RepT::Type{<:HRep{T}}, p::HRep{T}) where {T} = constructpolyhedron(RepT, FullDim(p), (p,), hreps(p)...)
 hconvert(RepT::Type{<:HRep{T}}, p::HRep)    where {T} = constructpolyhedron(RepT, FullDim(p), (p,), RepIterator{T}.(hreps(p))...)
-
-vreps(p...) = preps(p...)..., rreps(p...)...
-preps(p::VRep...) = tuple(points(p...))
-preps(p::VCone...) = tuple()
-rreps(p::VRep...) = lines(p...), rays(p...)
-rreps(p::VLinearSpace...) = tuple(lines(p...))
-rreps(p::VPolytope...) = tuple()
-
-vmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = pmap(f, d, T, p...)..., rmap(f, d, T, p...)...
-pmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = tuple(mappoints(f, d, T, p...))
-pmap(f, d::FullDim, ::Type, p::VCone...) = tuple()
-rmap(f, d::FullDim, ::Type{T}, p::VRep...) where T = maplines(f, d, T, p...), maprays(f, d, T, p...)
-rmap(f, d::FullDim, ::Type{T}, p::VLinearSpace...) where T = tuple(maplines(f, d, T, p...))
-rmap(f, d::FullDim, ::Type, p::VPolytope...) = tuple()
-
-vconvert(RepT::Type{<:VRep{T}}, p::VRep{T}) where {T} = constructpolyhedron(RepT, FullDim(p), (p,), vreps(p)...)
-vconvert(RepT::Type{<:VRep{T}}, p::VRep)    where {T} = constructpolyhedron(RepT, FullDim(p), (p,), RepIterator{T}.(vreps(p))...)
