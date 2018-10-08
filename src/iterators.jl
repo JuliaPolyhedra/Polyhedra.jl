@@ -1,33 +1,51 @@
+abstract type AbstractRepIterator{T, ElemT} end
+
 # Subtyping AbstractVector{ElemT} make Base think that RepIterator implements indexing e.g. for copy!
-abstract type AbstractRepIterator{T, ElemT, PT} end
+abstract type AbstractSingleRepIterator{T, ElemT, PT} <: AbstractRepIterator{T, ElemT} end
+
+# SingleRepIterator
+struct SingleRepIterator{T, ElemT, PT<:Rep{T}} <: AbstractSingleRepIterator{T, ElemT, PT}
+    p::PT
+    function SingleRepIterator{T, ElemT}(p::PT) where {T, ElemT, PT<:Rep{T}}
+        new{T, ElemT, PT}(p)
+    end
+end
+mapitem(it::SingleRepIterator, item) = item
+
+# SingleMapRepIterator
+struct SingleMapRepIterator{T, ElemT, PT<:Rep} <: AbstractSingleRepIterator{T, ElemT, PT}
+    p::PT
+    f::Function
+    function SingleMapRepIterator{T, ElemT}(p::PT, f::Function) where {T, ElemT, PT<:Rep}
+        new{T, ElemT, PT}(p, f)
+    end
+end
+mapitem(it::SingleMapRepIterator, item) = it.f(item)
 
 # For a RepIterator with only one representation, we fallback to the indexing interface, the index being the iterator state
 # A representation can overwrite this if it can do something more efficient or if it simply does not support indexing
-const SingleRepIterator{T, ElemT, RepT} = AbstractRepIterator{T, ElemT, Tuple{RepT}}
-function Base.eachindex(it::SingleRepIterator{<:Any, ElemT,
+function Base.eachindex(it::AbstractSingleRepIterator{<:Any, ElemT,
                                               RepT}) where {T, ElemT, RepT<:Rep{T}}
-    return Indices{T, similar_type(ElemT, FullDim(RepT), T)}(it.ps[1])
+    return Indices{T, similar_type(ElemT, FullDim(RepT), T)}(it.p)
 end
 element_and_index(it, idx::Nothing) = nothing
-function element_and_index(it::SingleRepIterator, idx::Index)
-    x = get(it.ps[1], idx)
-    a = mapitem(it, 1, x)
-    return a, idx
+function element_and_index(it::AbstractSingleRepIterator, idx::Index)
+    return mapitem(it, get(it.p, idx)), idx
 end
-function Base.iterate(it::SingleRepIterator{<:Any, ElemT,
-                                            RepT}) where {T, ElemT, RepT<:Rep{T}}
-    idx = undouble_it(iterate(eachindex(it)))::Union{Nothing, Index{T, similar_type(ElemT, FullDim(RepT), T)}}
-    ccall(:jl_breakpoint, Cvoid, (Any,), idx)
+function Base.iterate(it::AbstractSingleRepIterator)
+    idx = undouble_it(iterate(eachindex(it)))
     return element_and_index(it, idx)
 end
-function Base.iterate(it::SingleRepIterator, idx::Index)
+function Base.iterate(it::AbstractSingleRepIterator, idx::Index)
     idx = undouble_it(iterate(eachindex(it), idx))::Union{Nothing, typeof(idx)}
     return element_and_index(it, idx)
 end
 
+abstract type AbstractMultiRepIterator{T, ElemT, PT} <: AbstractRepIterator{T, ElemT} end
+
 # If there are multiple representations, we need to iterate.
 # Builds a SingleRepIterator{ElemT} from p
-function checknext(it::AbstractRepIterator, i::Int, item_state)
+function checknext(it::AbstractMultiRepIterator, i::Int, item_state)
     while i <= length(it.ps) && item_state === nothing
         i += 1
         if i <= length(it.ps)
@@ -40,23 +58,22 @@ function checknext(it::AbstractRepIterator, i::Int, item_state)
         return item_state[1], (i, item_state[2])
     end
 end
-Base.iterate(it::AbstractRepIterator) = checknext(it, 0, nothing)
-function Base.iterate(it::AbstractRepIterator, state)
+Base.iterate(it::AbstractMultiRepIterator) = checknext(it, 0, nothing)
+function Base.iterate(it::AbstractMultiRepIterator, state)
     return checknext(it, state[1], iterate(repit(it, state[1]), state[2]))
 end
 
 # RepIterator
-struct RepIterator{T, ElemT, PT<:Tuple{Vararg{Rep{T}}}} <: AbstractRepIterator{T, ElemT, PT}
+struct RepIterator{T, ElemT, PT<:Tuple{Vararg{Rep{T}}}} <: AbstractMultiRepIterator{T, ElemT, PT}
     ps::PT
     function RepIterator{T, ElemT}(ps::PT) where {T, ElemT, PT<:Tuple{Vararg{Rep{T}}}}
         new{T, ElemT, PT}(ps)
     end
 end
-repit(it::RepIterator{T, ElemT}, i::Int) where {T, ElemT} = RepIterator{T, ElemT}((it.ps[i],))
-mapitem(it::RepIterator, i, item) = item
+repit(it::RepIterator{T, ElemT}, i::Int) where {T, ElemT} = SingleRepIterator{T, ElemT}(it.ps[i])
 
 # MapRepIterator
-struct MapRepIterator{T, ElemT, PT} <: AbstractRepIterator{T, ElemT, PT}
+struct MapRepIterator{T, ElemT, PT} <: AbstractMultiRepIterator{T, ElemT, PT}
     ps::PT
     f::Function
     function MapRepIterator{T, ElemT}(ps::PT, f::Function) where {T, ElemT, PT<:Tuple}
@@ -64,20 +81,15 @@ struct MapRepIterator{T, ElemT, PT} <: AbstractRepIterator{T, ElemT, PT}
     end
 end
 # T is the coeftype, it can be different that the ones of is.ps[i]
-repit(it::MapRepIterator{T, ElemT}, i::Int) where {T, ElemT} = MapRepIterator{T, ElemT}((it.ps[i],), (j, item) -> it.f(i, item)) # j should be 1
-mapitem(it::MapRepIterator, i, item) = it.f(i, item)
+repit(it::MapRepIterator{T, ElemT}, i::Int) where {T, ElemT} = SingleMapRepIterator{T, ElemT}(it.ps[i], item -> it.f(i, item))
 
-#function Base.first(it::AbstractRepIterator)
-#    next(it, start(it))[1]
-#end
-FullDim(it::AbstractRepIterator{T, ElemT}) where {T, ElemT} = FullDim(ElemT)
 Base.eltype(it::AbstractRepIterator{T, ElemT}) where {T, ElemT} = ElemT
-function typed_map(f, d::FullDim, ::Type{T}, it::RepIterator{Tin, ElemT}) where {T, Tin, ElemT}
-    MapRepIterator{T, similar_type(ElemT, d, T)}(it.ps, f)
+function typed_map(f::Function, ::Type{T}, it::RepIterator{Tin, ElemT}) where {T, Tin, ElemT}
+    MapRepIterator{T, similar_type(ElemT, T)}(it.ps, f)
 end
 
 function RepIterator{T}(it::RepIterator) where {T}
-    typed_map((i,x) -> convert(similar_type(typeof(x), T), x), FullDim(it), T, it)
+    typed_map((i, x) -> convert(similar_type(typeof(x), T), x), T, it)
 end
 
 # FIXME the variables need to be defined outside of the local scope of for
