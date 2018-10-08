@@ -1,33 +1,53 @@
+abstract type AbstractRepIterator{T, ElemT} end
+
 # Subtyping AbstractVector{ElemT} make Base think that RepIterator implements indexing e.g. for copy!
-abstract type AbstractRepIterator{T, ElemT, PT} end
+abstract type AbstractSingleRepIterator{T, ElemT, PT} <: AbstractRepIterator{T, ElemT} end
+
+# SingleRepIterator
+struct SingleRepIterator{T, ElemT, PT<:Rep{T}} <: AbstractSingleRepIterator{T, ElemT, PT}
+    p::PT
+    function SingleRepIterator{T, ElemT}(p::PT) where {T, ElemT, PT<:Rep{T}}
+        new{T, ElemT, PT}(p)
+    end
+end
+mapitem(it::SingleRepIterator, item) = item
+iterator(T::Type, ElemT::Type, p::Rep) = SingleRepIterator{T, ElemT}(p)
+
+# SingleMapRepIterator
+struct SingleMapRepIterator{T, ElemT, PT<:Rep} <: AbstractSingleRepIterator{T, ElemT, PT}
+    p::PT
+    f::Function
+    function SingleMapRepIterator{T, ElemT}(p::PT, f::Function) where {T, ElemT, PT<:Rep}
+        new{T, ElemT, PT}(p, f)
+    end
+end
+mapitem(it::SingleMapRepIterator, item) = it.f(1, item)
+iterator(T::Type, ElemT::Type, f::Function, p::Rep) = SingleMapRepIterator{T, ElemT}(p, f)
 
 # For a RepIterator with only one representation, we fallback to the indexing interface, the index being the iterator state
 # A representation can overwrite this if it can do something more efficient or if it simply does not support indexing
-const SingleRepIterator{T, ElemT, RepT} = AbstractRepIterator{T, ElemT, Tuple{RepT}}
-function Base.eachindex(it::SingleRepIterator{<:Any, ElemT,
+function Base.eachindex(it::AbstractSingleRepIterator{<:Any, ElemT,
                                               RepT}) where {T, ElemT, RepT<:Rep{T}}
-    return Indices{T, similar_type(ElemT, FullDim(RepT), T)}(it.ps[1])
+    return Indices{T, similar_type(ElemT, FullDim(RepT), T)}(it.p)
 end
 element_and_index(it, idx::Nothing) = nothing
-function element_and_index(it::SingleRepIterator, idx::Index)
-    x = get(it.ps[1], idx)
-    a = mapitem(it, 1, x)
-    return a, idx
+function element_and_index(it::AbstractSingleRepIterator, idx::Index)
+    return mapitem(it, get(it.p, idx)), idx
 end
-function Base.iterate(it::SingleRepIterator{<:Any, ElemT,
-                                            RepT}) where {T, ElemT, RepT<:Rep{T}}
-    idx = undouble_it(iterate(eachindex(it)))::Union{Nothing, Index{T, similar_type(ElemT, FullDim(RepT), T)}}
-    ccall(:jl_breakpoint, Cvoid, (Any,), idx)
+function Base.iterate(it::AbstractSingleRepIterator)
+    idx = undouble_it(iterate(eachindex(it)))
     return element_and_index(it, idx)
 end
-function Base.iterate(it::SingleRepIterator, idx::Index)
+function Base.iterate(it::AbstractSingleRepIterator, idx::Index)
     idx = undouble_it(iterate(eachindex(it), idx))::Union{Nothing, typeof(idx)}
     return element_and_index(it, idx)
 end
 
+abstract type AbstractMultiRepIterator{T, ElemT, PT} <: AbstractRepIterator{T, ElemT} end
+
 # If there are multiple representations, we need to iterate.
 # Builds a SingleRepIterator{ElemT} from p
-function checknext(it::AbstractRepIterator, i::Int, item_state)
+function checknext(it::AbstractMultiRepIterator, i::Int, item_state)
     while i <= length(it.ps) && item_state === nothing
         i += 1
         if i <= length(it.ps)
@@ -40,23 +60,24 @@ function checknext(it::AbstractRepIterator, i::Int, item_state)
         return item_state[1], (i, item_state[2])
     end
 end
-Base.iterate(it::AbstractRepIterator) = checknext(it, 0, nothing)
-function Base.iterate(it::AbstractRepIterator, state)
+Base.iterate(it::AbstractMultiRepIterator) = checknext(it, 0, nothing)
+function Base.iterate(it::AbstractMultiRepIterator, state)
     return checknext(it, state[1], iterate(repit(it, state[1]), state[2]))
 end
 
 # RepIterator
-struct RepIterator{T, ElemT, PT<:Tuple{Vararg{Rep{T}}}} <: AbstractRepIterator{T, ElemT, PT}
+struct RepIterator{T, ElemT, PT<:Tuple{Vararg{Rep{T}}}} <: AbstractMultiRepIterator{T, ElemT, PT}
     ps::PT
     function RepIterator{T, ElemT}(ps::PT) where {T, ElemT, PT<:Tuple{Vararg{Rep{T}}}}
         new{T, ElemT, PT}(ps)
     end
 end
-repit(it::RepIterator{T, ElemT}, i::Int) where {T, ElemT} = RepIterator{T, ElemT}((it.ps[i],))
-mapitem(it::RepIterator, i, item) = item
+repit(it::RepIterator{T, ElemT}, i::Int) where {T, ElemT} = SingleRepIterator{T, ElemT}(it.ps[i])
+
+iterator(T::Type, ElemT::Type, p::Rep...) = RepIterator{T, ElemT}(p)
 
 # MapRepIterator
-struct MapRepIterator{T, ElemT, PT} <: AbstractRepIterator{T, ElemT, PT}
+struct MapRepIterator{T, ElemT, PT} <: AbstractMultiRepIterator{T, ElemT, PT}
     ps::PT
     f::Function
     function MapRepIterator{T, ElemT}(ps::PT, f::Function) where {T, ElemT, PT<:Tuple}
@@ -64,20 +85,20 @@ struct MapRepIterator{T, ElemT, PT} <: AbstractRepIterator{T, ElemT, PT}
     end
 end
 # T is the coeftype, it can be different that the ones of is.ps[i]
-repit(it::MapRepIterator{T, ElemT}, i::Int) where {T, ElemT} = MapRepIterator{T, ElemT}((it.ps[i],), (j, item) -> it.f(i, item)) # j should be 1
-mapitem(it::MapRepIterator, i, item) = it.f(i, item)
+repit(it::MapRepIterator{T, ElemT}, i::Int) where {T, ElemT} = SingleMapRepIterator{T, ElemT}(it.ps[i], (j, item) -> it.f(i, item)) # j should be 1
 
-#function Base.first(it::AbstractRepIterator)
-#    next(it, start(it))[1]
-#end
-FullDim(it::AbstractRepIterator{T, ElemT}) where {T, ElemT} = FullDim(ElemT)
-Base.eltype(it::AbstractRepIterator{T, ElemT}) where {T, ElemT} = ElemT
-function typed_map(f, d::FullDim, ::Type{T}, it::RepIterator{Tin, ElemT}) where {T, Tin, ElemT}
-    MapRepIterator{T, similar_type(ElemT, d, T)}(it.ps, f)
+iterator(T::Type, ElemT::Type, f::Function, p::Rep...) = MapRepIterator{T, ElemT}(p, f)
+
+function typed_map(f::Function, ::Type{T}, it::SingleRepIterator{Tin, ElemT}) where {T, Tin, ElemT}
+    SingleMapRepIterator{T, similar_type(ElemT, T)}(it.p, f)
+end
+function typed_map(f::Function, ::Type{T}, it::RepIterator{Tin, ElemT}) where {T, Tin, ElemT}
+    MapRepIterator{T, similar_type(ElemT, T)}(it.ps, f)
 end
 
-function RepIterator{T}(it::RepIterator) where {T}
-    typed_map((i,x) -> convert(similar_type(typeof(x), T), x), FullDim(it), T, it)
+Base.eltype(it::AbstractRepIterator{T, ElemT}) where {T, ElemT} = ElemT
+function change_coefficient_type(it::AbstractRepIterator, T::Type)
+    typed_map((i, x) -> convert(similar_type(typeof(x), T), x), T, it)
 end
 
 # FIXME the variables need to be defined outside of the local scope of for
@@ -89,17 +110,16 @@ for (isVrep, elt, loop_singular) in [(true, :AbstractVector, :point),
                                      (false, :HyperPlane, :hyperplane), (false, :HalfSpace, :halfspace)]
     global singular = loop_singular
     if isVrep
-        vectortype = :vvectortype
+        vectortype_fun = :vvectortype
         global HorV = :V
         global HorVRep = :VRep
         global horvrep = :vrep
     else
-        vectortype = :hvectortype
+        vectortype_fun = :hvectortype
         global HorV = :H
         global HorVRep = :HRep
         global horvrep = :hrep
     end
-    typename = :(AbstractRepIterator{T, <:$elt})
     singularstr = string(singular)
     elemtype = Symbol(singularstr * "type")
     donep = Symbol("done" * singularstr)
@@ -154,31 +174,33 @@ for (isVrep, elt, loop_singular) in [(true, :AbstractVector, :point),
 
         $elemtype(p::Polyhedron) = $elemtype($horvrep(p))
         if $singularstr == "point"
-            $elemtype(p::$HorVRep) = $vectortype(typeof(p))
+            $elemtype(p::$HorVRep) = $vectortype_fun(typeof(p))
         else
-            $elemtype(p::$HorVRep{T}) where {T} = $elt{T, $vectortype(typeof(p))}
+            $elemtype(p::$HorVRep{T}) where {T} = $elt{T, $vectortype_fun(typeof(p))}
         end
 
         function $plural(p::$HorVRep{T}...) where {T}
             ElemT = promote_type($elemtype.(p)...)
-            RepIterator{T, ElemT}(p)
+            iterator(T, ElemT, p...)
         end
 
         function $mapit(f::Function, d::FullDim, ::Type{T}, p::$HorVRep...) where {T}
             ElemT = promote_type(similar_type.($elemtype.(p), Ref(d), T)...)
-            MapRepIterator{T, ElemT}(p, f)
+            iterator(T, ElemT, f, p...)
         end
 
-        Base.length(it::$typename) where {T} = sum($lenp, it.ps)
-        Base.isempty(it::$typename) where {T} = !any($isnotemptyp.(it.ps))
+        Base.length(it::AbstractSingleRepIterator{T, <:$elt}) where {T} = $lenp(it.p)
+        Base.length(it::AbstractMultiRepIterator{T, <:$elt}) where {T} = sum($lenp, it.ps)
+        Base.isempty(it::AbstractSingleRepIterator{T, <:$elt}) where {T} = !any($isnotemptyp(it.p))
+        Base.isempty(it::AbstractMultiRepIterator{T, <:$elt}) where {T}  = !any($isnotemptyp.(it.ps))
     end
 end
 
 # Combines an element type with its linear version.
 # e.g. combines rays with the lines by splitting lines in two points.
-struct AllRepIterator{T, ElemT, LinElemT, PT}
-    itlin::RepIterator{T, LinElemT, PT}
-    it::RepIterator{T, ElemT, PT}
+struct AllRepIterator{T, ElemT, LinElemT, LRT<:Union{AbstractRepIterator{T, LinElemT}}, RT<:Union{AbstractRepIterator{T, ElemT}}}
+    itlin::LRT
+    it::RT
 end
 
 Base.eltype(it::AllRepIterator{T, ElemT}) where {T, ElemT} = ElemT
@@ -336,7 +358,7 @@ hmap(f, d::FullDim, ::Type{T}, p::HRep...) where T = maphyperplanes(f, d, T, p..
 hmap(f, d::FullDim, ::Type{T}, p::HAffineSpace...) where T = tuple(maphyperplanes(f, d, T, p...))
 
 hconvert(RepT::Type{<:HRep{T}}, p::HRep{T}) where {T} = constructpolyhedron(RepT, FullDim(p), (p,), hreps(p)...)
-hconvert(RepT::Type{<:HRep{T}}, p::HRep)    where {T} = constructpolyhedron(RepT, FullDim(p), (p,), RepIterator{T}.(hreps(p))...)
+hconvert(RepT::Type{<:HRep{T}}, p::HRep)    where {T} = constructpolyhedron(RepT, FullDim(p), (p,), change_coefficient_type.(hreps(p), T)...)
 
 vreps(p...) = preps(p...)..., rreps(p...)...
 preps(p::VRep...) = tuple(points(p...))
@@ -353,4 +375,6 @@ rmap(f, d::FullDim, ::Type{T}, p::VLinearSpace...) where T = tuple(maplines(f, d
 rmap(f, d::FullDim, ::Type, p::VPolytope...) = tuple()
 
 vconvert(RepT::Type{<:VRep{T}}, p::VRep{T}) where {T} = constructpolyhedron(RepT, FullDim(p), (p,), vreps(p)...)
-vconvert(RepT::Type{<:VRep{T}}, p::VRep)    where {T} = constructpolyhedron(RepT, FullDim(p), (p,), RepIterator{T}.(vreps(p))...)
+function vconvert(RepT::Type{<:VRep{T}}, p::VRep)    where {T}
+    constructpolyhedron(RepT, FullDim(p), (p,), change_coefficient_type.(vreps(p), T)...)
+end
