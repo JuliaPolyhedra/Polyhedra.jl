@@ -7,8 +7,7 @@ abstract type Polyhedron{T} end
 
 similar_type(::Type{<:Vector}, ::Int, ::Type{T}) where T = Vector{T}
 
-import StaticArrays
-const FullDim = Union{Int, StaticArrays.Size}
+const FullDim = Int
 FullDim(::Type{<:AbstractVector}) = -1 # Shouldn't hurt as it will not be used
 FullDim(v::AbstractVector) = length(v)
 FullDim_convert(::Type{Int}, d::Int) = d
