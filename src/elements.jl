@@ -176,6 +176,9 @@ const VRepElement{T} = Union{VStruct{T}, AbstractVector{T}}
 const RepElement{T} = Union{HRepElement{T}, VRepElement{T}}
 const StructElement{T, AT} = Union{VStruct{T, AT}, HRepElement{T, AT}}
 
+vectortype(::Type{<:StructElement{T, AT}}) where {T, AT} = AT
+vectortype(AT::Type{<:AbstractVector}) = AT
+
 FullDim(::Type{<:StructElement{T, AT}}) where {T, AT} = FullDim(AT)
 FullDim(el::StructElement) = FullDim(coord(el))
 coefficient_type(::Union{RepElement{T}, Type{<:RepElement{T}}}) where {T} = T

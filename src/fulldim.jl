@@ -1,14 +1,8 @@
-# -1 is the dimension of an empty polyhedron, here it is used as the
-# *full* dimension of a polyhedron with no element
-FullDim_rec() = -1
-function FullDim_rec(it::ElemIt{<:Union{AT, VStruct{T, AT},
-                                        HRepElement{T, AT}}},
-                     its::Union{Rep, It}...) where {T,
-                                                    AT <: StaticArrays.SVector}
-    return FullDim(AT)
-end
+FullDim_rec() = error("Cannot infer dimension of polyhedron constructed from no element.")
 function FullDim_rec(it::It, its::Union{Rep, It}...)
-    if isempty(it)
+    if vectortype(eltype(it)) <: StaticArrays.SVector
+        return FullDim(eltype(it))
+    elseif isempty(it)
         return FullDim_rec(its...)
     else
         return FullDim(first(it))

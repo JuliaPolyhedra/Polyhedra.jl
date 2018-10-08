@@ -365,4 +365,6 @@ rmap(f, d::FullDim, ::Type{T}, p::VLinearSpace...) where T = tuple(maplines(f, d
 rmap(f, d::FullDim, ::Type, p::VPolytope...) = tuple()
 
 vconvert(RepT::Type{<:VRep{T}}, p::VRep{T}) where {T} = constructpolyhedron(RepT, FullDim(p), (p,), vreps(p)...)
-vconvert(RepT::Type{<:VRep{T}}, p::VRep)    where {T} = constructpolyhedron(RepT, FullDim(p), (p,), RepIterator{T}.(vreps(p))...)
+function vconvert(RepT::Type{<:VRep{T}}, p::VRep)    where {T}
+    constructpolyhedron(RepT, d, (p,), RepIterator{T}.(vreps(p))...)
+end
