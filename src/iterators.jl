@@ -110,12 +110,12 @@ for (isVrep, elt, loop_singular) in [(true, :AbstractVector, :point),
                                      (false, :HyperPlane, :hyperplane), (false, :HalfSpace, :halfspace)]
     global singular = loop_singular
     if isVrep
-        vectortype = :vvectortype
+        vectortype_fun = :vvectortype
         global HorV = :V
         global HorVRep = :VRep
         global horvrep = :vrep
     else
-        vectortype = :hvectortype
+        vectortype_fun = :hvectortype
         global HorV = :H
         global HorVRep = :HRep
         global horvrep = :hrep
@@ -174,9 +174,9 @@ for (isVrep, elt, loop_singular) in [(true, :AbstractVector, :point),
 
         $elemtype(p::Polyhedron) = $elemtype($horvrep(p))
         if $singularstr == "point"
-            $elemtype(p::$HorVRep) = $vectortype(typeof(p))
+            $elemtype(p::$HorVRep) = $vectortype_fun(typeof(p))
         else
-            $elemtype(p::$HorVRep{T}) where {T} = $elt{T, $vectortype(typeof(p))}
+            $elemtype(p::$HorVRep{T}) where {T} = $elt{T, $vectortype_fun(typeof(p))}
         end
 
         function $plural(p::$HorVRep{T}...) where {T}
