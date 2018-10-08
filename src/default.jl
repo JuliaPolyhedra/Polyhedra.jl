@@ -8,7 +8,7 @@ Returns the default polyhedron type for `d`-dimensional polyhedron of coefficien
 function default_type end
 
 function default_type(d::StaticArrays.Size{N}, ::Type{T}) where {N, T}
-    return SimplePolyhedron{T, Intersection{T, StaticArrays.SVector{N[1], T}, typeof(d)}, Hull{T, StaticArrays.SVector{N[1], T}}, typeof(d)}
+    return DefaultPolyhedron{T, Intersection{T, StaticArrays.SVector{N[1], T}, typeof(d)}, Hull{T, StaticArrays.SVector{N[1], T}}, typeof(d)}
 end
 function default_type(::StaticArrays.Size{(1,)}, ::Type{T}) where T
     return Interval{T, StaticArrays.SVector{1, T}}
@@ -17,7 +17,7 @@ function default_type(d::Int, ::Type{T}) where T
     if d == 1
         return Interval{T, Vector{T}}
     else
-        return SimplePolyhedron{T, Intersection{T, Vector{T}, typeof(d)}, Hull{T, Vector{T}, typeof(d)}}
+        return DefaultPolyhedron{T, Intersection{T, Vector{T}, typeof(d)}, Hull{T, Vector{T}, typeof(d)}}
     end
 end
 

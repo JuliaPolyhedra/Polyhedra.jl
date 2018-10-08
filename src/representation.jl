@@ -76,7 +76,7 @@ Base.convert(RepT::Type{<:VRepresentation}, p::VRep)            = vconvert(RepT,
 # avoid ambiguity
 Base.convert(RepT::Type{<:VRepresentation}, p::VRepresentation) = vconvert(RepT, p)
 
-# Used by SimpleVRepPolyhedraModel
+# Used by VRepPolyhedraModel
 Base.convert(::Type{VRep}, p::VRepresentation) = p
 
 change_coefficient_type(p::Rep{T}, ::Type{T}) where {T} = p

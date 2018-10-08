@@ -1,4 +1,4 @@
-export DefaultLibrary, SimplePolyhedron
+export DefaultLibrary, DefaultPolyhedron
 
 """
     DefaultLibrary{T}
@@ -15,103 +15,103 @@ end
 
 similar_library(lib::DefaultLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to Interval if d is FullDim{1}
 
-mutable struct SimplePolyhedron{T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}} <: Polyhedron{T}
+mutable struct DefaultPolyhedron{T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}} <: Polyhedron{T}
     hrep::Union{HRepT, Nothing}
     vrep::Union{VRepT, Nothing}
     solver::Union{Nothing, MPB.AbstractMathProgSolver}
-    function SimplePolyhedron{T, HRepT, VRepT}(hrep::Union{HRepT, Nothing}, vrep::Union{VRepT, Nothing}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+    function DefaultPolyhedron{T, HRepT, VRepT}(hrep::Union{HRepT, Nothing}, vrep::Union{VRepT, Nothing}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
         new{T, HRepT, VRepT}(hrep, vrep, solver)
     end
 end
-function SimplePolyhedron{T, HRepT, VRepT}(hrep::HRepT, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
-    SimplePolyhedron{T, HRepT, VRepT}(hrep, nothing, solver)
+function DefaultPolyhedron{T, HRepT, VRepT}(hrep::HRepT, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+    DefaultPolyhedron{T, HRepT, VRepT}(hrep, nothing, solver)
 end
-function SimplePolyhedron{T, HRepT, VRepT}(vrep::VRepT, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
-    SimplePolyhedron{T, HRepT, VRepT}(nothing, vrep, solver)
+function DefaultPolyhedron{T, HRepT, VRepT}(vrep::VRepT, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+    DefaultPolyhedron{T, HRepT, VRepT}(nothing, vrep, solver)
 end
-function SimplePolyhedron{T, HRepT, VRepT}(hrep::HRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
-    SimplePolyhedron{T, HRepT, VRepT}(convert(HRepT, hrep), solver)
+function DefaultPolyhedron{T, HRepT, VRepT}(hrep::HRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+    DefaultPolyhedron{T, HRepT, VRepT}(convert(HRepT, hrep), solver)
 end
-function SimplePolyhedron{T, HRepT, VRepT}(vrep::VRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
-    SimplePolyhedron{T, HRepT, VRepT}(convert(VRepT, vrep), solver)
+function DefaultPolyhedron{T, HRepT, VRepT}(vrep::VRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+    DefaultPolyhedron{T, HRepT, VRepT}(convert(VRepT, vrep), solver)
 end
 
-FullDim(p::SimplePolyhedron) = FullDim_rep(p.hrep, p.vrep)
-library(::Union{SimplePolyhedron{T}, Type{<:SimplePolyhedron{T}}}) where {T} = DefaultLibrary{T}()
-default_solver(p::SimplePolyhedron) = p.solver
-supportssolver(::Type{<:SimplePolyhedron}) = true
+FullDim(p::DefaultPolyhedron) = FullDim_rep(p.hrep, p.vrep)
+library(::Union{DefaultPolyhedron{T}, Type{<:DefaultPolyhedron{T}}}) where {T} = DefaultLibrary{T}()
+default_solver(p::DefaultPolyhedron) = p.solver
+supportssolver(::Type{<:DefaultPolyhedron}) = true
 
-hvectortype(::Type{<:SimplePolyhedron{T, HRepT}}) where {T, HRepT} = hvectortype(HRepT)
-vvectortype(::Type{SimplePolyhedron{T, HRepT, VRepT}}) where {T, HRepT, VRepT} = vvectortype(VRepT)
+hvectortype(::Type{<:DefaultPolyhedron{T, HRepT}}) where {T, HRepT} = hvectortype(HRepT)
+vvectortype(::Type{DefaultPolyhedron{T, HRepT, VRepT}}) where {T, HRepT, VRepT} = vvectortype(VRepT)
 
-similar_type(::Type{<:SimplePolyhedron{S, HRepT, VRepT}}, d::FullDim, ::Type{T}) where {S, HRepT, VRepT, T} = SimplePolyhedron{T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
+similar_type(::Type{<:DefaultPolyhedron{S, HRepT, VRepT}}, d::FullDim, ::Type{T}) where {S, HRepT, VRepT, T} = DefaultPolyhedron{T, similar_type(HRepT, d, T), similar_type(VRepT, d, T)}
 
-function SimplePolyhedron{T, HRepT, VRepT}(d::FullDim, hits::HIt...; solver=nothing) where {T, HRepT, VRepT}
-    SimplePolyhedron{T, HRepT, VRepT}(HRepT(d, hits...), solver)
+function DefaultPolyhedron{T, HRepT, VRepT}(d::FullDim, hits::HIt...; solver=nothing) where {T, HRepT, VRepT}
+    DefaultPolyhedron{T, HRepT, VRepT}(HRepT(d, hits...), solver)
 end
-function SimplePolyhedron{T, HRepT, VRepT}(d::FullDim, vits::VIt...; solver=nothing) where {T, HRepT, VRepT}
-    SimplePolyhedron{T, HRepT, VRepT}(VRepT(d, vits...), solver)
+function DefaultPolyhedron{T, HRepT, VRepT}(d::FullDim, vits::VIt...; solver=nothing) where {T, HRepT, VRepT}
+    DefaultPolyhedron{T, HRepT, VRepT}(VRepT(d, vits...), solver)
 end
 
 # Need fulltype in case the use does `intersect!` with another element
-SimplePolyhedron{T}(rep::Representation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T} = SimplePolyhedron{T}(change_coefficient_type(rep, T), solver)
-function SimplePolyhedron{T}(rep::HRepresentation{T}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T}
+DefaultPolyhedron{T}(rep::Representation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T} = DefaultPolyhedron{T}(change_coefficient_type(rep, T), solver)
+function DefaultPolyhedron{T}(rep::HRepresentation{T}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T}
     HRepT = fulltype(typeof(rep))
     VRepT = dualtype(HRepT)
-    SimplePolyhedron{T, HRepT, VRepT}(rep, solver)
+    DefaultPolyhedron{T, HRepT, VRepT}(rep, solver)
 end
-function SimplePolyhedron{T}(rep::VRepresentation{T}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T}
+function DefaultPolyhedron{T}(rep::VRepresentation{T}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T}
     VRepT = fulltype(typeof(rep))
     HRepT = dualtype(VRepT)
-    SimplePolyhedron{T, HRepT, VRepT}(rep, solver)
+    DefaultPolyhedron{T, HRepT, VRepT}(rep, solver)
 end
 
 function polyhedron(rep::Representation, lib::DefaultLibrary{T}) where {T}
-    SimplePolyhedron{polytypefor(T)}(rep, lib.solver)
+    DefaultPolyhedron{polytypefor(T)}(rep, lib.solver)
 end
 
-function Base.copy(p::SimplePolyhedron{T}) where {T}
+function Base.copy(p::DefaultPolyhedron{T}) where {T}
     if p.hrep !== nothing
-        SimplePolyhedron{T}(p.hrep, p.solver)
+        DefaultPolyhedron{T}(p.hrep, p.solver)
     else
-        SimplePolyhedron{T}(p.vrep, p.solver)
+        DefaultPolyhedron{T}(p.vrep, p.solver)
     end
 end
 
-hrepiscomputed(p::SimplePolyhedron) = p.hrep !== nothing
-function computehrep!(p::SimplePolyhedron)
+hrepiscomputed(p::DefaultPolyhedron) = p.hrep !== nothing
+function computehrep!(p::DefaultPolyhedron)
     # vrep(p) could trigger an infinite loop if both vrep and hrep are null
     p.hrep = doubledescription(p.vrep)
 end
-function hrep(p::SimplePolyhedron)
+function hrep(p::DefaultPolyhedron)
     if !hrepiscomputed(p)
         computehrep!(p)
     end
     return p.hrep
 end
-vrepiscomputed(p::SimplePolyhedron) = p.vrep !== nothing
-function computevrep!(p::SimplePolyhedron)
+vrepiscomputed(p::DefaultPolyhedron) = p.vrep !== nothing
+function computevrep!(p::DefaultPolyhedron)
     # hrep(p) could trigger an infinite loop if both vrep and hrep are null
     p.vrep = doubledescription(p.hrep)
 end
-function vrep(p::SimplePolyhedron)
+function vrep(p::DefaultPolyhedron)
     if !vrepiscomputed(p)
         computevrep!(p)
     end
     return p.vrep
 end
 
-function sethrep!(p::SimplePolyhedron, h::HRepresentation)
+function sethrep!(p::DefaultPolyhedron, h::HRepresentation)
     p.hrep = h
 end
-function setvrep!(p::SimplePolyhedron, v::VRepresentation)
+function setvrep!(p::DefaultPolyhedron, v::VRepresentation)
     p.vrep = v
 end
-function resethrep!(p::SimplePolyhedron, h::HRepresentation)
+function resethrep!(p::DefaultPolyhedron, h::HRepresentation)
     p.hrep = h
     p.vrep = nothing
 end
-function resetvrep!(p::SimplePolyhedron, v::VRepresentation)
+function resetvrep!(p::DefaultPolyhedron, v::VRepresentation)
     p.vrep = v
     p.hrep = nothing
 end
