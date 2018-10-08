@@ -1,6 +1,6 @@
 using Polyhedra
 using Test
-h = Polyhedra.HyperPlanesIntersection(2, [Polyhedra.HyperPlane{Int}([0, 1], 1), Polyhedra.HyperPlane{Int}([0, 1], -1)])
+h = Polyhedra.HyperPlanesIntersection(2, [Polyhedra.HyperPlane{Int}([0, 1], 1)])
 let
     i = 0
     for a in hyperplanes(h)

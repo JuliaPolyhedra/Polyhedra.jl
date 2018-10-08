@@ -30,16 +30,10 @@ struct HyperPlane{T, AT<:AbstractVector{T}} <: HRepElement{T, AT}
 end
 
 HyperPlane{T}(a::AT, β::T) where {T, AT <: AbstractVector{T}} = HyperPlane{T, AT}(a, β)
-HyperPlane{T}(a::AbstractVector, β) where {T} = HyperPlane{T}(_vec(T, a), T(β))
 
-for ElemT in [:HalfSpace, :HyperPlane]
-    @eval begin
-        function similar_type(::Type{$ElemT{T, AT}}, dout::FullDim, ::Type{Tout}) where {T, AT, Tout}
-            return $ElemT{Tout, similar_type(AT, dout, Tout)}
-        end
-    end
+function similar_type(::Type{HyperPlane{T, AT}}, dout::FullDim, ::Type{Tout}) where {T, AT, Tout}
+    return HyperPlane{Tout, similar_type(AT, dout, Tout)}
 end
-
 
 abstract type Representation{T <: Real} end
 abstract type HRepresentation{T} <: Representation{T} end
