@@ -1,5 +1,5 @@
 import RecipesBase
-function doctest(lib::PolyhedraLibrary)
+function doctest(lib::Polyhedra.Library)
     A = [1 1;1 -1;-1 0]
     b = [1,0,0]
     V = [1//2 1//2; 0 1; 0 0]

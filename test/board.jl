@@ -1,5 +1,5 @@
 using LinearAlgebra # for I
-function boardtest(lib::Lib) where Lib<:PolyhedraLibrary
+function boardtest(lib::Polyhedra.Library)
     A1 = -Matrix(1I, 9, 9) # x >= 0
     b1 = zeros(Int, 9)
     A2 = Matrix(1I, 9, 9) # x <= 1

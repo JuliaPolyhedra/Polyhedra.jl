@@ -1,19 +1,19 @@
-export SimplePolyhedraLibrary, SimplePolyhedron
+export DefaultLibrary, SimplePolyhedron
 
 """
-    SimplePolyhedraLibrary{T}
+    DefaultLibrary{T}
 
 Default library for polyhedra of dimension larger than 1 ([`IntervalLibrary`](@ref) is the default for polyhedra of dimension 1).
 The library implements the bare minimum and uses the fallback implementation for all operations.
 """
-struct SimplePolyhedraLibrary{T} <: PolyhedraLibrary
+struct DefaultLibrary{T} <: Library
     solver::Union{Nothing, MPB.AbstractMathProgSolver}
-    function SimplePolyhedraLibrary{T}(solver=nothing) where T
+    function DefaultLibrary{T}(solver=nothing) where T
         new{T}(solver)
     end
 end
 
-similar_library(lib::SimplePolyhedraLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to Interval if d is FullDim{1}
+similar_library(lib::DefaultLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to Interval if d is FullDim{1}
 
 mutable struct SimplePolyhedron{T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}} <: Polyhedron{T}
     hrep::Union{HRepT, Nothing}
@@ -37,7 +37,7 @@ function SimplePolyhedron{T, HRepT, VRepT}(vrep::VRepresentation, solver::Union{
 end
 
 FullDim(p::SimplePolyhedron) = FullDim_rep(p.hrep, p.vrep)
-library(::Union{SimplePolyhedron{T}, Type{<:SimplePolyhedron{T}}}) where {T} = SimplePolyhedraLibrary{T}()
+library(::Union{SimplePolyhedron{T}, Type{<:SimplePolyhedron{T}}}) where {T} = DefaultLibrary{T}()
 default_solver(p::SimplePolyhedron) = p.solver
 supportssolver(::Type{<:SimplePolyhedron}) = true
 
@@ -66,7 +66,7 @@ function SimplePolyhedron{T}(rep::VRepresentation{T}, solver::Union{Nothing, MPB
     SimplePolyhedron{T, HRepT, VRepT}(rep, solver)
 end
 
-function polyhedron(rep::Representation, lib::SimplePolyhedraLibrary{T}) where {T}
+function polyhedron(rep::Representation, lib::DefaultLibrary{T}) where {T}
     SimplePolyhedron{polytypefor(T)}(rep, lib.solver)
 end
 

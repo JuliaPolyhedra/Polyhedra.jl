@@ -1,4 +1,4 @@
-function permutahedrontest(lib::Lib) where Lib<:PolyhedraLibrary
+function permutahedrontest(lib::Polyhedra.Library)
     A = [1 1 1; 1 0 0; 0 1 0; 0 0 1; -1 0 0; 0 -1 0; 0 0 -1]
     b = [6, 3, 3, 3, -1, -1, -1]
     linset = BitSet([1])
@@ -9,7 +9,7 @@ function permutahedrontest(lib::Lib) where Lib<:PolyhedraLibrary
     inequality_fulltest(poly, A, b, linset)
     generator_fulltest(poly, V, Matrix{Int}(undef, 0, 3))
 
-    isa(lib, SimplePolyhedraLibrary) && return
+    isa(lib, SimplePolyhedra.Library) && return
     # x1___x4____________1
     #      |         |
     #      V         V

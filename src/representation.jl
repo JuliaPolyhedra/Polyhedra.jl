@@ -27,7 +27,7 @@ const  Rep{T} = Union{ Representation{T}, Polyhedron{T}}
 const HRep{T} = Union{HRepresentation{T}, Polyhedron{T}}
 const VRep{T} = Union{VRepresentation{T}, Polyhedron{T}}
 
-Base.broadcastable(x::Union{Rep, PolyhedraLibrary}) = Ref(x)
+Base.broadcastable(x::Union{Rep, Library}) = Ref(x)
 
 """
     coefficient_type(rep::Rep)

@@ -40,18 +40,18 @@ function default_library end
 _default_type(::Type{T}) where T = T
 # See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/35
 _default_type(::Type{AbstractFloat}) = Float64
-default_library(::StaticArrays.Size, T::Type) = SimplePolyhedraLibrary{_default_type(T)}()
+default_library(::StaticArrays.Size, T::Type) = DefaultLibrary{_default_type(T)}()
 default_library(::StaticArrays.Size{(1,)}, T::Type) = IntervalLibrary{_default_type(T)}()
 function default_library(d::Int, ::Type{T}) where T
     if d == 1
         return IntervalLibrary{_default_type(T)}()
     else
-        return SimplePolyhedraLibrary{_default_type(T)}()
+        return DefaultLibrary{_default_type(T)}()
     end
 end
 
 """
-    similar_library(lib::PolyhedraLibrary, d::FullDim, T::Type)
+    similar_library(lib::Library, d::FullDim, T::Type)
 
 Returns a library that supports polyhedra of full dimension `T` with coefficient type `T`. If `lib` does not support it, this commonly calls `default_library(d, T)`.
 """

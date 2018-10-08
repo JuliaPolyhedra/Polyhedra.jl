@@ -1,7 +1,7 @@
 using JuMP
 
 # Inspired from Joey Huchette's test in ConvexHull.jl
-function infeasibletest(lib::PolyhedraLibrary, n)
+function infeasibletest(lib::Polyhedra.Library, n)
     m = Model()
     @variable(m, 0 ≤ x[1:n] ≤ 1)
     @constraint(m, x[1] ≥ 2)

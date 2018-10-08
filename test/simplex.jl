@@ -1,5 +1,5 @@
 import MathProgBase
-function simplextest(lib::PolyhedraLibrary)
+function simplextest(lib::Polyhedra.Library)
     hsim = HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0) ∩ HyperPlane([1, 1], 1)
     vsim = convexhull([0, 1], [1, 0])
     poly1 = polyhedron(hsim, lib)

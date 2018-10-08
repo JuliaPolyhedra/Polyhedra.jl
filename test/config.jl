@@ -16,7 +16,7 @@ macro polytestset(setname, subsets=false)
         runtest = :( f(lib) )
     end
     esc(:(
-        function $testname(lib::PolyhedraLibrary, exclude::Vector{String} = String[])
+        function $testname(lib::Polyhedra.Library, exclude::Vector{String} = String[])
             for (name,f) in $testdict
                 if name in exclude
                     continue

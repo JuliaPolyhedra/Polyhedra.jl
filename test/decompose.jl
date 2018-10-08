@@ -55,7 +55,7 @@ function test_decompose(p::Polyhedron, d::Dict)
     @test isempty(d)
 end
 
-function orthantdecomposetest(lib::PolyhedraLibrary)
+function orthantdecomposetest(lib::Polyhedra.Library)
     v = vrep([Ray([1., 0, 0]),
               Ray([0, 1., 0]),
               Ray([0, 0, 1.])])
@@ -72,7 +72,7 @@ function orthantdecomposetest(lib::PolyhedraLibrary)
     test_decompose(p, d)
 end
 
-function cubedecomposetest(lib::PolyhedraLibrary)
+function cubedecomposetest(lib::Polyhedra.Library)
     p = polyhedron(convexhull([ 1.,  1,   1],
                               [ 1., -1,   1],
                               [ 1.,  1,  -1],
@@ -100,7 +100,7 @@ function cubedecomposetest(lib::PolyhedraLibrary)
                                     Face([ 1.0,  1.0, -1.0], [ 1.0, -1.0, -1.0], [ 1.0, -1.0,  1.0])])
     test_decompose(p, d)
 end
-function largedecomposetest(lib::PolyhedraLibrary)
+function largedecomposetest(lib::Polyhedra.Library)
     V = [-1 -1  1;
          -1  1  1;
           1 -1  1;
