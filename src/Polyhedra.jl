@@ -1,5 +1,3 @@
-__precompile__()
-
 module Polyhedra
 
 using Compat
@@ -9,14 +7,11 @@ abstract type Polyhedron{T} end
 
 similar_type(::Type{<:Vector}, ::Int, ::Type{T}) where T = Vector{T}
 
-# Interface/Definitions
-#include("dimension.jl")
 import StaticArrays
 const FullDim = Union{Int, StaticArrays.Size}
 FullDim(::Type{<:AbstractVector}) = -1 # Shouldn't hurt as it will not be used
 FullDim(v::AbstractVector) = length(v)
 FullDim_convert(::Type{Int}, d::Int) = d
-#include("elements.jl")
 abstract type HRepElement{T, AT} end
 struct HalfSpace{T, AT <: AbstractVector{T}} <: HRepElement{T, AT}
     a::AT
@@ -78,7 +73,27 @@ function similar_type(::Type{ET}, d::FullDim) where {ET<:Union{HRepElement, Rep}
 end
 
 # Operations
-include("aff.jl")
+struct HyperPlanesIntersection{T, AT, D<:FullDim} <: HAffineSpace{T}
+    d::D
+    hyperplanes::Vector{HyperPlane{T, AT}}
+    function HyperPlanesIntersection{T, AT, D}(d::FullDim,
+                                               hps::HyperPlaneIt{T}) where {T, AT, D}
+        new{T, AT, D}(FullDim_convert(D, d), lazy_collect(hps))
+    end
+end
+function HyperPlanesIntersection(d::FullDim,
+                                 it::ElemIt{HyperPlane{T, AT}}) where {T, AT}
+    return HyperPlanesIntersection{T, AT, typeof(d)}(d, it)
+end
+
+FullDim(h::HyperPlanesIntersection) = h.d
+hvectortype(L::Type{<:HyperPlanesIntersection{T, AT}}) where {T, AT} = AT
+similar_type(PT::Type{<:HyperPlanesIntersection}, d::FullDim, ::Type{T}) where T = HyperPlanesIntersection{T, similar_type(hvectortype(PT), d, T), typeof(d)}
+
+@vecrepelem HyperPlanesIntersection HyperPlane hyperplanes
+
+hreptype(::Type{<:HyperPlanesIntersection{T, AT}}) where {T, AT} = Intersection{T, AT}
+
 FullDim(rep::Type{<:HyperPlanesIntersection}) = FullDim(hvectortype(rep))
 # collect(::Vector) does a copy.
 # lazy_collect avoid this copy in case `v` is a Vector
