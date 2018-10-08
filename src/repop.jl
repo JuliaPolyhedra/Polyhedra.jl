@@ -103,12 +103,12 @@ function sumpoints(::FullDim, ::Type{T}, p1, p2) where {T}
     ps = [_tout(po1 + po2) for po1 in points(p1) for po2 in points(p2)]
     tuple(ps)
 end
-sumpoints(::FullDim, ::Type{T}, p1::Rep, p2::VCone) where {T} = RepIterator{T}.(preps(p1))
-sumpoints(::FullDim, ::Type{T}, p1::VCone, p2::Rep) where {T} = RepIterator{T}.(preps(p2))
+sumpoints(::FullDim, ::Type{T}, p1::Rep, p2::VCone) where {T} = change_coefficient_type.(preps(p1), T)
+sumpoints(::FullDim, ::Type{T}, p1::VCone, p2::Rep) where {T} = change_coefficient_type.(preps(p2), T)
 
 function Base.:+(p1::VRep{T1}, p2::VRep{T2}) where {T1, T2}
     T = typeof(zero(T1) + zero(T2))
-    similar((p1, p2), FullDim(p1), T, sumpoints(FullDim(p1), T, p1, p2)..., RepIterator{T}.(rreps(p1, p2))...)
+    similar((p1, p2), FullDim(p1), T, sumpoints(FullDim(p1), T, p1, p2)..., change_coefficient_type.(rreps(p1, p2), T)...)
 end
 Base.:+(p::Rep, el::Union{Line, Ray}) = p + vrep([el])
 Base.:+(el::Union{Line, Ray}, p::Rep) = p + el
