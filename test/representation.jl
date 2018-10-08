@@ -312,8 +312,6 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test_throws ErrorException VRepType(2, AT[], [Line([1, 2])])
             @test_throws ErrorException VRepType(2, AT[], Line{T, AT}[], [Ray([1, 2])])
             @test_throws ErrorException VRepType(2, AT[], [Line([1, 2])], [Ray([1, 2])])
-            @test isempty(VRepType(2, AT[], Line{T, AT}[], Ray{T, AT}[]))
-            @test isempty(VRepType(2, Line{T, AT}[], Ray{T, AT}[]))
             v = VRepType(2, [Line([1, 2])])
             @test collect(points(v)) == [[0, 0]]
             @test collect(lines(v)) == [Line([1, 2])]
@@ -325,6 +323,12 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test_throws ErrorException Polyhedra.checkvconsistency(vinc)
             pinc = polyhedron(vinc)
             @test_throws ErrorException Polyhedra.checkvconsistency(pinc)
+        end
+        let
+            AT = StaticArrays.SVector{1, Int}
+            VRepType = Polyhedra.Hull{T, AT, Int}
+            @test isempty(VRepType(2, AT[], Line{T, AT}[], Ray{T, AT}[]))
+            @test isempty(VRepType(2, Line{T, AT}[], Ray{T, AT}[]))
         end
     end
     @testset "Combination of different coefficient type" begin
