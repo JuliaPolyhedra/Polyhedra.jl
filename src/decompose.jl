@@ -1,21 +1,21 @@
 import GeometryTypes
 
-struct PolyhedronGeometry{N, T, PT <: Polyhedron{T}} <: GeometryTypes.GeometryPrimitive{N, T}
+struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryTypes.GeometryPrimitive{N, T}
     polyhedron::PT
 end
-function PolyhedronGeometry{N}(polyhedron::Polyhedron{T}) where {N, T}
-    return PolyhedronGeometry{N, T, typeof(polyhedron)}(polyhedron)
+function Mesh{N}(polyhedron::Polyhedron{T}) where {N, T}
+    return Mesh{N, T, typeof(polyhedron)}(polyhedron)
 end
-function PolyhedronGeometry(polyhedron::Polyhedron, ::StaticArrays.Size{N}) where N
-    return PolyhedronGeometry{N[1]}(polyhedron)
+function Mesh(polyhedron::Polyhedron, ::StaticArrays.Size{N}) where N
+    return Mesh{N[1]}(polyhedron)
 end
-function PolyhedronGeometry(polyhedron::Polyhedron, N::Int)
+function Mesh(polyhedron::Polyhedron, N::Int)
     # This is type unstable but there is no way around that,
     # use polyhedron built from StaticArrays vector to avoid that.
-    return PolyhedronGeometry{N}(polyhedron)
+    return Mesh{N}(polyhedron)
 end
-function PolyhedronGeometry(polyhedron::Polyhedron)
-    return PolyhedronGeometry(polyhedron, FullDim(polyhedron))
+function Mesh(polyhedron::Polyhedron)
+    return Mesh(polyhedron, FullDim(polyhedron))
 end
 
 # Creates a scene for the vizualisation to be used to truncate the lines and rays
@@ -53,10 +53,8 @@ function _isdup(zray, triangles)
 end
 _isdup(poly, hidx, triangles) = _isdup(get(poly, hidx).a, triangles)
 
-function fulldecompose(poly::Polyhedron, ::Type{T}) where T
-    if fulldim(poly) != 3
-        error("Only 3-dimensional polyhedra are supported")
-    end
+function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
+    poly = poly_geom.polyhedron
     exit_point = scene(poly, T)
 
     triangles = Tuple{Tuple{Vector{T},Vector{T},Vector{T}}, Vector{T}}[]
@@ -219,20 +217,25 @@ function fulldecompose(poly::Polyhedron, ::Type{T}) where T
     (pts, faces, ns)
 end
 
-fulldecompose(poly::Polyhedron{T}) where T = fulldecompose(poly, typeof(one(T)/2))
+fulldecompose(poly::Mesh{N, T}) where {N, T} = fulldecompose(poly, typeof(one(T)/2))
 
-GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:GeometryTypes.Point, S<:Polyhedron} = true
-GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:GeometryTypes.Face, S<:Polyhedron} = true
-GeometryTypes.isdecomposable(::Type{T}, ::Type{S}) where {T<:GeometryTypes.Normal, S<:Polyhedron} = true
-function GeometryTypes.decompose(PT::Type{<:GeometryTypes.Point}, poly::Polyhedron)
+GeometryTypes.isdecomposable(::Type{<:GeometryTypes.Point{3}},  ::Type{<:Mesh{3}}) = true
+GeometryTypes.isdecomposable(::Type{<:GeometryTypes.Face{3}},   ::Type{<:Mesh{3}}) = true
+GeometryTypes.isdecomposable(::Type{<:GeometryTypes.Normal{3}}, ::Type{<:Mesh{3}}) = true
+function GeometryTypes.decompose(PT::Type{<:GeometryTypes.Point}, poly::Mesh)
     points = fulldecompose(poly)[1]
     map(PT, points)
 end
-function GeometryTypes.decompose(FT::Type{<:GeometryTypes.Face}, poly::Polyhedron)
+function GeometryTypes.decompose(FT::Type{<:GeometryTypes.Face}, poly::Mesh)
     faces = fulldecompose(poly)[2]
     GeometryTypes.decompose(FT, faces)
 end
-function GeometryTypes.decompose(NT::Type{<:GeometryTypes.Normal}, poly::Polyhedron)
+function GeometryTypes.decompose(NT::Type{<:GeometryTypes.Normal}, poly::Mesh)
     ns = fulldecompose(poly)[3]
     map(NT, ns)
 end
+
+# In AbstractPlotting, when asking to plot an object, it calls this constructor
+# which is only defined for `GeometryTypes.GeometryPrimitive` which is a
+# supertype of `Polyhedra.Mesh`
+GeometryTypes.GLNormalMesh(p::Polyhedron) = GeometryTypes.GLNormalMesh(Mesh(p))
