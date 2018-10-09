@@ -20,7 +20,7 @@ end
 
 nfaces(d::Dict{<:Any, Face}) = length(d)
 nfaces(d::Dict{<:Any, <:Vector}) = sum(map(length, values(d)))
-function test_decompose(p::Polyhedra.Geometry, d::Dict)
+function test_decompose(p::Polyhedra.Mesh, d::Dict)
     @test GeometryTypes.isdecomposable(GeometryTypes.Point{3, Float32}, typeof(p))
     points = GeometryTypes.decompose(GeometryTypes.Point{3, Float32}, p)
     @test GeometryTypes.isdecomposable(GeometryTypes.Face{3, Int}, typeof(p))
@@ -54,7 +54,7 @@ function test_decompose(p::Polyhedra.Geometry, d::Dict)
     end
     @test isempty(d)
 end
-test_decompose(p::Polyhedron, d::Dict) = test_decompose(Polyhedra.Geometry(p), d)
+test_decompose(p::Polyhedron, d::Dict) = test_decompose(Polyhedra.Mesh(p), d)
 
 function orthantdecomposetest(lib::Polyhedra.Library)
     v = vrep([Ray([1., 0, 0]),
