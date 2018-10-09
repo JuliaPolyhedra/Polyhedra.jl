@@ -1,6 +1,6 @@
 using SparseArrays
 
-function sparsetest(lib::PolyhedraLibrary)
+function sparsetest(lib::Polyhedra.Library)
     # Sparse H-representation, fixandeliminate and ⊆
     # 3x_1 + 2x_2        ≤  2
     # 2x_1        + 3x_3 ≥  1

@@ -2,7 +2,7 @@ using JuMP
 using Combinatorics
 
 # Inspired from Joey Huchette's test in ConvexHull.jl
-function hypercubetest(lib::PolyhedraLibrary, n)
+function hypercubetest(lib::Polyhedra.Library, n)
     m = Model()
     @variable(m, 0 ≤ x[1:n] ≤ 1)
 

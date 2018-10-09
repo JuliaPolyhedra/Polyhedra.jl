@@ -1,7 +1,7 @@
 using JuMP
 
 # Inspired from Joey Huchette's test in ConvexHull.jl
-function jumpsimplextest(lib::PolyhedraLibrary, n)
+function jumpsimplextest(lib::Polyhedra.Library, n)
     m = Model()
     @variable(m, x[1:n] >= 0)
     @constraint(m, sum(x[i] for i=1:n) == 1)
@@ -16,7 +16,7 @@ function jumpsimplextest(lib::PolyhedraLibrary, n)
 end
 
 # Inspired from Joey Huchette's test in ConvexHull.jl
-function simplexorigtest(lib::PolyhedraLibrary, n)
+function simplexorigtest(lib::Polyhedra.Library, n)
     m = Model()
     @variable(m, x[1:n] >= 0)
     @constraint(m, sum(x[i] for i=1:n) ≤ 1)

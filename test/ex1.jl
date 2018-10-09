@@ -1,7 +1,7 @@
 using JuMP
 
 # Inspired from Joey Huchette's test in ConvexHull.jl
-function ex1test(lib::PolyhedraLibrary)
+function ex1test(lib::Polyhedra.Library)
     m = Model()
     @variable(m, x)
     @variable(m, y)

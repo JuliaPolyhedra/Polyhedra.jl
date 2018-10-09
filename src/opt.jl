@@ -7,7 +7,7 @@ abstract type AbstractPolyhedraModel <: MPB.AbstractLinearQuadraticModel end
 #  error("PolyhedraModel not implemented for solver $solver")
 #end
 
-#creates ambiguity with (::SimpleVRepMode, ::Vrep) when a polyhedron is given
+#creates ambiguity with (::VRepMode, ::Vrep) when a polyhedron is given
 #loadproblem!(m::AbstractPolyhedraModel, hrep::HRep, c, sense) = error("loadproblem! not implemented")
 
 struct LinprogSolution

@@ -6,10 +6,10 @@ export IntervalLibrary, Interval
 Default library for polyhedra of dimension 1. Many aspect of polyhedral computation become trivial in one dimension. This library exploits this fact.
 The library is also used as a fallback for libraries that do not support 1-dimensional polyhedra (e.g. qhull). That is projecting a polyhedron using such library produces a polyhedron using `IntervalLibrary`.
 """
-struct IntervalLibrary{T} <: PolyhedraLibrary
+struct IntervalLibrary{T} <: Library
 end
 
-similar_library(lib::IntervalLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to SimplePolyhedraLibrary if d is not FullDim(1)
+similar_library(lib::IntervalLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to DefaultLibrary if d is not FullDim(1)
 
 mutable struct Interval{T, AT, D} <: Polyhedron{T}
     hrep::Intersection{T, AT, D}

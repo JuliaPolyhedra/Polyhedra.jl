@@ -5,9 +5,9 @@ module Polyhedra
 using SparseArrays
 using LinearAlgebra
 
-export PolyhedraLibrary, Polyhedron
+export Polyhedron
 
-abstract type PolyhedraLibrary end
+abstract type Library end
 abstract type Polyhedron{T} end
 
 import MathProgBase

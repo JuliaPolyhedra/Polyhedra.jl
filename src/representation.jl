@@ -27,7 +27,7 @@ const  Rep{T} = Union{ Representation{T}, Polyhedron{T}}
 const HRep{T} = Union{HRepresentation{T}, Polyhedron{T}}
 const VRep{T} = Union{VRepresentation{T}, Polyhedron{T}}
 
-Base.broadcastable(x::Union{Rep, PolyhedraLibrary}) = Ref(x)
+Base.broadcastable(x::Union{Rep, Library}) = Ref(x)
 
 """
     coefficient_type(rep::Rep)
@@ -76,7 +76,7 @@ Base.convert(RepT::Type{<:VRepresentation}, p::VRep)            = vconvert(RepT,
 # avoid ambiguity
 Base.convert(RepT::Type{<:VRepresentation}, p::VRepresentation) = vconvert(RepT, p)
 
-# Used by SimpleVRepPolyhedraModel
+# Used by VRepPolyhedraModel
 Base.convert(::Type{VRep}, p::VRepresentation) = p
 
 change_coefficient_type(p::Rep{T}, ::Type{T}) where {T} = p

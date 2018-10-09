@@ -1,4 +1,4 @@
-function issue48test(lib::PolyhedraLibrary)
+function issue48test(lib::Polyhedra.Library)
     v = [-5 -15; 2 3; -4 2; -2 5]
     V = vrep(v)
     p = polyhedron(V, lib)

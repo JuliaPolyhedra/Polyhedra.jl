@@ -2,7 +2,7 @@ using JuMP
 using Combinatorics
 
 # Inspired from Joey Huchette's test in ConvexHull.jl
-function crosspolytopetest(lib::PolyhedraLibrary, n)
+function crosspolytopetest(lib::Polyhedra.Library, n)
     m = Model()
 
     @variable(m, x[1:n])

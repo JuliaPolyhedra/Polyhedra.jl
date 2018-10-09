@@ -5,7 +5,7 @@
     v = convexhull([-3.], [8.])
 
     v0 = [[1.], [8], [-2], [4], [-1], [-3], [5]]
-    pp = polyhedron(vrep(v0), SimplePolyhedraLibrary{Float64}())
+    pp = polyhedron(vrep(v0), Polyhedra.DefaultLibrary{Float64}())
     @test !hrepiscomputed(pp)
     @test vrepiscomputed(pp)
     d = StaticArrays.Size{(1,)}()
@@ -14,8 +14,8 @@
         @test similar_library(pp, 1) == IntervalLibrary{Float64}()
         @test similar_library(pp, StaticArrays.Size((1,))) == IntervalLibrary{Float64}()
         @test library(p) == IntervalLibrary{Float64}()
-        @test similar_library(p, 2) == SimplePolyhedraLibrary{Float64}()
-        @test similar_library(p, StaticArrays.Size((2,))) == SimplePolyhedraLibrary{Float64}()
+        @test similar_library(p, 2) == Polyhedra.DefaultLibrary{Float64}()
+        @test similar_library(p, StaticArrays.Size((2,))) == Polyhedra.DefaultLibrary{Float64}()
         @test hrepiscomputed(p)
         @test vrepiscomputed(p)
         @test p isa Interval{Float64}
@@ -26,7 +26,7 @@
         generator_fulltest(p, v)
     end
 
-    pp = polyhedron(h, SimplePolyhedraLibrary{Float64}())
+    pp = polyhedron(h, Polyhedra.DefaultLibrary{Float64}())
     @test hrepiscomputed(pp)
     @test !vrepiscomputed(pp)
     for p in (Interval{Float64, SVector{1, Float64}, typeof(d)}(pp),

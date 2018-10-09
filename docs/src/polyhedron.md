@@ -167,7 +167,7 @@ default_type
 
 The following libraries serves as fallback:
 ```@docs
-SimplePolyhedraLibrary
+DefaultLibrary
 IntervalLibrary
 ```
 
