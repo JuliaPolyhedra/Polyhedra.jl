@@ -6,14 +6,14 @@ and a Polyhedra Manipulation Library of your choice.
 ## Getting Julia
 
 The first step is to install Julia.
-Polyhedra supports Julia v0.4 to Julia v0.6 but the latest version only supports Julia v0.6 (the command `Pkg.add` will automatically install the latest compatible version of Polyhedra).
+Polyhedra supports Julia v0.4 to Julia v1.0 but the latest version only supports Julia v0.7 and v1.0.
 Download links and more detailed instructions are available on the [Julia website](http://julialang.org).
 
 ## Getting Polyhedra
 
 Open a Julia console (e.g. enter `julia` at the command line) and write
 ```julia
-julia> Pkg.add("Polyhedra")
+] add Polyhedra
 ```
 
 To start using Polyhedra, you can now just write
