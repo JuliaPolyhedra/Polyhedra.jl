@@ -53,7 +53,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation",
     "title": "Getting Julia",
     "category": "section",
-    "text": "The first step is to install Julia. Polyhedra supports Julia v0.4 to Julia v0.6 but the latest version only supports Julia v0.6 (the command Pkg.add will automatically install the latest compatible version of Polyhedra). Download links and more detailed instructions are available on the Julia website."
+    "text": "The first step is to install Julia. Polyhedra supports Julia v0.4 to Julia v1.0 but the latest version only supports Julia v0.7 and v1.0. Download links and more detailed instructions are available on the Julia website."
 },
 
 {
@@ -61,7 +61,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation",
     "title": "Getting Polyhedra",
     "category": "section",
-    "text": "Open a Julia console (e.g. enter julia at the command line) and writejulia> Pkg.add(\"Polyhedra\")To start using Polyhedra, you can now just writejulia> using PolyhedraPolyhedra includes a default library supporting every operation but external library can also be used. See the next section on installing a library."
+    "text": "Open a Julia console (e.g. enter julia at the command line) and write] add PolyhedraTo start using Polyhedra, you can now just writejulia> using PolyhedraPolyhedra includes a default library supporting every operation but external library can also be used. See the next section on installing a library."
 },
 
 {
@@ -85,7 +85,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.HRepresentation",
     "category": "type",
-    "text": "HRepresentation{T<:Real}\n\nSupertype for H-representations with coefficient type T.\n\n\n\n"
+    "text": "HRepresentation{T<:Real}\n\nSupertype for H-representations with coefficient type T.\n\n\n\n\n\n"
 },
 
 {
@@ -93,7 +93,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.VRepresentation",
     "category": "type",
-    "text": "VRepresentation{T<:Real}\n\nSupertype for V-representations coefficient type T.\n\n\n\n"
+    "text": "VRepresentation{T<:Real}\n\nSupertype for V-representations coefficient type T.\n\n\n\n\n\n"
 },
 
 {
@@ -101,7 +101,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.Representation",
     "category": "type",
-    "text": "Representation{T<:Real}\n\nSupertype for H-(or V-)representations with coefficient type T.\n\n\n\n"
+    "text": "Representation{T<:Real}\n\nSupertype for H-(or V-)representations with coefficient type T.\n\n\n\n\n\n"
 },
 
 {
@@ -109,15 +109,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.fulldim",
     "category": "function",
-    "text": "fulldim(rep::Rep)::Int\n\nReturns the dimension of the space in which polyhedron, representation, element or vector is defined. That is, a straight line in a 3D space has fulldim 3 even if its dimension is 1.\n\n\n\n"
+    "text": "fulldim(rep::Rep)::Int\n\nReturns the dimension of the space in which polyhedron, representation, element or vector is defined. That is, a straight line in a 3D space has fulldim 3 even if its dimension is 1.\n\n\n\n\n\n"
 },
 
 {
-    "location": "representation.html#MultivariatePolynomials.coefficienttype",
+    "location": "representation.html#Polyhedra.coefficient_type",
     "page": "Representation",
-    "title": "MultivariatePolynomials.coefficienttype",
+    "title": "Polyhedra.coefficient_type",
     "category": "function",
-    "text": "coefficienttype(rep::Rep)\n\nReturns the type of the coefficients used in the representation of rep.\n\n\n\n"
+    "text": "coefficient_type(rep::Rep)\n\nReturns the type of the coefficients used in the representation of rep.\n\n\n\n\n\n"
 },
 
 {
@@ -125,7 +125,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Representation",
     "category": "section",
-    "text": "Polyhedra can be described in 2 different ways.H-representation: As the intersection of finitely many halfspaces given by its facets.\nV-representation: As the convex hull of its vertices + the conic hull of its rays where \'+\' is the Minkowski sum.HRepresentation\nVRepresentation\nRepresentationIn Polyhedra.jl, those representations are given the respective abstract types HRepresentation and VRepresentation which are themself subtypes of Representation.These functions can be called on both H-representation and V-representationfulldim\ncoefficienttype"
+    "text": "Polyhedra can be described in 2 different ways.H-representation: As the intersection of finitely many halfspaces given by its facets.\nV-representation: As the convex hull of its vertices + the conic hull of its rays where \'+\' is the Minkowski sum.HRepresentation\nVRepresentation\nRepresentationIn Polyhedra.jl, those representations are given the respective abstract types HRepresentation and VRepresentation which are themself subtypes of Representation.These functions can be called on both H-representation and V-representationfulldim\nPolyhedra.coefficient_type"
 },
 
 {
@@ -133,7 +133,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.HalfSpace",
     "category": "type",
-    "text": "struct HalfSpace{T, AT} <: HRepElement{T, AT}\n    a::AT\n    β::T\nend\n\nAn halfspace defined by the set of points x such that langle a x rangle le beta.\n\n\n\n"
+    "text": "struct HalfSpace{T, AT} <: HRepElement{T, AT}\n    a::AT\n    β::T\nend\n\nAn halfspace defined by the set of points x such that langle a x rangle le beta.\n\n\n\n\n\n"
 },
 
 {
@@ -141,7 +141,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.HyperPlane",
     "category": "type",
-    "text": "struct HyperPlane{T, AT} <: HRepElement{T, AT}\n    a::AT\n    β::T\nend\n\nAn hyperplane defined by the set of points x such that langle a x rangle = beta.\n\n\n\n"
+    "text": "struct HyperPlane{T, AT} <: HRepElement{T, AT}\n    a::AT\n    β::T\nend\n\nAn hyperplane defined by the set of points x such that langle a x rangle = beta.\n\n\n\n\n\n"
 },
 
 {
@@ -149,7 +149,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.hrep",
     "category": "function",
-    "text": "hrep(p::Polyhedron)\n\nReturns an H-representation for the polyhedron p.\n\n\n\nhrep(hyperplanes::HyperPlaneIt; d::FullDim)\n\nCreates an affine space of full dimension d from the list of hyperplanes hyperplanes.\n\nExamples\n\nhrep([HyperPlane([0, 1, 0], 1), HyperPlane([0, 0, 1], 0)])\n\ncreates the 1-dimensional affine subspace containing all the points (x_1 0 0), i.e. the x_1-axis.\n\nhrep([HyperPlane([1, 1], 1), HyperPlane([1, 0], 0)])\n\ncreates the 0-dimensional affine subspace only containing the point (0 1).\n\n\n\nhrep(hyperplanes::HyperPlaneIt, halfspaces::HalfSpaceIt; d::FullDim)\n\nCreates an H-representation for the polyhedron of full dimension d equal to the intersection of the hyperplanes hyperplanes and halfspaces halfspaces.\n\nExamples\n\nFor instance, the simplex\n\nbeginalign*\n  x_1 + x_2 = 1 \n  x_1 geq 0 \n  x_2 geq 0\nendalign*\n\ncan be created as follows:\n\nhrep([HalfSpace([-1, 0], 0)], [HyperPlane([1, 1], 1), HalfSpace([0, -1], 0)])\n\n\n\nhrep(halfspaces::HalfSpaceIt; d::FullDim)\n\nCreates an H-representation for the polyhedron of full dimension d equal to the intersection of the halfspaces halfspaces.\n\nExamples\n\nFor instance, the polytope\n\nbeginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*\n\ncan be created as follows:\n\nhrep([HalfSpace([1, 1], 1), HalfSpace([1, -1], 0), HalfSpace([-1, 0], 0)])\n\n\n\nhrep(model::JuMP.Model)\n\nBuilds an H-representation from the feasibility set of the JuMP model model. Note that if non-linear constraint are present in the model, they are ignored.\n\n\n\nhrep(A::AbstractMatrix, b::AbstractVector, linset::BitSet=BitSet())\n\nCreates an H-representation for the polyhedron defined by the inequalities langle A_i x rangle = b_i if i in linset and langle A_i x rangle le b_i otherwise where A_i is the ith row of A, i.e. A[i,:] and b_i is b[i].\n\n\n\n"
+    "text": "hrep(p::Polyhedron)\n\nReturns an H-representation for the polyhedron p.\n\n\n\n\n\nhrep(hyperplanes::HyperPlaneIt; d::FullDim)\n\nCreates an affine space of full dimension d from the list of hyperplanes hyperplanes.\n\nExamples\n\nhrep([HyperPlane([0, 1, 0], 1), HyperPlane([0, 0, 1], 0)])\n\ncreates the 1-dimensional affine subspace containing all the points (x_1 0 0), i.e. the x_1-axis.\n\nhrep([HyperPlane([1, 1], 1), HyperPlane([1, 0], 0)])\n\ncreates the 0-dimensional affine subspace only containing the point (0 1).\n\n\n\n\n\nhrep(hyperplanes::HyperPlaneIt, halfspaces::HalfSpaceIt; d::FullDim)\n\nCreates an H-representation for the polyhedron of full dimension d equal to the intersection of the hyperplanes hyperplanes and halfspaces halfspaces.\n\nExamples\n\nFor instance, the simplex\n\nbeginalign*\n  x_1 + x_2 = 1 \n  x_1 geq 0 \n  x_2 geq 0\nendalign*\n\ncan be created as follows:\n\nhrep([HalfSpace([-1, 0], 0)], [HyperPlane([1, 1], 1), HalfSpace([0, -1], 0)])\n\n\n\n\n\nhrep(halfspaces::HalfSpaceIt; d::FullDim)\n\nCreates an H-representation for the polyhedron of full dimension d equal to the intersection of the halfspaces halfspaces.\n\nExamples\n\nFor instance, the polytope\n\nbeginalign*\n  x_1 + x_2 leq 1 \n  x_1 - x_2 leq 0 \n  x_1  geq 0\nendalign*\n\ncan be created as follows:\n\nhrep([HalfSpace([1, 1], 1), HalfSpace([1, -1], 0), HalfSpace([-1, 0], 0)])\n\n\n\n\n\nhrep(model::JuMP.Model)\n\nBuilds an H-representation from the feasibility set of the JuMP model model. Note that if non-linear constraint are present in the model, they are ignored.\n\n\n\n\n\nhrep(A::AbstractMatrix, b::AbstractVector, linset::BitSet=BitSet())\n\nCreates an H-representation for the polyhedron defined by the inequalities langle A_i x rangle = b_i if i in linset and langle A_i x rangle le b_i otherwise where A_i is the ith row of A, i.e. A[i,:] and b_i is b[i].\n\n\n\n\n\n"
 },
 
 {
@@ -165,7 +165,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.halfspaces",
     "category": "function",
-    "text": "halfspaces(hrep::HRep)\n\nReturns an iterator over the halfspaces of the H-representation hrep.\n\n\n\n"
+    "text": "halfspaces(hrep::HRep)\n\nReturns an iterator over the halfspaces of the H-representation hrep.\n\n\n\n\n\n"
 },
 
 {
@@ -173,7 +173,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.nhalfspaces",
     "category": "function",
-    "text": "nhalfspaces(hrep::HRep)\n\nReturns the number of halfspaces of the H-representation hrep.\n\n\n\n"
+    "text": "nhalfspaces(hrep::HRep)\n\nReturns the number of halfspaces of the H-representation hrep.\n\n\n\n\n\n"
 },
 
 {
@@ -181,7 +181,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.hashalfspaces",
     "category": "function",
-    "text": "hashalfspaces(hrep::HRep)\n\nReturns whether the H-representation hrep has any halfspace.\n\n\n\n"
+    "text": "hashalfspaces(hrep::HRep)\n\nReturns whether the H-representation hrep has any halfspace.\n\n\n\n\n\n"
 },
 
 {
@@ -189,7 +189,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.hyperplanes",
     "category": "function",
-    "text": "hyperplanes(hrep::HRep)\n\nReturns an iterator over the hyperplanes of the H-representation hrep.\n\n\n\n"
+    "text": "hyperplanes(hrep::HRep)\n\nReturns an iterator over the hyperplanes of the H-representation hrep.\n\n\n\n\n\n"
 },
 
 {
@@ -197,7 +197,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.nhyperplanes",
     "category": "function",
-    "text": "nhyperplanes(hrep::HRep)\n\nReturns the number of hyperplanes of the H-representation hrep.\n\n\n\n"
+    "text": "nhyperplanes(hrep::HRep)\n\nReturns the number of hyperplanes of the H-representation hrep.\n\n\n\n\n\n"
 },
 
 {
@@ -205,7 +205,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.hashyperplanes",
     "category": "function",
-    "text": "hashyperplanes(hrep::HRep)\n\nReturns whether the H-representation hrep has any hyperplane.\n\n\n\n"
+    "text": "hashyperplanes(hrep::HRep)\n\nReturns whether the H-representation hrep has any hyperplane.\n\n\n\n\n\n"
 },
 
 {
@@ -213,7 +213,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.allhalfspaces",
     "category": "function",
-    "text": "allhalfspaces(hrep::HRep)\n\nReturns an iterator over the halfspaces and hyperplanes in the H-representation hrep splitting hyperplanes in two halfspaces.\n\nExamples\n\nhrep = HyperPlane([1, 0], 1) ∩ HalfSpace([0, 1], 1)\ncollect(allhalfspaces(hrep)) # Returns [HalfSpace([1, 0]), HalfSpace([-1, 0]), HalfSpace([0, 1])]\n\n\n\n"
+    "text": "allhalfspaces(hrep::HRep)\n\nReturns an iterator over the halfspaces and hyperplanes in the H-representation hrep splitting hyperplanes in two halfspaces.\n\nExamples\n\nhrep = HyperPlane([1, 0], 1) ∩ HalfSpace([0, 1], 1)\ncollect(allhalfspaces(hrep)) # Returns [HalfSpace([1, 0]), HalfSpace([-1, 0]), HalfSpace([0, 1])]\n\n\n\n\n\n"
 },
 
 {
@@ -221,7 +221,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.nallhalfspaces",
     "category": "function",
-    "text": "nallhalfspaces(hrep::HRep)\n\nReturns the number of halfspaces plus twice the number of hyperplanes in the H-representation hrep, i.e. length(allhalfspaces(hrep))\n\n\n\n"
+    "text": "nallhalfspaces(hrep::HRep)\n\nReturns the number of halfspaces plus twice the number of hyperplanes in the H-representation hrep, i.e. length(allhalfspaces(hrep))\n\n\n\n\n\n"
 },
 
 {
@@ -229,7 +229,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.hasallhalfspaces",
     "category": "function",
-    "text": "hasallhalfspaces(hrep::HRep)\n\nReturns whether the H-representation hrep contains any halfspace or hyperplane.\n\n\n\n"
+    "text": "hasallhalfspaces(hrep::HRep)\n\nReturns whether the H-representation hrep contains any halfspace or hyperplane.\n\n\n\n\n\n"
 },
 
 {
@@ -241,11 +241,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "representation.html#Polyhedra.Ray",
+    "page": "Representation",
+    "title": "Polyhedra.Ray",
+    "category": "type",
+    "text": "struct Ray{T, AT <: AbstractVector{T}}\n    a::AT\nend\n\nThe conic hull of a, i.e. the set of points λa where λ is any nonnegative real number.\n\n\n\n\n\n"
+},
+
+{
     "location": "representation.html#Polyhedra.Line",
     "page": "Representation",
     "title": "Polyhedra.Line",
     "category": "type",
-    "text": "struct Line{T, AT <: AbstractVector{T}}\n    a::AT\nend\n\nThe conic hull of a and -a, i.e. the set of points λa where λ is any real number.\n\n\n\n"
+    "text": "struct Line{T, AT <: AbstractVector{T}}\n    a::AT\nend\n\nThe conic hull of a and -a, i.e. the set of points λa where λ is any real number.\n\n\n\n\n\n"
 },
 
 {
@@ -253,7 +261,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.vrep",
     "category": "function",
-    "text": "vrep(p::Polyhedron)\n\nReturns a V-representation for the polyhedron p.\n\n\n\nvrep(lines::LineIt; d::FullDim)\n\nCreates an affine space of full dimension d from the list of lines lines.\n\nExamples\n\nvrep([Line([1, 0, 0]), Line([0, 1, 0])])\n\ncreates the 2-dimensional affine subspace containing all the points (x_1 x_2 0), i.e. the x_1x_2-plane.\n\n\n\nvrep(points::PointIt; d::FullDim)\n\nCreates a V-representation for the polytope of full dimension d equal to the convex hull of the points points.\n\nExamples\n\nThe convex hull of (0 0), (0 1) and (12 12) can be created as follows using exact arithmetic\n\nvrep([[0, 0], [0, 1], [1//2, 1//2]])\n\nor as follows using floating point arithmetic\n\nvrep([[0, 0], [0, 1], [1/2, 1/2]])\n\n\n\nvrep(lines::LineIt, rays::RayIt; d::FullDim)\n\nCreates a V-representation for the polyhedral cone of full dimension d equal to the conic hull of the lines lines and rays rays.\n\nExamples\n\nvrep([Line([0, 1])], [Ray([1, 0])])\n\ncreates a V-representation for the halfspace x_1 ge 0.\n\n\n\nvrep(rays::RayIt)\n\nCreates a V-representation for the polyhedral cone of full dimension d equal to the conic hull of the rays rays.\n\nExamples\n\nvrep([Ray([1, 0]), Ray([0, 1])])\n\ncreates a V-representation for positive orthant.\n\n\n\nvrep(points::PointIt, lines::LineIt, rays::RayIt)\n\nCreates a V-representation for the polyhedron of full dimension d equal to the minkowski sum of the convex hull of points with the conic hull of lines and rays.\n\n\n\nvrep(V::AbstractMatrix, R::AbstractMatrix, Rlinset::BitSet=BitSet())\n\nCreates a V-representation for the polyhedron defined by the points V_i, lines R_i if i in Rlinset and rays R_i otherwise where V_i (resp. R_i) is the ith row of V (resp. R), i.e. V[i,:] (resp. R[i,:]).\n\n\n\n"
+    "text": "vrep(p::Polyhedron)\n\nReturns a V-representation for the polyhedron p.\n\n\n\n\n\nvrep(lines::LineIt; d::FullDim)\n\nCreates an affine space of full dimension d from the list of lines lines.\n\nExamples\n\nvrep([Line([1, 0, 0]), Line([0, 1, 0])])\n\ncreates the 2-dimensional affine subspace containing all the points (x_1 x_2 0), i.e. the x_1x_2-plane.\n\n\n\n\n\nvrep(points::PointIt; d::FullDim)\n\nCreates a V-representation for the polytope of full dimension d equal to the convex hull of the points points.\n\nExamples\n\nThe convex hull of (0 0), (0 1) and (12 12) can be created as follows using exact arithmetic\n\nvrep([[0, 0], [0, 1], [1//2, 1//2]])\n\nor as follows using floating point arithmetic\n\nvrep([[0, 0], [0, 1], [1/2, 1/2]])\n\n\n\n\n\nvrep(lines::LineIt, rays::RayIt; d::FullDim)\n\nCreates a V-representation for the polyhedral cone of full dimension d equal to the conic hull of the lines lines and rays rays.\n\nExamples\n\nvrep([Line([0, 1])], [Ray([1, 0])])\n\ncreates a V-representation for the halfspace x_1 ge 0.\n\n\n\n\n\nvrep(rays::RayIt)\n\nCreates a V-representation for the polyhedral cone of full dimension d equal to the conic hull of the rays rays.\n\nExamples\n\nvrep([Ray([1, 0]), Ray([0, 1])])\n\ncreates a V-representation for positive orthant.\n\n\n\n\n\nvrep(points::PointIt, lines::LineIt, rays::RayIt)\n\nCreates a V-representation for the polyhedron of full dimension d equal to the minkowski sum of the convex hull of points with the conic hull of lines and rays.\n\n\n\n\n\nvrep(V::AbstractMatrix, R::AbstractMatrix, Rlinset::BitSet=BitSet())\n\nCreates a V-representation for the polyhedron defined by the points V_i, lines R_i if i in Rlinset and rays R_i otherwise where V_i (resp. R_i) is the ith row of V (resp. R), i.e. V[i,:] (resp. R[i,:]).\n\n\n\n\n\n"
 },
 
 {
@@ -261,7 +269,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "V-representation",
     "category": "section",
-    "text": "The fundamental elements of an V-representation are the points and raysAbstractPoint\nRayA V-representation can be created as the minkowski sum between a convex hull of points and a conic hull of rays. For instance, the positive orthant without the simplex defined in the H-representation section can be created as follows:convexhull([1, 0], [0, 1]) + conichull([1, 0], [0, 1])The V-representation represents the polyhedron as a minkowski sum of a polytope and a polyhedral cone. The polytope is represented using a P-representation : a convex hull of points. The polyhedral cone is represented using an R-representation : a conic hull of rays.Even if rays are enough to describe any polyhedral cone, it is sometimes important to represent the fact that the polyhedron contains an affine subspace. For instance, the polyhedron created withconvexhull([1, 0], [0, 1]) + conichull([1, 1], [-1, -1])contains the line [1, 1].The fundamental element of an affine subspace is the lineLineAn affine subspace can be created as the conic hull/minkownski sum of several lines. For instanceconichull(Line([1, 0]), Line([0, 1]))represents the full space.In addition to being created incrementally with convex hull and minkowsky addition, a V-representation can also be created using the vrep functionvrep"
+    "text": "The fundamental elements of an V-representation are the points (represented by AbstractVectors and and raysRayA V-representation can be created as the minkowski sum between a convex hull of points and a conic hull of rays. For instance, the positive orthant without the simplex defined in the H-representation section can be created as follows:convexhull([1, 0], [0, 1]) + conichull([1, 0], [0, 1])The V-representation represents the polyhedron as a minkowski sum of a polytope and a polyhedral cone. The polytope is represented using a P-representation : a convex hull of points. The polyhedral cone is represented using an R-representation : a conic hull of rays.Even if rays are enough to describe any polyhedral cone, it is sometimes important to represent the fact that the polyhedron contains an affine subspace. For instance, the polyhedron created withconvexhull([1, 0], [0, 1]) + conichull([1, 1], [-1, -1])contains the line [1, 1].The fundamental element of an affine subspace is the lineLineAn affine subspace can be created as the conic hull/minkownski sum of several lines. For instanceconichull(Line([1, 0]), Line([0, 1]))represents the full space.In addition to being created incrementally with convex hull and minkowsky addition, a V-representation can also be created using the vrep functionvrep"
 },
 
 {
@@ -269,7 +277,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.points",
     "category": "function",
-    "text": "points(vrep::VRep)\n\nReturns an iterator over the points of the V-representation vrep.\n\n\n\n"
+    "text": "points(vrep::VRep)\n\nReturns an iterator over the points of the V-representation vrep.\n\n\n\n\n\n"
 },
 
 {
@@ -277,7 +285,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.npoints",
     "category": "function",
-    "text": "npoints(vrep::VRep)\n\nReturns the number of points of the V-representation vrep.\n\n\n\n"
+    "text": "npoints(vrep::VRep)\n\nReturns the number of points of the V-representation vrep.\n\n\n\n\n\n"
 },
 
 {
@@ -285,7 +293,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.haspoints",
     "category": "function",
-    "text": "haspoints(vrep::VRep)\n\nReturns whether the V-representation vrep has any point.\n\n\n\n"
+    "text": "haspoints(vrep::VRep)\n\nReturns whether the V-representation vrep has any point.\n\n\n\n\n\n"
 },
 
 {
@@ -293,7 +301,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.rays",
     "category": "function",
-    "text": "rays(vrep::VRep)\n\nReturns an iterator over the rays of the V-representation vrep.\n\n\n\n"
+    "text": "rays(vrep::VRep)\n\nReturns an iterator over the rays of the V-representation vrep.\n\n\n\n\n\n"
 },
 
 {
@@ -301,7 +309,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.nrays",
     "category": "function",
-    "text": "nrays(vrep::VRep)\n\nReturns the number of rays of the V-representation vrep.\n\n\n\n"
+    "text": "nrays(vrep::VRep)\n\nReturns the number of rays of the V-representation vrep.\n\n\n\n\n\n"
 },
 
 {
@@ -309,7 +317,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.hasrays",
     "category": "function",
-    "text": "hasrays(vrep::VRep)\n\nReturns whether the V-representation vrep has any ray.\n\n\n\n"
+    "text": "hasrays(vrep::VRep)\n\nReturns whether the V-representation vrep has any ray.\n\n\n\n\n\n"
 },
 
 {
@@ -317,7 +325,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.lines",
     "category": "function",
-    "text": "lines(vrep::VRep)\n\nReturns an iterator over the lines of the V-representation vrep.\n\n\n\n"
+    "text": "lines(vrep::VRep)\n\nReturns an iterator over the lines of the V-representation vrep.\n\n\n\n\n\n"
 },
 
 {
@@ -325,7 +333,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.nlines",
     "category": "function",
-    "text": "nlines(vrep::VRep)\n\nReturns the number of lines of the V-representation vrep.\n\n\n\n"
+    "text": "nlines(vrep::VRep)\n\nReturns the number of lines of the V-representation vrep.\n\n\n\n\n\n"
 },
 
 {
@@ -333,7 +341,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.haslines",
     "category": "function",
-    "text": "haslines(vrep::VRep)\n\nReturns whether the V-representation vrep has any line.\n\n\n\n"
+    "text": "haslines(vrep::VRep)\n\nReturns whether the V-representation vrep has any line.\n\n\n\n\n\n"
 },
 
 {
@@ -341,7 +349,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.allrays",
     "category": "function",
-    "text": "allrays(vrep::VRep)\n\nReturns an iterator over the rays and lines in the V-representation vrep splitting lines in two rays.\n\nExamples\n\nvrep = Line([1, 0]) + Ray([0, 1])\ncollect(allrays(vrep)) # Returns [Ray([1, 0]), Ray([-1, 0]), Ray([0, 1])]\n\n\n\n"
+    "text": "allrays(vrep::VRep)\n\nReturns an iterator over the rays and lines in the V-representation vrep splitting lines in two rays.\n\nExamples\n\nvrep = Line([1, 0]) + Ray([0, 1])\ncollect(allrays(vrep)) # Returns [Ray([1, 0]), Ray([-1, 0]), Ray([0, 1])]\n\n\n\n\n\n"
 },
 
 {
@@ -349,7 +357,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.nallrays",
     "category": "function",
-    "text": "nallrays(vrep::VRep)\n\nReturns the number of rays plus twice the number of lines in the V-representation vrep, i.e. length(allrays(vrep))\n\n\n\n"
+    "text": "nallrays(vrep::VRep)\n\nReturns the number of rays plus twice the number of lines in the V-representation vrep, i.e. length(allrays(vrep))\n\n\n\n\n\n"
 },
 
 {
@@ -357,7 +365,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Representation",
     "title": "Polyhedra.hasallrays",
     "category": "function",
-    "text": "hasallrays(vrep::VRep)\n\nReturns whether the V-representation vrep contains any ray or line.\n\n\n\n"
+    "text": "hasallrays(vrep::VRep)\n\nReturns whether the V-representation vrep contains any ray or line.\n\n\n\n\n\n"
 },
 
 {
@@ -381,7 +389,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.doubledescription",
     "category": "function",
-    "text": "doubledescription(h::HRepresentation)\n\nComputes the V-representation of the polyhedron represented by h using the Double-Description algorithm [1, 2].\n\ndoubledescription(V::VRepresentation)\n\nComputes the H-representation of the polyhedron represented by v using the Double-Description algorithm [1, 2].\n\n[1] Motzkin, T. S., Raiffa, H., Thompson, G. L. and Thrall, R. M. The double description method Contribution to the Theory of Games, Princeton University Press, 1953\n\n[2] Fukuda, K. and Prodon, A. Double description method revisited Combinatorics and computer science, Springer, 1996, 91-111\n\n\n\n"
+    "text": "doubledescription(h::HRepresentation)\n\nComputes the V-representation of the polyhedron represented by h using the Double-Description algorithm [1, 2].\n\ndoubledescription(V::VRepresentation)\n\nComputes the H-representation of the polyhedron represented by v using the Double-Description algorithm [1, 2].\n\n[1] Motzkin, T. S., Raiffa, H., Thompson, G. L. and Thrall, R. M. The double description method Contribution to the Theory of Games, Princeton University Press, 1953\n\n[2] Fukuda, K. and Prodon, A. Double description method revisited Combinatorics and computer science, Springer, 1996, 91-111\n\n\n\n\n\n"
 },
 
 {
@@ -389,7 +397,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.polyhedron",
     "category": "function",
-    "text": "polyhedron(rep::Representation{T})\n\nCreates a polyhedron from the representation rep using the default library including in the Polyhedra package.\n\n\n\n"
+    "text": "polyhedron(rep::Representation{T})\n\nCreates a polyhedron from the representation rep using the default library including in the Polyhedra package.\n\n\n\n\n\n"
 },
 
 {
@@ -413,7 +421,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.hrepiscomputed",
     "category": "function",
-    "text": "hrepiscomputed(p::Polyhedron)\n\nReturns whether the H-representation of this polyhedron has been computed.\n\n\n\n"
+    "text": "hrepiscomputed(p::Polyhedron)\n\nReturns whether the H-representation of this polyhedron has been computed.\n\n\n\n\n\n"
 },
 
 {
@@ -421,7 +429,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.vrepiscomputed",
     "category": "function",
-    "text": "vrepiscomputed(p::Polyhedron)\n\nReturns whether the V-representation of this polyhedron has been computed.\n\n\n\n"
+    "text": "vrepiscomputed(p::Polyhedron)\n\nReturns whether the V-representation of this polyhedron has been computed.\n\n\n\n\n\n"
 },
 
 {
@@ -437,7 +445,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.Index",
     "category": "type",
-    "text": "Index{T, ElemT}\n\nIndex of an element of type ElemT in a Rep{T}.\n\n\n\n"
+    "text": "Index{T, ElemT}\n\nIndex of an element of type ElemT in a Rep{T}.\n\n\n\n\n\n"
 },
 
 {
@@ -445,7 +453,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.Indices",
     "category": "type",
-    "text": "Indices{T, ElemT, RepT<:Rep{T}}\n\nIterator over the indices of the elements of type ElemT of the field rep.\n\n\n\n"
+    "text": "Indices{T, ElemT, RepT<:Rep{T}}\n\nIterator over the indices of the elements of type ElemT of the field rep.\n\n\n\n\n\n"
 },
 
 {
@@ -453,7 +461,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.incidenthalfspaces",
     "category": "function",
-    "text": "incidenthalfspaces(p::Polyhedron, idx)\n\nReturns the list of halfspaces incident to idx for the polyhedron p.\n\n\n\n"
+    "text": "incidenthalfspaces(p::Polyhedron, idx)\n\nReturns the list of halfspaces incident to idx for the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -461,7 +469,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.incidenthalfspaceindices",
     "category": "function",
-    "text": "incidenthalfspaceindices(p::Polyhedron, idx)\n\nReturns the list of the indices of halfspaces incident to idx for the polyhedron p.\n\n\n\n"
+    "text": "incidenthalfspaceindices(p::Polyhedron, idx)\n\nReturns the list of the indices of halfspaces incident to idx for the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -469,7 +477,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.incidentpoints",
     "category": "function",
-    "text": "incidentpoints(p::Polyhedron, idx)\n\nReturns the list of points incident to idx for the polyhedron p.\n\n\n\n"
+    "text": "incidentpoints(p::Polyhedron, idx)\n\nReturns the list of points incident to idx for the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -477,7 +485,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.incidentpointindices",
     "category": "function",
-    "text": "incidentpointindices(p::Polyhedron, idx)\n\nReturns the list of the indices of points incident to idx for the polyhedron p.\n\n\n\n"
+    "text": "incidentpointindices(p::Polyhedron, idx)\n\nReturns the list of the indices of points incident to idx for the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -485,7 +493,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.incidentrays",
     "category": "function",
-    "text": "incidentrays(p::Polyhedron, idx)\n\nReturns the list of rays incident to idx for the polyhedron p.\n\n\n\n"
+    "text": "incidentrays(p::Polyhedron, idx)\n\nReturns the list of rays incident to idx for the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -493,7 +501,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.incidentrayindices",
     "category": "function",
-    "text": "incidentrayindices(p::Polyhedron, idx)\n\nReturns the list of the indices of rays incident to idx for the polyhedron p.\n\n\n\n"
+    "text": "incidentrayindices(p::Polyhedron, idx)\n\nReturns the list of the indices of rays incident to idx for the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -501,7 +509,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.incidenthyperplanes",
     "category": "function",
-    "text": "incidenthyperplanes(p::Polyhedron, idx)\n\nReturns the list of hyperplanes incident to idx for the polyhedron p.\n\n\n\n"
+    "text": "incidenthyperplanes(p::Polyhedron, idx)\n\nReturns the list of hyperplanes incident to idx for the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -509,7 +517,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.incidenthyperplaneindices",
     "category": "function",
-    "text": "incidenthyperplaneindices(p::Polyhedron, idx)\n\nReturns the list of the indices of hyperplanes incident to idx for the polyhedron p.\n\n\n\n"
+    "text": "incidenthyperplaneindices(p::Polyhedron, idx)\n\nReturns the list of the indices of hyperplanes incident to idx for the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -517,7 +525,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.incidentlines",
     "category": "function",
-    "text": "incidentlines(p::Polyhedron, idx)\n\nReturns the list of lines incident to idx for the polyhedron p.\n\n\n\n"
+    "text": "incidentlines(p::Polyhedron, idx)\n\nReturns the list of lines incident to idx for the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -525,7 +533,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.incidentlineindices",
     "category": "function",
-    "text": "incidentlineindices(p::Polyhedron, idx)\n\nReturns the list of the indices of lines incident to idx for the polyhedron p.\n\n\n\n"
+    "text": "incidentlineindices(p::Polyhedron, idx)\n\nReturns the list of the indices of lines incident to idx for the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -541,7 +549,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.default_library",
     "category": "function",
-    "text": "default_library(d::FullDim, ::Type{T}) where {T}\n\nReturns the default polyhedral library for d-dimensional polyhedron of coefficient type T.\n\n\n\n"
+    "text": "default_library(d::FullDim, ::Type{T}) where {T}\n\nReturns the default polyhedral library for d-dimensional polyhedron of coefficient type T.\n\nExamples\n\nTo obtain the default library for 2-dimensional polyhedra of eltype Float64, do default_library(2, Float64).\n\nGiven an StaticArrays.SVector v, to obtain a default library for points of the type of v in a type stable way, do default_library(Polyhedra.FullDim(v), eltype(v)).\n\n\n\n\n\n"
 },
 
 {
@@ -549,7 +557,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.similar_library",
     "category": "function",
-    "text": "similar_library(lib::PolyhedraLibrary, d::FullDim, T::Type)\n\nReturns a library that supports polyhedra of full dimension T with coefficient type T. If lib does not support it, this commonly calls default_library(d, T).\n\n\n\n"
+    "text": "similar_library(lib::Library, d::FullDim, T::Type)\n\nReturns a library that supports polyhedra of full dimension T with coefficient type T. If lib does not support it, this commonly calls default_library(d, T).\n\n\n\n\n\n"
 },
 
 {
@@ -557,7 +565,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.library",
     "category": "function",
-    "text": "library(p::Polyhedron)\n\nReturns the library used by p.\n\n\n\n"
+    "text": "library(p::Polyhedron)\n\nReturns the library used by p.\n\n\n\n\n\n"
 },
 
 {
@@ -565,15 +573,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.default_type",
     "category": "function",
-    "text": "default_type(d::FullDim, ::Type{T}) where {T}\n\nReturns the default polyhedron type for d-dimensional polyhedron of coefficient type T.\n\n\n\n"
+    "text": "default_type(d::FullDim, ::Type{T}) where {T}\n\nReturns the default polyhedron type for d-dimensional polyhedron of coefficient type T.\n\n\n\n\n\n"
 },
 
 {
-    "location": "polyhedron.html#Polyhedra.SimplePolyhedraLibrary",
+    "location": "polyhedron.html#Polyhedra.DefaultLibrary",
     "page": "Polyhedron",
-    "title": "Polyhedra.SimplePolyhedraLibrary",
+    "title": "Polyhedra.DefaultLibrary",
     "category": "type",
-    "text": "SimplePolyhedraLibrary{T}\n\nDefault library for polyhedra of dimension larger than 1 (IntervalLibrary is the default for polyhedra of dimension 1). The library implements the bare minimum and uses the fallback implementation for all operations.\n\n\n\n"
+    "text": "DefaultLibrary{T}\n\nDefault library for polyhedra of dimension larger than 1 (IntervalLibrary is the default for polyhedra of dimension 1). The library implements the bare minimum and uses the fallback implementation for all operations.\n\n\n\n\n\n"
 },
 
 {
@@ -581,7 +589,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.IntervalLibrary",
     "category": "type",
-    "text": "IntervalLibrary{T}\n\nDefault library for polyhedra of dimension 1. Many aspect of polyhedral computation become trivial in one dimension. This library exploits this fact. The library is also used as a fallback for libraries that do not support 1-dimensional polyhedra (e.g. qhull). That is projecting a polyhedron using such library produces a polyhedron using IntervalLibrary.\n\n\n\n"
+    "text": "IntervalLibrary{T}\n\nDefault library for polyhedra of dimension 1. Many aspect of polyhedral computation become trivial in one dimension. This library exploits this fact. The library is also used as a fallback for libraries that do not support 1-dimensional polyhedra (e.g. qhull). That is projecting a polyhedron using such library produces a polyhedron using IntervalLibrary.\n\n\n\n\n\n"
 },
 
 {
@@ -589,7 +597,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Base.similar",
     "category": "function",
-    "text": "similar(p::Tuple{Vararg{Polyhedra.Rep}}, d::Polyhedra.FullDim, ::Type{T}, it::Polyhedra.It{T}...)\n\nCreates a representation with a type similar to p of a polyhedron of full dimension d, element type T and initialize it with the iterators it. The type of the result will be chosen closer to the type of p[1].\n\n\n\n"
+    "text": "similar(p::Tuple{Vararg{Polyhedra.Rep}}, d::Polyhedra.FullDim, ::Type{T}, it::Polyhedra.It{T}...)\n\nCreates a representation with a type similar to p of a polyhedron of full dimension d, element type T and initialize it with the iterators it. The type of the result will be chosen closer to the type of p[1].\n\n\n\n\n\n"
 },
 
 {
@@ -597,7 +605,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Default libraries",
     "category": "section",
-    "text": "The following functions allows to select a default library:default_library\nsimilar_library\nlibrary\ndefault_typeThe following libraries serves as fallback:SimplePolyhedraLibrary\nIntervalLibraryThe type and library of the polyhedron obtained after applying an operation of several polyhedra (of possibly different type and/or library) is determined by the similar function.similar"
+    "text": "The following functions allows to select a default library:default_library\nsimilar_library\nlibrary\ndefault_typeThe following libraries serves as fallback:DefaultLibrary\nIntervalLibraryThe type and library of the polyhedron obtained after applying an operation of several polyhedra (of possibly different type and/or library) is determined by the similar function.similar"
 },
 
 {
@@ -621,7 +629,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Base.in",
     "category": "function",
-    "text": "in(p::VRepElement, h::HRepElement)\n\nReturns whether p is in h. If h is an hyperplane, it returns whether langle a x rangle approx beta. If h is an halfspace, it returns whether langle a x rangle le beta.\n\nin(p::VRepElement, h::HRep)\n\nReturns whether p is in h, e.g. in all the hyperplanes and halfspaces supporting h.\n\n\n\n"
+    "text": "in(p::VRepElement, h::HRepElement)\n\nReturns whether p is in h. If h is an hyperplane, it returns whether langle a x rangle approx beta. If h is an halfspace, it returns whether langle a x rangle le beta.\n\nin(p::VRepElement, h::HRep)\n\nReturns whether p is in h, e.g. in all the hyperplanes and halfspaces supporting h.\n\n\n\n\n\n"
 },
 
 {
@@ -629,7 +637,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Base.issubset",
     "category": "function",
-    "text": "issubset(p::Rep, h::HRepElement)\n\nReturns whether p is a subset of h, i.e. whether h supports the polyhedron p.\n\n\n\n"
+    "text": "issubset(p::Rep, h::HRepElement)\n\nReturns whether p is a subset of h, i.e. whether h supports the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -637,7 +645,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Polyhedra.ininterior",
     "category": "function",
-    "text": "ininterior(p::VRepElement, h::HRepElement)\n\nReturns whether p is in the interior of h. If h is an hyperplane, it always returns false. If h is an halfspace langle a x rangle leq beta, it returns whether p is in the open halfspace langle a x rangle  beta\n\nininterior(p::VRepElement, h::HRep)\n\nReturns whether p is in the interior of h, e.g. in the interior of all the hyperplanes and halfspaces supporting h.\n\n\n\n"
+    "text": "ininterior(p::VRepElement, h::HRepElement)\n\nReturns whether p is in the interior of h. If h is an hyperplane, it always returns false. If h is an halfspace langle a x rangle leq beta, it returns whether p is in the open halfspace langle a x rangle  beta\n\nininterior(p::VRepElement, h::HRep)\n\nReturns whether p is in the interior of h, e.g. in the interior of all the hyperplanes and halfspaces supporting h.\n\n\n\n\n\n"
 },
 
 {
@@ -645,7 +653,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Polyhedra.inrelativeinterior",
     "category": "function",
-    "text": "inrelativeinterior(p::VRepElement, h::HRepElement)\n\nReturns whether p is in the relative interior of h. If h is an hyperplane, it is equivalent to p in h since the relative interior of an hyperplane is itself. If h is an halfspace, it is equivalent to ininterior(p, h).\n\ninrelativeinterior(p::VRepElement, h::HRep)\n\nReturns whether p is in the relative interior of h, e.g. in the relative interior of all the hyperplanes and halfspaces supporting h.\n\n\n\n"
+    "text": "inrelativeinterior(p::VRepElement, h::HRepElement)\n\nReturns whether p is in the relative interior of h. If h is an hyperplane, it is equivalent to p in h since the relative interior of an hyperplane is itself. If h is an halfspace, it is equivalent to ininterior(p, h).\n\ninrelativeinterior(p::VRepElement, h::HRep)\n\nReturns whether p is in the relative interior of h, e.g. in the relative interior of all the hyperplanes and halfspaces supporting h.\n\n\n\n\n\n"
 },
 
 {
@@ -661,7 +669,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Polyhedra.detecthlinearity!",
     "category": "function",
-    "text": "detecthlinearity!(p::VRep)\n\nDetects all the hyperplanes contained in the H-representation and remove all redundant hyperplanes.\n\nExamples\n\nThe representation\n\nh = HalfSpace([1, 1], 1]) ∩ HalfSpace([-1, -1], -1)\n\ncontains the hyperplane HyperPlane([1, 1], 1).\n\n\n\n"
+    "text": "detecthlinearity!(p::VRep)\n\nDetects all the hyperplanes contained in the H-representation and remove all redundant hyperplanes.\n\nExamples\n\nThe representation\n\nh = HalfSpace([1, 1], 1]) ∩ HalfSpace([-1, -1], -1)\n\ncontains the hyperplane HyperPlane([1, 1], 1).\n\n\n\n\n\n"
 },
 
 {
@@ -669,7 +677,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Polyhedra.detectvlinearity!",
     "category": "function",
-    "text": "detectvlinearity!(p::VRep)\n\nDetects all the lines contained in the V-representation and remove all redundant lines.\n\nExamples\n\nThe representation\n\nv = conichull([1, 1], [-1, -1])\n\ncontains the line Line([1, 1]).\n\n\n\n"
+    "text": "detectvlinearity!(p::VRep)\n\nDetects all the lines contained in the V-representation and remove all redundant lines.\n\nExamples\n\nThe representation\n\nv = conichull([1, 1], [-1, -1])\n\ncontains the line Line([1, 1]).\n\n\n\n\n\n"
 },
 
 {
@@ -677,7 +685,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Polyhedra.dim",
     "category": "function",
-    "text": "dim(h::HRep, current=false)\n\nReturns the dimension of the affine hull of the polyhedron. That is the number of non-redundant hyperplanes that define it. If current is true then it simply returns the dimension according the current number of hyperplanes, assuming that the H-linearity has already been detected. Otherwise, it first calls detecthlinearity!.\n\n\n\n"
+    "text": "dim(h::HRep, current=false)\n\nReturns the dimension of the affine hull of the polyhedron. That is the number of non-redundant hyperplanes that define it. If current is true then it simply returns the dimension according the current number of hyperplanes, assuming that the H-linearity has already been detected. Otherwise, it first calls detecthlinearity!.\n\n\n\n\n\n"
 },
 
 {
@@ -693,7 +701,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Polyhedra.removeduplicates",
     "category": "function",
-    "text": "removeduplicates(rep::Representation)\n\nRemoves the duplicates in the Representation.\n\nIn an H-representation, it removes the redundant hyperplanes and it remove an halfspace when it is equal to another halfspace in the affine hull. For instance, HalfSpace([1, 1], 1) is equal to HalfSpace([1, 0], 0) in the affine hull generated by HyperPlane([0, 1], 1]).\nIn a V-representation, it removes the redundant lines and it remove a point (resp. ray) when it is equal to another point (resp. ray) in the line hull. For instance, in the line hull generated by Line([0, 1]), [1, 1] is equal to [1, 0] and Ray([2, 2]) is equal to Ray([1, 0]).\n\n\n\n"
+    "text": "removeduplicates(rep::Representation)\n\nRemoves the duplicates in the Representation.\n\nIn an H-representation, it removes the redundant hyperplanes and it remove an halfspace when it is equal to another halfspace in the affine hull. For instance, HalfSpace([1, 1], 1) is equal to HalfSpace([1, 0], 0) in the affine hull generated by HyperPlane([0, 1], 1]).\nIn a V-representation, it removes the redundant lines and it remove a point (resp. ray) when it is equal to another point (resp. ray) in the line hull. For instance, in the line hull generated by Line([0, 1]), [1, 1] is equal to [1, 0] and Ray([2, 2]) is equal to Ray([1, 0]).\n\n\n\n\n\n"
 },
 
 {
@@ -709,7 +717,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Polyhedra.isredundant",
     "category": "function",
-    "text": "isredundant(p::Rep, idx::Index; strongly=false)\n\nReturn a Bool indicating whether the element with index idx can be removed without changing the polyhedron represented by p. If strongly is true,\n\nif idx is an H-representation element h, it returns true only if no V-representation element of p is in the hyperplane of h.\nif idx is a V-representation element v, it returns true only if v is in the relative interior of p.\n\n\n\n"
+    "text": "isredundant(p::Rep, idx::Index; strongly=false)\n\nReturn a Bool indicating whether the element with index idx can be removed without changing the polyhedron represented by p. If strongly is true,\n\nif idx is an H-representation element h, it returns true only if no V-representation element of p is in the hyperplane of h.\nif idx is a V-representation element v, it returns true only if v is in the relative interior of p.\n\n\n\n\n\n"
 },
 
 {
@@ -717,7 +725,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Polyhedra.removehredundancy!",
     "category": "function",
-    "text": "removehredundancy!(p::HRep)\n\nRemoves the elements of the H-representation of p that can be removed without changing the polyhedron represented by p. That is, it only keeps the halfspaces corresponding to facets of the polyhedron.\n\n\n\n"
+    "text": "removehredundancy!(p::HRep)\n\nRemoves the elements of the H-representation of p that can be removed without changing the polyhedron represented by p. That is, it only keeps the halfspaces corresponding to facets of the polyhedron.\n\n\n\n\n\n"
 },
 
 {
@@ -725,7 +733,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Polyhedra.removevredundancy!",
     "category": "function",
-    "text": "removevredundancy!(p::VRep)\n\nRemoves the elements of the V-representation of p that can be removed without changing the polyhedron represented by p. That is, it only keeps the extreme points and rays. This operation is often called \"convex hull\" as the remaining points are the extreme points of the convex hull of the initial set of points.\n\n\n\n"
+    "text": "removevredundancy!(p::VRep)\n\nRemoves the elements of the V-representation of p that can be removed without changing the polyhedron represented by p. That is, it only keeps the extreme points and rays. This operation is often called \"convex hull\" as the remaining points are the extreme points of the convex hull of the initial set of points.\n\n\n\n\n\n"
 },
 
 {
@@ -749,7 +757,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Projection/Elimination",
     "title": "Polyhedra.FourierMotzkin",
     "category": "type",
-    "text": "FourierMotzkin\n\nComputation of the projection by computing the H-representation and applying the Fourier-Motzkin elimination algorithm to it.\n\n\n\n"
+    "text": "FourierMotzkin\n\nComputation of the projection by computing the H-representation and applying the Fourier-Motzkin elimination algorithm to it.\n\n\n\n\n\n"
 },
 
 {
@@ -757,7 +765,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Projection/Elimination",
     "title": "Polyhedra.BlockElimination",
     "category": "type",
-    "text": "BlockElimination\n\nComputation of the projection by computing the H-representation and applying the block elimination algorithm to it.\n\n\n\n"
+    "text": "BlockElimination\n\nComputation of the projection by computing the H-representation and applying the block elimination algorithm to it.\n\n\n\n\n\n"
 },
 
 {
@@ -765,7 +773,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Projection/Elimination",
     "title": "Polyhedra.ProjectGenerators",
     "category": "type",
-    "text": "ProjectGenerators\n\nComputation of the projection by computing the V-representation and projecting them.\n\n\n\n"
+    "text": "ProjectGenerators\n\nComputation of the projection by computing the V-representation and projecting them.\n\n\n\n\n\n"
 },
 
 {
@@ -773,7 +781,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Projection/Elimination",
     "title": "Polyhedra.eliminate",
     "category": "function",
-    "text": "eliminate(p::Polyhedron, delset, algo::EliminationAlgorithm)\n\nEliminate the dimensions in delset by projecting the polyhedron onto the remaining dimension.\n\n\n\n"
+    "text": "eliminate(p::Polyhedron, delset, algo::EliminationAlgorithm)\n\nEliminate the dimensions in delset by projecting the polyhedron onto the remaining dimension.\n\n\n\n\n\n"
 },
 
 {
@@ -781,7 +789,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Projection/Elimination",
     "title": "Polyhedra.project",
     "category": "function",
-    "text": "project(p::Polyhedron, pset, algo)\n\nEquivalent to `eliminate(p, setdiff(1:fulldim(p), pset), algo).\n\n\n\n"
+    "text": "project(p::Polyhedron, pset, algo)\n\nEquivalent to `eliminate(p, setdiff(1:fulldim(p), pset), algo).\n\n\n\n\n\n"
 },
 
 {
@@ -789,7 +797,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Projection/Elimination",
     "title": "Polyhedra.fixandeliminate",
     "category": "function",
-    "text": "fixandeliminate(p::HRep{T}, I, v)\n\nFix the variables with indices in I to the corresponding value in v. This is equivalent to doing the following:\n\nfunction ei(i)\n    a = zeros(T, fulldim(p))\n    a[i] = one(T)\n    a\nend\neliminate(p ∩ HyperPlane(ei(I[1], v[1]) ∩ ... ∩ HyperPlane(ei(I[1], v[1]))\n\nbut it is much more efficient. The code above does a polyhedral projection while this function simply replace each halfspace ⟨a, x⟩ ≤ β (resp. each hyperplane ⟨a, x⟩ = β) by the halfspace ⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩ (resp. the hyperplane ⟨a_J, x⟩ = β - ⟨a_I, v⟩) where J = setdiff(1:fulldim(p), I).\n\n\n\n"
+    "text": "fixandeliminate(p::HRep{T}, I, v)\n\nFix the variables with indices in I to the corresponding value in v. This is equivalent to doing the following:\n\nfunction ei(i)\n    a = zeros(T, fulldim(p))\n    a[i] = one(T)\n    a\nend\neliminate(p ∩ HyperPlane(ei(I[1], v[1]) ∩ ... ∩ HyperPlane(ei(I[1], v[1]))\n\nbut it is much more efficient. The code above does a polyhedral projection while this function simply replace each halfspace ⟨a, x⟩ ≤ β (resp. each hyperplane ⟨a, x⟩ = β) by the halfspace ⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩ (resp. the hyperplane ⟨a_J, x⟩ = β - ⟨a_I, v⟩) where J = setdiff(1:fulldim(p), I).\n\n\n\n\n\n"
 },
 
 {
@@ -813,7 +821,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optimization",
     "title": "Base.isempty",
     "category": "function",
-    "text": "isempty(p::Rep, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p))\n\nCheck whether the polyhedron p is empty by using the solver solver.\n\n\n\n"
+    "text": "isempty(p::Rep, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p))\n\nCheck whether the polyhedron p is empty by using the solver solver.\n\n\n\n\n\n"
 },
 
 {
@@ -821,7 +829,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optimization",
     "title": "MathProgBase.HighLevelInterface.linprog",
     "category": "function",
-    "text": "linprog(c::AbstractVector, p::Rep, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p))\n\nSolve the minimization of the objective langle c x rangle over the polyhedron p.\n\n\n\n"
+    "text": "linprog(c::AbstractVector, p::Rep, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p))\n\nSolve the minimization of the objective langle c x rangle over the polyhedron p.\n\n\n\n\n\n"
 },
 
 {
@@ -829,7 +837,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optimization",
     "title": "Polyhedra.VRepSolver",
     "category": "type",
-    "text": "VRepSolver\n\nLinear Programming solver using the V-representation of the feasible set to find the optimal solution.\n\n\n\n"
+    "text": "VRepSolver\n\nLinear Programming solver using the V-representation of the feasible set to find the optimal solution.\n\n\n\n\n\n"
 },
 
 {
@@ -837,7 +845,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optimization",
     "title": "Polyhedra.default_solver",
     "category": "function",
-    "text": "default_solver(p::Rep)\n\nReturns a default linear programming solver for the polyhedron p (e.g. CDD has an internal solver which is used by default).\n\n\n\n"
+    "text": "default_solver(p::Rep)\n\nReturns a default linear programming solver for the polyhedron p (e.g. CDD has an internal solver which is used by default).\n\n\n\n\n\n"
 },
 
 {
@@ -845,7 +853,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optimization",
     "title": "Polyhedra.solver",
     "category": "function",
-    "text": "solver(p::Rep, solver::MathProgBase.AbstractMathProgSolver=default_solver(p))\n\nIf the V-representation of p has been computed, returns VRepSolver(), otherwise, returns solver.\n\n\n\n"
+    "text": "solver(p::Rep, solver::MathProgBase.AbstractMathProgSolver=default_solver(p))\n\nIf the V-representation of p has been computed, returns VRepSolver(), otherwise, returns solver.\n\n\n\n\n\n"
 },
 
 {
@@ -853,7 +861,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optimization",
     "title": "Optimization",
     "category": "section",
-    "text": "A polyhedron can represents the feasible set of an optimization program. The program is infeasible when the polyhedron is empty.isempty\nMathProgBase.linprogIf the V-representation of the polyhedron has been computed, it can be used to solve the linear program.VRepSolverOtherwise, any programming solver implementing the MathProgBase interface can be used. See here for a list of available solvers.Polyhedra.default_solver\nPolyhedra.solver"
+    "text": "A polyhedron can represents the feasible set of an optimization program. The program is infeasible when the polyhedron is empty.isempty\nPolyhedra.MathProgBase.linprogIf the V-representation of the polyhedron has been computed, it can be used to solve the linear program.VRepSolverOtherwise, any programming solver implementing the MathProgBase interface can be used. See here for a list of available solvers.Polyhedra.default_solver\nPolyhedra.solver"
 },
 
 {
@@ -885,7 +893,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Base.:*",
     "category": "function",
-    "text": "*(p1::Rep, p2::Rep)\n\nCartesian product between the polyhedra p1 and p2.\n\n\n\n*(P::AbstractMatrix, p::VRep)\n\nTransform the polyhedron represented by p into P p by transforming each element of the V-representation (points, symmetric points, rays and lines) x into P x.\n\n\n\n"
+    "text": "*(p1::Rep, p2::Rep)\n\nCartesian product between the polyhedra p1 and p2.\n\n\n\n\n\n*(P::AbstractMatrix, p::VRep)\n\nTransform the polyhedron represented by p into P p by transforming each element of the V-representation (points, symmetric points, rays and lines) x into P x.\n\n\n\n\n\n"
 },
 
 {
@@ -893,7 +901,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Base.:\\",
     "category": "function",
-    "text": "\\(P::AbstractMatrix, p::HRep)\n\nTransform the polyhedron represented by p into P^-1 p by transforming each halfspace langle a x rangle le beta into langle P^top a x rangle le beta and each hyperplane langle a x rangle = beta into langle P^top a x rangle = beta.\n\n\n\n"
+    "text": "\\(P::AbstractMatrix, p::HRep)\n\nTransform the polyhedron represented by p into P^-1 p by transforming each halfspace langle a x rangle le beta into langle P^top a x rangle le beta and each hyperplane langle a x rangle = beta into langle P^top a x rangle = beta.\n\n\n\n\n\n"
 },
 
 {
@@ -901,7 +909,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Base.:/",
     "category": "function",
-    "text": "/(p::HRep, P::AbstractMatrix)\n\nTransform the polyhedron represented by p into P^-T p by transforming each halfspace langle a x rangle le beta into langle P a x rangle le beta and each hyperplane langle a x rangle = beta into langle P a x rangle = beta.\n\n\n\n"
+    "text": "/(p::HRep, P::AbstractMatrix)\n\nTransform the polyhedron represented by p into P^-T p by transforming each halfspace langle a x rangle le beta into langle P a x rangle le beta and each hyperplane langle a x rangle = beta into langle P a x rangle = beta.\n\n\n\n\n\n"
 },
 
 {
@@ -909,7 +917,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Base.intersect",
     "category": "function",
-    "text": "intersect(P1::HRep, P2::HRep)\n\nTakes the intersection of P1 and P2  x  x in P_1 x in P_2 . It is very efficient between two H-representations or between two polyhedron for which the H-representation has already been computed. However, if P1 (resp. P2) is a polyhedron for which the H-representation has not been computed yet, it will trigger a representation conversion which is costly. See the Polyhedral Computation FAQ for a discussion on this operation.\n\nThe type of the result will be chosen closer to the type of P1. For instance, if P1 is a polyhedron (resp. H-representation) and P2 is a H-representation (resp. polyhedron), intersect(P1, P2) will be a polyhedron (resp. H-representation). If P1 and P2 are both polyhedra (resp. H-representation), the resulting polyhedron type (resp. H-representation type) will be computed according to the type of P1. The coefficient type however, will be promoted as required taking both the coefficient type of P1 and P2 into account.\n\n\n\nintersect(v::VRepresentation{T}, h::HRepElement)\n\nCompute the intersection of v with an halfspace or hyperplane h. The method used by default is to keep the V-representation element of v that are in h and add new ones generated as the intersection between the hyperplane defining h and the segment between two adjacent V-representation elements of v that are in either sides of the hyperplane. See Lemma 3 of [FP96] for more detail on the method.\n\n[FP96] Fukuda, K. and Prodon, A. Double description method revisited Combinatorics and computer science, Springer, 1996, 91-111\n\n\n\n"
+    "text": "intersect(P1::HRep, P2::HRep)\n\nTakes the intersection of P1 and P2  x  x in P_1 x in P_2 . It is very efficient between two H-representations or between two polyhedron for which the H-representation has already been computed. However, if P1 (resp. P2) is a polyhedron for which the H-representation has not been computed yet, it will trigger a representation conversion which is costly. See the Polyhedral Computation FAQ for a discussion on this operation.\n\nThe type of the result will be chosen closer to the type of P1. For instance, if P1 is a polyhedron (resp. H-representation) and P2 is a H-representation (resp. polyhedron), intersect(P1, P2) will be a polyhedron (resp. H-representation). If P1 and P2 are both polyhedra (resp. H-representation), the resulting polyhedron type (resp. H-representation type) will be computed according to the type of P1. The coefficient type however, will be promoted as required taking both the coefficient type of P1 and P2 into account.\n\n\n\n\n\nintersect(v::VRepresentation{T}, h::HRepElement)\n\nCompute the intersection of v with an halfspace or hyperplane h. The method used by default is to keep the V-representation element of v that are in h and add new ones generated as the intersection between the hyperplane defining h and the segment between two adjacent V-representation elements of v that are in either sides of the hyperplane. See Lemma 3 of [FP96] for more detail on the method.\n\n[FP96] Fukuda, K. and Prodon, A. Double description method revisited Combinatorics and computer science, Springer, 1996, 91-111\n\n\n\n\n\n"
 },
 
 {
@@ -917,7 +925,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Base.intersect!",
     "category": "function",
-    "text": "intersect!(p::HRep, h::Union{HRepresentation, HRepElement})\n\nSame as intersect except that p is modified to be equal to the intersection.\n\n\n\n"
+    "text": "intersect!(p::HRep, h::Union{HRepresentation, HRepElement})\n\nSame as intersect except that p is modified to be equal to the intersection.\n\n\n\n\n\n"
 },
 
 {
@@ -925,7 +933,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Polyhedra.convexhull",
     "category": "function",
-    "text": "convexhull(P1::VRep, P2::VRep)\n\nTakes the convex hull of P1 and P2  lambda x + (1-lambda) y  x in P_1 y in P_2 . It is very efficient between two V-representations or between two polyhedron for which the V-representation has already been computed. However, if P1 (resp. P2) is a polyhedron for which the V-representation has not been computed yet, it will trigger a representation conversion which is costly.\n\nThe type of the result will be chosen closer to the type of P1. For instance, if P1 is a polyhedron (resp. V-representation) and P2 is a V-representation (resp. polyhedron), convexhull(P1, P2) will be a polyhedron (resp. V-representation). If P1 and P2 are both polyhedra (resp. V-representation), the resulting polyhedron type (resp. V-representation type) will be computed according to the type of P1. The coefficient type however, will be promoted as required taking both the coefficient type of P1 and P2 into account.\n\n\n\n"
+    "text": "convexhull(P1::VRep, P2::VRep)\n\nTakes the convex hull of P1 and P2  lambda x + (1-lambda) y  x in P_1 y in P_2 . It is very efficient between two V-representations or between two polyhedron for which the V-representation has already been computed. However, if P1 (resp. P2) is a polyhedron for which the V-representation has not been computed yet, it will trigger a representation conversion which is costly.\n\nThe type of the result will be chosen closer to the type of P1. For instance, if P1 is a polyhedron (resp. V-representation) and P2 is a V-representation (resp. polyhedron), convexhull(P1, P2) will be a polyhedron (resp. V-representation). If P1 and P2 are both polyhedra (resp. V-representation), the resulting polyhedron type (resp. V-representation type) will be computed according to the type of P1. The coefficient type however, will be promoted as required taking both the coefficient type of P1 and P2 into account.\n\n\n\n\n\n"
 },
 
 {
@@ -933,7 +941,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Polyhedra.convexhull!",
     "category": "function",
-    "text": "convexhull!(p1::VRep, p2::VRep)\n\nSame as convexhull except that p1 is modified to be equal to the convex hull.\n\n\n\n"
+    "text": "convexhull!(p1::VRep, p2::VRep)\n\nSame as convexhull except that p1 is modified to be equal to the convex hull.\n\n\n\n\n\n"
 },
 
 {
@@ -949,7 +957,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Polyhedra.volume",
     "category": "function",
-    "text": "volume(p::Polyhedron{T}) where {T}\n\nReturns the fulldim(p)-dimensional hyper-volume of the polyhedron p. Returns Inf or -one(T) if it is infinite depending on whether the type T has an infinite value.\n\n\n\n"
+    "text": "volume(p::Polyhedron{T}) where {T}\n\nReturns the fulldim(p)-dimensional hyper-volume of the polyhedron p. Returns Inf or -one(T) if it is infinite depending on whether the type T has an infinite value.\n\n\n\n\n\n"
 },
 
 {
@@ -957,7 +965,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Polyhedra.surface",
     "category": "function",
-    "text": "surface(p::Polyhedron{T}) where {T}\n\nReturns the fulldim(p)-1-dimensional hyper-volume of the surface of the polyhedron p. Returns Inf or -one(T) if it is infinite depending on whether the type T has an infinite value.\n\n\n\n"
+    "text": "surface(p::Polyhedron{T}) where {T}\n\nReturns the fulldim(p)-1-dimensional hyper-volume of the surface of the polyhedron p. Returns Inf or -one(T) if it is infinite depending on whether the type T has an infinite value.\n\n\n\n\n\n"
 },
 
 {
@@ -973,7 +981,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Polyhedra.chebyshevcenter",
     "category": "function",
-    "text": "chebyshevcenter(p::Rep[, solver])\n\nIf p is a H-representation or is a polyhedron for which the H-representation has already been computed, calls hchebyshevcenter, otherwise, call vchebyshevcenter.\n\n\n\n"
+    "text": "chebyshevcenter(p::Rep[, solver])\n\nIf p is a H-representation or is a polyhedron for which the H-representation has already been computed, calls hchebyshevcenter, otherwise, call vchebyshevcenter.\n\n\n\n\n\n"
 },
 
 {
@@ -981,7 +989,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Polyhedra.hchebyshevcenter",
     "category": "function",
-    "text": "hchebyshevcenter(p::HRep[, solver])\n\nReturn a tuple with the center and radius of the largest euclidean ball contained in the polyhedron p. Throws an error if the polyhedron is empty or if the radius is infinite.\n\n\n\n"
+    "text": "hchebyshevcenter(p::HRep[, solver])\n\nReturn a tuple with the center and radius of the largest euclidean ball contained in the polyhedron p. Throws an error if the polyhedron is empty or if the radius is infinite.\n\n\n\n\n\n"
 },
 
 {
@@ -989,7 +997,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Polyhedra.vchebyshevcenter",
     "category": "function",
-    "text": "vchebyshevcenter(p::VRep[, solver])\n\nReturn a tuple with the center and radius of the smallest euclidean ball containing the polyhedron p. Throws an error if the polyhedron is empty or if the radius is infinite (i.e. p is not a polytope, it contains rays).\n\n\n\n"
+    "text": "vchebyshevcenter(p::VRep[, solver])\n\nReturn a tuple with the center and radius of the smallest euclidean ball containing the polyhedron p. Throws an error if the polyhedron is empty or if the radius is infinite (i.e. p is not a polytope, it contains rays).\n\n\n\n\n\n"
 },
 
 {
@@ -1005,7 +1013,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Polyhedra.@subrepelem",
     "category": "macro",
-    "text": "The representation rep contain the elements elem inside a representation in the field field.\n\n\n\n"
+    "text": "The representation rep contain the elements elem inside a representation in the field field.\n\n\n\n\n\n"
 },
 
 {
@@ -1013,7 +1021,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Polyhedra.@norepelem",
     "category": "macro",
-    "text": "The representation rep does not contain any elem.\n\n\n\n"
+    "text": "The representation rep does not contain any elem.\n\n\n\n\n\n"
 },
 
 {
@@ -1021,7 +1029,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Polyhedra.@vecrepelem",
     "category": "macro",
-    "text": "The representation rep contain the elements elem inside a vector in the field field.\n\n\n\n"
+    "text": "The representation rep contain the elements elem inside a vector in the field field.\n\n\n\n\n\n"
 },
 
 {
