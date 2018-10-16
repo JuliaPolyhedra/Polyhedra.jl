@@ -10,4 +10,4 @@ function FullDim_rec(it::It, its::Union{Rep, It}...)
 end
 
 FullDim_rep(rep::Rep, other_reps::Union{Nothing, Rep}...) = FullDim(rep)
-FullDim_rep(rep::Nothing, other_reps::Union{Nothing, Rep}...) = FullDim(other_reps...)
+FullDim_rep(rep::Nothing, other_reps::Union{Nothing, Rep}...) = FullDim_rep(other_reps...)
