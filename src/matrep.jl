@@ -44,7 +44,6 @@ MixedMatHRep(A::AbstractMatrix{T}, b::AbstractVector{T}, linset::BitSet) where T
 MixedMatHRep(h::HRep{T}) where {T} = MixedMatHRep{T}(h)
 MixedMatHRep{T}(h::HRep) where {T} = convert(MixedMatHRep{T, hmatrixtype(typeof(h), T)}, h)
 
-MixedMatHRep{T}(hits::HIt{T}...) where {T} = MixedMatHRep{T, Matrix{T}}(hits...) # FIXME required by CDD and LRS tests
 function MixedMatHRep{T, MT}(d::FullDim, hyperplanes::HyperPlaneIt{T},
                              halfspaces::HalfSpaceIt{T}) where {T, MT}
     nhyperplane = length(hyperplanes)
@@ -115,7 +114,6 @@ end
 MixedMatVRep(v::VRep{T}) where {T} = MixedMatVRep{T}(v)
 MixedMatVRep{T}(v::VRep) where {T} = convert(MixedMatVRep{T, vmatrixtype(typeof(v), T)}, v)
 
-MixedMatVRep{T}(vits::VIt{T}...) where {T} = MixedMatVRep{T, Matrix{T}}(vits...) # FIXME required by CDD and LRS tests
 function MixedMatVRep{T, MT}(d::FullDim, vits::VIt{T}...) where {T, MT}
     points, lines, rays = fillvits(d, vits...)
     npoint = length(points)
