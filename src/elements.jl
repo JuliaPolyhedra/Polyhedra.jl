@@ -198,7 +198,20 @@ function Base.:*(P::AbstractMatrix, v::ElemT) where {T, ElemT<:VStruct{T}}
       return ElemTout(P * v.a)
 end
 
-# TODO zeropad for SparseVector and StaticArrays.SVector
+# TODO zeropad for SparseVector
+function (zeropad(a::StaticArrays.SVector{N1, T}, ::StaticArrays.Size{N2})::StaticArrays.SVector{N1+abs(N2[1]), T}) where {T, N1, N2}
+    # TODO, should probably de a generated function to make it type stable
+    if iszero(N2[1])
+        return a
+    else
+        z = StaticArrays.@SVector zeros(T, abs(N2[1]))
+        if N2[1] < 0
+            return vcat(z, a)::StaticArrays.SVector{N1-N2[1], T}
+        else
+            return vcat(a, z)::StaticArrays.SVector{N1+N2[1], T}
+        end
+    end
+end
 function zeropad(a::Vector{T}, n::Integer) where T
     if iszero(n)
         return a
