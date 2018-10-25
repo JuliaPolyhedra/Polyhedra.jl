@@ -20,12 +20,16 @@ end
 Interval{T, AT, D}(d::FullDim, it::HIt...) where {T, AT, D} = _hinterval(Intersection{T, AT, D}(d, it...), AT, D)
 Interval{T, AT, D}(d::FullDim, it::VIt...) where {T, AT, D} = _vinterval(Hull{T, AT, D}(d, it...), AT, D)
 
-FullDim(::Interval) = 1
+# If AT is an SVector, it will be StaticArrays.Size{(1,)}
+# otherwise, it will be 1
+FullDim(p::Interval) = FullDim(p.hrep)
 
 library(::Union{Interval{T}, Type{<:Interval{T}}}) where T = IntervalLibrary{T}()
 
 hvectortype(::Type{<:Interval{T, AT}}) where {T, AT} = AT
 vvectortype(::Type{<:Interval{T, AT}}) where {T, AT} = AT
+
+similar_type(::Type{<:Interval}, d::FullDim, ::Type{T}) where T = default_type(d, T)
 
 surface(::Interval{T}) where {T} = zero(T)
 volume(p::Interval) = p.length
