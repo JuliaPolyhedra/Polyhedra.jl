@@ -42,5 +42,6 @@ function doctest(lib::Polyhedra.Library)
     #inequality_fulltest(fixandeliminate(p, 2, 1/4, reshape([1, -1], 2, 1), [1/4, 0], BitSet())
     inequality_fulltest(translate(p, -[0, 1]), [1 1; 1 -1;-1 0], [0, 1, 0], BitSet())
     # Testing 2D plotting
-    RecipesBase.apply_recipe(Dict{Symbol, Any}(), p)[1].args == ([0, 0.5, 0.5, 0, 0], [1, 0.5, 0.5, 0, 1])
+    RecipesBase.apply_recipe(Dict{Symbol, Any}(), p)[1].args == ([0, 0.5, 0],
+                                                                 [1, 0.5, 0])
 end
