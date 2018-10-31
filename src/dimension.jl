@@ -50,8 +50,8 @@ fulldim(::StaticArrays.Size{N}) where N = N[1]
 
 neg_fulldim(N::Int) = -N
 # FIXME May need generated function to make it type stable
-neg_fulldim(::StaticArrays.Size{N}) where N = StaticArrays.Size{(-N[1],)}
+neg_fulldim(::StaticArrays.Size{N}) where N = StaticArrays.Size{(-N[1],)}()
 
 sum_fulldim(N1::Int, N2::Int) = N1 + N2
 # FIXME May need generated function to make it type stable
-sum_fulldim(::StaticArrays.Size{N1}, ::StaticArrays.Size{N2}) where {N1, N2} = StaticArrays.Size{(N1[1] + N2[1],)}
+sum_fulldim(::StaticArrays.Size{N1}, ::StaticArrays.Size{N2}) where {N1, N2} = StaticArrays.Size{(N1[1] + N2[1],)}()

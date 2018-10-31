@@ -33,13 +33,23 @@ end
         error("Plotting 3-dimensional polyhedron with Plots is not supported, use Makie, MeshCat or DrakeVisualizer")
     end
     removevredundancy!(p)
-    if hasrays(p)
-        warn("Rays not supported yet in the 2D plotting recipe")
+    if hasallrays(p)
+        error("Rays not supported yet in the 2D plotting recipe")
     end
     ps = collect(points(p))
     sort!(ps, by = x -> x[1])
     counterclockwise(p1, p2) = dot(cross([p1; 0], [p2; 0]), [0, 0, 1])
-    hull = [getsemihull(ps, 1, counterclockwise); getsemihull(ps, -1, counterclockwise)]
+    top = getsemihull(ps,  1, counterclockwise)
+    bot = getsemihull(ps, -1, counterclockwise)
+    if !isempty(top) && !isempty(bot)
+        @assert top[end] == bot[1]
+        pop!(top)
+    end
+    if !isempty(bot) && !isempty(top)
+        @assert bot[end] == top[1]
+        pop!(bot)
+    end
+    hull = [top; bot]
     seriestype --> :shape
     legend --> false
     [p[1] for p in hull], [p[2] for p in hull]
