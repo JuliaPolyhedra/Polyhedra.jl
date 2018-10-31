@@ -37,7 +37,7 @@ function MPB.linprog(c::AbstractVector, p::Rep, solver::MPB.AbstractMathProgSolv
         try
             attrs[:unboundedray] = MPBSI.getunboundedray(m)
         catch
-            warn("Problem is unbounded, but unbounded ray is unavailable; check that the proper solver options are set.")
+            @warn "Problem is unbounded, but unbounded ray is unavailable; check that the proper solver options are set."
         end
         return LinprogSolution(stat, nothing, [], attrs)
     else
