@@ -76,7 +76,7 @@ include("matrep.jl")
 include("liftedrep.jl")
 include("doubledescription.jl") # FIXME move it after projection.jl once it stops depending on LiftedRep
 include("interval.jl") # 1D polyhedron
-include("simplepolyhedron.jl")
+include("defaultlibrary.jl")
 
 include("fulldim.jl")
 
