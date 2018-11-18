@@ -1,87 +1,53 @@
 using LinearAlgebra # for I
-struct InconsistentVRep{T, AT, D<:Polyhedra.FullDim} <: VRepresentation{T}
-    points::Polyhedra.PointsHull{T, AT, D}
-    rays::Polyhedra.RaysHull{T, AT, D}
-    function InconsistentVRep{T, AT, D}(d::Polyhedra.FullDim, points, lines,
-                                        rays) where {T, AT, D}
-        new{T, AT, D}(Polyhedra.PointsHull(d, points),
-                      Polyhedra.RaysHull(d, lines, rays))
+include("inconsistentvrep.jl")
+
+function change_fulldim_test(Rep)
+    T = Int
+    RepT = Rep{T, Matrix{T}}
+    @testset "Change Polyhedra.FullDim with $RepT" begin
+        @test fulldim(RepT) == -1
+        @test Polyhedra.coefficient_type(RepT) == T
+        changedrep = Polyhedra.similar_type(RepT, 10)
+        @test fulldim(changedrep) == -1
+        @test Polyhedra.FullDim(changedrep) == -1
+        #@test (@inferred Polyhedra.FullDim(changedrep)) == 10
+        @test Polyhedra.coefficient_type(changedrep) == T
     end
 end
-Polyhedra.FullDim(rep::InconsistentVRep) = Polyhedra.FullDim(rep.points)
-Polyhedra.dualtype(::Type{InconsistentVRep{T, AT, D}}, ::Type{AT}) where {T, AT, D} = Polyhedra.Intersection{T, AT, D}
-Polyhedra.hvectortype(::Type{<:InconsistentVRep{T, AT}}) where {T, AT} = AT
-Polyhedra.vvectortype(::Type{<:InconsistentVRep{T, AT}}) where {T, AT} = AT
-Polyhedra.similar_type(PT::Type{<:InconsistentVRep}, d::Polyhedra.FullDim, ::Type{T}) where {T} = InconsistentVRep{T, Polyhedra.similar_type(Polyhedra.hvectortype(PT), d, T), typeof(d)}
-Polyhedra.fulltype(::Type{InconsistentVRep{T, AT, D}}) where {T, AT, D} = InconsistentVRep{T, AT, D}
-#Polyhedra.@subrepelem InconsistentVRep SymPoint points
-Polyhedra.@subrepelem InconsistentVRep Point points
-Polyhedra.@subrepelem InconsistentVRep Line rays
-Polyhedra.@subrepelem InconsistentVRep Ray rays
+
+function isempty_vtest(vr::VRepresentation, nr, np)
+    @testset "isempty not working correctly for iterators #17 with V-rep" begin
+        hasr = nr > 0
+        hasp = np > 0
+        @test npoints(vr) == length(points(vr)) == np
+        @test nallrays(vr) == length(allrays(vr)) == nr
+        @test nlines(vr) == length(lines(vr)) == 0
+        @test nrays(vr) == length(rays(vr)) == nr
+        @test haspoints(vr) == !isempty(points(vr)) == hasp
+        @test hasallrays(vr) == !isempty(allrays(vr)) == hasr
+        @test haslines(vr) == !isempty(lines(vr)) == false
+        @test hasrays(vr) == !isempty(rays(vr)) == hasr
+    end
+end
+
+function isempty_htest(hr::HRepresentation, ne, ni)
+    @testset "isempty not working correctly for iterators #17 with H-rep" begin
+        hase = ne > 0
+        hasi = ni > 0
+        @test nallhalfspaces(hr) == length(allhalfspaces(hr)) == 2ne + ni
+        @test nhyperplanes(hr) == length(hyperplanes(hr)) == ne
+        @test nhalfspaces(hr) == length(halfspaces(hr)) == ni
+        @test hasallhalfspaces(hr) == !isempty(allhalfspaces(hr)) == hase || hasi
+        @test hashyperplanes(hr) == !isempty(hyperplanes(hr)) == hase
+        @test hashalfspaces(hr) == !isempty(halfspaces(hr)) == hasi
+    end
+end
+
 @testset "Representation tests" begin
-    @testset "MixMatRep with bad arguments" begin
-        A = [1 1; -1 0; 0 -1]
-        b = [1, 0, 0]
-        linset = BitSet([1])
 
-        @test_throws ErrorException hrep(A, [0, 0], linset)
-        @test_throws ErrorException hrep(A, b, BitSet([4]))
-        ine = hrep(A, b, linset)
-        @test fulldim(ine) == 2
-        @test (@inferred Polyhedra.FullDim(ine)) == 2
-        @test Polyhedra.coefficient_type(ine) == Int
-        @test translate(ine, [1, 0]).b == [2, -1, 0]
-
-        V = [0 1; 1 0]
-        @test_throws ErrorException vrep(zeros(0, 2), [1 0]) # V-consistency
-        @test_throws ErrorException vrep(V, [1 0 0], BitSet())
-        @test_throws ErrorException vrep(V, [1 1], BitSet([2]))
-        ext = vrep(V)
-        @test fulldim(ext) == 2
-        @test (@inferred Polyhedra.FullDim(ine)) == 2
-        @test Polyhedra.coefficient_type(ext) == Int
-        @test translate(ext, [1, 0]).V == [1 1; 2 0]
-    end
-
-    @testset "LPHRepresentation with bad arguments" begin
-        @test_throws DimensionMismatch LPHRepresentation(ones(2, 2), [1], [1], [1, 2], [1, 2])
-        @test_throws DimensionMismatch LPHRepresentation(ones(2, 2), [1, 2], [1, 2], [1], [1])
-    end
-
-    @testset "Lifted Representation with bad arguments" begin
-        A = [1 -1 -1; 0 1 0; 0 0 1]
-        ls = BitSet([1])
-
-        @test_throws ErrorException LiftedHRepresentation(A, BitSet([4]))
-        ine = copy(LiftedHRepresentation(A, ls))
-        @test ine.A == A
-        @test ine.A !== A
-        #@test linset(ine) == ls
-        @test ine.linset !== ls
-        @test Polyhedra.similar_type(LiftedHRepresentation{Int, Matrix{Int}}, Float64) == LiftedHRepresentation{Float64, Matrix{Float64}}
-        @test Polyhedra.similar_type(LiftedHRepresentation{Int, SparseMatrixCSC{Int, Int}}, 3, Float64) == LiftedHRepresentation{Float64, SparseMatrixCSC{Float64, Int}}
-
-        A2 = [1 1; -1 0; 0 -1]
-        b2 = [1, 0, 0]
-        linset2 = BitSet([1])
-        ine2 = hrep(A2, b2, linset2)
-
-        ine = LiftedHRepresentation(ine2)
-        @test ine.A == A
-        @test ine.linset == ls
-
-        V = [1 0 1; 1 1 0]
-        Vlinset = BitSet(2)
-        @test_throws ErrorException LiftedVRepresentation(V, BitSet([4]))
-        ext = copy(LiftedVRepresentation(V, Vlinset))
-        @test ext.R == V
-        @test ext.R !== V
-        #@test linset(ext) == Vlinset
-        @test ext.linset !== Vlinset
-
-        @test Polyhedra.similar_type(LiftedVRepresentation{Int, SparseMatrixCSC{Int, Int}}, Float64) == LiftedVRepresentation{Float64, SparseMatrixCSC{Float64, Int}}
-        @test Polyhedra.similar_type(LiftedVRepresentation{Int, Matrix{Int}}, 3, Float64) == LiftedVRepresentation{Float64, Matrix{Float64}}
-    end
+    include("matrep.jl")
+    include("lphrep.jl")
+    include("liftedrep.jl")
 
     @testset "eltype for some iterators is incorrect #7" begin
         function collecttest(it, exp_type)
@@ -199,79 +165,6 @@ Polyhedra.@subrepelem InconsistentVRep Ray rays
             @test h.β == b[hyperplane[i]]
             @test isa(h, HyperPlane{Int})
         end
-    end
-
-    @testset "Change Polyhedra.FullDim" begin
-        N = 5
-        M = 10
-        T = Int64
-        reps = [MixedMatHRep{T, Matrix{T}}, MixedMatVRep{T, Matrix{T}}, LiftedHRepresentation{T, Matrix{T}}, LiftedVRepresentation{T, Matrix{T}}]
-        for rep in reps
-            @test fulldim(rep) == -1
-            @test Polyhedra.coefficient_type(rep) == T
-            changedrep = Polyhedra.similar_type(rep, M)
-            @test fulldim(changedrep) == -1
-            @test Polyhedra.FullDim(changedrep) == -1
-            #@test (@inferred Polyhedra.FullDim(changedrep)) == M
-            @test Polyhedra.coefficient_type(changedrep) == T
-        end
-    end
-
-    @testset "Cartesian product" begin
-        A = [1 2; 3 4; 5 6]
-        a = [7, 8, 9]
-        B = [10 11 12; 13 14 15]
-        b = [16, 17]
-        p1 = hrep(A, a, BitSet([2]))
-        p2 = hrep(B, b, BitSet([1]))
-        p = p1 * p2
-        @test p.A == [A[2,:]' zeros(1, 3)
-                      zeros(1, 2) B[1, :]'
-                      A[[1,3],:] zeros(2, 3)
-                      zeros(1, 2) B[2, :]']
-        @test p.b == [a[2]; b[1]; a[[1,3]]; b[2]]
-        @test p.linset == BitSet([1, 2])
-    end
-
-    @testset "isempty not working correctly for iterators #17" begin
-        function vtest(vr, nr, np)
-            hasr = nr > 0
-            hasp = np > 0
-            @test npoints(vr) == length(points(vr)) == np
-            @test nallrays(vr) == length(allrays(vr)) == nr
-            @test nlines(vr) == length(lines(vr)) == 0
-            @test nrays(vr) == length(rays(vr)) == nr
-            @test haspoints(vr) == !isempty(points(vr)) == hasp
-            @test hasallrays(vr) == !isempty(allrays(vr)) == hasr
-            @test haslines(vr) == !isempty(lines(vr)) == false
-            @test hasrays(vr) == !isempty(rays(vr)) == hasr
-        end
-        vtest(vrep(zeros(0, 3)), 0, 0)
-        vtest(vrep(zeros(1, 2)), 0, 1)
-        vtest(vrep(zeros(1, 4), ones(2, 4)), 2, 1)
-        vtest(vrep(zeros(2, 1), ones(1, 1)), 1, 2)
-        vtest(LiftedVRepresentation(zeros(0, 2)), 0, 0)
-        vtest(LiftedVRepresentation([1 0; 1 1]), 0, 2)
-        vtest(LiftedVRepresentation([0 1; 0 2]), 2, 0)
-        vtest(LiftedVRepresentation([0 0; 1 1]), 1, 1)
-        function htest(hr, ne, ni)
-            hase = ne > 0
-            hasi = ni > 0
-            @test nallhalfspaces(hr) == length(allhalfspaces(hr)) == 2ne + ni
-            @test nhyperplanes(hr) == length(hyperplanes(hr)) == ne
-            @test nhalfspaces(hr) == length(halfspaces(hr)) == ni
-            @test hasallhalfspaces(hr) == !isempty(allhalfspaces(hr)) == hase || hasi
-            @test hashyperplanes(hr) == !isempty(hyperplanes(hr)) == hase
-            @test hashalfspaces(hr) == !isempty(halfspaces(hr)) == hasi
-        end
-        htest(hrep(ones(0, 3), zeros(0)), 0, 0)
-        htest(hrep(ones(1, 2), zeros(1)), 0, 1)
-        htest(hrep(ones(2, 4), zeros(2), BitSet(1:2)), 2, 0)
-        htest(hrep(ones(3, 1), zeros(3), BitSet([2])), 1, 2)
-        htest(LiftedHRepresentation(ones(0, 2)), 0, 0)
-        htest(LiftedHRepresentation([0 1; 0 2]), 0, 2)
-        htest(LiftedHRepresentation([0 1; 0 2], BitSet(1:2)), 2, 0)
-        htest(LiftedHRepresentation([0 1; 0 2], BitSet([2])), 1, 1)
     end
 
     @testset "Building rep with different type" begin
