@@ -62,7 +62,10 @@ FullDim(h::HyperPlanesIntersection) = h.d
 hvectortype(L::Type{<:HyperPlanesIntersection{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:HyperPlanesIntersection}, d::FullDim, ::Type{T}) where T = HyperPlanesIntersection{T, similar_type(hvectortype(PT), d, T), typeof(d)}
 
-Base.intersect!(L::HyperPlanesIntersection, h::HyperPlane) = push!(L.hyperplanes, h)
+function Base.intersect!(L::HyperPlanesIntersection, h::HyperPlane)
+    push!(L.hyperplanes, h)
+    return L
+end
 
 @vecrepelem HyperPlanesIntersection HyperPlane hyperplanes
 
