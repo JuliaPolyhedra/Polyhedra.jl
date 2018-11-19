@@ -75,6 +75,15 @@ similar_type(PT::Type{<:Intersection}, d::FullDim, ::Type{T}) where {T} = Inters
 Intersection(h::HRepresentation{T}) where {T} = Intersection{T}(h)
 Intersection{T}(h::HRepresentation) where {T} = convert(Intersection{T, similar_type(hvectortype(typeof(h)), T), typeof(FullDim(h))}, h)
 
+function Base.intersect!(h::Intersection, hp::HyperPlane)
+    intersect!(h.hyperplanes, hp)
+    return h
+end
+function Base.intersect!(h::Intersection, hs::HalfSpace)
+    push!(h.halfspaces, hs)
+    return h
+end
+
 @subrepelem Intersection HyperPlane hyperplanes
 @vecrepelem Intersection HalfSpace halfspaces
 

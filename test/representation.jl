@@ -45,6 +45,7 @@ end
 
 @testset "Representation tests" begin
 
+    include("vecrep.jl")
     include("matrep.jl")
     include("lphrep.jl")
     include("liftedrep.jl")
