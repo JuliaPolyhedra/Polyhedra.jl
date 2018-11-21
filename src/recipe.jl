@@ -50,6 +50,7 @@ end
         pop!(bot)
     end
     hull = [top; bot]
+    push!(hull, hull[1])  # ensure shape is closed
     seriestype --> :shape
     legend --> false
     [p[1] for p in hull], [p[2] for p in hull]
