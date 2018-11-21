@@ -34,7 +34,7 @@ A JuMP model is treated by `polyhedron` just like any H-representation. For exam
 m = Model()
 @variable(m, 0 ≤ x[1:n] ≤ 1)
 
-poly = polyhedron(m, CDDLibrary(:exact))
+poly = polyhedron(m, CDDLib.Library(:exact))
 ```
 
 In fact, the MathProgBase representation of the feasible set of a linear program:

@@ -38,7 +38,7 @@ function doctest(lib::Polyhedra.Library)
     @test_throws DimensionMismatch project(p, ones(2, 3))
     inequality_fulltest(project(p, reshape([0, 1], 2, 1)), Ap, bp, BitSet())
     inequality_fulltest(fixandeliminate(p, 2, eltype(p) <: AbstractFloat ? 1/4 : 1//4), reshape([1, -1], 2, 1), [1/4, 0], BitSet())
-    # tries to create CDDPolyhedron of BigFloat, needs to let CDD decide of the promotion
+    # tries to create CDDLib.Polyhedron of BigFloat, needs to let CDD decide of the promotion
     #inequality_fulltest(fixandeliminate(p, 2, 1/4, reshape([1, -1], 2, 1), [1/4, 0], BitSet())
     inequality_fulltest(translate(p, -[0, 1]), [1 1; 1 -1;-1 0], [0, 1, 0], BitSet())
     # Testing 2D plotting

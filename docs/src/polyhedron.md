@@ -13,7 +13,7 @@ Just like the abstract type `AbstractArray{N,T}` represents an `N`-dimensional a
 the abstract type `Polyhedron{N,T}` represents an `N`-dimensional polyhedron with elements of coefficient type `T`.
 
 There is typically one concrete subtype of `Polyhedron` by library.
-For instance, the CDD library defines `CDDPolyhedron` and the LRS library defines `LRSPolyhedron`.
+For instance, the CDD library defines `CDDLib.Polyhedron` and the LRS library defines `LRSLib.Polyhedron`.
 It must be said that the type `T` is not necessarily how the elements are stored internally by the library but the polyhedron will behave just like it is stored that way.
 For instance, when retreiving an H-(or V-)representation, the representation will be of type `T`.
 Therefore using `Int` for `T` may result in `InexactError`.
@@ -34,33 +34,35 @@ vrf = convexhull([0, 0], [0, 1], [1/2, 1/2])
 One can use the CDD library, to create an instance of a concrete subtype of `Polyhedron` as follows:
 ```julia
 julia> using CDDLib
-julia> polyf = polyhedron(hr, CDDLibrary())
+julia> polyf = polyhedron(hr, CDDLib.Library())
 julia> typeof(polyhf)
-CDDLib.CDDPolyhedron{2,Float64}
+CDDLib.CDDLib.Polyhedron{2,Float64}
 ```
 
 We see that the library has choosen to deal with floating point arithmetic.
-This decision does not depend on the type of `hr` but only on the instance of `CDDLibrary` given.
-`CDDLibrary` creates `CDDPolyhedron` of type either `Float64` or `Rational{BigInt}`.
-One can choose the first one using `CDDLibrary(:float)` and the second one using `CDDLibrary(:exact)`, by default it is `:float`.
+This decision does not depend on the type of `hr` but only on the instance of
+`CDDLib.Library` given. `CDDLib.Library` creates `CDDLib.Polyhedron` of type
+either `Float64` or `Rational{BigInt}`. One can choose the first one using
+`CDDLib.Library(:float)` and the second one using `CDDLib.Library(:exact)`, by
+default it is `:float`.
 ```julia
-julia> poly = polyhedron(hr, CDDLibrary(:exact))
+julia> poly = polyhedron(hr, CDDLib.Library(:exact))
 julia> typeof(poly)
-CDDLib.CDDPolyhedron{2,Rational{BigInt}}
+CDDLib.Polyhedron{2,Rational{BigInt}}
 ```
 
 The first polyhedron `polyf` can also be created from its V-representation using either of the 4 following lines:
 ```julia
-julia> polyf = polyhedron(vrf, CDDLibrary(:float))
-julia> polyf = polyhedron(vrf, CDDLibrary())
-julia> polyf = polyhedron(vre,  CDDLibrary(:float))
-julia> polyf = polyhedron(vre,  CDDLibrary())
+julia> polyf = polyhedron(vrf, CDDLib.Library(:float))
+julia> polyf = polyhedron(vrf, CDDLib.Library())
+julia> polyf = polyhedron(vre,  CDDLib.Library(:float))
+julia> polyf = polyhedron(vre,  CDDLib.Library())
 ```
 
 and `poly` using either of those lines:
 ```julia
-julia> poly = polyhedron(vrf, CDDLibrary(:exact))
-julia> poly = polyhedron(vre, CDDLibrary(:exact))
+julia> poly = polyhedron(vrf, CDDLib.Library(:exact))
+julia> poly = polyhedron(vre, CDDLib.Library(:exact))
 ```
 
 Of course, creating a representation in floating points with exact arithmetic works here because we have `0.5` which is `0.1` in binary but in general, is not a good idea.
