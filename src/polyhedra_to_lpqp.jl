@@ -3,14 +3,14 @@
 # To enable LPQP support from a Polyhedra solver, define, e.g.,
 # LinearQuadraticModel(s::CDDSolver) = PolyhedraToLPQPBridge(PolyhedraModel(s))
 
-mutable struct PolyhedraToLPQPBridge <: MPB.AbstractLinearQuadraticModel
+mutable struct PolyhedraToLPQPBridge{T<:Real} <: MPB.AbstractLinearQuadraticModel
     m::AbstractPolyhedraModel
-    A::SparseMatrixCSC{Float64,Int}
-    collb::Vector{Float64}
-    colub::Vector{Float64}
-    obj::Vector{Float64}
-    rowlb::Vector{Float64}
-    rowub::Vector{Float64}
+    A::SparseMatrixCSC{T,Int}
+    collb::Vector{T}
+    colub::Vector{T}
+    obj::Vector{T}
+    rowlb::Vector{T}
+    rowub::Vector{T}
     sense::Symbol
     rowoffset
     coloffset
@@ -115,9 +115,9 @@ function MPBSI.getconstrsolution(wrap::PolyhedraToLPQPBridge)
     map(offset -> sign(offset[1]) * constrsol[abs(offset[1])], wrap.rowoffset)
 end
 
-function getdualsaux(wrap::PolyhedraToLPQPBridge, offsets)
+function getdualsaux(wrap::PolyhedraToLPQPBridge{T}, offsets) where T
     l = length(offsets)
-    duals = zeros(Float64, l)
+    duals = zeros(T, l)
     constrduals = MPBSI.getconstrduals(wrap.m)
     for i in 1:l
         for offset in offsets[i]
