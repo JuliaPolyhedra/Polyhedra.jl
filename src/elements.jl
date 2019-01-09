@@ -54,8 +54,12 @@ HalfSpace(a::AbstractVector{S}, β::T) where {S, T} = HalfSpace{promote_type(S, 
 HyperPlane(a::AbstractVector{T}, β::T) where {T} = HyperPlane{T}(a, β)
 HyperPlane(a::AbstractVector{S}, β::T) where {S, T} = HyperPlane{promote_type(S, T)}(a, β)
 
-Base.convert(::Type{HalfSpace{T, AT}}, h::HalfSpace) where {T, AT} = HalfSpace{T, AT}(AT(h.a), T(h.β))
-Base.convert(::Type{HyperPlane{T, AT}}, h::HyperPlane) where {T, AT} = HyperPlane{T, AT}(AT(h.a), T(h.β))
+function Base.convert(::Type{HalfSpace{T, AT}}, h::HalfSpace) where {T, AT}
+    return HalfSpace{T, AT}(convert(AT, h.a), convert(T, h.β))
+end
+function Base.convert(::Type{HyperPlane{T, AT}}, h::HyperPlane) where {T, AT}
+    return HyperPlane{T, AT}(convert(AT, h.a), convert(T, h.β))
+end
 Base.convert(::Type{HalfSpace{T, AT}}, h::HalfSpace{T, AT}) where {T, AT} = h
 Base.convert(::Type{HyperPlane{T, AT}}, h::HyperPlane{T, AT}) where {T, AT} = h
 
