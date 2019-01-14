@@ -27,8 +27,7 @@ function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray = nothin
     hull
 end
 
-
-@recipe function f(p::Polyhedron)
+function planar_contour(p::Polyhedron)
     if fulldim(p) != 2
         error("Plotting 3-dimensional polyhedron with Plots is not supported, use Makie, MeshCat or DrakeVisualizer")
     end
@@ -51,7 +50,11 @@ end
     end
     hull = [top; bot]
     push!(hull, hull[1])  # ensure shape is closed
+    return [p[1] for p in hull], [p[2] for p in hull]
+end
+
+@recipe function f(p::Polyhedron)
     seriestype --> :shape
     legend --> false
-    [p[1] for p in hull], [p[2] for p in hull]
+    planar_contour(p)
 end
