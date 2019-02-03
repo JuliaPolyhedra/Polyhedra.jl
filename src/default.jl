@@ -100,8 +100,11 @@ end
 solver(v::VRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}=default_solver(v)) = VRepSolver()
 solver(h::HRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}=default_solver(h)) = solver
 
-_promote_reptype(P1::Type{<:HRep}, ::Type{<:HRep}) = P1
-_promote_reptype(P1::Type{<:VRep}, ::Type{<:VRep}) = P1
+_promote_reptype(P::Type{<:HRep}, ::Type{<:HRep}) = P
+_promote_reptype(P::Type{<:VRep}, ::Type{<:VRep}) = P
+# Breaks ambiguity with above two methods
+_promote_reptype(P::Type{<:Polyhedron}, ::Type{<:Polyhedron}) = P
+
 function promote_reptype(P1::Type{<:Rep}, P2::Type{<:Rep})
     _promote_reptype(P1, P2)
 end
