@@ -397,7 +397,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Polyhedron",
     "title": "Polyhedra.polyhedron",
     "category": "function",
-    "text": "polyhedron(rep::Representation{T})\n\nCreates a polyhedron from the representation rep using the default library including in the Polyhedra package.\n\n\n\n\n\n"
+    "text": "polyhedron(rep::Representation{T})\n\nCreates a polyhedron from the representation rep using the default library included in the Polyhedra package.\n\n\n\n\n\n"
 },
 
 {
