@@ -6,7 +6,7 @@ export volume, surface
 """
     polyhedron(rep::Representation{T})
 
-Creates a polyhedron from the representation `rep` using the default library including in the Polyhedra package.
+Creates a polyhedron from the representation `rep` using the default library included in the Polyhedra package.
 """
 polyhedron(rep::Representation{T}) where {T} = polyhedron(rep, default_library(FullDim(rep), T))
 
