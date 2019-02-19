@@ -37,7 +37,7 @@ Double description method revisited
 """
 function doubledescription end
 
-function doubledescription(h::HRepresentation)
+function doubledescription(h::HRepresentation; verbose=0)
     # The redundancy of V-elements are measured using
     # the number of hyperplane they are in. If there are
     # redundant hyperplanes, it does not matter since no point
@@ -49,27 +49,39 @@ function doubledescription(h::HRepresentation)
     h = removeduplicates(h)
     v = dualfullspace(h)
     checkvconsistency(v)
-    for hp in hyperplanes(h)
+    for (i, hp) in enumerate(hyperplanes(h))
+        if verbose >= 1
+            println("Intersecting hyperplane $i/$(nhyperplanes(h))")
+        end
         #v = removeduplicates(v ∩ hel)
         # removeduplicates is cheaper than removevredundancy since the latter
         # needs to go through all the hrep element
         v = removevredundancy(removeduplicates(v ∩ hp), h)
         #v = removevredundancy(v ∩ hel, h)
+        if verbose >= 2
+            println("After intersection: $(npoints(v)) points, $(nrays(v)) rays and $(nlines(v)) lines.")
+        end
     end
-    for hs in halfspaces(h)
+    for (i, hs) in enumerate(halfspaces(h))
+        if verbose >= 1
+            println("Intersecting halfspace $i/$(nhalfspaces(h))")
+        end
         #v = removeduplicates(v ∩ hel)
         # removeduplicates is cheaper than removevredundancy since the latter
         # needs to go through all the hrep element
         v = removevredundancy(removeduplicates(v ∩ hs), h)
         #v = removevredundancy(v ∩ hel, h)
+        if verbose >= 2
+            println("After intersection: $(npoints(v)) points, $(nrays(v)) rays and $(nlines(v)) lines.")
+        end
     end
-    v
+    return v
 end
 
-function doubledescription(v::VRepresentation{T}) where {T}
+function doubledescription(v::VRepresentation{T}; kws...) where {T}
     checkvconsistency(v)
     lv = convert(LiftedVRepresentation{T, Matrix{T}}, v)
     R = -lv.R
-    vl = doubledescription(MixedMatHRep{T}(R, zeros(T, size(R, 1)), lv.linset))
+    vl = doubledescription(MixedMatHRep{T}(R, zeros(T, size(R, 1)), lv.linset); kws...)
     LiftedHRepresentation{T}(vl.R, vl.Rlinset)
 end
