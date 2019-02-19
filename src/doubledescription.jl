@@ -37,7 +37,45 @@ Double description method revisited
 """
 function doubledescription end
 
-function doubledescription(h::HRepresentation; verbose=0)
+function print_v_summary(v::VRep)
+    print("$(npoints(v)) points, $(nrays(v)) rays and $(nlines(v)) lines")
+end
+
+function intersect_and_remove_redundancy(v, hs, h; verbose=0)
+    if eltype(hs) <: HalfSpace
+        str = "halfspace"
+    else
+        str = "hyperplane"
+    end
+    for (i, hel) in enumerate(hs)
+        if verbose >= 1
+            println("Intersecting $str $i/$(length(hs))")
+        end
+        v_int = v ∩ hel
+        if verbose >= 3
+            print("Removing duplicates: ")
+            print_v_summary(v_int)
+            println(".")
+        end
+        # removeduplicates is cheaper than removevredundancy since the latter
+        # needs to go through all the hrep element
+        v_dup = removeduplicates(v_int)
+        if verbose >= 3
+            print("Removing redundancy: ")
+            print_v_summary(v_dup)
+            println(".")
+        end
+        v = removevredundancy(v_dup, h)
+        if verbose >= 2
+            print("After intersection:  ")
+            print_v_summary(v)
+            println(".")
+        end
+    end
+    return v
+end
+
+function doubledescription(h::HRepresentation; kws...)
     # The redundancy of V-elements are measured using
     # the number of hyperplane they are in. If there are
     # redundant hyperplanes, it does not matter since no point
@@ -49,32 +87,8 @@ function doubledescription(h::HRepresentation; verbose=0)
     h = removeduplicates(h)
     v = dualfullspace(h)
     checkvconsistency(v)
-    for (i, hp) in enumerate(hyperplanes(h))
-        if verbose >= 1
-            println("Intersecting hyperplane $i/$(nhyperplanes(h))")
-        end
-        #v = removeduplicates(v ∩ hel)
-        # removeduplicates is cheaper than removevredundancy since the latter
-        # needs to go through all the hrep element
-        v = removevredundancy(removeduplicates(v ∩ hp), h)
-        #v = removevredundancy(v ∩ hel, h)
-        if verbose >= 2
-            println("After intersection: $(npoints(v)) points, $(nrays(v)) rays and $(nlines(v)) lines.")
-        end
-    end
-    for (i, hs) in enumerate(halfspaces(h))
-        if verbose >= 1
-            println("Intersecting halfspace $i/$(nhalfspaces(h))")
-        end
-        #v = removeduplicates(v ∩ hel)
-        # removeduplicates is cheaper than removevredundancy since the latter
-        # needs to go through all the hrep element
-        v = removevredundancy(removeduplicates(v ∩ hs), h)
-        #v = removevredundancy(v ∩ hel, h)
-        if verbose >= 2
-            println("After intersection: $(npoints(v)) points, $(nrays(v)) rays and $(nlines(v)) lines.")
-        end
-    end
+    v = intersect_and_remove_redundancy(v, hyperplanes(h), h; kws...)
+    v = intersect_and_remove_redundancy(v, halfspaces(h), h; kws...)
     return v
 end
 
