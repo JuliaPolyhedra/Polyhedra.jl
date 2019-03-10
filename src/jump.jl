@@ -8,6 +8,19 @@ Note that if non-linear constraint are present in the model, they are ignored.
 """
 hrep(model::JuMP.Model) = LPHRepresentation(model)
 
+function _get_constraint_ref_array(model::Model)
+    ref_arr = vcat([
+        all_constraints(model, c...)
+        for c in list_of_constraint_types(model)
+    ]...)
+end
+
+function _get_constraint_array(model::Model)
+    constraint_arr = constraint_object.(
+        _get_constraint_ref_array(model)
+    )
+end
+
 # Returns affine constraint lower and upper bounds, all as dense vectors
 function prepConstrBounds(m::Model)
 
@@ -29,45 +42,56 @@ end
 # matrix of coefficients.
 function prepConstrMatrix(m::Model)
 
-    linconstr = m.linconstr::Vector{LinearConstraint}
+    linconstr = _get_constraint_array(m)
+    # Number of constraints
     numRows = length(linconstr)
+    # Number of variables
+    numCols = num_variables(m)
+
     # Calculate the maximum number of nonzeros
     # The actual number may be less because of cancelling or
     # zero-coefficient terms
     nnz = 0
     for c in 1:numRows
-        nnz += length(linconstr[c].terms.coeffs)
+        func = linconstr[c].func
+        if func isa VariableRef
+            nnz += 1
+        elseif func isa GenericAffExpr
+            nnz += length(func.terms)
+        end
     end
     # Non-zero row indices
-    I = Array{Int}(nnz)
+    I = Array{Int}(undef, nnz)
     # Non-zero column indices
-    J = Array{Int}(nnz)
+    J = Array{Int}(undef, nnz)
     # Non-zero values
-    V = Array{Float64}(nnz)
+    V = Array{Float64}(undef, nnz)
 
     # Fill it up!
     # Number of nonzeros seen so far
     nnz = 0
     for c in 1:numRows
-        # Check that no coefficients are NaN/Inf
-        assert_isfinite(linconstr[c].terms)
-        coeffs = linconstr[c].terms.coeffs
-        vars   = linconstr[c].terms.vars
-        # Check that variables belong to this model
-        if !verify_ownership(m, vars)
-            throw(VariableNotOwnedError("constraint"))
-        end
-        # Record all (i,j,v) triplets
-        @inbounds for ind in 1:length(coeffs)
+        func = linconstr[c].func
+        if func isa VariableRef
             nnz += 1
             I[nnz] = c
-            J[nnz] = vars[ind].col
-            V[nnz] = coeffs[ind]
+            J[nnz] = func.index.value
+            V[nnz] = 1.0
+        elseif func isa GenericAffExpr
+            vars, coeffs = zip(linconstr[c].func.terms...)
+            @assert all(isfinite.(coeffs))
+            # Record all (i,j,v) triplets
+            @inbounds for ind in 1:length(coeffs)
+                nnz += 1
+                I[nnz] = c
+                J[nnz] = vars[ind].index.value
+                V[nnz] = coeffs[ind]
+            end
         end
     end
 
     # sparse() handles merging duplicate terms and removing zeros
-    A = sparse(I,J,V,numRows,m.numCols)
+    A = sparse(I, J, V, numRows, numCols)
 end
 
 function LPHRepresentation(model::JuMP.Model)
