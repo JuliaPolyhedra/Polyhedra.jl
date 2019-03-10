@@ -25,14 +25,18 @@ end
 function prepConstrBounds(m::Model)
 
     # Create dense affine constraint bound vectors
-    linconstr = m.linconstr::Vector{LinearConstraint}
+    linconstr = _get_constraint_array(m)
     numRows = length(linconstr)
     # -Inf means no lower bound, +Inf means no upper bound
     rowlb = fill(-Inf, numRows)
     rowub = fill(+Inf, numRows)
     @inbounds for ind in 1:numRows
-        rowlb[ind] = linconstr[ind].lb
-        rowub[ind] = linconstr[ind].ub
+        set = linconstr[ind].set
+        if set isa MOI.GreaterThan
+            rowlb[ind] = set.lower
+        elseif set isa MOI.LessThan
+            rowlb[ind] = set.upper
+        end
     end
 
     return rowlb, rowub
