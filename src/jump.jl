@@ -8,27 +8,61 @@ Note that if non-linear constraint are present in the model, they are ignored.
 """
 hrep(model::JuMP.Model) = LPHRepresentation(model)
 
-function _get_constraint_ref_array(model::Model)
+function _get_all_constraint_ref_array(model::Model)
     ref_arr = vcat([
         all_constraints(model, c...)
         for c in list_of_constraint_types(model)
     ]...)
 end
 
-function _get_constraint_array(model::Model)
+function _get_all_constraint_array(model::Model)
     constraint_arr = constraint_object.(
-        _get_constraint_ref_array(model)
+        _get_all_constraint_ref_array(model)
     )
+end
+
+function _get_var_bounds_array(model::Model)
+    constraint_arr = _get_all_constraint_array(model)
+    var_bounds = filter(c -> c.func isa VariableRef, constraint_arr)
+    return var_bounds
+end
+
+function _get_aff_constr_array(model::Model)
+    constraint_arr = _get_all_constraint_array(model)
+    linconstr = filter(c -> c.func isa GenericAffExpr, constraint_arr)
+    return linconstr
+end
+
+# Returns variable lower and upper bounds, all as dense vectors
+function _prepVariableBounds(m::Model)
+    var_bounds = _get_var_bounds_array(m)
+    nvar = num_variables(m)
+    # Variable lower bounds
+    l = fill(-Inf, nvar)
+    # Variable upper bounds
+    u = fill(+Inf, nvar)
+    @inbounds for ind in 1:nvar
+        set = var_bounds[ind].set
+        if set isa MOI.GreaterThan
+            l[ind] = set.lower
+        elseif set isa MOI.LessThan
+            u[ind] = set.upper
+        end
+    end
+
+    return l, u
 end
 
 # Returns affine constraint lower and upper bounds, all as dense vectors
 function prepConstrBounds(m::Model)
 
     # Create dense affine constraint bound vectors
-    linconstr = _get_constraint_array(m)
+    linconstr = _get_aff_constr_array(m)
     numRows = length(linconstr)
     # -Inf means no lower bound, +Inf means no upper bound
+    # Linear constraint lower bounds
     rowlb = fill(-Inf, numRows)
+    # Linear constraint upper bounds
     rowub = fill(+Inf, numRows)
     @inbounds for ind in 1:numRows
         set = linconstr[ind].set
@@ -46,7 +80,7 @@ end
 # matrix of coefficients.
 function prepConstrMatrix(m::Model)
 
-    linconstr = _get_constraint_array(m)
+    linconstr = _get_aff_constr_array(m)
     # Number of constraints
     numRows = length(linconstr)
     # Number of variables
@@ -102,13 +136,15 @@ function LPHRepresentation(model::JuMP.Model)
     # Inspired from Joey Huchette's code in ConvexHull.jl
     A = prepConstrMatrix(model)
     lb, ub = prepConstrBounds(model)
-    l, u = model.colLower, model.colUpper
+    #l, u = model.colLower, model.colUpper
+    l, u = _prepVariableBounds(model)
 
     m, n = size(A)
     @assert m == length(lb) == length(ub)
-    @assert model.nlpdata == nothing
-    @assert isempty(model.quadconstr)
-    @assert isempty(model.sosconstr)
+    @assert num_nl_constraints(model) == 0
+    # TODO: Re-introduce asserts
+    #@assert isempty(model.quadconstr)
+    #@assert isempty(model.sosconstr)
 
     LPHRepresentation(A, l, u, lb, ub)
 end
