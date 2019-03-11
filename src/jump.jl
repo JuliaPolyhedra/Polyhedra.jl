@@ -94,11 +94,7 @@ function prepConstrMatrix(m::Model)
     nnz = 0
     for c in 1:numRows
         func = linconstr[c].func
-        if func isa VariableRef
-            nnz += 1
-        elseif func isa GenericAffExpr
-            nnz += length(func.terms)
-        end
+        nnz += length(func.terms)
     end
     # Non-zero row indices
     I = Array{Int}(undef, nnz)
@@ -112,21 +108,14 @@ function prepConstrMatrix(m::Model)
     nnz = 0
     for c in 1:numRows
         func = linconstr[c].func
-        if func isa VariableRef
+        vars, coeffs = zip(linconstr[c].func.terms...)
+        @assert all(isfinite.(coeffs))
+        # Record all (i,j,v) triplets
+        @inbounds for ind in 1:length(coeffs)
             nnz += 1
             I[nnz] = c
-            J[nnz] = func.index.value
-            V[nnz] = 1.0
-        elseif func isa GenericAffExpr
-            vars, coeffs = zip(linconstr[c].func.terms...)
-            @assert all(isfinite.(coeffs))
-            # Record all (i,j,v) triplets
-            @inbounds for ind in 1:length(coeffs)
-                nnz += 1
-                I[nnz] = c
-                J[nnz] = vars[ind].index.value
-                V[nnz] = coeffs[ind]
-            end
+            J[nnz] = vars[ind].index.value
+            V[nnz] = coeffs[ind]
         end
     end
 
