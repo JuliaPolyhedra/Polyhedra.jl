@@ -1,5 +1,5 @@
 name = "Polyhedra"
 uuid = "67491407-f73d-577b-9b50-8179a7c68029"
 authors = ["Benoît Legat <benoit.legat@gmail.com>", "Robin Deits <robin.deits@gmail.com>", "Gustavo Goretkin <gustavo.goretkin@gmail.com>", "Daisuke Oyama <oyama@e.u-tokyo.ac.jp>", "mforets <marcelo.forets-irurtia@univ-grenoble-alpes.fr>", "Joey Huchette <joehuchette@gmail.com>", "Twan Koolen <koolen.twan@gmail.com>", "guberger <47389731+guberger@users.noreply.github.com>", "mforets <mforets@gmail.com>", "femtocleaner[bot] <femtocleaner[bot]@users.noreply.github.com>", "Elliot Saba <staticfloat@gmail.com>", "Chase Coleman <cc7768@gmail.com>", "Robert Schwarz <mail@rschwarz.net>"]
-version = "0.4.5"
 repo = "https://github.com/JuliaPolyhedra/Polyhedra.jl.git"
+version = "0.4.5"
