@@ -25,6 +25,7 @@ julia = ">= 0.7"
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 GLPK = "60bf3e95-4087-53dc-ae20-288a0d20c6a6"
 GLPKMathProgInterface = "3c7084bd-78ad-589a-b5bb-dbd673274bea"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Combinatorics", "GLPK", "GLPKMathProgInterface"]
+test = ["Combinatorics", "GLPK", "GLPKMathProgInterface", "Test"]
