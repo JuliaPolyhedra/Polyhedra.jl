@@ -71,7 +71,7 @@ function prepConstrBounds(m::Model)
         if set isa MOI.GreaterThan
             rowlb[ind] = set.lower
         elseif set isa MOI.LessThan
-            rowlb[ind] = set.upper
+            rowub[ind] = set.upper
         end
     end
 
