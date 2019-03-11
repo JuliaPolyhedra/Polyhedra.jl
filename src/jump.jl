@@ -41,12 +41,14 @@ function _prepVariableBounds(m::Model)
     l = fill(-Inf, nvar)
     # Variable upper bounds
     u = fill(+Inf, nvar)
-    @inbounds for ind in 1:nvar
-        set = var_bounds[ind].set
+    @inbounds for bound_ind in 1:length(var_bounds)
+        constr = var_bounds[bound_ind]
+        var_ind = constr.func.index.value
+        set = constr.set
         if set isa MOI.GreaterThan
-            l[ind] = set.lower
+            l[var_ind] = set.lower
         elseif set isa MOI.LessThan
-            u[ind] = set.upper
+            u[var_ind] = set.upper
         end
     end
 
