@@ -7,8 +7,10 @@ version = "0.4.5"
 [deps]
 GeometryTypes = "4d00f742-c7ba-57c2-abde-4428a4b178cb"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MathProgBase = "fdba3010-5040-5b88-9595-932c9decdf73"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
