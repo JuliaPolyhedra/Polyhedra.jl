@@ -1,24 +1,23 @@
-export VRepSolver, VRepPolyhedraModel
+export VRepOptimizer
 
 """
-    VRepSolver
+    VRepOptimizer
 
-Linear Programming solver using the V-representation of the feasible set to find the optimal solution.
+Linear Programming solver using the V-representation of the feasible set to find
+the optimal solution.
 """
-struct VRepSolver <: MPB.AbstractMathProgSolver
-end
-
-mutable struct VRepPolyhedraModel <: AbstractPolyhedraModel
+struct VRepOptimizer <: MOI.AbstractOptimizer
     vrep::Union{VRep, Nothing}
     obj::Union{Vector, Nothing}
-    sense::Symbol
+    sense::MOI.OptimizationSense
 
     objval
     solution::Union{AbstractVector, Nothing}
     status::Symbol
 
     function VRepPolyhedraModel()
-        new(nothing, nothing, :Feas, nothing, nothing, :Undecided)
+        new(nothing, nothing, MOI.FEASIBILITY_SENSE, nothing, nothing,
+            MOI.OPTIMIZE_NOT_CALLED)
     end
 end
 

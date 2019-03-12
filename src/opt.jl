@@ -3,7 +3,7 @@ export AbstractPolyhedraModel
 abstract type AbstractPolyhedraModel <: MPB.AbstractLinearQuadraticModel end
 
 # see the cheat in lpqp_to_polyhedra
-#function PolyhedraModel(solver::MPB.AbstractMathProgSolver)
+#function PolyhedraModel(solver::Solver)
 #  error("PolyhedraModel not implemented for solver $solver")
 #end
 
@@ -22,7 +22,7 @@ end
 
 Solve the minimization of the objective ``\\langle c, x \\rangle`` over the polyhedron `p`.
 """
-function MPB.linprog(c::AbstractVector, p::Rep, solver::MPB.AbstractMathProgSolver=Polyhedra.solver(p))
+function MPB.linprog(c::AbstractVector, p::Rep, solver::Solver=Polyhedra.solver(p))
     m = PolyhedraModel(solver)
     if fulldim(p) != length(c)
         throw(DimensionMismatch("length of objective does not match dimension of polyhedron"))
@@ -50,7 +50,7 @@ end
 
 Check whether the polyhedron `p` is empty by using the solver `solver`.
 """
-function Base.isempty(p::Rep{T}, solver::MPB.AbstractMathProgSolver=Polyhedra.solver(p)) where {T}
+function Base.isempty(p::Rep{T}, solver::Solver=Polyhedra.solver(p)) where {T}
     N = fulldim(p)
     if N == -1
         if p isa VRepresentation || (p isa Polyhedron && fulldim(vrep(p)) == -1)

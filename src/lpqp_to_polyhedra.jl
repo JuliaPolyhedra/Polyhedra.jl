@@ -20,7 +20,7 @@ export LPQPtoPolyhedraBridge
 
 # To transform Polyhedra problems into LinearQuadratic problems
 function MPBSI.loadproblem!(m::LPQPtoPolyhedraBridge, rep::HRep, c, sense)
-    lp = LPHRepresentation(rep)
+    lp = LPHRep(rep)
     MPBSI.loadproblem!(m.lpqpmodel, lp.A, lp.l, lp.u, c, lp.lb, lp.ub, sense)
 end
 

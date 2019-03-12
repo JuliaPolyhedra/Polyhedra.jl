@@ -46,5 +46,5 @@ In fact, the MathProgBase representation of the feasible set of a linear program
 \end{align*}
 ```
 
-has `LPHRepresentation` as a corresponding H-representation.
-A JuMP model can be converted to this representation using `LPHRepresentation(m)`.
+has `LPHRep` as a corresponding H-representation.
+A JuMP model can be converted to this representation using `LPHRep(m)`.

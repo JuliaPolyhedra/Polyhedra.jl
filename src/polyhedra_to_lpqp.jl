@@ -39,7 +39,7 @@ function MPBSI.addquadconstr!(wrap::PolyhedraToLPQPBridge, linearidx, linearval,
     error("For polyhedra solvers, no quadratic constraint is supported")
 end
 
-function computeoffsets(lp::LPHRepresentation)
+function computeoffsets(lp::LPHRep)
     coloffset = Vector{Vector{Int}}(undef, size(lp.A, 2))
     rowoffset = Vector{Vector{Int}}(undef, size(lp.A, 1))
     # Assumes that hyperplanes are in first indices
@@ -99,7 +99,7 @@ function MPBSI.optimize!(wrap::PolyhedraToLPQPBridge)
     (nvar = length(collb)) == length(colub) || error("Unequal lengths for column bounds")
     (nrow = length(rowlb)) == length(rowub) || error("Unequal lengths for row bounds")
 
-    lp = LPHRepresentation(A, collb, colub, rowlb, rowub)
+    lp = LPHRep(A, collb, colub, rowlb, rowub)
     wrap.coloffset, wrap.rowoffset = computeoffsets(lp)
     MPBSI.loadproblem!(wrap.m, lp, obj, wrap.sense)
     MPBSI.optimize!(wrap.m)
