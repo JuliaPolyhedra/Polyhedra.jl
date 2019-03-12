@@ -21,15 +21,23 @@ function _get_all_constraint_array(model::Model)
     )
 end
 
+function _filter_var_bounds(constr)
+    constr isa VariableRef | constr isa VectorofVariables
+end
+
+function _filter_aff_constr(constr)
+    constr isa GenericAffExpr | constr isa VectorAffineFunction
+end
+
 function _get_var_bounds_array(model::Model)
     constraint_arr = _get_all_constraint_array(model)
-    var_bounds = filter(c -> c.func isa VariableRef, constraint_arr)
+    var_bounds = filter(_filter_var_bounds, constraint_arr)
     return var_bounds
 end
 
 function _get_aff_constr_array(model::Model)
     constraint_arr = _get_all_constraint_array(model)
-    linconstr = filter(c -> c.func isa GenericAffExpr, constraint_arr)
+    linconstr = filter(_filter_aff_constr, constraint_arr)
     return linconstr
 end
 
