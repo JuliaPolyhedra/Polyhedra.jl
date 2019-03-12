@@ -9,10 +9,10 @@ Note that if non-linear constraint are present in the model, they are ignored.
 hrep(model::JuMP.Model) = LPHRepresentation(model)
 
 function _get_all_constraint_ref_array(model::Model)
-    ref_arr = vcat([
+    ref_arr = reduce(vcat, [
         all_constraints(model, c...)
         for c in list_of_constraint_types(model)
-    ]...)
+    ])
 end
 
 function _get_all_constraint_array(model::Model)
@@ -108,7 +108,7 @@ function prepConstrMatrix(m::Model)
     nnz = 0
     for c in 1:numRows
         func = linconstr[c].func
-        vars, coeffs = zip(linconstr[c].func.terms...)
+        vars, coeffs = map(f -> collect(f(linconstr[c].func.terms)), (keys, values))
         @assert all(isfinite.(coeffs))
         # Record all (i,j,v) triplets
         @inbounds for ind in 1:length(coeffs)
