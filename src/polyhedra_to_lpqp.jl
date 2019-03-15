@@ -4,7 +4,7 @@
 # LinearQuadraticModel(s::CDDSolver) = PolyhedraToLPQPBridge(PolyhedraModel(s))
 
 mutable struct PolyhedraToLPQPBridge{T<:Real} <: MPB.AbstractLinearQuadraticModel
-    m::AbstractPolyhedraModel
+    m::AbstractPolyhedraOptimizer
     A::SparseMatrixCSC{T,Int}
     collb::Vector{T}
     colub::Vector{T}
@@ -16,7 +16,7 @@ mutable struct PolyhedraToLPQPBridge{T<:Real} <: MPB.AbstractLinearQuadraticMode
     coloffset
 end
 
-PolyhedraToLPQPBridge(s::AbstractPolyhedraModel) = PolyhedraToLPQPBridge(s, sparse(Int[],Int[],Float64[]), Float64[], Float64[], Float64[], Float64[], Float64[], :Min, nothing, nothing)
+PolyhedraToLPQPBridge(s::AbstractPolyhedraOptimizer) = PolyhedraToLPQPBridge(s, sparse(Int[],Int[],Float64[]), Float64[], Float64[], Float64[], Float64[], Float64[], :Min, nothing, nothing)
 
 export PolyhedraToLPQPBridge
 

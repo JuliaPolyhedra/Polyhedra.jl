@@ -1,6 +1,34 @@
-export AbstractPolyhedraModel
+export AbstractPolyhedraOptimizer
 
-abstract type AbstractPolyhedraModel <: MPB.AbstractLinearQuadraticModel end
+abstract type AbstractPolyhedraOptimizer <: MOI.AbstractOptimizer end
+
+struct FeasibilitySet <: MOI.AbstractModelAttribute end
+
+function MOI.copy_to(dest::AbstractPolyhedraOptimizer,
+                     src::MOI.ModelLike)
+    MOI.empty!(dest)
+
+    idxmap = IndexMap()
+
+    vis_src = MOI.get(src, MOI.ListOfVariableIndices())
+    vis_dest = MOI.add_variable(dest, length(vis_src))
+    for (vi_src, vi_dest) in zip(vis_src, vis_dest)
+        idxmap.varmap[vi_src] = vi_dest
+    end
+
+    # Copy variable attributes
+    pass_attributes(dest, src, copy_names, idxmap, vis_src)
+
+    # Copy model attributes
+    pass_attributes(dest, src, copy_names, idxmap)
+
+    lphrep = LPHRep(src)
+    if hashreps(lphrep)
+        MOI.set(dest, MOI.FeasibilitySet(), lphrep)
+    end
+
+    return idxmap
+end
 
 # see the cheat in lpqp_to_polyhedra
 #function PolyhedraModel(solver::Solver)

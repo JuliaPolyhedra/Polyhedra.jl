@@ -6,25 +6,23 @@ export VRepOptimizer
 Linear Programming solver using the V-representation of the feasible set to find
 the optimal solution.
 """
-struct VRepOptimizer <: MOI.AbstractOptimizer
+struct VRepOptimizer <: AbstractPolyhedraOptimizer
     vrep::Union{VRep, Nothing}
     obj::Union{Vector, Nothing}
     sense::MOI.OptimizationSense
 
     objval
     solution::Union{AbstractVector, Nothing}
-    status::Symbol
+    status::MOI.TerminationStatus
 
-    function VRepPolyhedraModel()
+    function VRepOptimizer()
         new(nothing, nothing, MOI.FEASIBILITY_SENSE, nothing, nothing,
             MOI.OPTIMIZE_NOT_CALLED)
     end
 end
 
-PolyhedraModel(::VRepSolver) = VRepPolyhedraModel()
-MPBSI.LinearQuadraticModel(s::VRepSolver) = PolyhedraToLPQPBridge(PolyhedraModel(s))
 
-function MPBSI.loadproblem!(lpm::VRepPolyhedraModel, vrep::VRep, obj, sense)
+function MPBSI.loadproblem!(lpm::VRepOptimizer, vrep::VRep, obj, sense)
     if !(sense in [:Max, :Min])
         error("sense should be :Max or :Min")
     end
@@ -37,7 +35,7 @@ function MPBSI.loadproblem!(lpm::VRepPolyhedraModel, vrep::VRep, obj, sense)
     end
 end
 
-function MPBSI.optimize!(lpm::VRepPolyhedraModel)
+function MPBSI.optimize!(lpm::VRepOptimizer)
     if lpm.vrep === nothing
         error("No problem loaded")
     end
@@ -81,15 +79,13 @@ function MPBSI.optimize!(lpm::VRepPolyhedraModel)
     end
 end
 
-function MPB.status(lpm::VRepPolyhedraModel)
+function MPB.status(lpm::VRepOptimizer)
     lpm.status
 end
-function MPB.getobjval(lpm::VRepPolyhedraModel)
-    lpm.objval
-end
-function MPB.getsolution(lpm::VRepPolyhedraModel)
+MOI.get(lpm::VRepOptimizer, ::MOI.ObjectiveValue) = lpm.objval
+function MPB.getsolution(lpm::VRepOptimizer)
     copy(lpm.solution)
 end
-function MPB.getunboundedray(lpm::VRepPolyhedraModel)
+function MPB.getunboundedray(lpm::VRepOptimizer)
     copy(lpm.solution)
 end

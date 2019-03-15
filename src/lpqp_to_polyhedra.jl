@@ -7,7 +7,7 @@
 #PolyhedraModel(s::MathProgbase.AbstractMathProgSolver) = LPQPtoPolyhedraBridge(LinearQuadraticModel(s))
 PolyhedraModel(s) = LPQPtoPolyhedraBridge(MPBSI.LinearQuadraticModel(s))
 
-struct LPQPtoPolyhedraBridge <: AbstractPolyhedraModel
+struct LPQPtoPolyhedraBridge <: AbstractPolyhedraOptimizer
     lpqpmodel::MPB.AbstractLinearQuadraticModel
     rep
     c
