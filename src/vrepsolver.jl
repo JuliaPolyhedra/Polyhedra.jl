@@ -1,18 +1,19 @@
 export VRepOptimizer
 
 """
-    VRepOptimizer
+    VRepOptimizer{T} <: AbstractPolyhedraOptimizer{T}
 
 Linear Programming solver using the V-representation of the feasible set to find
 the optimal solution.
 """
-struct VRepOptimizer <: AbstractPolyhedraOptimizer
-    vrep::Union{VRep, Nothing}
-    obj::Union{Vector, Nothing}
+struct VRepOptimizer{T} <: AbstractPolyhedraOptimizer{T}
+    lphrep::LPHRep{T}
+    rep::Union{Rep{T}, Nothing}
+    obj::Union{Vector{T}, Nothing}
     sense::MOI.OptimizationSense
 
-    objval
-    solution::Union{AbstractVector, Nothing}
+    objval::T
+    solution::Union{AbstractVector{T}, Nothing}
     status::MOI.TerminationStatus
 
     function VRepOptimizer()

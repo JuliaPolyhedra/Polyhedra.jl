@@ -1,33 +1,38 @@
 export AbstractPolyhedraOptimizer
 
-abstract type AbstractPolyhedraOptimizer <: MOI.AbstractOptimizer end
+abstract type AbstractPolyhedraOptimizer{T} <: MOI.AbstractOptimizer end
 
-struct FeasibilitySet <: MOI.AbstractModelAttribute end
+function MOI.copy_to(dest::AbstractPolyhedraOptimizer, src::MOI.ModelLike; kws...)
+    return MOI.Utilities.automatic_copy_to(dest, src; kws...)
+end
+MOI.Utilities.supports_default_copy_to(optimizer::AbstractPolyhedraOptimizer, copy_names::Bool) = true
 
-function MOI.copy_to(dest::AbstractPolyhedraOptimizer,
-                     src::MOI.ModelLike)
-    MOI.empty!(dest)
+struct PolyhedraOptSet{T, RepT <: Rep{T}} <: MOI.AbstractVectorSet
+    rep::RepT
+end
 
-    idxmap = IndexMap()
+function MOI.add_variable(optimizer::AbstractPolyhedraOptimizer)
+    return MOI.add_variable(optimizer.lphrep.model)
+end
+function MOI.add_variables(optimizer::AbstractPolyhedraOptimizer, n)
+    return MOI.add_variables(optimizer.lphrep.model, n)
+end
 
-    vis_src = MOI.get(src, MOI.ListOfVariableIndices())
-    vis_dest = MOI.add_variable(dest, length(vis_src))
-    for (vi_src, vi_dest) in zip(vis_src, vis_dest)
-        idxmap.varmap[vi_src] = vi_dest
+function MOI.add_constraint(optimizer::AbstractPolyhedraOptimizer{T},
+                            func::MOI.ScalarAffineFunction{T},
+                            set::Union{MOI.EqualTo{T}, MOI.LessThan{T}})
+    return MOI.add_constraint(optimizer.lphrep.model, func, set)
+end
+function MOI.add_constraint(optimizer::AbstractPolyhedraOptimizer,
+                            vov::MOI.VectorOfVariables, rep::PolyhedraOptSet)
+    if vov.variables != MOI.get(optimizer.lphrep, MOI.ListOfVariableIndices())
+        error("Cannot only add VectorOfVariables polyhedra constraints with all variables in creation order.")
     end
-
-    # Copy variable attributes
-    pass_attributes(dest, src, copy_names, idxmap, vis_src)
-
-    # Copy model attributes
-    pass_attributes(dest, src, copy_names, idxmap)
-
-    lphrep = LPHRep(src)
-    if hashreps(lphrep)
-        MOI.set(dest, MOI.FeasibilitySet(), lphrep)
+    if optimizer.rep !== nothing
+        error("Cannot only add one polyhedra constraint.")
     end
-
-    return idxmap
+    optimizer.rep = rep
+    return MOI.ConstraintIndex{MOI.VectorOfVariables, typeof(rep)}(1)
 end
 
 # see the cheat in lpqp_to_polyhedra
