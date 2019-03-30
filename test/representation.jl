@@ -47,7 +47,6 @@ end
 
     include("vecrep.jl")
     include("matrep.jl")
-    include("lphrep.jl")
     include("liftedrep.jl")
 
     @testset "eltype for some iterators is incorrect #7" begin
