@@ -44,7 +44,7 @@ end
 function LPHRep{T}(d::FullDim,
                    hyperplanes::ElemIt{<:HyperPlane{T}},
                    halfspaces::ElemIt{<:HalfSpace{T}}) where {T}
-    model = _MOIModel{Float64}()
+    model = _MOIModel{T}()
     vars = MOI.add_variables(model, fulldim(d))
     for hyperplane in hyperplanes
         func = _saf(hyperplane.a, vars)

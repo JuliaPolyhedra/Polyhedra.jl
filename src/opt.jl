@@ -4,6 +4,10 @@ struct PolyhedraOptSet{T, RepT <: Rep{T}} <: MOI.AbstractVectorSet
     rep::RepT
 end
 
+function JuMP.build_constraint(error_fun::Function, func, set::Rep)
+    return JuMP.build_constraint(error_fun, func, PolyhedraOptSet(set))
+end
+
 abstract type AbstractPolyhedraOptimizer{T} <: MOI.AbstractOptimizer end
 
 function MOI.copy_to(dest::AbstractPolyhedraOptimizer, src::MOI.ModelLike; kws...)
@@ -67,14 +71,14 @@ function MOI.supports_constraint(::AbstractPolyhedraOptimizer,
 end
 function MOI.add_constraint(optimizer::AbstractPolyhedraOptimizer,
                             vov::MOI.VectorOfVariables, rep::PolyhedraOptSet)
-    if vov.variables != MOI.get(optimizer.lphrep, MOI.ListOfVariableIndices())
+    if vov.variables != MOI.get(optimizer.lphrep.model, MOI.ListOfVariableIndices())
         error("Cannot only add VectorOfVariables polyhedra constraints with all variables in creation order.")
     end
     if optimizer.rep !== nothing
         error("Cannot only add one polyhedra constraint.")
     end
     optimizer.feasible_set = nothing # Invalidated by the new constraint
-    optimizer.rep = rep
+    optimizer.rep = rep.rep
     return MOI.ConstraintIndex{MOI.VectorOfVariables, typeof(rep)}(1)
 end
 

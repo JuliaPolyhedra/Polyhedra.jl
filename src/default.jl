@@ -85,19 +85,19 @@ function default_solver(p::Rep, ps::Rep...)
 end
 
 """
-    solver(p::Rep, solver::MathProgBase.AbstractMathProgSolver=default_solver(p))
+    solver(p::Rep, solver::Union{Nothing, JuMP.OptimizerFactory}=default_solver(p))
 
-If the V-representation of `p` has been computed, returns `VRepSolver()`, otherwise, returns `solver`.
+If the V-representation of `p` has been computed, returns `VRepOptimizer()`, otherwise, returns `solver`.
 """
-function solver(p::Rep, solver::SolverOrNot=default_solver(p))
+function solver(p::Rep{T}, solver::SolverOrNot=default_solver(p)) where T
     if vrepiscomputed(p)
-        VRepSolver()
+        with_optimizer(VRepOptimizer{T})
     else
         solver
     end
 end
 
-solver(v::VRepresentation, solver::SolverOrNot=default_solver(v)) = VRepSolver()
+solver(v::VRepresentation{T}, solver::SolverOrNot=default_solver(v)) where {T} = with_optimizer(VRepOptimizer{T})
 solver(h::HRepresentation, solver::SolverOrNot=default_solver(h)) = solver
 
 _promote_reptype(P::Type{<:HRep}, ::Type{<:HRep}) = P

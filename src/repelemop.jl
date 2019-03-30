@@ -108,17 +108,23 @@ end
 function _hinv(h::HRepElement, vr::VRep)
     all(_hinv.(h, vreps(vr)))
 end
-function _hinh(h::HalfSpace, hr::HRep, solver)
+function _hinh(h::HalfSpace, hr::HRep, solver::Solver)
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
-    sol = MPB.linprog(-h.a, hr, solver)
-    if sol.status == :Unbounded
-        false
-    elseif sol.status == :Infeasible
-        true
-    elseif sol.status == :Optimal
-        _leq(-sol.objval, h.β)
+    model = JuMP.Model(solver)
+    x = JuMP.@variable(model, [1:fulldim(p)])
+    JuMP.@constraint(model, x in hr)
+    JuMP.@objective(model, Max, h.a ⋅ x)
+    term = termination_status(model)
+    if term == MOI.DUAL_INFEASIBLE
+        return false
+    elseif term == MOI.INFEASIBLE
+        return true
+    elseif term == MOI.OPTIMAL
+        return _leq(sol.objval, h.β)
     else
-        error("Solver returned with status $(sol.status)")
+        error("Cannot determine whether the polyhedron is contained in the",
+              " halfspace or not because the linear program terminated with",
+              " status $term.")
     end
 end
 function _hinh(h::HyperPlane, hr::HRep, solver)
