@@ -6,19 +6,15 @@ MOI.Utilities.@model(_MOIModel,
 
 mutable struct LPHRep{T} <: HRepresentation{T}
     model::_MOIModel{T}
-    hyperplane_indices::Vector{MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},
-                                                   MOI.EqualTo{T}}}
-    halfspace_indices::Vector{MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},
-                                                  MOI.LessThan{T}}}
+    hyperplane_indices::Union{Nothing,
+                              Vector{MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},
+                                                         MOI.EqualTo{T}}}}
+    halfspace_indices::Union{Nothing,
+                             Vector{MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},
+                                                        MOI.LessThan{T}}}}
 end
 function LPHRep(model::_MOIModel{T}) where T
-    return LPHRep(model,
-        MOI.get(model,
-                MOI.ListOfConstraintIndices{MOI.ScalarAffineFunction{T},
-                                            MOI.EqualTo{T}}()),
-        MOI.get(model,
-                MOI.ListOfConstraintIndices{MOI.ScalarAffineFunction{T},
-                                            MOI.LessThan{T}}()))
+    return LPHRep(model, nothing, nothing)
 end
 function LPHRep(model::MOI.ModelLike)
     _model = _MOIModel{Float64}()
@@ -56,7 +52,7 @@ function LPHRep{T}(d::FullDim,
         MOI.add_constraint(model, func, set)
     end
     for halfspace in halfspaces
-        func = _saf(hyperplane.a, vars)
+        func = _saf(halfspace.a, vars)
         set = MOI.LessThan(halfspace.β)
         MOI.add_constraint(model, func, set)
     end
@@ -69,13 +65,38 @@ function Base.copy(lp::LPHRep{T}) where {T}
     return LPHRep(model)
 end
 
-function constraint_indices(rep::LPHRep,
-                            ::Union{HyperPlaneIndex, HyperPlaneIndices})
+function constraint_indices(rep::LPHRep{T},
+                            ::Union{HyperPlaneIndex, HyperPlaneIndices}) where T
+    if rep.hyperplane_indices === nothing
+        rep.hyperplane_indices = MOI.get(
+            rep.model,
+            MOI.ListOfConstraintIndices{MOI.ScalarAffineFunction{T},
+                                        MOI.EqualTo{T}}())
+    end
     return rep.hyperplane_indices
 end
-function constraint_indices(rep::LPHRep,
-                            ::Union{HalfSpaceIndex, HalfSpaceIndices})
+function MOI.add_constraint(rep::LPHRep{T},
+                            func::MOI.ScalarAffineFunction{T},
+                            set::MOI.EqualTo{T}) where T
+    rep.hyperplane_indices = nothing
+    return MOI.add_constraint(rep.model, func, set)
+end
+
+function constraint_indices(rep::LPHRep{T},
+                            ::Union{HalfSpaceIndex, HalfSpaceIndices}) where T
+    if rep.halfspace_indices === nothing
+        rep.halfspace_indices = MOI.get(
+            rep.model,
+            MOI.ListOfConstraintIndices{MOI.ScalarAffineFunction{T},
+                                        MOI.LessThan{T}}())
+    end
     return rep.halfspace_indices
+end
+function MOI.add_constraint(rep::LPHRep{T},
+                            func::MOI.ScalarAffineFunction{T},
+                            set::MOI.LessThan{T}) where T
+    rep.halfspace_indices = nothing
+    return MOI.add_constraint(rep.model, func, set)
 end
 
 function Base.length(idxs::HIndices{T, LPHRep{T}}) where {T}
@@ -99,7 +120,11 @@ function Base.get(rep::LPHRep{T}, idx::HIndex{T}) where {T}
     a = sparsevec(indices, values, FullDim(rep))
     set = MOI.get(rep.model, MOI.ConstraintSet(), ci)
     β = MOI.Utilities.getconstant(set) - func.constant
-    return HyperPlane(a, β)
+    if idx isa HyperPlaneIndex
+        return HyperPlane(a, β)
+    else
+        return HalfSpace(a, β)
+    end
 end
 function nextindex(rep::LPHRep{T}, idx::HIndex{T}) where {T}
     if idx.value >= length(constraint_indices(rep, idx))

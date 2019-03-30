@@ -20,6 +20,7 @@ include("doubledescription.jl")
 
 include("interval.jl")
 
+include("vrep_optimizer.jl")
 include("polyhedra_to_lpqp.jl")
 include("default.jl")
 
