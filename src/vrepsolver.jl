@@ -53,18 +53,26 @@ end
 
 function MOI.optimize!(lpm::VRepOptimizer{T}) where T
     if lpm.rep === nothing
-        if lpm.library === nothing
-            lpm.feasible_set = polyhedron(lpm.lphrep)
-        else
-            lpm.feasible_set = polyhedron(lpm.lphrep, lpm.library)
-        end
+        lpm.feasible_set = lpm.lphrep
     else
-        if !MOI.is_empty(lpm.lphrep.model)
+        if hasallhalfspaces(lpm.lphrep)
             error("Cannot provide both a polyhedral feasible set and additional constraints.")
         end
         lpm.feasible_set = lpm.rep
     end
-    prob = vrep(lpm.feasible_set)
+    if lpm.feasible_set isa HRepresentation
+        if lpm.library === nothing
+            lpm.feasible_set = polyhedron(lpm.feasible_set)
+        else
+            lpm.feasible_set = polyhedron(lpm.feasible_set, lpm.library)
+        end
+    end
+    if lpm.feasible_set isa VRepresentation
+        prob = lpm.feasible_set
+    else
+        @assert lpm.feasible_set isa Polyhedron
+        prob = vrep(lpm.feasible_set)
+    end
     N = fulldim(prob)
     if !haspoints(prob) && !haslines(prob) && !hasrays(prob)
         lpm.status = MOI.INFEASIBLE
