@@ -1,5 +1,4 @@
 using JuMP
-import MathProgBase
 
 struct MockSolver <: MathProgBase.AbstractMathProgSolver end
 struct MockModel <: AbstractPolyhedraModel end

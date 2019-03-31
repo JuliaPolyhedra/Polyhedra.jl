@@ -8,10 +8,6 @@ export Polyhedron
 abstract type Library end
 abstract type Polyhedron{T} end
 
-import MathProgBase
-const MPB = MathProgBase
-const MPBSI = MPB.SolverInterface
-
 import JuMP
 const Solver = JuMP.OptimizerFactory
 const SolverOrNot = Union{Nothing, Solver}

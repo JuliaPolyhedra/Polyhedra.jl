@@ -21,7 +21,7 @@ include("doubledescription.jl")
 include("interval.jl")
 
 include("vrep_optimizer.jl")
-include("polyhedra_to_lpqp.jl")
+#include("polyhedra_to_lpqp.jl") # TODO
 include("default.jl")
 
 include("show.jl")
