@@ -111,7 +111,7 @@ end
 function _hinh(h::HalfSpace, hr::HRep, solver::Solver)
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
     model = JuMP.Model(solver)
-    x = JuMP.@variable(model, [1:fulldim(p)])
+    x = JuMP.@variable(model, [1:fulldim(hr)])
     JuMP.@constraint(model, x in hr)
     JuMP.@objective(model, Max, h.a ⋅ x)
     term = termination_status(model)

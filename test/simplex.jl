@@ -1,4 +1,4 @@
-import MathProgBase
+import JuMP
 function simplextest(lib::Polyhedra.Library)
     hsim = HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0) ∩ HyperPlane([1, 1], 1)
     vsim = convexhull([0, 1], [1, 0])
@@ -38,7 +38,7 @@ function simplextest(lib::Polyhedra.Library)
         end
     end
 
-    @test_throws DimensionMismatch MathProgBase.linprog(ones(3), poly1)
+    model = Model(Polyhedra.solver(poly1))
     sol = MathProgBase.linprog([-2, 0], poly1)
     @test sol.status == :Optimal
     @test sol.objval == -2
