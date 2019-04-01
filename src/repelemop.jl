@@ -139,7 +139,7 @@ Base.issubset(hr::HRepresentation, h::HRepElement) = _hinh(h, hr)
 
 Returns whether `p` is a subset of `h`, i.e. whether `h` supports the polyhedron `p`.
 """
-function Base.issubset(p::Polyhedron, h::HRepElement, solver=Polyhedra.solver(p))
+function Base.issubset(p::Polyhedron, h::HRepElement, solver=Polyhedra.linear_objective_solver(p))
     if vrepiscomputed(p)
         _hinv(h, p)
     else

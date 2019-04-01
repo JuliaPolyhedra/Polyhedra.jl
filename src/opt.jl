@@ -83,11 +83,11 @@ function MOI.add_constraint(optimizer::AbstractPolyhedraOptimizer,
 end
 
 """
-    isempty(p::Rep, solver::JuMP.OptimizerFactory=Polyhedra.solver(p))
+    isempty(p::Rep, solver::JuMP.OptimizerFactory=Polyhedra.linear_objective_solver(p))
 
 Check whether the polyhedron `p` is empty by using the solver `solver`.
 """
-function Base.isempty(p::Rep{T}, solver::Solver=Polyhedra.solver(p)) where {T}
+function Base.isempty(p::Rep{T}, solver::Solver=Polyhedra.linear_objective_solver(p)) where {T}
     N = fulldim(p)
     if N == -1
         if p isa VRepresentation || (p isa Polyhedron && fulldim(vrep(p)) == -1)

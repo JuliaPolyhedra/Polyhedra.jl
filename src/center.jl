@@ -52,7 +52,7 @@ end
 Return a tuple with the center and radius of the smallest euclidean ball containing the polyhedron `p`.
 Throws an error if the polyhedron is empty or if the radius is infinite (i.e. `p` is not a polytope, it contains rays).
 """
-function vchebyshevcenter(p::VRep, solver=Polyhedra.solver(p))
+function vchebyshevcenter(p::VRep, solver=Polyhedra.default_solver(p))
     error("TODO")
 end
 
@@ -61,12 +61,12 @@ end
 
 If `p` is a H-representation or is a polyhedron for which the H-representation has already been computed, calls `hchebyshevcenter`, otherwise, call `vchebyshevcenter`.
 """
-function chebyshevcenter(p::Polyhedron, solver=Polyhedra.solver(p))
+function chebyshevcenter(p::Polyhedron, solver=Polyhedra.default_solver(p))
     if hrepiscomputed(p)
         hchebyshevcenter(p, solver)
     else
         vchebyshevcenter(p, solver)
     end
 end
-chebyshevcenter(p::HRepresentation, solver=Polyhedra.solver(p)) = hchebyshevcenter(p, solver)
-chebyshevcenter(p::VRepresentation, solver=Polyhedra.solver(p)) = vchebyshevcenter(p, solver)
+chebyshevcenter(p::HRepresentation, solver=Polyhedra.default_solver(p)) = hchebyshevcenter(p, solver)
+chebyshevcenter(p::VRepresentation, solver=Polyhedra.default_solver(p)) = vchebyshevcenter(p, solver)

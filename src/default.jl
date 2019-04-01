@@ -85,23 +85,24 @@ function default_solver(p::Rep, ps::Rep...)
 end
 
 """
-    solver(p::Rep, solver::Union{Nothing, JuMP.OptimizerFactory}=default_solver(p))
+    linear_objective_solver(p::Rep, solver::Union{Nothing, JuMP.OptimizerFactory}=default_solver(p))
 
-If the V-representation of `p` has been computed, returns `VRepOptimizer()`, otherwise, returns `solver`.
-
-## Note
-
-Only use this function for solver a problem like
+Return the solver to use for optimizing a linear objective over the polyhedron `p`, i.e.
 ```julia
 model = Model(solver)
 x = @variable(model, [1:fulldim(p)])
 @constraint(model, x in p)
 @objective(model, c ⋅ x)
 ```
+for some vector `c`.
+
+By default, if the V-representation of `p` has been computed, it returns
+`VRepOptimizer()`, otherwise, it returns `solver`.
+
 If the problem has constraints different to `x in p`, use `default_solver(p)` instead
 as the fact that the V-representation of `p` has been computed does not help.
 """
-function solver(p::Rep{T}, solver::SolverOrNot=default_solver(p)) where T
+function linear_objective_solver(p::Rep{T}, solver::SolverOrNot=default_solver(p)) where T
     if vrepiscomputed(p)
         return with_optimizer(VRepOptimizer{T})
     else
@@ -109,8 +110,8 @@ function solver(p::Rep{T}, solver::SolverOrNot=default_solver(p)) where T
     end
 end
 
-solver(v::VRepresentation{T}, solver::SolverOrNot=default_solver(v)) where {T} = with_optimizer(VRepOptimizer{T})
-solver(h::HRepresentation, solver::SolverOrNot=default_solver(h)) = solver
+linear_objective_solver(v::VRepresentation{T}, solver::SolverOrNot=default_solver(v)) where {T} = with_optimizer(VRepOptimizer{T})
+linear_objective_solver(h::HRepresentation, solver::SolverOrNot=default_solver(h)) = solver
 
 _promote_reptype(P::Type{<:HRep}, ::Type{<:HRep}) = P
 _promote_reptype(P::Type{<:VRep}, ::Type{<:VRep}) = P
