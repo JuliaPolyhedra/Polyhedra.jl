@@ -38,15 +38,28 @@ function simplextest(lib::Polyhedra.Library)
         end
     end
 
-    model = Model(Polyhedra.solver(poly1))
-    sol = MathProgBase.linprog([-2, 0], poly1)
-    @test sol.status == :Optimal
-    @test sol.objval == -2
-    @test sol.sol == [1, 0]
-    sol = MathProgBase.linprog([-1, -3], poly1)
-    @test sol.status == :Optimal
-    @test sol.objval == -3
-    @test sol.sol == [0, 1]
+    @testset "Optimize with objective -2x_1" begin
+        model = Model(Polyhedra.linear_objective_solver(poly1))
+        x = @variable(model, [1:fulldim(poly1)])
+        @constraint(model, x in poly1)
+        @objective(model, Min, [-2, 0] ⋅ x)
+        optimize!(model)
+        @test termination_status(model) == MOI.OPTIMAL
+        @test objective_value(model) == -2
+        @test primal_status(model) == MOI.FEASIBLE_POINT
+        @test value.(x) == [1, 0]
+    end
+    @testset "Optimize with objective -x_1 - 3x_2" begin
+        model = Model(Polyhedra.linear_objective_solver(poly1))
+        x = @variable(model, [1:fulldim(poly1)])
+        @constraint(model, x in poly1)
+        @objective(model, Min, [-1, -3] ⋅ x)
+        optimize!(model)
+        @test termination_status(model) == MOI.OPTIMAL
+        @test objective_value(model) == -3
+        @test primal_status(model) == MOI.FEASIBLE_POINT
+        @test value.(x) == [0, 1]
+    end
 
     poly2 = polyhedron(vsim, lib)
     @test dim(poly2) == 1
@@ -78,14 +91,28 @@ function simplextest(lib::Polyhedra.Library)
     @test_throws ErrorException chebyshevcenter(poly3)
     @test dim(poly3) == 2
 
-    @testset "LinProg" begin
-        sol = MathProgBase.linprog([1, 1], poly3)
-        @test sol.status == :Optimal
-        @test sol.objval == 0
-        @test sol.sol == [0, 0]
-        sol = MathProgBase.linprog([0, -1], poly3)
-        @test sol.status == :Unbounded
-        @test sol.attrs[:unboundedray] == [0, 1]
+    @testset "Optimize with objective x_1 + x_2" begin
+        model = Model(Polyhedra.linear_objective_solver(poly3))
+        x = @variable(model, [1:fulldim(poly3)])
+        @constraint(model, x in poly3)
+        @objective(model, Min, [1, 1] ⋅ x)
+        optimize!(model)
+        @test termination_status(model) == MOI.OPTIMAL
+        @test objective_value(model) == 0
+        @test primal_status(model) == MOI.FEASIBLE_POINT
+        @test value.(x) == [0, 0]
+    end
+
+    @testset "Optimize with objective -x_2" begin
+        model = Model(Polyhedra.linear_objective_solver(poly3))
+        x = @variable(model, [1:fulldim(poly3)])
+        @constraint(model, x in poly3)
+        @objective(model, Min, [0, -1] ⋅ x)
+        optimize!(model)
+        @test termination_status(model) == MOI.DUAL_INFEASIBLE
+        @test objective_value(model) == -1
+        @test primal_status(model) == MOI.INFEASIBILITY_CERTIFICATE
+        @test value.(x) == [0, 1]
     end
 
     hcutel = HyperPlane([1, 1], 1)
