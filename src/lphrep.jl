@@ -18,7 +18,7 @@ function LPHRep(model::_MOIModel{T}) where T
 end
 function LPHRep(model::MOI.ModelLike)
     _model = _MOIModel{Float64}()
-    MOI.copy_to(_model, model)
+    MOI.copy_to(MOI.Bridges.full_bridge_optimizer(_model, Float64), model)
     return LPHRep(_model)
 end
 FullDim(rep::LPHRep) = MOI.get(rep.model, MOI.NumberOfVariables())
