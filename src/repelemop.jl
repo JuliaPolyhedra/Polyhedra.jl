@@ -114,6 +114,7 @@ function _hinh(h::HalfSpace, hr::HRep, solver::Solver)
     x = JuMP.@variable(model, [1:fulldim(hr)])
     JuMP.@constraint(model, x in hr)
     JuMP.@objective(model, Max, h.a ⋅ x)
+    optimize!(model)
     term = termination_status(model)
     if term == MOI.DUAL_INFEASIBLE
         return false

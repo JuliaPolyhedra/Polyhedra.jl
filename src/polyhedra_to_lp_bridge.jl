@@ -10,7 +10,7 @@ struct PolyhedraToLPBridge{T, F} <: MOI.Bridges.AbstractBridge
     halfspaces::Vector{MOI.ConstraintIndex{F, MOI.LessThan{T}}}
 end
 function PolyhedraToLPBridge{T, F}(model, f::MOI.AbstractVectorFunction, p::PolyhedraOptSet) where {T, F}
-    vf = MOIU.eachindex(f)
+    vf = MOIU.eachscalar(f)
     hyperplanes = [
         MOIU.add_scalar_constraint(model, func(T, h.a, vf, F), MOI.EqualTo(h.β))
         for h in hyperplanes(p.rep)
