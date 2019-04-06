@@ -67,10 +67,11 @@ function simplextest(lib::Polyhedra.Library)
     inequality_fulltest(poly2, hsim)
     generator_fulltest(poly2, vsim)
 
-    # x_1 cannot be 2
-    hempty = hsim ∩ HyperPlane([1, 0], 2)
-    poly = polyhedron(hempty, lib)
-    @test isempty(poly)
+    @testset "x_1 cannot be 2" begin
+        hempty = hsim ∩ HyperPlane([1, 0], 2)
+        poly = polyhedron(hempty, lib)
+        @test isempty(poly)
+    end
 
     # We now add the vertex (0, 0)
     ext0 = convexhull([0, 0])

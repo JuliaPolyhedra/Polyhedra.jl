@@ -105,7 +105,9 @@ function Base.isempty(p::Rep{T}, solver::Solver=Polyhedra.linear_objective_solve
     term = termination_status(model)
     if term == MOI.OPTIMAL
         return false
-    elseif term == MOI.INFEASIBLE
+    elseif term == MOI.INFEASIBLE || term == MOI.INFEASIBLE_OR_UNBOUNDED
+        # The problem has no objective so it cannot be unbounded so
+        # the `MOI.INFEASIBLE_OR_UNBOUNDED` status is accepted
         return true
     else
         error("Cannot determine whether the polyhedron is empty or not because",
