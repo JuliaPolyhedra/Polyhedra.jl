@@ -30,6 +30,7 @@ mutable struct VRepOptimizer{T} <: AbstractPolyhedraOptimizer{T}
     end
 end
 
+coefficient_type(::VRepOptimizer{T}) where {T} = T
 MOI.get(::VRepOptimizer, ::MOI.SolverName) = "VRep"
 
 function MOI.empty!(lpm::VRepOptimizer{T}) where T

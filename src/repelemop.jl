@@ -110,18 +110,22 @@ function _hinv(h::HRepElement, vr::VRep)
 end
 function _hinh(h::HalfSpace, hr::HRep, solver::Solver)
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
-    model = JuMP.Model(solver)
-    x = JuMP.@variable(model, [1:fulldim(hr)])
-    JuMP.@constraint(model, x in hr)
-    JuMP.@objective(model, Max, h.a ⋅ x)
-    optimize!(model)
-    term = termination_status(model)
+    model, T = layered_optimizer(solver)
+    x = MOI.add_variables(model, fulldim(hr))
+    MOI.add_constraint(model, MOI.VectorOfVariables(x), PolyhedraOptSet(hr))
+    MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+    MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+            MOI.ScalarAffineFunction(
+                MOI.ScalarAffineTerm{T}.(h.a, x),
+                zero(T)))
+    MOI.optimize!(model)
+    term = MOI.get(model, MOI.TerminationStatus())
     if term == MOI.DUAL_INFEASIBLE
         return false
     elseif term == MOI.INFEASIBLE
         return true
     elseif term == MOI.OPTIMAL
-        return _leq(objective_value(model), h.β)
+        return _leq(MOI.get(model, MOI.ObjectiveValue()), h.β)
     else
         error("Cannot determine whether the polyhedron is contained in the",
               " halfspace or not because the linear program terminated with",

@@ -5,7 +5,9 @@ struct PolyhedraOptSet{T, RepT <: Rep{T}} <: MOI.AbstractVectorSet
 end
 
 function JuMP.build_constraint(error_fun::Function, func, set::Rep)
-    return JuMP.build_constraint(error_fun, func, PolyhedraOptSet(set))
+    return JuMP.BridgeableConstraint(
+        JuMP.build_constraint(error_fun, func, PolyhedraOptSet(set)),
+        PolyhedraToLPBridge)
 end
 
 abstract type AbstractPolyhedraOptimizer{T} <: MOI.AbstractOptimizer end
@@ -41,7 +43,7 @@ function MOI.set(optimizer::AbstractPolyhedraOptimizer, ::MOI.ObjectiveFunction,
                  func::MOI.ScalarAffineFunction)
     indices = [term.variable_index.value for term in func.terms]
     coefs = [term.coefficient for term in func.terms]
-    optimizer.objective_func = sparsevec(indices, coefs)
+    optimizer.objective_func = sparsevec(indices, coefs, fulldim(optimizer.lphrep))
     optimizer.objective_constant = func.constant
 end
 
@@ -82,12 +84,27 @@ function MOI.add_constraint(optimizer::AbstractPolyhedraOptimizer,
     return MOI.ConstraintIndex{MOI.VectorOfVariables, typeof(rep)}(1)
 end
 
+coefficient_type(::MOI.ModelLike) = Float64
+
+# Inspired by `JuMP.set_optimizer`
+function layered_optimizer(factory::JuMP.OptimizerFactory)
+    optimizer = factory()
+    T = coefficient_type(optimizer)
+    if !MOIU.supports_default_copy_to(optimizer, false)
+        universal_fallback = MOIU.UniversalFallback(_MOIModel{T}())
+        optimizer = MOIU.CachingOptimizer(universal_fallback, optimizer)
+    end
+    optimizer = MOI.Bridges.full_bridge_optimizer(optimizer, T)
+    MOI.Bridges.add_bridge(optimizer, PolyhedraToLPBridge{T})
+    return optimizer, T
+end
+
 """
     isempty(p::Rep, solver::JuMP.OptimizerFactory=Polyhedra.linear_objective_solver(p))
 
 Check whether the polyhedron `p` is empty by using the solver `solver`.
 """
-function Base.isempty(p::Rep{T}, solver::Solver=Polyhedra.linear_objective_solver(p)) where {T}
+function Base.isempty(p::Rep, solver::Solver=Polyhedra.linear_objective_solver(p))
     N = fulldim(p)
     if N == -1
         if p isa VRepresentation || (p isa Polyhedron && fulldim(vrep(p)) == -1)
@@ -98,11 +115,11 @@ function Base.isempty(p::Rep{T}, solver::Solver=Polyhedra.linear_objective_solve
             return false
         end
     end
-    model = JuMP.Model(solver)
-    x = JuMP.@variable(model, [1:fulldim(p)])
-    JuMP.@constraint(model, x in p)
-    JuMP.optimize!(model)
-    term = termination_status(model)
+    model, T = layered_optimizer(solver)
+    x = MOI.add_variables(model, fulldim(p))
+    MOI.add_constraint(model, MOI.VectorOfVariables(x), PolyhedraOptSet(p))
+    MOI.optimize!(model)
+    term = MOI.get(model, MOI.TerminationStatus())
     if term == MOI.OPTIMAL
         return false
     elseif term == MOI.INFEASIBLE || term == MOI.INFEASIBLE_OR_UNBOUNDED

@@ -25,6 +25,7 @@ mutable struct MockOptimizer{T} <: Polyhedra.AbstractPolyhedraOptimizer{T}
                    optimize!, MOI.OPTIMIZE_NOT_CALLED, nothing)
     end
 end
+coefficient_type(::MockOptimizer{T}) where {T} = T
 
 function MOI.empty!(mock::MockOptimizer{T}) where T
     mock.lphrep = LPHRep(Polyhedra._MOIModel{T}())

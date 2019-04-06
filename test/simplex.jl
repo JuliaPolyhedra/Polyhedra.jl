@@ -38,27 +38,38 @@ function simplextest(lib::Polyhedra.Library)
         end
     end
 
-    @testset "Optimize with objective -2x_1" begin
-        model = Model(Polyhedra.linear_objective_solver(poly1))
-        x = @variable(model, [1:fulldim(poly1)])
-        @constraint(model, x in poly1)
-        @objective(model, Min, [-2, 0] ⋅ x)
-        optimize!(model)
-        @test termination_status(model) == MOI.OPTIMAL
-        @test objective_value(model) == -2
-        @test primal_status(model) == MOI.FEASIBLE_POINT
-        @test value.(x) == [1, 0]
+    @testset "Optimize with objective : max 2x_1" begin
+        model, T = Polyhedra.layered_optimizer(Polyhedra.linear_objective_solver(poly1))
+        x = MOI.add_variables(model, fulldim(poly1))
+        MOI.add_constraint(model, MOI.VectorOfVariables(x),
+                           Polyhedra.PolyhedraOptSet(poly1))
+        MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+        MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+                MOI.ScalarAffineFunction(
+                    [MOI.ScalarAffineTerm{T}(2, x[1])], zero(T)))
+        MOI.optimize!(model)
+        @test MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMAL
+        @test MOI.get(model, MOI.ObjectiveValue()) == 2
+        @test MOI.get(model, MOI.PrimalStatus()) == MOI.FEASIBLE_POINT
+        @test MOI.get(model, MOI.VariablePrimal(), x[1]) == 1
+        @test MOI.get(model, MOI.VariablePrimal(), x[2]) == 0
     end
-    @testset "Optimize with objective -x_1 - 3x_2" begin
-        model = Model(Polyhedra.linear_objective_solver(poly1))
-        x = @variable(model, [1:fulldim(poly1)])
-        @constraint(model, x in poly1)
-        @objective(model, Min, [-1, -3] ⋅ x)
-        optimize!(model)
-        @test termination_status(model) == MOI.OPTIMAL
-        @test objective_value(model) == -3
-        @test primal_status(model) == MOI.FEASIBLE_POINT
-        @test value.(x) == [0, 1]
+    @testset "Optimize with objective : max x_1 + 3x_2" begin
+        model, T = Polyhedra.layered_optimizer(Polyhedra.linear_objective_solver(poly1))
+        x = MOI.add_variables(model, fulldim(poly1))
+        MOI.add_constraint(model, MOI.VectorOfVariables(x),
+                           Polyhedra.PolyhedraOptSet(poly1))
+        MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+        MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+                MOI.ScalarAffineFunction(
+                    [MOI.ScalarAffineTerm{T}(1, x[1]),
+                     MOI.ScalarAffineTerm{T}(3, x[2])], zero(T)))
+        MOI.optimize!(model)
+        @test MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMAL
+        @test MOI.get(model, MOI.ObjectiveValue()) == 3
+        @test MOI.get(model, MOI.PrimalStatus()) == MOI.FEASIBLE_POINT
+        @test MOI.get(model, MOI.VariablePrimal(), x[1]) == 0
+        @test MOI.get(model, MOI.VariablePrimal(), x[2]) == 1
     end
 
     poly2 = polyhedron(vsim, lib)
@@ -92,28 +103,39 @@ function simplextest(lib::Polyhedra.Library)
     @test_throws ErrorException chebyshevcenter(poly3)
     @test dim(poly3) == 2
 
-    @testset "Optimize with objective x_1 + x_2" begin
-        model = Model(Polyhedra.linear_objective_solver(poly3))
-        x = @variable(model, [1:fulldim(poly3)])
-        @constraint(model, x in poly3)
-        @objective(model, Min, [1, 1] ⋅ x)
-        optimize!(model)
-        @test termination_status(model) == MOI.OPTIMAL
-        @test objective_value(model) == 0
-        @test primal_status(model) == MOI.FEASIBLE_POINT
-        @test value.(x) == [0, 0]
+    @testset "Optimize with objective : min x_1 + x_2" begin
+        model, T = Polyhedra.layered_optimizer(Polyhedra.linear_objective_solver(poly3))
+        x = MOI.add_variables(model, fulldim(poly3))
+        MOI.add_constraint(model, MOI.VectorOfVariables(x),
+                           Polyhedra.PolyhedraOptSet(poly3))
+        MOI.set(model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+        MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+                MOI.ScalarAffineFunction(
+                    [MOI.ScalarAffineTerm{T}(1, x[1]),
+                     MOI.ScalarAffineTerm{T}(1, x[2])], zero(T)))
+        MOI.optimize!(model)
+        @test MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMAL
+        @test MOI.get(model, MOI.ObjectiveValue()) == 0
+        @test MOI.get(model, MOI.PrimalStatus()) == MOI.FEASIBLE_POINT
+        @test MOI.get(model, MOI.VariablePrimal(), x[1]) == 0
+        @test MOI.get(model, MOI.VariablePrimal(), x[2]) == 0
     end
 
-    @testset "Optimize with objective -x_2" begin
-        model = Model(Polyhedra.linear_objective_solver(poly3))
-        x = @variable(model, [1:fulldim(poly3)])
-        @constraint(model, x in poly3)
-        @objective(model, Min, [0, -1] ⋅ x)
-        optimize!(model)
-        @test termination_status(model) == MOI.DUAL_INFEASIBLE
-        @test objective_value(model) == -1
-        @test primal_status(model) == MOI.INFEASIBILITY_CERTIFICATE
-        @test value.(x) == [0, 1]
+    @testset "Optimize with objective : max x_2" begin
+        model, T = Polyhedra.layered_optimizer(Polyhedra.linear_objective_solver(poly3))
+        x = MOI.add_variables(model, fulldim(poly3))
+        MOI.add_constraint(model, MOI.VectorOfVariables(x),
+                           Polyhedra.PolyhedraOptSet(poly3))
+        MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+        MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+                MOI.ScalarAffineFunction(
+                    [MOI.ScalarAffineTerm{T}(1, x[2])], zero(T)))
+        MOI.optimize!(model)
+        @test MOI.get(model, MOI.TerminationStatus()) == MOI.DUAL_INFEASIBLE
+        @test MOI.get(model, MOI.ObjectiveValue()) == 1
+        @test MOI.get(model, MOI.PrimalStatus()) == MOI.INFEASIBILITY_CERTIFICATE
+        @test MOI.get(model, MOI.VariablePrimal(), x[1]) == 0
+        @test MOI.get(model, MOI.VariablePrimal(), x[2]) == 1
     end
 
     hcutel = HyperPlane([1, 1], 1)

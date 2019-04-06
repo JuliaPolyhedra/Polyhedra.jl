@@ -81,11 +81,6 @@ include("fulldim.jl")
 # Optimization
 include("opt.jl")
 include("polyhedra_to_lp_bridge.jl")
-function JuMP.build_constraint(error_func::Function, func::Vector{<:JuMP.AbstractJuMPScalar},
-                               set::PolyhedraOptSet)
-    return JuMP.BridgeableConstraint(JuMP.VectorConstraint(func, set),
-                                     PolyhedraToLPBridge)
-end
 include("vrep_optimizer.jl")
 include("default.jl")
 
