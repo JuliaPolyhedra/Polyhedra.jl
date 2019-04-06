@@ -86,7 +86,7 @@ function JuMP.build_constraint(error_func::Function, func::Vector{<:JuMP.Abstrac
     return JuMP.BridgeableConstraint(JuMP.VectorConstraint(func, set),
                                      PolyhedraToLPBridge)
 end
-include("vrepsolver.jl")
+include("vrep_optimizer.jl")
 include("default.jl")
 
 # Visualization
