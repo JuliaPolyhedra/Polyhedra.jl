@@ -121,7 +121,7 @@ function _hinh(h::HalfSpace, hr::HRep, solver::Solver)
     elseif term == MOI.INFEASIBLE
         return true
     elseif term == MOI.OPTIMAL
-        return _leq(sol.objval, h.β)
+        return _leq(objective_value(model), h.β)
     else
         error("Cannot determine whether the polyhedron is contained in the",
               " halfspace or not because the linear program terminated with",
