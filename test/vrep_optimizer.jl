@@ -8,6 +8,9 @@ const MOIB = MOI.Bridges
 
 @testset "Continuous Linear problems with VRepOptimizer" begin
     optimizer = VRepOptimizer{Float64}()
+    @testset "SolverName" begin
+        @test MOI.get(optimizer, MOI.SolverName()) == "VRep"
+    end
     cache = MOIU.UniversalFallback(Polyhedra._MOIModel{Float64}())
     cached = MOIU.CachingOptimizer(cache, optimizer)
     bridged = MOIB.full_bridge_optimizer(cached, Float64)

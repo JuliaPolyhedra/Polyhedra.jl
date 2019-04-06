@@ -30,6 +30,8 @@ mutable struct VRepOptimizer{T} <: AbstractPolyhedraOptimizer{T}
     end
 end
 
+MOI.get(::VRepOptimizer, ::MOI.SolverName) = "VRep"
+
 function MOI.empty!(lpm::VRepOptimizer{T}) where T
     lpm.lphrep = LPHRep(_MOIModel{T}())
     lpm.rep = nothing
