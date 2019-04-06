@@ -12,11 +12,11 @@ end
 function PolyhedraToLPBridge{T, F}(model, f::MOI.AbstractVectorFunction, p::PolyhedraOptSet) where {T, F}
     vf = MOIU.eachscalar(f)
     hps = [
-        MOIU.add_scalar_constraint(model, func(T, h.a, vf, F), MOI.EqualTo(h.β))
+        MOIU.add_scalar_constraint(model, func(T, h.a, vf, F), MOI.EqualTo(convert(T, h.β)))
         for h in hyperplanes(p.rep)
     ]
     hss = [
-        MOIU.add_scalar_constraint(model, func(T, h.a, vf, F), MOI.LessThan(h.β))
+        MOIU.add_scalar_constraint(model, func(T, h.a, vf, F), MOI.LessThan(convert(T, h.β)))
         for h in halfspaces(p.rep)
     ]
     return PolyhedraToLPBridge{T, F}(hps, hss)
@@ -25,7 +25,7 @@ end
 function func(T::Type, a::AbstractVector, vf, F::Type)
     func = zero(F)
     for (α, f) in zip(a, vf)
-        MOIU.operate!(+, T, func, MOIU.operate!(*, T, f, α))
+        MOIU.operate!(+, T, func, MOIU.operate!(*, T, f, convert(T, α)))
     end
     return func
 end
