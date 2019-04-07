@@ -817,43 +817,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "optimization.html#Base.isempty",
+    "location": "optimization.html#Polyhedra.VRepOptimizer",
     "page": "Optimization",
-    "title": "Base.isempty",
-    "category": "function",
-    "text": "isempty(p::Rep, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p))\n\nCheck whether the polyhedron p is empty by using the solver solver.\n\n\n\n\n\n"
-},
-
-{
-    "location": "optimization.html#MathProgBase.HighLevelInterface.linprog",
-    "page": "Optimization",
-    "title": "MathProgBase.HighLevelInterface.linprog",
-    "category": "function",
-    "text": "linprog(c::AbstractVector, p::Rep, solver::MathProgBase.AbstractMathProgSolver=Polyhedra.solver(p))\n\nSolve the minimization of the objective langle c x rangle over the polyhedron p.\n\n\n\n\n\n"
-},
-
-{
-    "location": "optimization.html#Polyhedra.VRepSolver",
-    "page": "Optimization",
-    "title": "Polyhedra.VRepSolver",
+    "title": "Polyhedra.VRepOptimizer",
     "category": "type",
-    "text": "VRepSolver\n\nLinear Programming solver using the V-representation of the feasible set to find the optimal solution.\n\n\n\n\n\n"
-},
-
-{
-    "location": "optimization.html#Polyhedra.default_solver",
-    "page": "Optimization",
-    "title": "Polyhedra.default_solver",
-    "category": "function",
-    "text": "default_solver(p::Rep)\n\nReturns a default linear programming solver for the polyhedron p (e.g. CDD has an internal solver which is used by default).\n\n\n\n\n\n"
-},
-
-{
-    "location": "optimization.html#Polyhedra.solver",
-    "page": "Optimization",
-    "title": "Polyhedra.solver",
-    "category": "function",
-    "text": "solver(p::Rep, solver::MathProgBase.AbstractMathProgSolver=default_solver(p))\n\nIf the V-representation of p has been computed, returns VRepSolver(), otherwise, returns solver.\n\n\n\n\n\n"
+    "text": "VRepOptimizer{T} <: AbstractPolyhedraOptimizer{T}\n\nLinear Programming solver using the V-representation of the feasible set to find the optimal solution.\n\n\n\n\n\n"
 },
 
 {
@@ -861,7 +829,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optimization",
     "title": "Optimization",
     "category": "section",
-    "text": "A polyhedron can represents the feasible set of an optimization program. The program is infeasible when the polyhedron is empty.isempty\nPolyhedra.MathProgBase.linprogIf the V-representation of the polyhedron has been computed, it can be used to solve the linear program.VRepSolverOtherwise, any programming solver implementing the MathProgBase interface can be used. See here for a list of available solvers.Polyhedra.default_solver\nPolyhedra.solver"
+    "text": "A polyhedron can represents the feasible set of an optimization program. The program is infeasible when the polyhedron is empty.isempty\nPolyhedra.MathProgBase.linprogIf the V-representation of the polyhedron has been computed, it can be used to solve the linear program.VRepOptimizerOtherwise, any programming solver implementing the MathProgBase interface can be used. See here for a list of available solvers.Polyhedra.default_solver\nPolyhedra.solver"
 },
 
 {
@@ -869,7 +837,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Optimization",
     "title": "Creating a polyhedron from the feasible set of a JuMP model",
     "category": "section",
-    "text": "A typical application of polyhedral computation is the computation of the set of extreme points and rays of the feasible set of an optimization problem. This comes from the fact that given a minimization of a concave function (or maximization of a convex function) on a convex feasible set (e.g. Linear Programming), we are either in the following three situations:The feasible set is empty, i.e. the problem is infeasible.\nAn extreme ray is optimal, i.e. the problem is unbounded (or it may also be bounded if the objective is constant along the ray).\nAn extreme point is optimal.A JuMP model is treated by polyhedron just like any H-representation. For example, the hypercube of dimension n can be created as followsm = Model()\n@variable(m, 0 ≤ x[1:n] ≤ 1)\n\npoly = polyhedron(m, CDDLib.Library(:exact))In fact, the MathProgBase representation of the feasible set of a linear program:beginalign*\n  lb leq Ax leq ub\n  l leq x leq u\nendalign*has LPHRepresentation as a corresponding H-representation. A JuMP model can be converted to this representation using LPHRepresentation(m)."
+    "text": "A typical application of polyhedral computation is the computation of the set of extreme points and rays of the feasible set of an optimization problem. This comes from the fact that given a minimization of a concave function (or maximization of a convex function) on a convex feasible set (e.g. Linear Programming), we are either in the following three situations:The feasible set is empty, i.e. the problem is infeasible.\nAn extreme ray is optimal, i.e. the problem is unbounded (or it may also be bounded if the objective is constant along the ray).\nAn extreme point is optimal.A JuMP model is treated by polyhedron just like any H-representation. For example, the hypercube of dimension n can be created as followsm = Model()\n@variable(m, 0 ≤ x[1:n] ≤ 1)\n\npoly = polyhedron(m, CDDLib.Library(:exact))In fact, the MathProgBase representation of the feasible set of a linear program:beginalign*\n  lb leq Ax leq ub\n  l leq x leq u\nendalign*has LPHRep as a corresponding H-representation. A JuMP model can be converted to this representation using LPHRep(m)."
 },
 
 {
