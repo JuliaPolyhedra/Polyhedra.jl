@@ -21,7 +21,8 @@ function LPHRep(model::MOI.ModelLike)
     MOI.copy_to(MOI.Bridges.full_bridge_optimizer(_model, Float64), model)
     return LPHRep(_model)
 end
-FullDim(rep::LPHRep) = MOI.get(rep.model, MOI.NumberOfVariables())
+# returns `Int64` so need to convert for 32-bit system
+FullDim(rep::LPHRep) = convert(Int, MOI.get(rep.model, MOI.NumberOfVariables()))
 
 hvectortype(::Type{LPHRep{T}}) where {T} = SparseVector{T, Int}
 similar_type(::Type{LPHRep{S}}, ::FullDim, ::Type{T}) where {S, T} = LPHRep{T}
