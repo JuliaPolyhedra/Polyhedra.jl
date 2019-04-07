@@ -108,17 +108,28 @@ end
 function _hinv(h::HRepElement, vr::VRep)
     all(_hinv.(h, vreps(vr)))
 end
-function _hinh(h::HalfSpace, hr::HRep, solver)
+function _hinh(h::HalfSpace, hr::HRep, solver::Solver)
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
-    sol = MPB.linprog(-h.a, hr, solver)
-    if sol.status == :Unbounded
-        false
-    elseif sol.status == :Infeasible
-        true
-    elseif sol.status == :Optimal
-        _leq(-sol.objval, h.β)
+    model, T = layered_optimizer(solver)
+    x = MOI.add_variables(model, fulldim(hr))
+    MOI.add_constraint(model, MOI.VectorOfVariables(x), PolyhedraOptSet(hr))
+    MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+    MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+            MOI.ScalarAffineFunction(
+                MOI.ScalarAffineTerm{T}.(h.a, x),
+                zero(T)))
+    MOI.optimize!(model)
+    term = MOI.get(model, MOI.TerminationStatus())
+    if term == MOI.DUAL_INFEASIBLE
+        return false
+    elseif term == MOI.INFEASIBLE
+        return true
+    elseif term == MOI.OPTIMAL
+        return _leq(MOI.get(model, MOI.ObjectiveValue()), h.β)
     else
-        error("Solver returned with status $(sol.status)")
+        error("Cannot determine whether the polyhedron is contained in the",
+              " halfspace or not because the linear program terminated with",
+              " status $term.")
     end
 end
 function _hinh(h::HyperPlane, hr::HRep, solver)
@@ -133,7 +144,7 @@ Base.issubset(hr::HRepresentation, h::HRepElement) = _hinh(h, hr)
 
 Returns whether `p` is a subset of `h`, i.e. whether `h` supports the polyhedron `p`.
 """
-function Base.issubset(p::Polyhedron, h::HRepElement, solver=Polyhedra.solver(p))
+function Base.issubset(p::Polyhedron, h::HRepElement, solver=Polyhedra.linear_objective_solver(p))
     if vrepiscomputed(p)
         _hinv(h, p)
     else

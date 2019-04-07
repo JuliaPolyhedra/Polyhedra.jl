@@ -1,10 +1,13 @@
 @testset "Dual Type" begin
-    h = LPHRepresentation(spzeros(Int, 2, 2), [1, 2], [3, 4], [4, 5], [6, 7])
+    model = JuMP.Model()
+    x = @variable(model, [1:2])
+    @constraint(model, sum(x) == 1)
+    h = hrep(model)
     p = polyhedron(h)
-    @test p isa Polyhedra.DefaultPolyhedron{Rational{BigInt}, LPHRepresentation{Rational{BigInt}, SparseMatrixCSC{Rational{BigInt},Int}}, Polyhedra.Hull{Rational{BigInt}, Vector{Rational{BigInt}}, Int}}
-    h = hrep(zeros(2, 2), zeros(2))
+    @test p isa Polyhedra.DefaultPolyhedron{Float64, LPHRep{Float64}, Polyhedra.Hull{Float64, Vector{Float64}, Int}}
+    h = hrep(zeros(Int, 2, 2), zeros(Int, 2))
     p = polyhedron(h)
-    @test p isa Polyhedra.DefaultPolyhedron{Float64, MixedMatHRep{Float64, Matrix{Float64}}, MixedMatVRep{Float64, Matrix{Float64}}}
+    @test p isa Polyhedra.DefaultPolyhedron{Rational{BigInt}, MixedMatHRep{Rational{BigInt}, Matrix{Rational{BigInt}}}, MixedMatVRep{Rational{BigInt}, Matrix{Rational{BigInt}}}}
     h = hrep(spzeros(2, 2), zeros(2))
     p = polyhedron(h)
     @test p isa Polyhedra.DefaultPolyhedron{Float64, MixedMatHRep{Float64, SparseMatrixCSC{Float64, Int}}, MixedMatVRep{Float64, Matrix{Float64}}}

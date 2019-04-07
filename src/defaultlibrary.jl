@@ -7,7 +7,7 @@ Default library for polyhedra of dimension larger than 1 ([`IntervalLibrary`](@r
 The library implements the bare minimum and uses the fallback implementation for all operations.
 """
 struct DefaultLibrary{T} <: Library
-    solver::Union{Nothing, MPB.AbstractMathProgSolver}
+    solver::SolverOrNot
     function DefaultLibrary{T}(solver=nothing) where T
         new{T}(solver)
     end
@@ -18,21 +18,21 @@ similar_library(lib::DefaultLibrary, d::FullDim, ::Type{T}) where T = default_li
 mutable struct DefaultPolyhedron{T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}} <: Polyhedron{T}
     hrep::Union{HRepT, Nothing}
     vrep::Union{VRepT, Nothing}
-    solver::Union{Nothing, MPB.AbstractMathProgSolver}
-    function DefaultPolyhedron{T, HRepT, VRepT}(hrep::Union{HRepT, Nothing}, vrep::Union{VRepT, Nothing}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+    solver::SolverOrNot
+    function DefaultPolyhedron{T, HRepT, VRepT}(hrep::Union{HRepT, Nothing}, vrep::Union{VRepT, Nothing}, solver::SolverOrNot) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
         new{T, HRepT, VRepT}(hrep, vrep, solver)
     end
 end
-function DefaultPolyhedron{T, HRepT, VRepT}(hrep::HRepT, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+function DefaultPolyhedron{T, HRepT, VRepT}(hrep::HRepT, solver::SolverOrNot) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
     DefaultPolyhedron{T, HRepT, VRepT}(hrep, nothing, solver)
 end
-function DefaultPolyhedron{T, HRepT, VRepT}(vrep::VRepT, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+function DefaultPolyhedron{T, HRepT, VRepT}(vrep::VRepT, solver::SolverOrNot) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
     DefaultPolyhedron{T, HRepT, VRepT}(nothing, vrep, solver)
 end
-function DefaultPolyhedron{T, HRepT, VRepT}(hrep::HRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+function DefaultPolyhedron{T, HRepT, VRepT}(hrep::HRepresentation, solver::SolverOrNot) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
     DefaultPolyhedron{T, HRepT, VRepT}(convert(HRepT, hrep), solver)
 end
-function DefaultPolyhedron{T, HRepT, VRepT}(vrep::VRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
+function DefaultPolyhedron{T, HRepT, VRepT}(vrep::VRepresentation, solver::SolverOrNot) where {T, HRepT<:HRepresentation{T}, VRepT<:VRepresentation{T}}
     DefaultPolyhedron{T, HRepT, VRepT}(convert(VRepT, vrep), solver)
 end
 
@@ -54,13 +54,13 @@ function DefaultPolyhedron{T, HRepT, VRepT}(d::FullDim, vits::VIt...; solver=not
 end
 
 # Need fulltype in case the use does `intersect!` with another element
-DefaultPolyhedron{T}(rep::Representation, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T} = DefaultPolyhedron{T}(change_coefficient_type(rep, T), solver)
-function DefaultPolyhedron{T}(rep::HRepresentation{T}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T}
+DefaultPolyhedron{T}(rep::Representation, solver::SolverOrNot) where {T} = DefaultPolyhedron{T}(change_coefficient_type(rep, T), solver)
+function DefaultPolyhedron{T}(rep::HRepresentation{T}, solver::SolverOrNot) where {T}
     HRepT = fulltype(typeof(rep))
     VRepT = dualtype(HRepT)
     DefaultPolyhedron{T, HRepT, VRepT}(rep, solver)
 end
-function DefaultPolyhedron{T}(rep::VRepresentation{T}, solver::Union{Nothing, MPB.AbstractMathProgSolver}) where {T}
+function DefaultPolyhedron{T}(rep::VRepresentation{T}, solver::SolverOrNot) where {T}
     VRepT = fulltype(typeof(rep))
     HRepT = dualtype(VRepT)
     DefaultPolyhedron{T, HRepT, VRepT}(rep, solver)

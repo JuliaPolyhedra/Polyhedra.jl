@@ -17,4 +17,3 @@ Polyhedra.fulltype(::Type{InconsistentVRep{T, AT, D}}) where {T, AT, D} = Incons
 Polyhedra.@subrepelem InconsistentVRep Point points
 Polyhedra.@subrepelem InconsistentVRep Line rays
 Polyhedra.@subrepelem InconsistentVRep Ray rays
-

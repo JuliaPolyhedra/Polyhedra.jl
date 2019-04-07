@@ -1,5 +1,3 @@
-__precompile__()
-
 module Polyhedra
 
 using SparseArrays
@@ -10,9 +8,9 @@ export Polyhedron
 abstract type Library end
 abstract type Polyhedron{T} end
 
-import MathProgBase
-const MPB = MathProgBase
-const MPBSI = MPB.SolverInterface
+import JuMP
+const Solver = JuMP.OptimizerFactory
+const SolverOrNot = Union{Nothing, Solver}
 
 coefficient_type(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
 similar_type(::Type{<:Vector}, ::Int, ::Type{T}) where T = Vector{T}
@@ -82,9 +80,8 @@ include("fulldim.jl")
 
 # Optimization
 include("opt.jl")
-include("lpqp_to_polyhedra.jl")
-include("polyhedra_to_lpqp.jl")
-include("vrepsolver.jl")
+include("polyhedra_to_lp_bridge.jl")
+include("vrep_optimizer.jl")
 include("default.jl")
 
 # Visualization

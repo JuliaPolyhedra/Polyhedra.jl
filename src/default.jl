@@ -13,8 +13,8 @@ end
 function default_type(d::StaticArrays.Size{(1,)}, ::Type{T}) where T
     return Interval{T, StaticArrays.SVector{1, T}, typeof(d)}
 end
-function default_type(d::Int, ::Type{T}) where T
-    if d == 1
+function default_type(d::Integer, ::Type{T}) where T
+    if isone(d)
         return Interval{T, Vector{T}, typeof(d)}
     else
         return DefaultPolyhedron{T, Intersection{T, Vector{T}, typeof(d)}, Hull{T, Vector{T}, typeof(d)}}
@@ -42,8 +42,8 @@ _default_type(::Type{T}) where T = T
 _default_type(::Type{AbstractFloat}) = Float64
 default_library(::StaticArrays.Size, T::Type) = DefaultLibrary{_default_type(T)}()
 default_library(::StaticArrays.Size{(1,)}, T::Type) = IntervalLibrary{_default_type(T)}()
-function default_library(d::Int, ::Type{T}) where T
-    if d == 1
+function default_library(d::Integer, ::Type{T}) where T
+    if isone(d)
         return IntervalLibrary{_default_type(T)}()
     else
         return DefaultLibrary{_default_type(T)}()
@@ -78,27 +78,40 @@ default_solver(p::Rep) = nothing
 function default_solver(p::Rep, ps::Rep...)
     s = default_solver(p)
     if s === nothing
-        default_solver(ps...)
+        return default_solver(ps...)
     else
-        s
+        return s
     end
 end
 
 """
-    solver(p::Rep, solver::MathProgBase.AbstractMathProgSolver=default_solver(p))
+    linear_objective_solver(p::Rep, solver::Union{Nothing, JuMP.OptimizerFactory}=default_solver(p))
 
-If the V-representation of `p` has been computed, returns `VRepSolver()`, otherwise, returns `solver`.
+Return the solver to use for optimizing a linear objective over the polyhedron `p`, i.e.
+```julia
+model = Model(solver)
+x = @variable(model, [1:fulldim(p)])
+@constraint(model, x in p)
+@objective(model, c ⋅ x)
+```
+for some vector `c`.
+
+By default, if the V-representation of `p` has been computed, it returns
+`VRepOptimizer()`, otherwise, it returns `solver`.
+
+If the problem has constraints different to `x in p`, use `default_solver(p)` instead
+as the fact that the V-representation of `p` has been computed does not help.
 """
-function solver(p::Rep, solver::Union{Nothing, MPB.AbstractMathProgSolver}=default_solver(p))
+function linear_objective_solver(p::Rep{T}, solver::SolverOrNot=default_solver(p)) where T
     if vrepiscomputed(p)
-        VRepSolver()
+        return with_optimizer(VRepOptimizer{T})
     else
-        solver
+        return solver
     end
 end
 
-solver(v::VRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}=default_solver(v)) = VRepSolver()
-solver(h::HRepresentation, solver::Union{Nothing, MPB.AbstractMathProgSolver}=default_solver(h)) = solver
+linear_objective_solver(v::VRepresentation{T}, solver::SolverOrNot=default_solver(v)) where {T} = with_optimizer(VRepOptimizer{T})
+linear_objective_solver(h::HRepresentation, solver::SolverOrNot=default_solver(h)) = solver
 
 _promote_reptype(P::Type{<:HRep}, ::Type{<:HRep}) = P
 _promote_reptype(P::Type{<:VRep}, ::Type{<:VRep}) = P
@@ -106,7 +119,7 @@ _promote_reptype(P::Type{<:VRep}, ::Type{<:VRep}) = P
 _promote_reptype(P::Type{<:Polyhedron}, ::Type{<:Polyhedron}) = P
 
 function promote_reptype(P1::Type{<:Rep}, P2::Type{<:Rep})
-    _promote_reptype(P1, P2)
+    return _promote_reptype(P1, P2)
 end
 promote_reptype(P1::Type{<:Rep}, P2::Type{<:Rep}, P::Type{<:Rep}...) = promote_reptype(promote_reptype(P1, P2), P...)
 promote_reptype(P::Type{<:Rep}) = P
@@ -121,13 +134,13 @@ function constructpolyhedron(RepT::Type{<:Rep{T}}, d::FullDim, p::Tuple{Vararg{R
             return RepT(d, it..., solver=solver)
         end
     end
-    RepT(d, it...)::RepT # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
+    return RepT(d, it...)::RepT # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
 end
 
 function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...) where T
     # Some types in p may not support `d` or `T` so we call `similar_type` after `promote_reptype`
     RepT = similar_type(promote_reptype(typeof.(p)...), d, T)
-    constructpolyhedron(RepT, d, p, it...)
+    return constructpolyhedron(RepT, d, p, it...)
 end
 
 """
@@ -138,13 +151,13 @@ The type of the result will be chosen closer to the type of `p[1]`.
 """
 Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...) where {T} = default_similar(p, d, T, it...)
 function promote_coefficient_type(p::Tuple{Vararg{Rep}})
-    promote_type(coefficient_type.(p)...)
+    return promote_type(coefficient_type.(p)...)
 end
 function Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, it::It...)
     T = promote_coefficient_type(p)
-    similar(p, d, T, it...)
+    return similar(p, d, T, it...)
 end
 function Base.similar(p::Tuple{Vararg{Rep}}, it::It...)
-    similar(p, FullDim(p[1]), it...)
+    return similar(p, FullDim(p[1]), it...)
 end
 Base.similar(p::Rep, args...) = similar((p,), args...)

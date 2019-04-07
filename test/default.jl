@@ -13,6 +13,6 @@
     end
     @testset "LP Solver" begin
         @test Polyhedra.default_solver(hrep([HalfSpace((@SVector [1, 2]), 3)])) === nothing
-        @test Polyhedra.solver(hrep([HalfSpace((@SVector [1, 2]), 3)]), lp_solver) === lp_solver
+        @test Polyhedra.linear_objective_solver(hrep([HalfSpace((@SVector [1, 2]), 3)]), lp_solver) === lp_solver
     end
 end

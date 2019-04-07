@@ -47,7 +47,6 @@ end
 
     include("vecrep.jl")
     include("matrep.jl")
-    include("lphrep.jl")
     include("liftedrep.jl")
 
     @testset "eltype for some iterators is incorrect #7" begin
@@ -312,11 +311,11 @@ end
     @testset "Preserving sparsity" begin
         for h in (HalfSpace(sparsevec([1], [1], 2), 1) ∩ HyperPlane(sparsevec([2], [-1]), 3), hrep(sparse([1, 2], [1, 2], [1, -1]), [1, 3]))
             @test Polyhedra.Intersection(h) isa Polyhedra.Intersection{Int, SparseVector{Int, Int}}
-            @test LPHRepresentation(h) isa LPHRepresentation{Int, SparseMatrixCSC{Int, Int}}
+            @test LPHRep(h) isa LPHRep{Int}
             @test MixedMatHRep(h) isa MixedMatHRep{Int, SparseMatrixCSC{Int, Int}}
             @test LiftedHRepresentation(h) isa LiftedHRepresentation{Int, SparseMatrixCSC{Int, Int}}
             @test Polyhedra.Intersection{Float64}(h) isa Polyhedra.Intersection{Float64, SparseVector{Float64, Int}}
-            @test LPHRepresentation{Float64}(h) isa LPHRepresentation{Float64, SparseMatrixCSC{Float64, Int}}
+            @test LPHRep{Float64}(h) isa LPHRep{Float64}
             @test MixedMatHRep{Float64}(h) isa MixedMatHRep{Float64, SparseMatrixCSC{Float64, Int}}
             @test LiftedHRepresentation{Float64}(h) isa LiftedHRepresentation{Float64, SparseMatrixCSC{Float64, Int}}
         end

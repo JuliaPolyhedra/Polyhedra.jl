@@ -1,4 +1,4 @@
-import MathProgBase
+import JuMP
 function simplextest(lib::Polyhedra.Library)
     hsim = HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0) ∩ HyperPlane([1, 1], 1)
     vsim = convexhull([0, 1], [1, 0])
@@ -38,15 +38,39 @@ function simplextest(lib::Polyhedra.Library)
         end
     end
 
-    @test_throws DimensionMismatch MathProgBase.linprog(ones(3), poly1)
-    sol = MathProgBase.linprog([-2, 0], poly1)
-    @test sol.status == :Optimal
-    @test sol.objval == -2
-    @test sol.sol == [1, 0]
-    sol = MathProgBase.linprog([-1, -3], poly1)
-    @test sol.status == :Optimal
-    @test sol.objval == -3
-    @test sol.sol == [0, 1]
+    @testset "Optimize with objective : max 2x_1" begin
+        model, T = Polyhedra.layered_optimizer(Polyhedra.linear_objective_solver(poly1))
+        x = MOI.add_variables(model, fulldim(poly1))
+        MOI.add_constraint(model, MOI.VectorOfVariables(x),
+                           Polyhedra.PolyhedraOptSet(poly1))
+        MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+        MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+                MOI.ScalarAffineFunction(
+                    [MOI.ScalarAffineTerm{T}(2, x[1])], zero(T)))
+        MOI.optimize!(model)
+        @test MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMAL
+        @test MOI.get(model, MOI.ObjectiveValue()) == 2
+        @test MOI.get(model, MOI.PrimalStatus()) == MOI.FEASIBLE_POINT
+        @test MOI.get(model, MOI.VariablePrimal(), x[1]) == 1
+        @test MOI.get(model, MOI.VariablePrimal(), x[2]) == 0
+    end
+    @testset "Optimize with objective : max x_1 + 3x_2" begin
+        model, T = Polyhedra.layered_optimizer(Polyhedra.linear_objective_solver(poly1))
+        x = MOI.add_variables(model, fulldim(poly1))
+        MOI.add_constraint(model, MOI.VectorOfVariables(x),
+                           Polyhedra.PolyhedraOptSet(poly1))
+        MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+        MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+                MOI.ScalarAffineFunction(
+                    [MOI.ScalarAffineTerm{T}(1, x[1]),
+                     MOI.ScalarAffineTerm{T}(3, x[2])], zero(T)))
+        MOI.optimize!(model)
+        @test MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMAL
+        @test MOI.get(model, MOI.ObjectiveValue()) == 3
+        @test MOI.get(model, MOI.PrimalStatus()) == MOI.FEASIBLE_POINT
+        @test MOI.get(model, MOI.VariablePrimal(), x[1]) == 0
+        @test MOI.get(model, MOI.VariablePrimal(), x[2]) == 1
+    end
 
     poly2 = polyhedron(vsim, lib)
     @test dim(poly2) == 1
@@ -54,10 +78,11 @@ function simplextest(lib::Polyhedra.Library)
     inequality_fulltest(poly2, hsim)
     generator_fulltest(poly2, vsim)
 
-    # x_1 cannot be 2
-    hempty = hsim ∩ HyperPlane([1, 0], 2)
-    poly = polyhedron(hempty, lib)
-    @test isempty(poly)
+    @testset "x_1 cannot be 2" begin
+        hempty = hsim ∩ HyperPlane([1, 0], 2)
+        poly = polyhedron(hempty, lib)
+        @test isempty(poly)
+    end
 
     # We now add the vertex (0, 0)
     ext0 = convexhull([0, 0])
@@ -78,14 +103,39 @@ function simplextest(lib::Polyhedra.Library)
     @test_throws ErrorException chebyshevcenter(poly3)
     @test dim(poly3) == 2
 
-    @testset "LinProg" begin
-        sol = MathProgBase.linprog([1, 1], poly3)
-        @test sol.status == :Optimal
-        @test sol.objval == 0
-        @test sol.sol == [0, 0]
-        sol = MathProgBase.linprog([0, -1], poly3)
-        @test sol.status == :Unbounded
-        @test sol.attrs[:unboundedray] == [0, 1]
+    @testset "Optimize with objective : min x_1 + x_2" begin
+        model, T = Polyhedra.layered_optimizer(Polyhedra.linear_objective_solver(poly3))
+        x = MOI.add_variables(model, fulldim(poly3))
+        MOI.add_constraint(model, MOI.VectorOfVariables(x),
+                           Polyhedra.PolyhedraOptSet(poly3))
+        MOI.set(model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+        MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+                MOI.ScalarAffineFunction(
+                    [MOI.ScalarAffineTerm{T}(1, x[1]),
+                     MOI.ScalarAffineTerm{T}(1, x[2])], zero(T)))
+        MOI.optimize!(model)
+        @test MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMAL
+        @test MOI.get(model, MOI.ObjectiveValue()) == 0
+        @test MOI.get(model, MOI.PrimalStatus()) == MOI.FEASIBLE_POINT
+        @test MOI.get(model, MOI.VariablePrimal(), x[1]) == 0
+        @test MOI.get(model, MOI.VariablePrimal(), x[2]) == 0
+    end
+
+    @testset "Optimize with objective : max x_2" begin
+        model, T = Polyhedra.layered_optimizer(Polyhedra.linear_objective_solver(poly3))
+        x = MOI.add_variables(model, fulldim(poly3))
+        MOI.add_constraint(model, MOI.VectorOfVariables(x),
+                           Polyhedra.PolyhedraOptSet(poly3))
+        MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+        MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+                MOI.ScalarAffineFunction(
+                    [MOI.ScalarAffineTerm{T}(1, x[2])], zero(T)))
+        MOI.optimize!(model)
+        @test MOI.get(model, MOI.TerminationStatus()) == MOI.DUAL_INFEASIBLE
+        @test MOI.get(model, MOI.ObjectiveValue()) == 1
+        @test MOI.get(model, MOI.PrimalStatus()) == MOI.INFEASIBILITY_CERTIFICATE
+        @test MOI.get(model, MOI.VariablePrimal(), x[1]) == 0
+        @test MOI.get(model, MOI.VariablePrimal(), x[2]) == 1
     end
 
     hcutel = HyperPlane([1, 1], 1)
