@@ -13,8 +13,8 @@ end
 function default_type(d::StaticArrays.Size{(1,)}, ::Type{T}) where T
     return Interval{T, StaticArrays.SVector{1, T}, typeof(d)}
 end
-function default_type(d::Int, ::Type{T}) where T
-    if d == 1
+function default_type(d::Integer, ::Type{T}) where T
+    if isone(d)
         return Interval{T, Vector{T}, typeof(d)}
     else
         return DefaultPolyhedron{T, Intersection{T, Vector{T}, typeof(d)}, Hull{T, Vector{T}, typeof(d)}}
@@ -42,8 +42,8 @@ _default_type(::Type{T}) where T = T
 _default_type(::Type{AbstractFloat}) = Float64
 default_library(::StaticArrays.Size, T::Type) = DefaultLibrary{_default_type(T)}()
 default_library(::StaticArrays.Size{(1,)}, T::Type) = IntervalLibrary{_default_type(T)}()
-function default_library(d::Int, ::Type{T}) where T
-    if d == 1
+function default_library(d::Integer, ::Type{T}) where T
+    if isone(d)
         return IntervalLibrary{_default_type(T)}()
     else
         return DefaultLibrary{_default_type(T)}()
