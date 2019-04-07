@@ -38,7 +38,7 @@ end
 
 FullDim(p::DefaultPolyhedron) = FullDim_rep(p.hrep, p.vrep)
 library(::Union{DefaultPolyhedron{T}, Type{<:DefaultPolyhedron{T}}}) where {T} = DefaultLibrary{T}()
-default_solver(p::DefaultPolyhedron) = p.solver
+default_solver(p::DefaultPolyhedron; T = nothing) = p.solver
 supportssolver(::Type{<:DefaultPolyhedron}) = true
 
 hvectortype(::Type{<:DefaultPolyhedron{T, HRepT}}) where {T, HRepT} = hvectortype(HRepT)

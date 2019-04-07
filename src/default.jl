@@ -74,11 +74,11 @@ function library end
 
 Returns a default linear programming solver for the polyhedron `p` (e.g. CDD has an internal solver which is used by default).
 """
-default_solver(p::Rep) = nothing
-function default_solver(p::Rep, ps::Rep...)
-    s = default_solver(p)
+default_solver(p::Rep; kws...) = nothing
+function default_solver(p::Rep, ps::Rep...; kws...)
+    s = default_solver(p; kws...)
     if s === nothing
-        return default_solver(ps...)
+        return default_solver(ps...; kws...)
     else
         return s
     end
