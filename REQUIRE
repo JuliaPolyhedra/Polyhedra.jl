@@ -1,4 +1,4 @@
-julia 0.7
+julia 1.0
 StaticArrays 0.5
 MathProgBase 0.5.10 0.8
 JuMP 0.19
