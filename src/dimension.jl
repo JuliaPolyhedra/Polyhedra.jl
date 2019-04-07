@@ -45,7 +45,7 @@ fulldim(p) = fulldim(FullDim(p))
 
 function fulldim end
 
-fulldim(N::Int) = N
+fulldim(N::Integer) = convert(Int, N)
 fulldim(::StaticArrays.Size{N}) where N = N[1]
 
 neg_fulldim(N::Int) = -N
