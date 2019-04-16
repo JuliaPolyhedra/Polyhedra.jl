@@ -13,6 +13,7 @@ makedocs(
         "Installation" => "installation.md",
         "Representation" => "representation.md",
         "Polyhedron" => "polyhedron.md",
+        "Plot" => "plot.md",
         "Containment/Redundancy" => "redundancy.md",
         "Projection/Elimination" => "projection.md",
         "Optimization" => "optimization.md",
