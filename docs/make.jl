@@ -1,13 +1,11 @@
-# Workaround for JuliaLang/julia/pull/28625
-if Base.HOME_PROJECT[] !== nothing
-    Base.HOME_PROJECT[] = abspath(Base.HOME_PROJECT[])
-end
-
 using Documenter, Polyhedra
 
 makedocs(
-    format = :html,
     sitename = "Polyhedra",
+    # See https://github.com/JuliaDocs/Documenter.jl/issues/868
+    format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
+    # See https://github.com/JuliaOpt/JuMP.jl/issues/1576
+    strict = true,
     pages = [
         "Index" => "index.md",
         "Installation" => "installation.md",
@@ -26,9 +24,4 @@ makedocs(
 
 deploydocs(
     repo   = "github.com/JuliaPolyhedra/Polyhedra.jl.git",
-    target = "build",
-    osname = "linux",
-    julia  = "1.0",
-    deps   = nothing,
-    make   = nothing
 )
