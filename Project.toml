@@ -1,6 +1,5 @@
 name = "Polyhedra"
 uuid = "67491407-f73d-577b-9b50-8179a7c68029"
-authors = ["Benoît Legat <benoit.legat@gmail.com>", "Robin Deits <robin.deits@gmail.com>", "Gustavo Goretkin <gustavo.goretkin@gmail.com>", "Daisuke Oyama <oyama@e.u-tokyo.ac.jp>", "mforets <marcelo.forets-irurtia@univ-grenoble-alpes.fr>", "Joey Huchette <joehuchette@gmail.com>", "Twan Koolen <koolen.twan@gmail.com>", "guberger <47389731+guberger@users.noreply.github.com>", "mforets <mforets@gmail.com>", "femtocleaner[bot] <femtocleaner[bot]@users.noreply.github.com>", "Elliot Saba <staticfloat@gmail.com>", "Chase Coleman <cc7768@gmail.com>", "Robert Schwarz <mail@rschwarz.net>"]
 repo = "https://github.com/JuliaPolyhedra/Polyhedra.jl.git"
 version = "0.4.5"
 
@@ -8,7 +7,6 @@ version = "0.4.5"
 GeometryTypes = "4d00f742-c7ba-57c2-abde-4428a4b178cb"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-MathProgBase = "fdba3010-5040-5b88-9595-932c9decdf73"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
@@ -16,8 +14,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 [extras]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 GLPK = "60bf3e95-4087-53dc-ae20-288a0d20c6a6"
-GLPKMathProgInterface = "3c7084bd-78ad-589a-b5bb-dbd673274bea"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Combinatorics", "GLPK", "GLPKMathProgInterface", "Test"]
+test = ["Combinatorics", "GLPK", "Test"]
