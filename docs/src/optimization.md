@@ -69,7 +69,7 @@ julia> @constraint(model, A * λ in simplex)
 [λ[1] + λ[2], λ[1] - λ[2]] ∈ Polyhedra.PolyhedraOptSet{Int64,Polyhedra.Intersection{Int64,Array{Int64,1},Int64}}(HyperPlane([1, 1], 1) ∩ HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0))
 ```
 We can verify that the model contains both constraints:
-```jldoctest jump-in-hrep
+```julia
 julia> model
 A JuMP Model
 Feasibility problem with:
