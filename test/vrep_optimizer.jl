@@ -1,9 +1,7 @@
 using Test
 using Polyhedra
-import MathOptInterface
-const MOI = MathOptInterface
+using JuMP
 const MOIT = MOI.Test
-const MOIU = MOI.Utilities
 const MOIB = MOI.Bridges
 
 @testset "Continuous Linear problems with VRepOptimizer" begin
