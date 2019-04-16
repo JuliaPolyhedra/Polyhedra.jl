@@ -12,13 +12,14 @@ If the V-representation of the polyhedron has been computed, it can be used to s
 VRepOptimizer
 ```
 
-Otherwise, any programming solver implementing the [MathProgBase](https://github.com/JuliaOpt/MathProgBase.jl) interface can be used. See [here](http://www.juliaopt.org/) for a list of available solvers.
+Otherwise, any programming solver implementing the [MathOptInterface](https://github.com/JuliaOpt/MathOptInterface.jl) interface can be used.
+See [here](http://www.juliaopt.org/JuMP.jl/dev/installation/#Getting-Solvers-1) for a list of available solvers.
 ```@docs
 Polyhedra.default_solver
 Polyhedra.linear_objective_solver
 ```
 
-## Creating a polyhedron from the feasible set of a JuMP model
+## Using a polyhedron for in an optimization model
 
 A polyhedron or representation can be used in the constraint of a JuMP model.
 For instance, consider the 1-simplex:
@@ -106,6 +107,8 @@ constraints using the following
 Polyhedra.PolyhedraToLPBridge
 ```
 
+See [Polyhedral Function](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/Polyhedral%20Function.ipynb) for an example notebook.
+
 ## Creating a polyhedron from the feasible set of a JuMP model
 
 A typical application of polyhedral computation is the computation of the set of extreme points and rays of the feasible set of an optimization problem.
@@ -123,15 +126,3 @@ m = Model()
 
 poly = polyhedron(m, CDDLib.Library(:exact))
 ```
-
-In fact, the MathProgBase representation of the feasible set of a linear program:
-
-```math
-\begin{align*}
-  lb \leq Ax \leq ub\\
-  l \leq x \leq u\\
-\end{align*}
-```
-
-has `LPHRep` as a corresponding H-representation.
-A JuMP model can be converted to this representation using `LPHRep(m)`.
