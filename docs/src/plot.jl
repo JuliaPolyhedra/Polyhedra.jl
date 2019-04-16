@@ -33,6 +33,8 @@ julia> using Plots
 julia> plot(p)
 ```
 
+See [Polyhedral Function](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/Polyhedral%20Function.ipynb) and [3D Plotting a projection of the 4D permutahedron](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/3D%20Plotting%20a%20projection%20of%20the%204D%20permutahedron.ipynb) for example notebooks.
+
 ## 3D plotting with Plots
 
 A 3-dimensional polyhedron can be visualized with either [MeshCat](https://github.com/rdeits/MeshCat.jl) or [Makie](https://github.com/JuliaPlots/Makie.jl).
@@ -50,7 +52,7 @@ V-representation Polyhedra.Hull{Int64,Array{Int64,1},Int64}:
  Ray([0, 0, 1])
 ```
 
-The V-representation cannot be given to [MeshCat](https://github.com/rdeits/MeshCat.jl) or Makie directly, it first need to be transformed into a polyhedron:
+The V-representation cannot be given to [MeshCat](https://github.com/rdeits/MeshCat.jl) or [Makie](https://github.com/JuliaPlots/Makie.jl) directly, it first need to be transformed into a polyhedron:
 ```jldoctest plots
 julia> p = polyhedron(v)
 Polyhedron DefaultPolyhedron{Rational{BigInt},Polyhedra.Intersection{Rational{BigInt},Array{Rational{BigInt},1},Int64},Polyhedra.Hull{Rational{BigInt},Array{Rational{BigInt},1},Int64}}:
@@ -80,7 +82,7 @@ julia> open(vis)
 ```
 To plot it in a notebook, replace `open(vis)` with `IJuliaCell(vis)`.
 
-To plot it with Makie instead, you can use for instance `mesh` or `wireframe`.
+To plot it with [Makie](https://github.com/JuliaPlots/Makie.jl) instead, you can use for instance `mesh` or `wireframe`.
 ```julia
 julia> import Makie
 
@@ -88,3 +90,5 @@ julia> Makie.mesh(m, color=:blue)
 
 julia> Makie.wireframe(m)
 ```
+
+See [3D Plotting a projection of the 4D permutahedron](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/3D%20Plotting%20a%20projection%20of%20the%204D%20permutahedron.ipynb) for an example notebook.
