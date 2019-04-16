@@ -1,5 +1,14 @@
 import GeometryTypes
 
+"""
+    struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryTypes.GeometryPrimitive{N, T}
+        polyhedron::PT
+    end
+
+Mesh wrapper type that inherits from `GeometryPrimitive` to be used for plotting
+a polyhedron. Note that `Mesh(p)` is type unstable but one can use `Mesh{3}(p)`
+instead if it is known that `p` is defined in a 3-dimensional space.
+"""
 struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryTypes.GeometryPrimitive{N, T}
     polyhedron::PT
 end

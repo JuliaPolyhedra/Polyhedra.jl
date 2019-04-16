@@ -43,6 +43,6 @@ julia> Pkg.add("CDDLib")
 
 ## Contents
 ```@contents
-Pages = ["installation.md", "representation.md", "polyhedron.md", "redundancy.md", "projection.md", "optimization.md", "utilities.md"]
+Pages = ["installation.md", "representation.md", "polyhedron.md", "plot.md", "redundancy.md", "projection.md", "optimization.md", "utilities.md"]
 Depth = 2
 ```
