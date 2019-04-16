@@ -3,18 +3,18 @@ using Combinatorics
 
 # Inspired from Joey Huchette's test in ConvexHull.jl
 function crosspolytopetest(lib::Polyhedra.Library, n)
-    m = Model()
+    model = Model()
 
-    @variable(m, x[1:n])
+    @variable(model, x[1:n])
 
     for k in 0:n
         for S in combinations(1:n, k)
             Sᶜ = setdiff(1:n, S)
-            @constraint(m, sum(x[i] for i in S) - sum(x[i] for i in Sᶜ) ≤ 1)
+            @constraint(model, sum(x[i] for i in S) - sum(x[i] for i in Sᶜ) ≤ 1)
         end
     end
 
-    poly = polyhedron(m, lib)
+    poly = polyhedron(model, lib)
 
     V = zeros(Int, 2n, n)
     for i in 1:n

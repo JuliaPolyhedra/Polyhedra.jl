@@ -11,6 +11,6 @@ hrep(model::JuMP.Model) = LPHRep(model)
 LPHRep(model::JuMP.Model) = LPHRep(backend(model))
 
 function polyhedron(model::JuMP.Model,
-                    lib::Library=default_library(FullDim(JuMP.num_variables(model)), Float64))
-    polyhedron(LPHRep(model), lib)
+                    lib::Library=default_library(fulldim(JuMP.num_variables(model)), Float64))
+    polyhedron(hrep(model), lib)
 end
