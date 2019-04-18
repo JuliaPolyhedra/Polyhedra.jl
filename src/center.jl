@@ -41,8 +41,11 @@ function hchebyshevcenter(p::HRep, solver=Polyhedra.default_solver(p; T=Float64)
     JuMP.@objective(model, Min, maxr)
     JuMP.optimize!(model)
     term = JuMP.termination_status(model)
-    @assert term == MOI.OPTIMAL
-    return (JuMP.value.(c), JuMP.value(minr))
+    if term == MOI.OPTIMAL
+        return (JuMP.value.(c), JuMP.value(minr))
+    else
+        error("Solver returned $term when computing the H-Chebyshev center.")
+    end
 end
 
 # TODO solver here should not be VRepOptimizer
