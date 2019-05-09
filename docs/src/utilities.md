@@ -9,6 +9,7 @@ intersect
 intersect!
 convexhull
 convexhull!
+translate
 ```
 
 ## Volume
