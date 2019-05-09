@@ -1001,11 +1001,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "utilities/#Polyhedra.translate",
+    "page": "Utilities",
+    "title": "Polyhedra.translate",
+    "category": "function",
+    "text": "translate(p::Polyhedra.Rep, v::AbstractVector)\n\nComputes translation of the polyhedron p with the vector v. That is, computes\n\n x + v mid x in p \n\nBy default, if the H-representation, it simply translates every hyperplanes and halfspace, otherwise, it translates every points of the V-representation. That is, this operation can be achieved both in the H-representation and V-representation hence does not trigger any representation conversion.\n\n\n\n\n\n"
+},
+
+{
     "location": "utilities/#Operations-1",
     "page": "Utilities",
     "title": "Operations",
     "category": "section",
-    "text": "*\n\\\n/\nintersect\nintersect!\nconvexhull\nconvexhull!"
+    "text": "*\n\\\n/\nintersect\nintersect!\nconvexhull\nconvexhull!\ntranslate"
 },
 
 {
