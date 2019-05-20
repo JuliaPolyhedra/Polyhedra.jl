@@ -1,7 +1,7 @@
 name = "Polyhedra"
 uuid = "67491407-f73d-577b-9b50-8179a7c68029"
 repo = "https://github.com/JuliaPolyhedra/Polyhedra.jl.git"
-version = "0.5.0"
+version = "0.5.1"
 
 [deps]
 GeometryTypes = "4d00f742-c7ba-57c2-abde-4428a4b178cb"
