@@ -6,6 +6,7 @@ in
 issubset
 ininterior
 inrelativeinterior
+support_function
 ```
 
 ## Linearity

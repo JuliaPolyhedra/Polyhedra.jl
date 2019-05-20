@@ -1,4 +1,4 @@
-export ininterior, inrelativeinterior
+export ininterior, inrelativeinterior, support_function
 
 hyperplane(h::HyperPlane) = h
 hyperplane(h::HalfSpace) = HyperPlane(h.a, h.β)
@@ -117,6 +117,38 @@ Returns whether `p` is in the relative interior of `h`, e.g. in the relative int
 """
 inrelativeinterior(v::VRepElement, hr::HRep) = _vinh(v, hr, inrelativeinterior)
 
+function support_function_model(h::AbstractVector, rep::Rep, solver)
+    length(h) != fulldim(rep) && throw(DimensionMismatch())
+    model, T = layered_optimizer(solver)
+    x = MOI.add_variables(model, fulldim(rep))
+    MOI.add_constraint(model, MOI.VectorOfVariables(x), PolyhedraOptSet(rep))
+    MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+    MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+            MOI.ScalarAffineFunction(
+                MOI.ScalarAffineTerm{T}.(h, x),
+                zero(T)))
+    return model
+end
+
+"""
+   support_function(h::AbstractVector, rep::Rep, solver=Polyhedra.linear_objective_solver(p))
+
+Return the value of the support function of `rep` at `h`. See [Section 13, R15] for more details.
+
+[R15] Rockafellar, R.T. *Convex analysis*. Princeton university press, **2015**.
+"""
+function support_function(h::AbstractVector, rep::Rep, solver=Polyhedra.linear_objective_solver(rep))
+    model = support_function_model(h, rep, solver)
+    MOI.optimize!(model)
+    term = MOI.get(model, MOI.TerminationStatus())
+    if term == MOI.OPTIMAL
+        return MOI.get(model, MOI.ObjectiveValue())
+    else
+        error("Cannot determine the value of the support function at $h",
+              " because the linear program terminated with status $term.")
+    end
+end
+
 function _hinv(h::HRepElement, vr::ElemIt{<:VRepElement})
     all(in.(vr, h))
 end
@@ -125,14 +157,7 @@ function _hinv(h::HRepElement, vr::VRep)
 end
 function _hinh(h::HalfSpace, hr::HRep, solver::Solver)
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
-    model, T = layered_optimizer(solver)
-    x = MOI.add_variables(model, fulldim(hr))
-    MOI.add_constraint(model, MOI.VectorOfVariables(x), PolyhedraOptSet(hr))
-    MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
-    MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
-            MOI.ScalarAffineFunction(
-                MOI.ScalarAffineTerm{T}.(h.a, x),
-                zero(T)))
+    model = support_function_model(h.a, hr, solver)
     MOI.optimize!(model)
     term = MOI.get(model, MOI.TerminationStatus())
     if term == MOI.DUAL_INFEASIBLE

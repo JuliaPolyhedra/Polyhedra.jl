@@ -8,6 +8,7 @@ include("empty.jl")
 include("sparse.jl")
 include("sparserect.jl")
 include("recipe.jl")
+include("support_function.jl")
 
 const misctests = Dict("basic" => basictest,
                        "doc" => doctest,
@@ -18,6 +19,7 @@ const misctests = Dict("basic" => basictest,
                        "empty" => emptytest,
                        "sparse" => sparsetest,
                        "sparserect" => sparserecttest,
-                       "recipe" => recipetest)
+                       "recipe" => recipetest,
+                       "support_function" => support_function_test)
 
 @polytestset misc
