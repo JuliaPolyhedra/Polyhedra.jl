@@ -705,11 +705,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "redundancy/#Polyhedra.support_function",
+    "page": "Containment/Redundancy",
+    "title": "Polyhedra.support_function",
+    "category": "function",
+    "text": "supportfunction(h::AbstractVector, rep::Rep, solver=Polyhedra.linearobjective_solver(p))\n\nReturn the value of the support function of rep at h. See [Section 13, R15] for more details.\n\n[R15] Rockafellar, R.T. Convex analysis. Princeton university press, 2015.\n\n\n\n\n\n"
+},
+
+{
     "location": "redundancy/#Containment-1",
     "page": "Containment/Redundancy",
     "title": "Containment",
     "category": "section",
-    "text": "in\nissubset\nininterior\ninrelativeinterior"
+    "text": "in\nissubset\nininterior\ninrelativeinterior\nsupport_function"
 },
 
 {
@@ -949,7 +957,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Base.:*",
     "category": "function",
-    "text": "*(p1::Rep, p2::Rep)\n\nCartesian product between the polyhedra p1 and p2.\n\n\n\n\n\n*(P::AbstractMatrix, p::VRep)\n\nTransform the polyhedron represented by p into P p by transforming each element of the V-representation (points, symmetric points, rays and lines) x into P x.\n\n\n\n\n\n"
+    "text": "*(p1::Rep, p2::Rep)\n\nCartesian product between the polyhedra p1 and p2.\n\n\n\n\n\n*(P::Union{AbstractMatrix, UniformScaling}, p::VRep)\n\nTransform the polyhedron represented by p into P p by transforming each element of the V-representation (points, symmetric points, rays and lines) x into P x.\n\n\n\n\n\n*(α::Number, p::Rep)\n\nTransform the polyhedron represented by p into alpha p by transforming each element of the V-representation (points, symmetric points, rays and lines) x into alpha x.\n\n\n\n\n\n"
 },
 
 {
@@ -957,7 +965,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Base.:\\",
     "category": "function",
-    "text": "\\(P::AbstractMatrix, p::HRep)\n\nTransform the polyhedron represented by p into P^-1 p by transforming each halfspace langle a x rangle le beta into langle P^top a x rangle le beta and each hyperplane langle a x rangle = beta into langle P^top a x rangle = beta.\n\n\n\n\n\n"
+    "text": "(P::Union{AbstractMatrix, UniformScaling}, p::HRep)\n\nTransform the polyhedron represented by p into P^-1 p by transforming each halfspace langle a x rangle le beta into langle P^top a x rangle le beta and each hyperplane langle a x rangle = beta into langle P^top a x rangle = beta.\n\n\n\n\n\n"
 },
 
 {
@@ -965,7 +973,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Base.:/",
     "category": "function",
-    "text": "/(p::HRep, P::AbstractMatrix)\n\nTransform the polyhedron represented by p into P^-T p by transforming each halfspace langle a x rangle le beta into langle P a x rangle le beta and each hyperplane langle a x rangle = beta into langle P a x rangle = beta.\n\n\n\n\n\n"
+    "text": "/(p::HRep, P::Union{AbstractMatrix, UniformScaling})\n\nTransform the polyhedron represented by p into P^-T p by transforming each halfspace langle a x rangle le beta into langle P a x rangle le beta and each hyperplane langle a x rangle = beta into langle P a x rangle = beta.\n\n\n\n\n\n"
 },
 
 {
