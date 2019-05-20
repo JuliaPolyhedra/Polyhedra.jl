@@ -153,40 +153,73 @@ Cartesian product between the polyhedra `p1` and `p2`.
 Base.:(*)(p1::Rep, p2::Rep) = cartesianproduct(p1, p2)
 
 """
-    \\(P::AbstractMatrix, p::HRep)
+  \\(P::Union{AbstractMatrix, UniformScaling}, p::HRep)
 
 Transform the polyhedron represented by ``p`` into ``P^{-1} p`` by transforming each halfspace ``\\langle a, x \\rangle \\le \\beta`` into ``\\langle P^\\top a, x \\rangle \\le \\beta`` and each hyperplane ``\\langle a, x \\rangle = \\beta`` into ``\\langle P^\\top a, x \\rangle = \\beta``.
 """
-Base.:(\)(P::AbstractMatrix, rep::HRep) = rep / P'
+Base.:(\)(P::Union{AbstractMatrix, UniformScaling}, rep::HRep) = rep / P'
 
-"""
-    /(p::HRep, P::AbstractMatrix)
-
-Transform the polyhedron represented by ``p`` into ``P^{-T} p`` by transforming each halfspace ``\\langle a, x \\rangle \\le \\beta`` into ``\\langle P a, x \\rangle \\le \\beta`` and each hyperplane ``\\langle a, x \\rangle = \\beta`` into ``\\langle P a, x \\rangle = \\beta``.
-"""
-function Base.:(/)(p::HRep{Tin}, P::AbstractMatrix) where {Tin}
-    if size(P, 2) != fulldim(p)
-        throw(DimensionMismatch("The number of rows of P must match the dimension of the H-representation"))
-    end
+function linear_preimage_transpose(P, p::HRep{Tin}, d) where Tin
     f = (i, h) -> h / P
-    # FIXME For a matrix P of StaticArrays, `d` should be type stable
-    d = size(P, 1)
     T = _promote_type(Tin, eltype(P))
-    similar(p, d, T, hmap(f, d, T, p)...)
+    return similar(p, d, T, hmap(f, d, T, p)...)
 end
 
 """
-    *(P::AbstractMatrix, p::VRep)
+    /(p::HRep, P::Union{AbstractMatrix, UniformScaling})
+
+Transform the polyhedron represented by ``p`` into ``P^{-T} p`` by transforming each halfspace ``\\langle a, x \\rangle \\le \\beta`` into ``\\langle P a, x \\rangle \\le \\beta`` and each hyperplane ``\\langle a, x \\rangle = \\beta`` into ``\\langle P a, x \\rangle = \\beta``.
+"""
+function Base.:(/)(p::HRep, P::AbstractMatrix)
+    if size(P, 2) != fulldim(p)
+        throw(DimensionMismatch("The number of rows of P must match the dimension of the H-representation"))
+    end
+    # FIXME For a matrix P of StaticArrays, `size(P, 1)` should be type stable
+    return linear_preimage_transpose(P, p, size(P, 1))
+end
+function Base.:(/)(p::HRep, P::UniformScaling)
+    return linear_preimage_transpose(P, p, FullDim(p))
+end
+
+function linear_image(P, p::VRep{Tin}, d) where Tin
+    f = (i, v) -> P * v
+    T = _promote_type(Tin, eltype(P))
+    return similar(p, d, T, vmap(f, d, T, p)...)
+end
+
+"""
+    *(P::Union{AbstractMatrix, UniformScaling}, p::VRep)
 
 Transform the polyhedron represented by ``p`` into ``P p`` by transforming each element of the V-representation (points, symmetric points, rays and lines) `x` into ``P x``.
 """
-function Base.:(*)(P::AbstractMatrix, p::VRep{Tin}) where {Tin}
+function Base.:(*)(P::AbstractMatrix, p::VRep)
     if size(P, 2) != fulldim(p)
         throw(DimensionMismatch("The number of rows of P must match the dimension of the V-representation"))
     end
-    f = (i, v) -> P * v
-    # For a matrix P of StaticArrays, `d` should be type stable
-    d = size(P, 1)
-    T = _promote_type(Tin, eltype(P))
-    similar(p, d, T, vmap(f, d, T, p)...)
+    # FIXME For a matrix P of StaticArrays, `size(P, 1)` should be type stable
+    return linear_image(P, p, size(P, 1))
+end
+function Base.:(*)(P::UniformScaling, p::VRep)
+    return linear_image(P, p, FullDim(p))
+end
+
+"""
+    *(α::Number, p::Rep)
+
+Transform the polyhedron represented by ``p`` into ``\\alpha p`` by transforming
+each element of the V-representation (points, symmetric points, rays and lines)
+`x` into ``\\alpha x``.
+"""
+function Base.:(*)(α::Number, p::Polyhedron)
+    if vrepiscomputed(p) || iszero(α)
+        return (α * LinearAlgebra.I) * p
+    else
+        return p / (inv(α) * LinearAlgebra.I)
+    end
+end
+function Base.:(*)(α::Number, p::VRepresentation)
+    return (α * LinearAlgebra.I) * p
+end
+function Base.:(*)(α::Number, p::HRepresentation)
+    return p / (inv(α) * LinearAlgebra.I)
 end

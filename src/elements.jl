@@ -74,6 +74,11 @@ Base.:(*)(α::Real, h::HyperPlane) = HyperPlane(α * h.a, α * h.β)
 Base.:(*)(h::HalfSpace, α::Real) = HalfSpace(h.a * α, h.β * α)
 Base.:(*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
 
+function Base.:(/)(h::ElemT, P::UniformScaling) where {T, ElemT<:HRepElement{T}}
+    Tout = _promote_type(T, eltype(P))
+    ElemTout = similar_type(ElemT, FullDim(h), Tout)
+    ElemTout(P * _vec(Tout, h.a), Tout(h.β))
+end
 function Base.:(/)(h::ElemT, P::AbstractMatrix) where {T, ElemT<:HRepElement{T}}
     Tout = _promote_type(T, eltype(P))
     ElemTout = similar_type(ElemT, size(P, 2), Tout)
