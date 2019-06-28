@@ -8,7 +8,7 @@ export Polyhedron
 abstract type Library end
 abstract type Polyhedron{T} end
 
-import JuMP
+import JuMP, ParameterJuMP
 const Solver = JuMP.OptimizerFactory
 const SolverOrNot = Union{Nothing, Solver}
 
