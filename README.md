@@ -21,6 +21,10 @@ It defines the abstract type `Polyhedron` and splits the operations on this type
 - [**STABLE**][docs-stable-url] &mdash; **most recently tagged version of the documentation.**
 - [**LATEST**][docs-latest-url] &mdash; *in-development version of the documentation.*
 
+## Citing
+
+See [CITATION.bib](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/CITATION.bib).
+
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-stable-url]: https://juliapolyhedra.github.io/Polyhedra.jl/stable
