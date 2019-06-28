@@ -27,5 +27,6 @@ removeduplicates
 ```@docs
 isredundant
 removehredundancy!
+removevredundancy
 removevredundancy!
 ```
