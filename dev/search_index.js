@@ -785,11 +785,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "redundancy/#Polyhedra.removevredundancy",
+    "page": "Containment/Redundancy",
+    "title": "Polyhedra.removevredundancy",
+    "category": "function",
+    "text": "removevredundancy(vr::VRepresentation)\n\nReturn a V-representation of the polyhedron represented by vr all the elements of vr except the redundant ones, i.e. the elements that can be expressed as convex combination of other ones.\n\n\n\n\n\n"
+},
+
+{
     "location": "redundancy/#Polyhedra.removevredundancy!",
     "page": "Containment/Redundancy",
     "title": "Polyhedra.removevredundancy!",
     "category": "function",
-    "text": "removevredundancy!(p::VRep)\n\nRemoves the elements of the V-representation of p that can be removed without changing the polyhedron represented by p. That is, it only keeps the extreme points and rays. This operation is often called \"convex hull\" as the remaining points are the extreme points of the convex hull of the initial set of points.\n\n\n\n\n\n"
+    "text": "removevredundancy!(p::VRep; strongly=false)\n\nRemoves the elements of the V-representation of p that can be removed without changing the polyhedron represented by p. That is, it only keeps the extreme points and rays. This operation is often called \"convex hull\" as the remaining points are the extreme points of the convex hull of the initial set of points. If strongly=true, weakly redundant points, i.e., points that are not extreme but are not in the relative interior either, may be kept.\n\n\n\n\n\n"
 },
 
 {
@@ -797,7 +805,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Containment/Redundancy",
     "title": "Redundancy",
     "category": "section",
-    "text": "isredundant\nremovehredundancy!\nremovevredundancy!"
+    "text": "isredundant\nremovehredundancy!\nremovevredundancy\nremovevredundancy!"
 },
 
 {
