@@ -183,12 +183,39 @@ include("solvers.jl")
 #        @test !hasallrays(vr)
 #    end
         @testset "Point" begin
-            vr = convexhull([-1, 0], [0, -1]) + conichull([1, 1], [-1, 1])
+            # x - y ≤  1
+            # x + y ≥ -1
             hr = HalfSpace([-1, -1], 1) ∩ HalfSpace([1, -1], 1)
-            vr = Polyhedra.removevredundancy(vr, hr)
-            @test collect(points(vr)) == [[0, -1]]
-            @test !haslines(vr)
-            @test collect(rays(vr)) == [Ray([1, 1]), Ray([-1, 1])]
+            # [-1, 0] is weakly redundant as it belongs to the facet x + y = -1
+            @test isredundant(hr, [-1, 0], nl=0)
+            @test !isredundant(hr, [-1, 0], strongly=true, nl=0)
+            # [0, -1] is not redundant as it is an extreme point
+            @test !isredundant(hr, [0, -1], nl=0)
+            @test !isredundant(hr, [0, -1], strongly=true, nl=0)
+            # [0, 0] is strongly redundant as it is in the relative interior
+            @test isredundant(hr, [0, 0], nl=0)
+            @test isredundant(hr, [0, 0], strongly=true, nl=0)
+            vr = convexhull([-1, 0], [0, -1], [0, 0]) + conichull([1, 1], [-1, 1])
+            @test collect(removevredundancy(points(vr), hr, nl=0)) == [[0, -1]]
+            @test collect(removevredundancy(points(vr), hr, strongly=true, nl=0)) == [[-1, 0], [0, -1]]
+            vrr = Polyhedra.removevredundancy(vr, hr)
+            @test collect(points(vrr)) == [[0, -1]]
+            @test !haslines(vrr)
+            @test collect(rays(vrr)) == [Ray([1, 1]), Ray([-1, 1])]
+            vrr = Polyhedra.removevredundancy(vr, hr, strongly=true)
+            @test collect(points(vrr)) == [[-1, 0], [0, -1]]
+            @test !haslines(vrr)
+            @test collect(rays(vrr)) == [Ray([1, 1]), Ray([-1, 1])]
+            p = polyhedron(vr)
+            Polyhedra.computehrep!(p)
+            removevredundancy!(p, strongly=true)
+            @test collect(points(p)) == [[-1, 0], [0, -1]]
+            @test !haslines(p)
+            @test collect(rays(p)) == [Ray([1, 1]), Ray([-1, 1])]
+            removevredundancy!(p)
+            @test collect(points(p)) == [[0, -1]]
+            @test !haslines(p)
+            @test collect(rays(p)) == [Ray([1, 1]), Ray([-1, 1])]
         end
 #    @testset "Split SymPoint" begin
 #        vr = convexhull(SymPoint([-1, 0]), SymPoint([0, 1])) + conichull([1, 1], [-1, 1])

@@ -141,9 +141,10 @@ Base.convert(::Type{Line{T, AT}}, line::Line) where {T, AT} = Line{T, AT}(line)
 Line{T}(a::AT) where {T, AT<:AbstractVector{T}} = Line{T, AT}(a)
 Line(a::AbstractVector) = Line{eltype(a)}(a)
 
-const VStruct{T, AT} = Union{Line{T, AT}, Ray{T, AT}}
+Base.:(==)(a::Ray, b::Ray) = coord(a) == coord(b)
+Base.:(==)(a::Line, b::Line) = coord(a) == coord(b)
 
-Base.:(==)(a::T, b::T) where T<:VStruct = coord(a) == coord(b)
+const VStruct{T, AT} = Union{Line{T, AT}, Ray{T, AT}}
 Base.getindex(x::VStruct, i) = x.a[i]
 Base.vec(x::VStruct) = vec(x.a)
 

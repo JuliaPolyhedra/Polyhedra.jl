@@ -106,17 +106,17 @@ function removevredundancy!(p::Polyhedron; strongly=false)
     if !strongly && !hrepiscomputed(p) && supportssolver(typeof(p))
         solver = default_solver(p)
         if solver === nothing
-            @warn("`removevredundancy` will trigger the computation of the",
-                  " H-representation, which is computationally demanding",
-                  " because no solver was provided to the library. If this is",
-                  " expected, call `computehrep!` explicitely before calling",
+            @warn("`removevredundancy` will trigger the computation of the" *
+                  " H-representation, which is computationally demanding" *
+                  " because no solver was provided to the library. If this is" *
+                  " expected, call `computehrep!` explicitely before calling" *
                   " this function to remove this warning.")
         end
     end
     if solver === nothing
         detecthlinearity!(p)
         detectvlinearity!(p)
-        setvrep!(p, removevredundancy(vrep(p), hrep(p)))
+        setvrep!(p, removevredundancy(vrep(p), hrep(p), strongly=strongly))
     else
         setvrep!(p, removevredundancy(vrep(p), solver))
     end
@@ -246,8 +246,10 @@ end
 # There shouldn't be any duplicates in hrep for this to work
 function removevredundancy(vrep::VRep, hrep::HRep; kws...)
     nl = nlines(vrep)
-    typeof(vrep)(FullDim(vrep),
-                 removevredundancy.(vreps(vrep), hrep; nl=nl, kws...)...)::typeof(vrep)
+    typeof(vrep)(
+        FullDim(vrep),
+        removevredundancy.(vreps(vrep), hrep; nl=nl, kws...)...
+    )::typeof(vrep)
 end
 
 function removehredundancy(hrepit::HIt, vrep::VRep; strongly=false, d=dim(vrep))

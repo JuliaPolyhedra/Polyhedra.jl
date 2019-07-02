@@ -1,3 +1,7 @@
+using Test
+using StaticArrays
+using Polyhedra
+
 @testset "Element" begin
     @testset "RemProj" begin
         r = Ray([1//1, -5//1, 0//1])
@@ -5,6 +9,8 @@
         r = Polyhedra.remproj(r, l)
         @test r isa Ray
         @test coord(r) == [1//1, -5//1, -15//1]
+        @test r == Ray([1, -5, -15])
+        @test r != Line([1, -5, -15])
     end
     @testset "Simplify" begin
         r = @inferred simplify(Ray([0, 0]))
