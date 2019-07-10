@@ -26,7 +26,7 @@ function hchebyshevcenter(p::HRep, solver=Polyhedra.default_solver(p; T=Float64)
     JuMP.@objective(model, Max, minr)
     JuMP.optimize!(model)
     term = JuMP.termination_status(model)
-    if term != MOI.OPTIMAL
+    if term ∉ [MOI.OPTIMAL, MOI.LOCALLY_SOLVED]
         if term == MOI.INFEASIBLE
             error("An empty polyhedron has no H-Chebyshev center.")
         elseif term == MOI.DUAL_INFEASIBLE
@@ -41,7 +41,7 @@ function hchebyshevcenter(p::HRep, solver=Polyhedra.default_solver(p; T=Float64)
     JuMP.@objective(model, Min, maxr)
     JuMP.optimize!(model)
     term = JuMP.termination_status(model)
-    if term == MOI.OPTIMAL
+    if term ∈ [MOI.OPTIMAL, MOI.LOCALLY_SOLVED]
         return (JuMP.value.(c), JuMP.value(minr))
     else
         error("Solver returned $term when computing the H-Chebyshev center.")
