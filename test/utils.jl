@@ -1,3 +1,6 @@
+using Test
+using Polyhedra
+
 _isapprox(x::Real, y::Real) = _isapprox(promote(x, y)...)
 _isapprox(x::T, y::T) where {T<:Real} = x == y
 _isapprox(x::T, y::T) where {T<:AbstractFloat} = y < x+1024*eps(T) && x < y+1024*eps(T)

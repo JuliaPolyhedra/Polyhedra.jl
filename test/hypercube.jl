@@ -16,5 +16,6 @@ function hypercubetest(lib::Polyhedra.Library, n)
             V[row, p] = ones(Int, length(p))
         end
     end
+
     generator_fulltest(poly, V)
 end
