@@ -95,7 +95,8 @@ function polyhedra_model_test(factory::JuMP.OptimizerFactory)
     model = Model(factory)
     n = 3
     @variable(model, 0 <= x[1:n] <= 1)
-    @variable(model, y == 1)
+    @variable(model, y)
+    @constraint(model, 2y == 2)
     csum = @constraint(model, sum(x[i] for i=1:n) == 1)
     c12 = @constraint(model, x[1] - x[2] <= 1)
     c23 = @constraint(model, x[2] - x[3] >= 1)
@@ -114,7 +115,7 @@ function polyhedra_model_test(factory::JuMP.OptimizerFactory)
     # TODO dual
 end
 
-@testset "PolyhedraToLPBridge" begin
+@testset "AbstractPolyhedraOptimizer" begin
     polyhedra_model_test(with_optimizer(
         MockOptimizer{Float64},
         mock -> begin

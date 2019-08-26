@@ -23,6 +23,7 @@ include("interval.jl")
 include("model_to_polyhedron.jl")
 include("vrep_optimizer.jl")
 include("lp_to_polyhedra.jl")
+include("polyhedra_to_lp_bridge.jl")
 include("default.jl")
 
 include("show.jl")

@@ -3,6 +3,17 @@ export LPHRep
 MOI.Utilities.@model(_MOIModel,
                      (), (MOI.EqualTo, MOI.LessThan,), (), (),
                      (), (MOI.ScalarAffineFunction,), (), ())
+# We need the `SingleVariable` constraints to be bridged so we should say that
+# they are not supported. We notably exclude `Integer` as we just ignore
+# integrality constraints. Binary constraint should be bridged to integrality
+# once https://github.com/JuliaOpt/MathOptInterface.jl/issues/704 is done.
+function MOI.supports_constraint(
+    ::_MOIModel{T}, ::Type{MOI.SingleVariable},
+    ::Type{<:Union{MOI.EqualTo{T}, MOI.GreaterThan{T}, MOI.LessThan{T},
+                   MOI.Interval{T}, MOI.ZeroOne}}) where T
+    return false
+end
+
 
 mutable struct LPHRep{T} <: HRepresentation{T}
     model::_MOIModel{T}
@@ -120,7 +131,7 @@ function Base.get(rep::LPHRep{T}, idx::HIndex{T}) where {T}
     values = [t.coefficient for t in func.terms]
     a = sparsevec(indices, values, FullDim(rep))
     set = MOI.get(rep.model, MOI.ConstraintSet(), ci)
-    β = MOI.Utilities.getconstant(set) - func.constant
+    β = MOI.constant(set) - func.constant
     if idx isa HyperPlaneIndex
         return HyperPlane(a, β)
     else

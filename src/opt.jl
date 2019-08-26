@@ -3,6 +3,7 @@ export AbstractPolyhedraOptimizer
 struct PolyhedraOptSet{T, RepT <: Rep{T}} <: MOI.AbstractVectorSet
     rep::RepT
 end
+MOI.dimension(set::PolyhedraOptSet) = fulldim(set.rep)
 
 function JuMP.build_constraint(error_fun::Function, func, set::Rep)
     return JuMP.BridgeableConstraint(
@@ -116,8 +117,7 @@ function Base.isempty(p::Rep, solver::Solver=Polyhedra.linear_objective_solver(p
         end
     end
     model, T = layered_optimizer(solver)
-    x = MOI.add_variables(model, fulldim(p))
-    MOI.add_constraint(model, MOI.VectorOfVariables(x), PolyhedraOptSet(p))
+    x, cx = MOI.add_constrained_variables(model, PolyhedraOptSet(p))
     MOI.optimize!(model)
     term = MOI.get(model, MOI.TerminationStatus())
     if term == MOI.OPTIMAL
