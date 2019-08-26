@@ -127,9 +127,9 @@ function ei(i)
     a[i] = one(T)
     a
 end
-eliminate(p ∩ HyperPlane(ei(I[1], v[1]) ∩ ... ∩ HyperPlane(ei(I[1], v[1]))
+eliminate(p ∩ HyperPlane(ei(I[1]), v[1]) ∩ ... ∩ HyperPlane(ei(I[n]), v[n]))
 ```
-but it is much more efficient. The code above does a polyhedral projection while this function simply replace
+where `n` is the length of `I` (and `v`), but it is much more efficient. The code above does a polyhedral projection while this function simply replaces
 each halfspace `⟨a, x⟩ ≤ β` (resp. each hyperplane `⟨a, x⟩ = β`) by the halfspace `⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩`
 (resp. the hyperplane `⟨a_J, x⟩ = β - ⟨a_I, v⟩`) where `J = setdiff(1:fulldim(p), I)`.
 """
