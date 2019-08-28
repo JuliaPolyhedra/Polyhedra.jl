@@ -861,7 +861,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Projection/Elimination",
     "title": "Polyhedra.fixandeliminate",
     "category": "function",
-    "text": "fixandeliminate(p::HRep{T}, I, v)\n\nFix the variables with indices in I to the corresponding value in v. This is equivalent to doing the following:\n\nfunction ei(i)\n    a = zeros(T, fulldim(p))\n    a[i] = one(T)\n    a\nend\neliminate(p ∩ HyperPlane(ei(I[1], v[1]) ∩ ... ∩ HyperPlane(ei(I[1], v[1]))\n\nbut it is much more efficient. The code above does a polyhedral projection while this function simply replace each halfspace ⟨a, x⟩ ≤ β (resp. each hyperplane ⟨a, x⟩ = β) by the halfspace ⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩ (resp. the hyperplane ⟨a_J, x⟩ = β - ⟨a_I, v⟩) where J = setdiff(1:fulldim(p), I).\n\n\n\n\n\n"
+    "text": "fixandeliminate(p::HRep{T}, I, v)\n\nFix the variables with indices in I to the corresponding value in v. This is equivalent to doing the following:\n\nfunction ei(i)\n    a = zeros(T, fulldim(p))\n    a[i] = one(T)\n    a\nend\neliminate(p ∩ HyperPlane(ei(I[1]), v[1]) ∩ ... ∩ HyperPlane(ei(I[n]), v[n]))\n\nwhere n is the length of I (and v), but it is much more efficient. The code above does a polyhedral projection while this function simply replaces each halfspace ⟨a, x⟩ ≤ β (resp. each hyperplane ⟨a, x⟩ = β) by the halfspace ⟨a_J, x⟩ ≤ β - ⟨a_I, v⟩ (resp. the hyperplane ⟨a_J, x⟩ = β - ⟨a_I, v⟩) where J = setdiff(1:fulldim(p), I).\n\n\n\n\n\n"
 },
 
 {
