@@ -5,18 +5,21 @@ The `PolyhedraToLPBridge` converts a constraint `VF`-in-`PolyhedraOptSet`
 into the constraints `F`-in-`EqualTo` for the hyperplanes and `F`-to-`LessThan`
 for halfspaces.
 """
-struct PolyhedraToLPBridge{T, F} <: MOI.Bridges.AbstractBridge
+struct PolyhedraToLPBridge{T, F} <: MOI.Bridges.Constraint.AbstractBridge
     hyperplanes::Vector{MOI.ConstraintIndex{F, MOI.EqualTo{T}}}
     halfspaces::Vector{MOI.ConstraintIndex{F, MOI.LessThan{T}}}
 end
-function PolyhedraToLPBridge{T, F}(model, f::MOI.AbstractVectorFunction, p::PolyhedraOptSet) where {T, F}
+function MOI.Bridges.Constraint.bridge_constraint(
+    ::Type{PolyhedraToLPBridge{T, F}}, model::MOI.ModelLike,
+    f::MOI.AbstractVectorFunction, p::PolyhedraOptSet) where {T, F}
+
     vf = MOIU.eachscalar(f)
     hps = [
-        MOIU.add_scalar_constraint(model, func(T, h.a, vf, F), MOI.EqualTo(convert(T, h.β)))
+        MOIU.normalize_and_add_constraint(model, func(T, h.a, vf, F), MOI.EqualTo(convert(T, h.β)))
         for h in hyperplanes(p.rep)
     ]
     hss = [
-        MOIU.add_scalar_constraint(model, func(T, h.a, vf, F), MOI.LessThan(convert(T, h.β)))
+        MOIU.normalize_and_add_constraint(model, func(T, h.a, vf, F), MOI.LessThan(convert(T, h.β)))
         for h in halfspaces(p.rep)
     ]
     return PolyhedraToLPBridge{T, F}(hps, hss)
@@ -30,16 +33,20 @@ function func(T::Type, a::AbstractVector, vf, F::Type)
     return func
 end
 
-# start allowing everything (scalar)
 MOI.supports_constraint(::Type{PolyhedraToLPBridge{T}},
                         ::Type{<:MOI.AbstractVectorFunction},
                         ::Type{<:PolyhedraOptSet}) where {T} = true
+function MOI.Bridges.added_constrained_variable_types(::Type{<:PolyhedraToLPBridge})
+    return Tuple{DataType}[]
+end
 function MOI.Bridges.added_constraint_types(::Type{PolyhedraToLPBridge{T, F}}) where {T, F}
     return [(F, MOI.EqualTo{T}), (F, MOI.LessThan{T})]
 end
-function MOI.Bridges.concrete_bridge_type(::Type{<:PolyhedraToLPBridge{T}},
-                              VF::Type{<:MOI.AbstractVectorFunction},
-                              ::Type{<:PolyhedraOptSet}) where T
+function MOI.Bridges.Constraint.concrete_bridge_type(
+    ::Type{<:PolyhedraToLPBridge{T}},
+    VF::Type{<:MOI.AbstractVectorFunction},
+    ::Type{<:PolyhedraOptSet}) where T
+
     SF = MOIU.scalar_type(VF)
     TermType = MOIU.promote_operation(*, T, T, SF)
     F = MOIU.promote_operation(+, T, TermType, TermType)
