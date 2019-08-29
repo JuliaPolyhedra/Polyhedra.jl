@@ -52,8 +52,9 @@ using Polyhedra
     @testset "Promote" begin
         @test promote_type(HyperPlane{Int, Vector{Int}}, HyperPlane{Float64, Vector{Float64}}) == HyperPlane{Float64, Vector{Float64}}
         @test promote_type(HyperPlane{Float64, SVector{2, Float64}}, HyperPlane{Int, SVector{2, Int}}) == HyperPlane{Float64, SVector{2, Float64}}
-        @test_throws ErrorException promote_type(HyperPlane{Int, Vector{Int}}, HyperPlane{Int, SVector{2, Int}})
-        # Differs with Julia 1.2
-        #@test_throws ErrorException promote_type(HyperPlane{Int, Vector{Int}}, HyperPlane{Float64, SVector{2, Float64}})
+        err = ErrorException("Cannot mix Polyhedra elements of vector type Array{$Int,1} and SArray{Tuple{2},$Int,1,2}")
+        @test_throws err promote_type(HyperPlane{Int, Vector{Int}}, HyperPlane{Int, SVector{2, Int}})
+        err = ErrorException("Cannot mix Polyhedra elements of vector type Array{Float64,1} and SArray{Tuple{2},Float64,1,2}")
+        @test_throws err promote_type(HyperPlane{Int, Vector{Int}}, HyperPlane{Float64, SVector{2, Float64}})
     end
 end

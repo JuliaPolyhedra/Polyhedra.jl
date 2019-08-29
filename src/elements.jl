@@ -173,7 +173,12 @@ for ElT in (:HyperPlane, :HalfSpace, :Line, :Ray)
         Base.promote_rule(::Type{$ElT{T, VT}}, ::Type{$ElT{T, WT}}) where {T, VT, WT} = error("Cannot mix Polyhedra elements of vector type $VT and $WT")
         function Base.promote_rule(::Type{$ElT{S, AS}}, ::Type{$ElT{T, AT}}) where {S, T, AS, AT}
             U = promote_type(S, T)
-            promote_type($ElT{U, similar_type(AS, U)}, $ElT{U, similar_type(AT, U)})
+            VU = similar_type(AS, U)
+            WU = similar_type(AT, U)
+            # Using promote_type instead of promote_rule here will promote to `Vector`
+            # when `VU` is `Vector` and `WU` is `SVector` in Julia v1.2 instead of throwing
+            # the error above.
+            return promote_rule($ElT{U, VU}, $ElT{U, WU})
         end
     end
 end
