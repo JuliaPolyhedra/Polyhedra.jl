@@ -6,8 +6,10 @@ include("jump.jl")
 include("misc.jl")
 include("decompose.jl")
 
-polyhedratests = Dict("jump" => jumptest,
-                      "misc" => misctest,
-                      "decompose" => decomposetest)
+polyhedratests = Dict(
+    "jump" => jumptest,
+    "misc" => misctest,
+    "decompose" => decomposetest
+)
 
 @polytestset polyhedra true
