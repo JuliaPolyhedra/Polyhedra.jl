@@ -247,6 +247,9 @@ function zeropad(a::Vector{T}, n::Integer) where T
 end
 zeropad(h::HRepElement, d::FullDim) = constructor(h)(zeropad(h.a, d), h.β)
 zeropad(v::VStruct, d::FullDim)     = constructor(v)(zeropad(v.a, d))
+# Called in cartesian product of two polyhedra, only the second using static arrays.
+zeropad(a::Vector, ::StaticArrays.Size{N}) where N = zeropad(a, N[1])
+zeropad(a::StaticArrays.SVector, n::Int) = zeropad(collect(a), n)
 
 for ElemT in [:HalfSpace, :HyperPlane, :Ray, :Line]
     @eval begin

@@ -3,6 +3,9 @@ function similar_type(SAT::Type{<:StaticArrays.SVector},
                       size::StaticArrays.Size, T::Type)
     StaticArrays.similar_type(SAT, T, size)
 end
+# Called when mixing polyhedra with one using StaticArrays and the other not.
+similar_type(::Type{<:StaticArrays.SVector}, ::Int, T::Type) = Vector{T}
+similar_type(::Type{<:Vector}, ::StaticArrays.Size, T::Type) = Vector{T}
 
 # The dimension is Int for Vector, SparseVector and
 # StaticArrays.Size for StaticArrays.SVector
@@ -55,3 +58,5 @@ neg_fulldim(::StaticArrays.Size{N}) where N = StaticArrays.Size{(-N[1],)}()
 sum_fulldim(N1::Int, N2::Int) = N1 + N2
 # FIXME May need generated function to make it type stable
 sum_fulldim(::StaticArrays.Size{N1}, ::StaticArrays.Size{N2}) where {N1, N2} = StaticArrays.Size{(N1[1] + N2[1],)}()
+# Called in cartesian product of two polyhedra, only the second using static arrays.
+sum_fulldim(N1::Int, ::StaticArrays.Size{N2}) where N2 = N1 + N2[1]
