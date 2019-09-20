@@ -15,23 +15,30 @@ The type of the result will be chosen closer to the type of `P1`. For instance, 
 If `P1` and `P2` are both polyhedra (resp. H-representation), the resulting polyhedron type (resp. H-representation type) will be computed according to the type of `P1`.
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
-function Base.intersect(p::HRep...)
+function Base.intersect(p1::HRep, p2::HRep, ps::HRep...)
+    p = (p1, p2, ps...)
     T = promote_coefficient_type(p)
     similar(p, hmap((i, x) -> convert(similar_type(typeof(x), T), x), FullDim(p[1]), T, p...)...)
 end
 Base.intersect(p::HRep, el::HRepElement) = p ∩ intersect(el)
 Base.intersect(el::HRepElement, p::HRep) = p ∩ el
 
-Base.intersect(hps::HyperPlane...) = hrep([hps...])
-Base.intersect(hss::HalfSpace...) = hrep([hss...])
+Base.intersect(h::HRepElement) = hrep([h])
+Base.intersect(hp1::HyperPlane, hp2::HyperPlane, hps::HyperPlane...) = hrep([hp1, hp2, hps...])
+Base.intersect(hs1::HalfSpace, hs2::HalfSpace, hss::HalfSpace...) = hrep([hs1, hs2, hss...])
 Base.intersect(h1::HyperPlane{T}, h2::HalfSpace{T}) where {T} = hrep([h1], [h2])
-Base.intersect(h1::HalfSpace{T}, h2::HyperPlane{T}) where {T} = h2 ∩ h1
-Base.intersect(p1::HAny{T}, p2::HAny{T}, ps::HAny{T}...) where {T} = intersect(p1 ∩ p2, ps...)
-function Base.intersect(p::HAny...)
-    T = promote_type(coefficient_type.(p)...)
-    f(p) = convert(similar_type(typeof(p), T), p)
-    intersect(f.(p)...)
+function Base.intersect(h1::HyperPlane, h2::HalfSpace)
+    T = promote_type(coefficient_type(h1), coefficient_type(h2))
+    f(h) = convert(similar_type(typeof(h), T), h)
+    intersect(f(h1), f(h2))
 end
+Base.intersect(h1::HalfSpace, h2::HyperPlane) = h2 ∩ h1
+Base.intersect(p1::HAny, p2::HAny, ps::HAny...) = intersect(p1 ∩ p2, ps...)
+#function Base.intersect(p::HAny...)
+#    T = promote_type(coefficient_type.(p)...)
+#    f(p) = convert(similar_type(typeof(p), T), p)
+#    intersect(f.(p)...)
+#end
 
 
 """
@@ -57,26 +64,33 @@ The type of the result will be chosen closer to the type of `P1`. For instance, 
 If `P1` and `P2` are both polyhedra (resp. V-representation), the resulting polyhedron type (resp. V-representation type) will be computed according to the type of `P1`.
 The coefficient type however, will be promoted as required taking both the coefficient type of `P1` and `P2` into account.
 """
-function convexhull(p::VRep...)
+function convexhull(p1::VRep, p2::VRep, ps::VRep...)
+    p = (p1, p2, ps...)
     T = promote_coefficient_type(p)
     similar(p, vmap((i, x) -> convert(similar_type(typeof(x), T), x), FullDim(p[1]), T, p...)...)
 end
 convexhull(p::VRep, el::VRepElement) = convexhull(p, convexhull(el))
 convexhull(el::VRepElement, p::VRep) = convexhull(p, el)
 
-convexhull(ps::AbstractVector...) = vrep([ps...])
-convexhull(ls::Line...) = vrep([ls...])
-convexhull(rs::Ray...) = vrep([rs...])
+convexhull(v::VRepElement) = vrep([v])
+convexhull(p1::AbstractVector, p2::AbstractVector, ps::AbstractVector...) = vrep([p1, p2, ps...])
+convexhull(l1::Line, l2::Line, ls::Line...) = vrep([l1, l2, ls...])
+convexhull(r1::Ray, r2::Ray, rs::Ray...) = vrep([r1, r2, rs...])
 convexhull(p::AbstractVector{T}, r::Union{Line{T}, Ray{T}}) where {T} = vrep([p], [r])
-convexhull(r::Union{Line{T}, Ray{T}}, p::AbstractVector{T}) where {T} = convexhull(p, r)
-convexhull(l::Line{T}, r::Ray{T}) where {T} = vrep([l], [r])
-convexhull(r::Ray{T}, l::Line{T}) where {T} = convexhull(l, r)
-convexhull(p1::VAny{T}, p2::VAny{T}, ps::VAny{T}...) where {T} = convexhull(convexhull(p1, p2), ps...)
-function convexhull(p::VAny...)
-    T = promote_type(coefficient_type.(p)...)
-    f(p) = convert(similar_type(typeof(p), T), p)
-    convexhull(f.(p)...)
+function convexhull(p::AbstractVector, r::Union{Line, Ray})
+    T = promote_type(coefficient_type(p), coefficient_type(r))
+    f(x) = convert(similar_type(typeof(x), T), x)
+    return convexhull(f(p), f(r))
 end
+convexhull(r::Union{Line, Ray}, p::AbstractVector) = convexhull(p, r)
+convexhull(l::Line, r::Ray) = vrep([l], [r])
+convexhull(r::Ray, l::Line) = convexhull(l, r)
+convexhull(p1::VAny, p2::VAny, ps::VAny...) = convexhull(convexhull(p1, p2), ps...)
+#function convexhull(p::VAny...)
+#    T = promote_type(coefficient_type.(p)...)
+#    f(p) = convert(similar_type(typeof(p), T), p)
+#    convexhull(f.(p)...)
+#end
 
 """
     convexhull!(p1::VRep, p2::VRep)
