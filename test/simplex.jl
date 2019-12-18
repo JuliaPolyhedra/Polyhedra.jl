@@ -44,6 +44,7 @@ function simplextest(lib::Polyhedra.Library)
         MOI.add_constraint(model, MOI.VectorOfVariables(x),
                            Polyhedra.PolyhedraOptSet(poly1))
         MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+        @test MOI.MAX_SENSE == MOI.get(model, MOI.ObjectiveSense())
         MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
                 MOI.ScalarAffineFunction(
                     [MOI.ScalarAffineTerm{T}(2, x[1])], zero(T)))
@@ -60,6 +61,7 @@ function simplextest(lib::Polyhedra.Library)
         MOI.add_constraint(model, MOI.VectorOfVariables(x),
                            Polyhedra.PolyhedraOptSet(poly1))
         MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+        @test MOI.MAX_SENSE == MOI.get(model, MOI.ObjectiveSense())
         MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
                 MOI.ScalarAffineFunction(
                     [MOI.ScalarAffineTerm{T}(1, x[1]),
@@ -109,6 +111,7 @@ function simplextest(lib::Polyhedra.Library)
         MOI.add_constraint(model, MOI.VectorOfVariables(x),
                            Polyhedra.PolyhedraOptSet(poly3))
         MOI.set(model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+        @test MOI.MIN_SENSE == MOI.get(model, MOI.ObjectiveSense())
         MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
                 MOI.ScalarAffineFunction(
                     [MOI.ScalarAffineTerm{T}(1, x[1]),
@@ -127,6 +130,7 @@ function simplextest(lib::Polyhedra.Library)
         MOI.add_constraint(model, MOI.VectorOfVariables(x),
                            Polyhedra.PolyhedraOptSet(poly3))
         MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+        @test MOI.MAX_SENSE == MOI.get(model, MOI.ObjectiveSense())
         MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
                 MOI.ScalarAffineFunction(
                     [MOI.ScalarAffineTerm{T}(1, x[2])], zero(T)))

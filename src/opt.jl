@@ -31,6 +31,9 @@ function MOI.supports(::AbstractPolyhedraOptimizer{T},
                               MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}}) where T
     return true
 end
+function MOI.get(optimizer::AbstractPolyhedraOptimizer, ::MOI.ObjectiveSense)
+    return optimizer.objective_sense
+end
 function MOI.set(optimizer::AbstractPolyhedraOptimizer, ::MOI.ObjectiveSense,
                  sense::MOI.OptimizationSense)
     optimizer.objective_sense = sense
