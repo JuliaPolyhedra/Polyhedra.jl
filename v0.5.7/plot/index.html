@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Plot · Polyhedra</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>Polyhedra</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Index</a></li><li><a class="toctext" href="../installation/">Installation</a></li><li><a class="toctext" href="../representation/">Representation</a></li><li><a class="toctext" href="../polyhedron/">Polyhedron</a></li><li class="current"><a class="toctext" href>Plot</a><ul class="internal"><li><a class="toctext" href="#D-plotting-with-Plots-1">2D plotting with Plots</a></li><li><a class="toctext" href="#D-plotting-with-Plots-2">3D plotting with Plots</a></li></ul></li><li><a class="toctext" href="../redundancy/">Containment/Redundancy</a></li><li><a class="toctext" href="../projection/">Projection/Elimination</a></li><li><a class="toctext" href="../optimization/">Optimization</a></li><li><a class="toctext" href="../utilities/">Utilities</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Plot</a></li></ul><a class="edit-page" href="https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/docs/src/plot.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Plot</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Plot-1" href="#Plot-1">Plot</a></h1><p>Polyhedra contains utilities to visualize either a 2-dimensional or a 3-dimensional polyhedron, see <a href="../polyhedron/#Polyhedron-1">Polyhedron</a> for how to construct a polyhedron, e.g. from its H- or V-representation.</p><h2><a class="nav-anchor" id="D-plotting-with-Plots-1" href="#D-plotting-with-Plots-1">2D plotting with Plots</a></h2><p>A 2-dimensional polytope, i.e. <em>bounded</em> polyhedron, can be visualized with <a href="https://github.com/JuliaPlots/Plots.jl">Plots</a>. Suppose for instance that we want to visualize the polyhedron having the following H-representation:</p><pre><code class="language-julia-repl">julia&gt; using Polyhedra
+
+julia&gt; h = HalfSpace([1, 1], 1) ∩ HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0)
+H-representation Polyhedra.Intersection{Int64,Array{Int64,1},Int64}:
+3-element iterator of HalfSpace{Int64,Array{Int64,1}}:
+ HalfSpace([1, 1], 1)
+ HalfSpace([-1, 0], 0)
+ HalfSpace([0, -1], 0)</code></pre><p>The H-representation cannot be given to Plots directly, it first need to be transformed into a polyhedron:</p><pre><code class="language-julia-repl">julia&gt; p = polyhedron(h)
+Polyhedron DefaultPolyhedron{Rational{BigInt},Polyhedra.Intersection{Rational{BigInt},Array{Rational{BigInt},1},Int64},Polyhedra.Hull{Rational{BigInt},Array{Rational{BigInt},1},Int64}}:
+3-element iterator of HalfSpace{Rational{BigInt},Array{Rational{BigInt},1}}:
+ HalfSpace(Rational{BigInt}[1//1, 1//1], 1//1)
+ HalfSpace(Rational{BigInt}[-1//1, 0//1], 0//1)
+ HalfSpace(Rational{BigInt}[0//1, -1//1], 0//1)</code></pre><p>The polyhedron can be given to Plots as follows</p><pre><code class="language-julia">julia&gt; using Plots
+
+julia&gt; plot(p)</code></pre><p>See <a href="https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/Polyhedral%20Function.ipynb">Polyhedral Function</a> and <a href="https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/3D%20Plotting%20a%20projection%20of%20the%204D%20permutahedron.ipynb">3D Plotting a projection of the 4D permutahedron</a> for example notebooks.</p><h2><a class="nav-anchor" id="D-plotting-with-Plots-2" href="#D-plotting-with-Plots-2">3D plotting with Plots</a></h2><p>A 3-dimensional polyhedron can be visualized with either <a href="https://github.com/rdeits/MeshCat.jl">MeshCat</a> or <a href="https://github.com/JuliaPlots/Makie.jl">Makie</a>. Unbounded polyhedron are supported by truncating the polyhedron into a polytope and not triangularizing the faces in the directions of unbounded rays.</p><p>Suppose for instance that we want to visualize the polyhedron having the following H-representation:</p><pre><code class="language-julia-repl">julia&gt; using Polyhedra
+
+julia&gt; v = convexhull([0, 0, 0]) + conichull([1, 0, 0], [0, 1, 0], [0, 0, 1])
+V-representation Polyhedra.Hull{Int64,Array{Int64,1},Int64}:
+1-element iterator of Array{Int64,1}:
+ [0, 0, 0],
+3-element iterator of Ray{Int64,Array{Int64,1}}:
+ Ray([1, 0, 0])
+ Ray([0, 1, 0])
+ Ray([0, 0, 1])</code></pre><p>The V-representation cannot be given to <a href="https://github.com/rdeits/MeshCat.jl">MeshCat</a> or <a href="https://github.com/JuliaPlots/Makie.jl">Makie</a> directly, it first need to be transformed into a polyhedron:</p><pre><code class="language-julia-repl">julia&gt; p = polyhedron(v)
+Polyhedron DefaultPolyhedron{Rational{BigInt},Polyhedra.Intersection{Rational{BigInt},Array{Rational{BigInt},1},Int64},Polyhedra.Hull{Rational{BigInt},Array{Rational{BigInt},1},Int64}}:
+1-element iterator of Array{Rational{BigInt},1}:
+ Rational{BigInt}[0//1, 0//1, 0//1],
+3-element iterator of Ray{Rational{BigInt},Array{Rational{BigInt},1}}:
+ Ray(Rational{BigInt}[1//1, 0//1, 0//1])
+ Ray(Rational{BigInt}[0//1, 1//1, 0//1])
+ Ray(Rational{BigInt}[0//1, 0//1, 1//1])</code></pre><p>Then, we need to create a mess from the polyhedron:</p><pre><code class="language-julia-repl">julia&gt; m = Polyhedra.Mesh(p)
+Polyhedra.Mesh{3,Rational{BigInt},DefaultPolyhedron{Rational{BigInt},Polyhedra.Intersection{Rational{BigInt},Array{Rational{BigInt},1},Int64},Polyhedra.Hull{Rational{BigInt},Array{Rational{BigInt},1},Int64}}}(convexhull([0//1, 0//1, 0//1]) + convexhull(Ray(Rational{BigInt}[1//1, 0//1, 0//1]), Ray(Rational{BigInt}[0//1, 1//1, 0//1]), Ray(Rational{BigInt}[0//1, 0//1, 1//1])))</code></pre><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Polyhedra.Mesh" href="#Polyhedra.Mesh"><code>Polyhedra.Mesh</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">struct Mesh{N, T, PT &lt;: Polyhedron{T}} &lt;: GeometryTypes.GeometryPrimitive{N, T}
+    polyhedron::PT
+end</code></pre><p>Mesh wrapper type that inherits from <code>GeometryPrimitive</code> to be used for plotting a polyhedron. Note that <code>Mesh(p)</code> is type unstable but one can use <code>Mesh{3}(p)</code> instead if it is known that <code>p</code> is defined in a 3-dimensional space.</p></div></div></section><p>The polyhedron can be plotted with <a href="https://github.com/rdeits/MeshCat.jl">MeshCat</a> as follows</p><pre><code class="language-julia">julia&gt; using MeshCat
+
+julia&gt; vis = Visualizer()
+
+julia&gt; setobject!(vis, m)
+
+julia&gt; open(vis)</code></pre><p>To plot it in a notebook, replace <code>open(vis)</code> with <code>IJuliaCell(vis)</code>.</p><p>To plot it with <a href="https://github.com/JuliaPlots/Makie.jl">Makie</a> instead, you can use for instance <code>mesh</code> or <code>wireframe</code>.</p><pre><code class="language-julia">julia&gt; import Makie
+
+julia&gt; Makie.mesh(m, color=:blue)
+
+julia&gt; Makie.wireframe(m)</code></pre><p>See <a href="https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/3D%20Plotting%20a%20projection%20of%20the%204D%20permutahedron.ipynb">3D Plotting a projection of the 4D permutahedron</a> for an example notebook.</p><footer><hr/><a class="previous" href="../polyhedron/"><span class="direction">Previous</span><span class="title">Polyhedron</span></a><a class="next" href="../redundancy/"><span class="direction">Next</span><span class="title">Containment/Redundancy</span></a></footer></article></body></html>
