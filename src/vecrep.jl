@@ -22,7 +22,7 @@ For instance, the simplex
 ```
 can be created as follows:
 ```julia
-hrep([HalfSpace([-1, 0], 0)], [HyperPlane([1, 1], 1), HalfSpace([0, -1], 0)])
+hrep([HyperPlane([1, 1], 1)], [HalfSpace([0, -1], 0), HalfSpace([-1, 0], 0)])
 ```
 """
 function hrep(hyperplanes::HyperPlaneIt, halfspaces::HalfSpaceIt;
