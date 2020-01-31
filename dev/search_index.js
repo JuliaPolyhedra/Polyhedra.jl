@@ -853,7 +853,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Projection/Elimination",
     "title": "Polyhedra.project",
     "category": "function",
-    "text": "project(p::Polyhedron, pset, algo)\n\nEquivalent to `eliminate(p, setdiff(1:fulldim(p), pset), algo).\n\n\n\n\n\n"
+    "text": "project(p::Polyhedron, pset, algo)\n\nEquivalent to eliminate(p, setdiff(1:fulldim(p), pset), algo).\n\n\n\n\n\n"
 },
 
 {
