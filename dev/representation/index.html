@@ -17,7 +17,13 @@ end</code></pre><p>An hyperplane defined by the set of points <span>$x$</span> s
   x_1 + x_2 &amp;= 1 \\
   x_1 &amp;\geq 0 \\
   x_2 &amp;\geq 0
-\end{align*}\]</div><p>can be created as follows:</p><pre><code class="language-julia">hrep([HalfSpace([-1, 0], 0)], [HyperPlane([1, 1], 1), HalfSpace([0, -1], 0)])</code></pre></div></div><div><div><pre><code class="language-none">hrep(halfspaces::HalfSpaceIt; d::FullDim)</code></pre><p>Creates an H-representation for the polyhedron of full dimension <code>d</code> equal to the intersection of the halfspaces <code>halfspaces</code>.</p><p><strong>Examples</strong></p><p>For instance, the polytope</p><div>\[\begin{align*}
+\end{align*}\]</div><p>can be created as follows:</p><pre><code class="language-julia-repl">julia&gt; hrep([HyperPlane([1, 1], 1)], [HalfSpace([0, -1], 0), HalfSpace([-1, 0], 0)])
+H-representation Polyhedra.Intersection{Int64,Array{Int64,1},Int64}:
+1-element iterator of HyperPlane{Int64,Array{Int64,1}}:
+ HyperPlane([1, 1], 1),
+2-element iterator of HalfSpace{Int64,Array{Int64,1}}:
+ HalfSpace([0, -1], 0)
+ HalfSpace([-1, 0], 0)</code></pre></div></div><div><div><pre><code class="language-none">hrep(halfspaces::HalfSpaceIt; d::FullDim)</code></pre><p>Creates an H-representation for the polyhedron of full dimension <code>d</code> equal to the intersection of the halfspaces <code>halfspaces</code>.</p><p><strong>Examples</strong></p><p>For instance, the polytope</p><div>\[\begin{align*}
   x_1 + x_2 &amp;\leq 1 \\
   x_1 - x_2 &amp;\leq 0 \\
   x_1 &amp; \geq 0.
