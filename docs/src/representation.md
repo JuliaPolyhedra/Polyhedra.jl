@@ -1,3 +1,9 @@
+```@meta
+DocTestSetup = quote
+    using Polyhedra
+end
+```
+
 # Representation
 
 Polyhedra can be described in 2 different ways.
