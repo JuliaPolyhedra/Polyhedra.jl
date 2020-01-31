@@ -21,8 +21,14 @@ For instance, the simplex
 \\end{align*}
 ```
 can be created as follows:
-```julia
-hrep([HyperPlane([1, 1], 1)], [HalfSpace([0, -1], 0), HalfSpace([-1, 0], 0)])
+```jldoctest
+julia> hrep([HyperPlane([1, 1], 1)], [HalfSpace([0, -1], 0), HalfSpace([-1, 0], 0)])
+H-representation Polyhedra.Intersection{Int64,Array{Int64,1},Int64}:
+1-element iterator of HyperPlane{Int64,Array{Int64,1}}:
+ HyperPlane([1, 1], 1),
+2-element iterator of HalfSpace{Int64,Array{Int64,1}}:
+ HalfSpace([0, -1], 0)
+ HalfSpace([-1, 0], 0)
 ```
 """
 function hrep(hyperplanes::HyperPlaneIt, halfspaces::HalfSpaceIt;
