@@ -117,15 +117,24 @@ Returns whether `p` is in the relative interior of `h`, e.g. in the relative int
 """
 inrelativeinterior(v::VRepElement, hr::HRep) = _vinh(v, hr, inrelativeinterior)
 
+structural_nonzero_indices(a::SparseArrays.SparseVector) = SparseArrays.nonzeroinds(a)
+structural_nonzero_indices(a::AbstractVector) = eachindex(a)
+
 function support_function_model(h::AbstractVector, rep::Rep, solver)
     length(h) != fulldim(rep) && throw(DimensionMismatch())
     model, T = layered_optimizer(solver)
-    x = MOI.add_variables(model, fulldim(rep))
-    MOI.add_constraint(model, MOI.VectorOfVariables(x), PolyhedraOptSet(rep))
+    x, cx = MOI.add_constrained_variables(model, PolyhedraOptSet(rep))
     MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+    function _terms(h::SparseVector, x::Vector{MOI.VariableIndex})
+        return [MOI.ScalarAffineTerm{T}(h[i], x[i]) for i in eachindex(x) if !iszero(h[i])]
+    end
+    function _terms(h::AbstractVector, x::Vector{MOI.VariableIndex})
+        return [MOI.ScalarAffineTerm{T}(h[i], x[i]) for i in eachindex(x) if !iszero(h[i])]
+    end
     MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
             MOI.ScalarAffineFunction(
-                MOI.ScalarAffineTerm{T}.(h, x),
+                MOI.ScalarAffineTerm{T}[MOI.ScalarAffineTerm{T}(h[i], x[i])
+                 for i in structural_nonzero_indices(h) if !iszero(h[i])],
                 zero(T)))
     return model
 end
