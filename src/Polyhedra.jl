@@ -9,8 +9,6 @@ abstract type Library end
 abstract type Polyhedron{T} end
 
 import JuMP, ParameterJuMP
-const Solver = JuMP.OptimizerFactory
-const SolverOrNot = Union{Nothing, Solver}
 
 coefficient_type(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
 similar_type(::Type{<:Vector}, ::Int, ::Type{T}) where T = Vector{T}

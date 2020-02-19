@@ -91,8 +91,8 @@ end
 coefficient_type(::MOI.ModelLike) = Float64
 
 # Inspired by `JuMP.set_optimizer`
-function layered_optimizer(factory::JuMP.OptimizerFactory)
-    optimizer = factory()
+function layered_optimizer(solver)
+    optimizer = solver()
     T = coefficient_type(optimizer)
     if !MOIU.supports_default_copy_to(optimizer, false)
         universal_fallback = MOIU.UniversalFallback(_MOIModel{T}())
@@ -104,11 +104,11 @@ function layered_optimizer(factory::JuMP.OptimizerFactory)
 end
 
 """
-    isempty(p::Rep, solver::JuMP.OptimizerFactory=Polyhedra.linear_objective_solver(p))
+    isempty(p::Rep, solver=Polyhedra.linear_objective_solver(p))
 
 Check whether the polyhedron `p` is empty by using the solver `solver`.
 """
-function Base.isempty(p::Rep, solver::Solver=Polyhedra.linear_objective_solver(p))
+function Base.isempty(p::Rep, solver=Polyhedra.linear_objective_solver(p))
     N = fulldim(p)
     if N == -1
         if p isa VRepresentation || (p isa Polyhedron && fulldim(vrep(p)) == -1)

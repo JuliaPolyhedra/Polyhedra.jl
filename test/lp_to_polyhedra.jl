@@ -91,8 +91,8 @@ function MOI.get(mock::MockOptimizer, ::MOI.VariablePrimal, vi::MOI.VariableInde
     return mock.solution[vi.value]
 end
 
-function polyhedra_model_test(factory::JuMP.OptimizerFactory)
-    model = Model(factory)
+function polyhedra_model_test(solver)
+    model = Model(solver)
     n = 3
     @variable(model, 0 <= x[1:n] <= 1)
     @variable(model, y)
@@ -116,10 +116,10 @@ function polyhedra_model_test(factory::JuMP.OptimizerFactory)
 end
 
 @testset "AbstractPolyhedraOptimizer" begin
-    polyhedra_model_test(with_optimizer(
-        MockOptimizer{Float64},
+    polyhedra_model_test(() -> MockOptimizer{Float64}(
         mock -> begin
             mock.status = MOI.OPTIMAL
             mock.solution = [0.0, 1.0, 0.0, 1.0]
-        end))
+        end
+    ))
 end
