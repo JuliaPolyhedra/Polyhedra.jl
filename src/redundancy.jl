@@ -199,7 +199,7 @@ function nonredundant_points(vr::VRepresentation, model, hull, z)
 end
 
 
-removevredundancy(vr::VEmptySpace, solver::Solver) = vr
+removevredundancy(vr::VEmptySpace, solver) = vr
 
 """
     removevredundancy(vr::VRepresentation)
@@ -208,7 +208,7 @@ Return a V-representation of the polyhedron represented by `vr` all the
 elements of `vr` except the redundant ones, i.e. the elements that can
 be expressed as convex combination of other ones.
 """
-function removevredundancy(vr::VRepresentation, solver::Solver)
+function removevredundancy(vr::VRepresentation, solver)
     model = ParameterJuMP.ModelWithParams(solver)
     z = ParameterJuMP.add_parameters(model, zeros(fulldim(vr)))
     hull = [zero(JuMP.AffExpr) for i in 1:fulldim(vr)]
@@ -244,12 +244,19 @@ end
 
 # Remove redundancy in the V-representation using the H-representation
 # There shouldn't be any duplicates in hrep for this to work
-function removevredundancy(vrep::VRep, hrep::HRep; kws...)
+function _removevred_withhred(vrep::VRep, hrep::HRep; kws...)
     nl = nlines(vrep)
     typeof(vrep)(
         FullDim(vrep),
         removevredundancy.(vreps(vrep), hrep; nl=nl, kws...)...
     )::typeof(vrep)
+end
+# Split in two methods to avoid ambiguity with `(::VRepresentation, solver::Any)`
+function removevredundancy(vrep::Polyhedron, hrep::HRep; kws...)
+    _removevred_withhred(vrep, hrep; kws...)
+end
+function removevredundancy(vrep::VRepresentation, hrep::HRep; kws...)
+    _removevred_withhred(vrep, hrep; kws...)
 end
 
 function removehredundancy(hrepit::HIt, vrep::VRep; strongly=false, d=dim(vrep))

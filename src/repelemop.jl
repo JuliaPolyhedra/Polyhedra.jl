@@ -164,7 +164,7 @@ end
 function _hinv(h::HRepElement, vr::VRep)
     all(_hinv.(h, vreps(vr)))
 end
-function _hinh(h::HalfSpace, hr::HRep, solver::Solver)
+function _hinh(h::HalfSpace, hr::HRep, solver)
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
     model = support_function_model(h.a, hr, solver)
     MOI.optimize!(model)

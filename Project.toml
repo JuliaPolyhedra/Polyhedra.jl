@@ -14,8 +14,8 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 GeometryTypes = "0.7"
-JuMP = "0.20"
-ParameterJuMP = "0.1.1"
+JuMP = "0.21"
+ParameterJuMP = "0.2"
 RecipesBase = "0.7"
 StaticArrays = "0.12"
 julia = "1"

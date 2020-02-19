@@ -87,7 +87,9 @@ set `Polyhedra.PolyhedraOptSet`.
 ```julia
 julia> import GLPK
 
-julia> optimize!(model, with_optimizer(GLPK.Optimizer))
+julia> set_optimizer(model, GLPK.Optimizer)
+
+julia> optimize!(model)
 
 julia> termination_status(model)
 OPTIMAL::TerminationStatusCode = 1
