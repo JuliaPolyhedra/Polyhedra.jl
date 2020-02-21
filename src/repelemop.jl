@@ -159,10 +159,10 @@ function support_function(h::AbstractVector, rep::Rep, solver=Polyhedra.linear_o
 end
 
 function _hinv(h::HRepElement, vr::ElemIt{<:VRepElement})
-    all(in.(vr, h))
+    return all(v -> in(v, h), vr)
 end
 function _hinv(h::HRepElement, vr::VRep)
-    all(_hinv.(h, vreps(vr)))
+    return all(v -> _hinv(h, v), vreps(vr))
 end
 function _hinh(h::HalfSpace, hr::HRep, solver)
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
