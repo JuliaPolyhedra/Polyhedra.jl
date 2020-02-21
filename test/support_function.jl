@@ -1,10 +1,10 @@
 function support_function_test(p::Rep)
     @test support_function([1, 1], p) ≈ 1
-    @test p ⊆ HyperPlane([1, 1], 1)
-    @test !(p ⊆ HyperPlane([1, 1], 0))
+    @test p ⊆ HalfSpace([1, 1], 1)
+    @test !(p ⊆ HalfSpace([1, 1], 0))
     @test support_function([1, 0], p) ≈ 1
-    @test p ⊆ HyperPlane([1, 0], 1)
-    @test !(p ⊆ HyperPlane([1, 0], 0))
+    @test p ⊆ HalfSpace([1, 0], 1)
+    @test !(p ⊆ HalfSpace([1, 0], 0))
     @testset "Scale" begin
         @test support_function([1, 1], 2p) ≈ 2
         @test support_function([1, 0], 2p) ≈ 2
