@@ -1,5 +1,6 @@
 isincident(v::VRepElement, h::HRepElement) = v in hyperplane(h)
 isincident(h::HRepElement, v::VRepElement) = v in hyperplane(h)
+isincident(p::Polyhedron, v::Index, h::Index) = isincident(get(p, v), get(p, h))
 
 abstract type Incident{T, ElemT<:RepElement{T}, PT<:Polyhedron{T}, IdxT<:Index{T}} end
 

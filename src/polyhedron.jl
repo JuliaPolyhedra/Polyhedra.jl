@@ -1,7 +1,7 @@
 # Mandatory
 export polyhedron, loadpolyhedron!
 export hrepiscomputed, hrep, vrepiscomputed, vrep
-export volume, surface
+export volume, volume_simplex, unscaled_volume_simplex, surface
 
 """
     polyhedron(rep::Representation{T})
@@ -44,7 +44,21 @@ vrep(p::Polyhedron) = error("`vrep` not implemented for `$(eltype(p))`")
 Returns the `fulldim(p)`-dimensional hyper-volume of the polyhedron `p`.
 Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
 """
-function volume end
+function volume(p::Polyhedron)
+    return sum(unscaled_volume_simplex(Δ) for Δ in triangulation(p)) / factorial(fulldim(p))
+end
+
+function unscaled_volume_simplex(s)
+    A = Matrix{coefficient_type(s)}(undef, fulldim(s), npoints(s) - 1)
+    v = first(points(s))
+    for (i, p) in enumerate(Iterators.drop(points(s), 1))
+        A[:, i] = p - v
+    end
+    return abs(det(A))
+end
+function volume_simplex(s)
+    return unscaled_volume_simplex(s) / factorial(fulldim(s))
+end
 
 """
     surface(p::Polyhedron{T}) where {T}
