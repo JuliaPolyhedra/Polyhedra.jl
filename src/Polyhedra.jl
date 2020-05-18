@@ -26,6 +26,7 @@ include("comp.jl")
 include("representation.jl")
 include("indices.jl")
 include("incidence.jl")
+include("triangulation.jl")
 include("iterators.jl")
 include("polyhedron.jl")
 

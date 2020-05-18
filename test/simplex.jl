@@ -93,9 +93,15 @@ function simplextest(lib::Polyhedra.Library)
     htri = HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0) ∩ HalfSpace([1, 1], 1)
     vtri = convexhull(vsim, ext0)
     convexhull!(poly1, ext0)
+    @test 2volume(poly1) ≈ 1
+    @test 2volume_simplex(poly1) ≈ 1
+    @test unscaled_volume_simplex(poly1) ≈ 1
     inequality_fulltest(poly1, htri)
     generator_fulltest(poly1, vtri)
     convexhull!(poly2, ext0)
+    @test 2volume(poly2) ≈ 1
+    @test 2volume_simplex(poly1) ≈ 1
+    @test unscaled_volume_simplex(poly1) ≈ 1
     inequality_fulltest(poly2, htri)
     generator_fulltest(poly2, vtri)
 

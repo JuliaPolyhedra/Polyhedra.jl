@@ -19,6 +19,7 @@ function vhypercubetest(lib::Polyhedra.Library, n, α, β)
 
     h = hrep([Matrix(1I, n, n); Matrix(-1I, n, n)], [β * ones(Int, n); -α * ones(Int, n)])
 
+    @test volume(poly) ≈ (β - α)^n
     inequality_fulltest(poly, h)
     generator_fulltest(poly, v)
 end
