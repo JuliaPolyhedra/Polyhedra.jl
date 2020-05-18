@@ -1,5 +1,7 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
+coveralls: true
+codecov: true
 os:
   - linux
   - osx
@@ -11,8 +13,6 @@ julia:
 #    - libgmp-dev # For CDDLib and LRSLib
 notifications:
   email: false
-after_success:
-  - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
 jobs:
   include:
     - stage: "Documentation"
