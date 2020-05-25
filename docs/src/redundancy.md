@@ -14,6 +14,7 @@ support_function
 ```@docs
 detecthlinearity!
 detectvlinearity!
+detect_new_lines
 dim
 ```
 

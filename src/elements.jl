@@ -152,8 +152,9 @@ Base.:-(h::ElemT) where {ElemT<:Union{HyperPlane, HalfSpace}} = ElemT(-h.a, -h.Î
 Base.:-(elem::ElemT) where ElemT<:VStruct = ElemT(-coord(elem))
 # Used in remproj
 Base.:-(p::AbstractVector, l::Line) = p - coord(l)
-# Ray - Line is done in remproj
+# `Ray - Line` and `Line - Line` are done in `remproj`
 Base.:-(r::Ray, s::Union{Ray, Line}) = Ray(r.a - s.a)
+Base.:-(r::Line, s::Line) = Line(r.a - s.a)
 Base.:+(r::Ray, s::Ray) = Ray(r.a + s.a)
 Base.:+(p::AbstractVector, r::Ray) = p + coord(r)
 

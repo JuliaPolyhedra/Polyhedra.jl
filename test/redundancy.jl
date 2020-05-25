@@ -92,6 +92,12 @@ include("solvers.jl")
                 @test npoints(rm) == 1
                 @test nrays(rm) == 1
                 @test nlines(rm) == 1
+                vr = conichull(Ray(x), Ray(y), Ray(-z))
+                rm = detectvlinearity(vr, lp_solver)
+                @test rm isa Polyhedra.RaysHull{T, AT}
+                @test npoints(rm) == 1
+                @test nrays(rm) == 0
+                @test nlines(rm) == 2
             end
             @testset "Polyhedra.PointsHull" begin
                 vr = vrep(typeof(x)[]; d=d)

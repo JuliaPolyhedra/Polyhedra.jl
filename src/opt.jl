@@ -90,8 +90,17 @@ end
 
 coefficient_type(::MOI.ModelLike) = Float64
 
+no_solver_help() = """
+To provide a solver to a polyhedron, first select a solver from https://www.juliaopt.org/JuMP.jl/v0.21.1/installation/#Getting-Solvers-1.
+If you choose for instance `GLPK`, do `using GLPK; solver = GLPK.Optimizer`.
+Then provide the solver to the library. For instance, with the default library, do `lib = DefaultLibrary{Float64}(solver)`
+or if you use an external library, say `QHull`, do `lib = QHull.Library(solver)`.
+Then when you create the polyhedron, say from a representation `rep`, do `polyhedron(rep, lib)`.
+"""
+
 # Inspired by `JuMP.set_optimizer`
 function layered_optimizer(solver)
+    solver === nothing && error("No solver specified.\n", no_solver_help())
     optimizer = solver()
     T = coefficient_type(optimizer)
     if !MOIU.supports_default_copy_to(optimizer, false)

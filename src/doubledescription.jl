@@ -59,7 +59,7 @@ function intersect_and_remove_redundancy(v, hs, h; verbose=0)
         end
         # removeduplicates is cheaper than removevredundancy since the latter
         # needs to go through all the hrep element
-        v_dup = removeduplicates(v_int)
+        v_dup = removeduplicates(v_int, OppositeRaysMockOptimizer)
         if verbose >= 3
             print("Removing redundancy: ")
             print_v_summary(v_dup)

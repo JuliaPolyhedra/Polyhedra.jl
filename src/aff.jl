@@ -152,7 +152,7 @@ conetype(::Type{LinesHull{T, AT, D}}) where {T, AT, D} = RaysHull{T, AT, D}
 vreptype(::Type{LinesHull{T, AT, D}}) where {T, AT, D} = Hull{T, AT, D}
 
 # Returns a LinesHull representing the following set (TODO does it have a name?, does someone has a reference talking about it ?)
-# {x | ⟨a, x⟩ = 0 ∀ a such that (α, β) is a valid hyperplane for p}
+# {x | y in p => x + y in p}
 function linespace(v::VRep, current=false)
     if !current
         detectvlinearity!(v)
@@ -172,11 +172,11 @@ function Base.in(v::VRepElement, L::LinesHull)
 end
 
 function removeduplicates(L::LinesHull{T, AT}) where {T, AT}
-    V = LinesHull{T, AT}()
+    V = LinesHull{T, AT}(FullDim(L))
     for l in lines(L)
-        if !(l in H)
-            convexhull!(H, h)
+        if !(l in V)
+            convexhull!(V, l)
         end
     end
-    H
+    V
 end
