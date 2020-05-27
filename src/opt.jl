@@ -90,7 +90,7 @@ end
 
 coefficient_type(::MOI.ModelLike) = Float64
 
-no_solver_help() = """
+const NO_SOLVER_HELP = """
 To provide a solver to a polyhedron, first select a solver from https://www.juliaopt.org/JuMP.jl/v0.21.1/installation/#Getting-Solvers-1.
 If you choose for instance `GLPK`, do `using GLPK; solver = GLPK.Optimizer`.
 Then provide the solver to the library. For instance, with the default library, do `lib = DefaultLibrary{Float64}(solver)`
@@ -100,8 +100,8 @@ Then when you create the polyhedron, say from a representation `rep`, do `polyhe
 
 # Inspired by `JuMP.set_optimizer`
 function layered_optimizer(solver)
-    solver === nothing && error("No solver specified.\n", no_solver_help())
-    optimizer = solver()
+    solver === nothing && error("No solver specified.\n", NO_SOLVER_HELP)
+    optimizer = MOI.instantiate(solver)
     T = coefficient_type(optimizer)
     if !MOIU.supports_default_copy_to(optimizer, false)
         universal_fallback = MOIU.UniversalFallback(_MOIModel{T}())
@@ -110,6 +110,25 @@ function layered_optimizer(solver)
     optimizer = MOI.Bridges.full_bridge_optimizer(optimizer, T)
     MOI.Bridges.add_bridge(optimizer, PolyhedraToLPBridge{T})
     return optimizer, T
+end
+
+_optimize!(model::JuMP.Model) = JuMP.optimize!(model)
+_optimize!(model::MOI.ModelLike) = MOI.optimize!(model)
+
+function is_feasible(model, message)
+    @assert MOI.get(model, MOI.ObjectiveSense()) == MOI.FEASIBILITY_SENSE
+    _optimize!(model)
+    status = MOI.get(model, MOI.TerminationStatus())
+    # The objective sense is `MOI.FEASIBILITY_SENSE` so
+    # `INFEASIBLE_OR_UNBOUNDED` means infeasible because it cannot be
+    # unbounded
+    if status == MOI.INFEASIBLE || status == MOI.INFEASIBLE_OR_UNBOUNDED
+        return false
+    elseif status == MOI.OPTIMAL
+        return true
+    else
+        error("Solver returned ", status, " when ", message, " Solver specific status: ", MOI.get(model, MOI.RawStatusString()))
+    end
 end
 
 """
@@ -130,16 +149,5 @@ function Base.isempty(p::Rep, solver=Polyhedra.linear_objective_solver(p))
     end
     model, T = layered_optimizer(solver)
     x, cx = MOI.add_constrained_variables(model, PolyhedraOptSet(p))
-    MOI.optimize!(model)
-    term = MOI.get(model, MOI.TerminationStatus())
-    if term == MOI.OPTIMAL
-        return false
-    elseif term == MOI.INFEASIBLE || term == MOI.INFEASIBLE_OR_UNBOUNDED
-        # The problem has no objective so it cannot be unbounded so
-        # the `MOI.INFEASIBLE_OR_UNBOUNDED` status is accepted
-        return true
-    else
-        error("Cannot determine whether the polyhedron is empty or not because",
-              " the linear program terminated with status $term.")
-    end
+    return !is_feasible(model, "trying to determine whether the polyhedron is empty.")
 end

@@ -59,7 +59,9 @@ function intersect_and_remove_redundancy(v, hs, h; verbose=0)
         end
         # removeduplicates is cheaper than removevredundancy since the latter
         # needs to go through all the hrep element
-        v_dup = removeduplicates(v_int, OppositeRaysMockOptimizer)
+        # FIXME not sure what to do here but it will be revamped by
+        #       https://github.com/JuliaPolyhedra/Polyhedra.jl/pull/195 anyway
+        v_dup = removeduplicates(v_int, OppositeMockOptimizer)
         if verbose >= 3
             print("Removing redundancy: ")
             print_v_summary(v_dup)
@@ -75,7 +77,7 @@ function intersect_and_remove_redundancy(v, hs, h; verbose=0)
     return v
 end
 
-function doubledescription(h::HRepresentation; kws...)
+function doubledescription(h::HRepresentation, solver = nothing; kws...)
     # The redundancy of V-elements are measured using
     # the number of hyperplane they are in. If there are
     # redundant hyperplanes, it does not matter since no point
@@ -84,7 +86,10 @@ function doubledescription(h::HRepresentation; kws...)
     # FIXME Note that removevredundancy, uses `h` which contains all hyperplanes and halfspaces
     # already taken into account but also all the other ones. We should check that this
     # is the right idea.
-    h = removeduplicates(h)
+
+    # FIXME not sure what to do here but it will be revamped by
+    #       https://github.com/JuliaPolyhedra/Polyhedra.jl/pull/195 anyway
+    h = removeduplicates(h, solver === nothing ? OppositeMockOptimizer : solver)
     v = dualfullspace(h)
     checkvconsistency(v)
     v = intersect_and_remove_redundancy(v, hyperplanes(h), h; kws...)
@@ -92,10 +97,10 @@ function doubledescription(h::HRepresentation; kws...)
     return v
 end
 
-function doubledescription(v::VRepresentation{T}; kws...) where {T}
+function doubledescription(v::VRepresentation{T}, solver = nothing; kws...) where {T}
     checkvconsistency(v)
     lv = convert(LiftedVRepresentation{T, Matrix{T}}, v)
     R = -lv.R
-    vl = doubledescription(MixedMatHRep{T}(R, zeros(T, size(R, 1)), lv.linset); kws...)
+    vl = doubledescription(MixedMatHRep{T}(R, zeros(T, size(R, 1)), lv.linset), solver; kws...)
     LiftedHRepresentation{T}(vl.R, vl.Rlinset)
 end

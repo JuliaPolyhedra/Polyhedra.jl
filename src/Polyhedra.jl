@@ -61,6 +61,7 @@ include("repop.jl")
 include("center.jl")
 include("repelemop.jl")
 include("aff.jl")
+include("linearity.jl")
 include("redundancy.jl")
 include("projection.jl")
 

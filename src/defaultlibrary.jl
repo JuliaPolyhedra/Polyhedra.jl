@@ -81,7 +81,7 @@ end
 hrepiscomputed(p::DefaultPolyhedron) = p.hrep !== nothing
 function computehrep!(p::DefaultPolyhedron)
     # vrep(p) could trigger an infinite loop if both vrep and hrep are null
-    p.hrep = doubledescription(p.vrep)
+    p.hrep = doubledescription(p.vrep, p.solver)
 end
 function hrep(p::DefaultPolyhedron)
     if !hrepiscomputed(p)
@@ -92,7 +92,7 @@ end
 vrepiscomputed(p::DefaultPolyhedron) = p.vrep !== nothing
 function computevrep!(p::DefaultPolyhedron)
     # hrep(p) could trigger an infinite loop if both vrep and hrep are null
-    p.vrep = doubledescription(p.hrep)
+    p.vrep = doubledescription(p.hrep, p.solver)
 end
 function vrep(p::DefaultPolyhedron)
     if !vrepiscomputed(p)
