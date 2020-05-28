@@ -46,6 +46,29 @@ include("solvers.jl")
                     @test !hashalfspaces(h)
                 end
             end
+            @testset "Intersection" begin
+                for hr in [HalfSpace(z + x, 3) ∩ HalfSpace(-x, -one(T)) ∩ HalfSpace(-2y, -2),
+                           HalfSpace(x, one(T)) ∩ HalfSpace(y, one(T)) ∩ HalfSpace(-z, -2)]
+                    h = detecthlinearity(hr, lp_solver, verbose=2)
+                    @test h isa Polyhedra.Intersection{T, AT}
+                    @test nhyperplanes(h) == 2
+                    @test !hashalfspaces(h)
+                end
+                for hr in [HalfSpace(z, zero(T)) ∩ HalfSpace(-z, -zero(T)),
+                           HalfSpace(x, one(T)) ∩ HalfSpace(-x, -one(T))]
+                    h = detecthlinearity(hr, lp_solver, verbose=2)
+                    @test h isa Polyhedra.Intersection{T, AT}
+                    @test nhyperplanes(h) == 1
+                    @test !hashalfspaces(h)
+                end
+                for hr in [HalfSpace(-x, one(T)) ∩ HalfSpace(-y, one(T)) ∩ HalfSpace(x, one(T)) ∩ HalfSpace(y, one(T)) ∩ HalfSpace(-x, -9),
+                           HalfSpace(x, zero(T)) ∩ HalfSpace(-x, -one(T))]
+                    h = detecthlinearity(hr, lp_solver, verbose=2)
+                    @test h isa Polyhedra.Intersection{T, AT}
+                    @test nhyperplanes(h) == 3
+                    @test !hashalfspaces(h)
+                end
+            end
         end
         @testset "VRepresentation with $(typeof(x))" for (x, y, z, w) in [
             ([1, 0], [0, 1], [1, 1], [0, 0]),

@@ -32,7 +32,7 @@ h = HalfSpace([1, 1], 1]) ∩ HalfSpace([-1, -1], -1)
 contains the hyperplane `HyperPlane([1, 1], 1)`.
 """
 detecthlinearity!(p::HRep) = error("detecthlinearity! not implemented for $(typeof(p))")
-detecthlinearity!(p::Polyhedron, solver=default_solver(p)) = sethrep!(p, detecthlinearity(hrep(p), solver))
+detecthlinearity!(p::Polyhedron, solver=default_solver(p); verbose=0) = sethrep!(p, detecthlinearity(hrep(p), solver; verbose=verbose))
 
 """
     detectvlinearity!(p::VRep)
@@ -47,7 +47,7 @@ v = conichull([1, 1], [-1, -1])
 contains the line `Line([1, 1])`.
 """
 detectvlinearity!(p::VRep) = error("detectvlinearity! not implemented for $(typeof(p))")
-detectvlinearity!(p::Polyhedron, solver=default_solver(p)) = setvrep!(p, detectvlinearity(vrep(p), solver))
+detectvlinearity!(p::Polyhedron, solver=default_solver(p); verbose=0) = setvrep!(p, detectvlinearity(vrep(p), solver; verbose=verbose))
 
 # No ray so no line
 function detectvlinearity!(p::VPolytope) end
@@ -90,13 +90,13 @@ function _detect_opposite_elements(aff, non_opposite, elements)
 end
 
 """
-    detect_new_linearities(rep::HRepresentation, solver)
+    detect_new_linearities(rep::HRepresentation, solver; verbose=0)
 
 Given a polyhedron with H-representation `rep`, detect whether a new hyperplane can be generated from the halfspaces in `halfspaces` using an linear program solved by `solver`.
 The method is similar to the method used for lines described as follows.
 This function is automatically called by `removehredundancy` if a solver is provided.
 
-    detect_new_linearities(rep::VRepresentation, solver)
+    detect_new_linearities(rep::VRepresentation, solver; verbose=0)
 
 Given a cone defined by the V-representation `rep` (ignoring the points in the representation if any), detect whether a new line can be generated from the rays in `rays` using an linear program solved by `solver`.
 The method is as follows (suppose `lines` is empty for simplicity).
@@ -130,7 +130,7 @@ to solve an LP for each ray.
 This method is therefore significantly more efficient as it's complexity is `O(dimension of linespace)` which is upper
 bounded by `O(fulldim)` while the method of CDDLib is `O(number of rays)`.
 """
-function detect_new_linearities(rep::Representation, solver, verbose=0)
+function detect_new_linearities(rep::Representation, solver; verbose=0)
     lins = _linearity(rep)
     nonlins = _nonlinearity(rep)
     isempty(nonlins) && return Int[]
@@ -201,7 +201,7 @@ _linearity_space(h::HRepresentation, current) = affinehull(h, current)
 _linearity_space(v::VRepresentation, current) = linespace(v, current)
 
 struct OppositeMockOptimizer end
-function _detect_linearity(rep::Representation, solver)
+function _detect_linearity(rep::Representation, solver; verbose=0)
     aff = _linearity_space(rep, true)
     if _hasnonlinearity(rep)
         if solver === nothing
@@ -216,7 +216,7 @@ Set a solver if you believe that the polyhedron may have more linearity.
             els = _nonlin_type(rep)[]
             _detect_opposite_elements(aff, els, _nonlinearity(rep))
         else
-            new_lins = detect_new_linearities(rep, solver)
+            new_lins = detect_new_linearities(rep, solver; verbose=verbose)
             if new_lins === nothing
                 empty!(aff)
                 els = eltype(_nonlinearity(rep))[]
@@ -235,11 +235,11 @@ Set a solver if you believe that the polyhedron may have more linearity.
     end
     return removeduplicates(aff), els
 end
-function detecthlinearity(hr::HRepresentation, solver)
-    aff, hs = _detect_linearity(hr, solver)
+function detecthlinearity(hr::HRepresentation, solver; verbose=0)
+    aff, hs = _detect_linearity(hr, solver; verbose=verbose)
     typeof(hr)(FullDim(hr), aff.hyperplanes, hs)
 end
-function detectvlinearity(vr::VRepresentation, solver)
-    aff, rays = _detect_linearity(vr, solver)
+function detectvlinearity(vr::VRepresentation, solver; verbose=0)
+    aff, rays = _detect_linearity(vr, solver; verbose=verbose)
     typeof(vr)(FullDim(vr), preps(vr)..., aff.lines, rays)
 end
