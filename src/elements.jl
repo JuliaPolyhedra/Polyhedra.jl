@@ -96,6 +96,7 @@ origin(::Type{<:SparseVector{T}}, N::Int) where {T} = spzeros(T, N)
 origin(::Type{Vector{T}}, N::Int) where {T} = zeros(T, N)
 origin(VT::Type{<:AbstractVector}, ::Int) = zeros(VT)
 # Canonical basis vector
+basis(::Type{<:SparseVector{T}}, N::Int, i::Int) where {T} = sparsevec([i], [one(T)], N)
 function basis(::Type{Vector{T}}, N::Int, i::Int) where {T}
     v = zeros(T, N)
     v[i] = one(T)

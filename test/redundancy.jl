@@ -8,38 +8,106 @@ include("solvers.jl")
 
 @testset "Redundancy removal" begin
     @testset "LP-based" begin
-        @testset "VRepresentation with $(typeof(x))" for (x, y, z) in [
-            ([1, 0], [0, 1], [1, 1]),
-            ([1.0, 0.0], [0.0, 1.0], [1.0, 1.0]),
-            ((@SVector [1, 0]), (@SVector [0, 1]), (@SVector [1, 1]))]
+        @testset "HRepresentation with $(typeof(x))" for (x, y, z, w) in [
+            ([1, 0], [0, 1], [1, 1], [0, 0]),
+            ([1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.0, 0.0]),
+            ((@SVector [1, 0]), (@SVector [0, 1]), (@SVector [1, 1]), (@SVector [0, 0]))]
+            T = eltype(x)
+            AT = typeof(x)
+            d = Polyhedra.FullDim(x)
+            @testset "HAffineSpace" begin
+                for hr in [hrep(typeof(HyperPlane(x, one(T)))[]; d=d),
+                           intersect(HyperPlane(w, zero(T)))]
+                    @test dim(hr) == 2
+                    for h in [detecthlinearity(hr, lp_solver),
+                              removehredundancy(hr, lp_solver)]
+                        @test dim(h) == 2
+                        @test h isa HyperPlanesIntersection{T, AT}
+                        @test !hashyperplanes(h)
+                        @test !hashalfspaces(h)
+                    end
+                end
+                hr = intersect(HyperPlane(x, one(T)))
+                @test dim(hr) == 1
+                for h in [detecthlinearity(hr, lp_solver),
+                          removehredundancy(hr, lp_solver)]
+                    @test dim(h) == 1
+                    @test h isa HyperPlanesIntersection{T, AT}
+                    @test nhyperplanes(h) == 1
+                    @test !hashalfspaces(h)
+                end
+                hr = intersect(HyperPlane(w, one(T)))
+                @test dim(hr) == -1
+                for h in [detecthlinearity(hr, lp_solver),
+                          removehredundancy(hr, lp_solver)]
+                    @test dim(h) == -1
+                    @test h isa HyperPlanesIntersection{T, AT}
+                    @test nhyperplanes(h) == 3
+                    @test !hashalfspaces(h)
+                end
+            end
+            @testset "Intersection" begin
+                for hr in [HalfSpace(z + x, 3) ∩ HalfSpace(-x, -one(T)) ∩ HalfSpace(-2y, -2),
+                           HalfSpace(x, one(T)) ∩ HalfSpace(y, one(T)) ∩ HalfSpace(-z, -2)]
+                    h = detecthlinearity(hr, lp_solver, verbose=2)
+                    @test h isa Polyhedra.Intersection{T, AT}
+                    @test nhyperplanes(h) == 2
+                    @test !hashalfspaces(h)
+                end
+                for hr in [HalfSpace(z, zero(T)) ∩ HalfSpace(-z, -zero(T)),
+                           HalfSpace(x, one(T)) ∩ HalfSpace(-x, -one(T))]
+                    h = detecthlinearity(hr, lp_solver, verbose=2)
+                    @test h isa Polyhedra.Intersection{T, AT}
+                    @test nhyperplanes(h) == 1
+                    @test !hashalfspaces(h)
+                end
+                for hr in [HalfSpace(-x, one(T)) ∩ HalfSpace(-y, one(T)) ∩ HalfSpace(x, one(T)) ∩ HalfSpace(y, one(T)) ∩ HalfSpace(-x, -9),
+                           HalfSpace(x, zero(T)) ∩ HalfSpace(-x, -one(T))]
+                    h = detecthlinearity(hr, lp_solver, verbose=2)
+                    @test h isa Polyhedra.Intersection{T, AT}
+                    @test nhyperplanes(h) == 3
+                    @test !hashalfspaces(h)
+                end
+            end
+        end
+        @testset "VRepresentation with $(typeof(x))" for (x, y, z, w) in [
+            ([1, 0], [0, 1], [1, 1], [0, 0]),
+            ([1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.0, 0.0]),
+            ((@SVector [1, 0]), (@SVector [0, 1]), (@SVector [1, 1]), (@SVector [0, 0]))]
             T = eltype(x)
             AT = typeof(x)
             d = Polyhedra.FullDim(x)
             @testset "VLinearSpace" begin
-                vr = vrep(typeof(Line(x))[]; d=d)
-                rm = removevredundancy(vr, lp_solver)
-                @test rm isa LinesHull{T, AT}
-                @test !haspoints(rm)
-                @test !hasrays(rm)
-                @test !haslines(rm)
+                for vr in [vrep(typeof(Line(x))[]; d=d),
+                           convexhull(Line(w))]
+                    for v in [detectvlinearity(vr, lp_solver),
+                              removevredundancy(vr, lp_solver)]
+                        @test v isa LinesHull{T, AT}
+                        @test !haspoints(v)
+                        @test !hasrays(v)
+                        @test !haslines(v)
+                    end
+                end
                 vr = convexhull(Line(x))
-                rm = removevredundancy(vr, lp_solver)
-                @test rm isa LinesHull{T, AT}
-                @test npoints(rm) == 1
-                @test !hasrays(rm)
-                @test nlines(rm) == 1
-                vr = convexhull(Line(x), Line(y))
-                rm = removevredundancy(vr, lp_solver)
-                @test rm isa LinesHull{T, AT}
-                @test npoints(rm) == 1
-                @test !hasrays(rm)
-                @test nlines(rm) == 2
-                vr = convexhull(Line(x), Line(y), Line(z))
-                rm = removevredundancy(vr, lp_solver)
-                @test rm isa LinesHull{T, AT}
-                @test npoints(rm) == 1
-                @test !hasrays(rm)
-                @test nlines(rm) == 2
+                for v in [detectvlinearity(vr, lp_solver),
+                          removevredundancy(vr, lp_solver)]
+                    @test v isa LinesHull{T, AT}
+                    @test npoints(v) == 1
+                    @test !hasrays(v)
+                    @test nlines(v) == 1
+                end
+                for vr in [convexhull(Line(x), Line(y)),
+                           convexhull(Line(x), Line(y), Line(z)),
+                           convexhull(Line(x), Line(z), Line(y)),
+                           convexhull(Line(x), Line(z), Line(z))]
+                    for v in [detectvlinearity(vr, lp_solver),
+                              removevredundancy(vr, lp_solver)]
+                        @test v isa LinesHull{T, AT}
+                        @test npoints(v) == 1
+                        @test !hasrays(v)
+                        @test nlines(v) == 2
+                    end
+                end
                 vrepm1 = Polyhedra.emptyspace(vr)
                 @test vrepm1 === @inferred removevredundancy(vrepm1, lp_solver)
             end
@@ -212,7 +280,7 @@ include("solvers.jl")
             @test collect(points(vrr)) == [[-1, 0], [0, -1]]
             @test !haslines(vrr)
             @test collect(rays(vrr)) == [Ray([1, 1]), Ray([-1, 1])]
-            p = polyhedron(vr)
+            p = polyhedron(vr, DefaultLibrary{Rational{BigInt}}(Polyhedra.OppositeMockOptimizer))
             Polyhedra.computehrep!(p)
             removevredundancy!(p, strongly=true)
             @test collect(points(p)) == [[-1, 0], [0, -1]]

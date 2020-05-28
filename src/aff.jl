@@ -43,13 +43,14 @@ end
 # An affine space L satisfies:
 # λx + (1-λ)y ∈ L, ∀x, y ∈ L, ∀ λ ∈ R
 # Note that λ is not rhyperplaneuired to be between 0 and 1 as in convex sets.
-struct HyperPlanesIntersection{T, AT, D<:FullDim} <: HAffineSpace{T}
+mutable struct HyperPlanesIntersection{T, AT, D<:FullDim} <: HAffineSpace{T}
     d::D
     # HyperPlanes whose intersection is the affine space
     hyperplanes::Vector{HyperPlane{T, AT}}
+    orthogonalized::Bool
     function HyperPlanesIntersection{T, AT, D}(d::FullDim,
                                                hps::HyperPlaneIt{T}) where {T, AT, D}
-        new{T, AT, D}(FullDim_convert(D, d), lazy_collect(hps))
+        new{T, AT, D}(FullDim_convert(D, d), lazy_collect(hps), false)
     end
 end
 function HyperPlanesIntersection(d::FullDim,
@@ -62,8 +63,30 @@ FullDim(h::HyperPlanesIntersection) = h.d
 hvectortype(L::Type{<:HyperPlanesIntersection{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:HyperPlanesIntersection}, d::FullDim, ::Type{T}) where T = HyperPlanesIntersection{T, similar_type(hvectortype(PT), d, T), typeof(d)}
 
+function Base.empty!(L::HyperPlanesIntersection{T, AT}) where {T, AT}
+    # We want the dimension to be `-1` and the hyperplanes to make
+    # an infeasible system so we build the system `x = 0 & 0 = 1`.
+    empty!(L.hyperplanes)
+    for i in 1:fulldim(L)
+        push!(L.hyperplanes, HyperPlane(basis(AT, L.d, i), zero(T)))
+    end
+    push!(L.hyperplanes, HyperPlane(origin(AT, fulldim(L)), one(T)))
+    return L
+end
 function Base.intersect!(L::HyperPlanesIntersection, h::HyperPlane)
-    push!(L.hyperplanes, h)
+    if L.orthogonalized
+        h_p = remproj(h, L)
+        if isapproxzero(h_p.a)
+            if !isapproxzero(h_p.β)
+                # `L` is empty
+                empty!(L)
+            end
+        else
+            push!(L.hyperplanes, h_p)
+        end
+    else
+        push!(L.hyperplanes, h)
+    end
     return L
 end
 
@@ -81,20 +104,18 @@ function affinehull(h::HRep, current=false)
     HyperPlanesIntersection(FullDim(h), hyperplanes(h))
 end
 
-function remproj(h::HRepElement, L::HyperPlanesIntersection)
-    for hp in hyperplanes(L)
-        h = remproj(h, hp)
+function detecthlinearity!(L::HyperPlanesIntersection, solver = nothing)
+    if !L.orthogonalized
+        V = detecthlinearity(L)
+        L.hyperplanes = V.hyperplanes
+        L.orthogonalized = true
     end
-    h
+    return L
 end
-function Base.in(h::HRepElement, L::HyperPlanesIntersection)
-    h = remproj(h, L)
-    isapproxzero(h)
-end
-
-function removeduplicates(L::HyperPlanesIntersection{T, AT}) where {T, AT}
+function detecthlinearity(L::HyperPlanesIntersection{T, AT}, solver=nothing) where {T, AT}
     H = HyperPlanesIntersection{T, AT}(FullDim(L))
     for h in hyperplanes(L)
+        hp = remproj(h, H)
         if !(h in H)
             intersect!(H, h)
         end
@@ -128,11 +149,12 @@ creates the 2-dimensional affine subspace containing all the points ``(x_1, x_2,
 vrep(lines::LineIt; d::FullDim = FullDim_rec(lines)) = LinesHull(d, lines)
 
 # Representation of an affine space containing the origin by the minkowsky sum of lines
-struct LinesHull{T, AT, D<:FullDim} <: VLinearSpace{T}
+mutable struct LinesHull{T, AT, D<:FullDim} <: VLinearSpace{T}
     d::D
     lines::Vector{Line{T, AT}}
+    orthogonalized::Bool
     function LinesHull{T, AT, D}(d::FullDim, lines::LineIt{T}) where {T, AT, D}
-        new{T, AT, D}(FullDim_convert(D, d), lazy_collect(lines))
+        new{T, AT, D}(FullDim_convert(D, d), lazy_collect(lines), false)
     end
 end
 function LinesHull(d::FullDim, it::ElemIt{Line{T, AT}}) where {T, AT}
@@ -144,7 +166,17 @@ FullDim(v::LinesHull) = v.d
 vvectortype(::Type{<:LinesHull{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:LinesHull}, d::FullDim, ::Type{T}) where T = LinesHull{T, similar_type(vvectortype(PT), d, T), typeof(d)}
 
-convexhull!(L::LinesHull, l::Line) = push!(L.lines, l)
+function convexhull!(L::LinesHull, l::Line)
+    if L.orthogonalized
+        l_p = remproj(l, L)
+        if !isapproxzero(l_p)
+            push!(L.lines, l_p)
+        end
+    else
+        push!(L.lines, l)
+    end
+    return L
+end
 
 @vecrepelem LinesHull Line lines
 
@@ -160,23 +192,37 @@ function linespace(v::VRep, current=false)
     LinesHull(FullDim(v), lines(v))
 end
 
-function remproj(v::VRepElement, L::LinesHull)
-    for l in lines(L)
-        v = remproj(v, l)
+function detectvlinearity!(L::LinesHull, solver = nothing)
+    if !L.orthogonalized
+        V = detectvlinearity(L)
+        L.lines = V.lines
+        L.orthogonalized = true
     end
-    v
+    return L
 end
-function Base.in(v::VRepElement, L::LinesHull)
-    v = remproj(v, L)
-    isapproxzero(v)
+function detectvlinearity(L::LinesHull{T, AT}, solver = nothing) where {T, AT}
+    V = LinesHull{T, AT}(FullDim(L))
+    V.orthogonalized = true
+    for l in lines(L)
+        convexhull!(V, l)
+    end
+    return V
 end
 
-function removeduplicates(L::LinesHull{T, AT}) where {T, AT}
-    V = LinesHull{T, AT}(FullDim(L))
-    for l in lines(L)
-        if !(l in V)
-            convexhull!(V, l)
-        end
+detectlinearity!(h::HRepresentation) = detecthlinearity!(h)
+detectlinearity!(v::VRepresentation) = detectvlinearity!(v)
+_linearity(h::HRepresentation) = hyperplanes(h)
+_linearity(v::VRepresentation) = lines(v)
+function remproj(el::RepElement, L::Union{HyperPlanesIntersection, LinesHull})
+    detectlinearity!(L)
+    # Modified Gram-Schmidt process, it is more stable than
+    # the classical Gram-Schmidt process.
+    # see https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process#Numerical_stability
+    for lin in _linearity(L)
+        el = remproj(el, lin)
     end
-    V
+    return el
+end
+function Base.in(el::RepElement, L::Union{HyperPlanesIntersection, LinesHull})
+    return isapproxzero(remproj(el, L))
 end
