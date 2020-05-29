@@ -1,5 +1,7 @@
-using LinearAlgebra # for I
+using LinearAlgebra, SparseArrays, Test
 include("inconsistentvrep.jl")
+
+using StaticArrays
 
 function change_fulldim_test(Rep)
     T = Int
@@ -191,6 +193,28 @@ end
         c, r = chebyshevcenter(p, lp_solver)
         @test c ≈ [0, 0] atol=1e-6
         @test r ≈ 0.4472135955 atol=1e-6
+
+        _interval(c, r) = HalfSpace([1], c + r) ∩ HalfSpace([-1], -c + r)
+        c_exp = [-4, 3, 8]
+        for rs in [[1, 2, 3], [3, 1, 2], [3, 2, 1], [2, 1, 2]]
+            h = _interval(c_exp[1], rs[1]) * _interval(c_exp[2], rs[2]) * _interval(c_exp[3], rs[3])
+            c, r = hchebyshevcenter(h, lp_solver, verbose=1)
+            @test c ≈ c_exp atol=1e-6
+            @test r ≈ 1 atol=1e-6
+
+            c, r = hchebyshevcenter(h, lp_solver, proper=false)
+            for i in 1:3
+                @test c_exp[i] - rs[i] + 1 - 1e-6 <= c[i]
+                @test c[i] <= c_exp[i] + rs[i] - 1 + 1e-6
+            end
+            @test r ≈ 1 atol=1e-6
+        end
+
+        h = _interval(0, 0) * _interval(0, 1)
+        c, r = hchebyshevcenter(h, lp_solver, linearity_detected=true, verbose=1)
+        @test c[1] ≈ 0 atol=1e-6
+        @test -1 - 1e-6 <= c[2] <= 1 + 1e-6
+        @test r ≈ 0 atol=1e-6
 
         p = convexhull([0, 0], [0, 1], [1, 0])
         @test_throws ErrorException chebyshevcenter(p) # Not yet implemented

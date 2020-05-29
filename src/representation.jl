@@ -90,22 +90,22 @@ VRep{T}(p::Polyhedron) where {T} = Polyhedron{T}(p)
 HRep{T}(h::HRepresentation) where {T} = HRepresentation{T}(h)
 HRep{T}(p::Polyhedron) where {T} = Polyhedron{T}(p)
 
-# FIXME it does not get called. The calls always go throug vconvert and hconvert. Use changecoefficient_type instead
+# FIXME it does not get called. The calls always go throug vconvert and hconvert. Use change_coefficient_type instead
 #function Base.convert{T, RepT<:Representation}(::Type{Representation{T}}, rep::RepT)
 #  if fulldim(RepT) != N
 #    error("Cannot convert representations of the same dimension")
 #  end
-#  Base.convert(changecoefficient_type(RepT, T), rep)
+#  Base.convert(change_coefficient_type(RepT, T), rep)
 #end
 #function Base.convert{T, RepT<:HRepresentation}(::Type{HRepresentation{T}}, rep::RepT)
 #  if fulldim(RepT) != N
 #    error("Cannot convert representations of the same dimension")
 #  end
-#  Base.convert(changecoefficient_type(RepT, T), rep)
+#  Base.convert(change_coefficient_type(RepT, T), rep)
 #end
 #function Base.convert{S, RepT<:VRepresentation}(::Type{VRepresentation{S}}, rep::RepT)
 #  if fulldim(RepT) != M
 #    error("Cannot convert representations of the same dimension")
 #  end
-#  Base.convert(changecoefficient_type(RepT, S), rep)
+#  Base.convert(change_coefficient_type(RepT, S), rep)
 #end

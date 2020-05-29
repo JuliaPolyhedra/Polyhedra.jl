@@ -59,15 +59,16 @@ fulltype(::Type{LPHRep{T}}) where {T} = LPHRep{T}
 LPHRep(h::HRep{T}) where {T} = LPHRep{T}(h)
 LPHRep{T}(h::HRep) where {T} = convert(LPHRep{T}, h)
 
-function _saf(a::AbstractVector{T}, vars) where T
-    func = MOI.ScalarAffineFunction(MOI.ScalarAffineTerm{T}[], zero(T))
-    for i in eachindex(a)
-        coef = a[i]
-        if !iszero(coef)
-            push!(func.terms, MOI.ScalarAffineTerm(coef, vars[i]))
-        end
+function _constrain_in_func_set(h::HyperPlane, vars, T)
+    return _dot(h.a, vars, T), MOI.EqualTo{T}(h.β)
+end
+function _constrain_in_func_set(h::HalfSpace, vars, T)
+    return _dot(h.a, vars, T), MOI.LessThan{T}(h.β)
+end
+function _constrain_in(model, hs::HIt, vars, T)
+    for h in hs
+        MOI.add_constraint(model, _constrain_in_func_set(h, vars, T)...)
     end
-    return func
 end
 
 function LPHRep{T}(d::FullDim,
@@ -75,16 +76,8 @@ function LPHRep{T}(d::FullDim,
                    halfspaces::ElemIt{<:HalfSpace{T}}) where {T}
     model = _MOIModel{T}()
     vars = MOI.add_variables(model, fulldim(d))
-    for hyperplane in hyperplanes
-        func = _saf(hyperplane.a, vars)
-        set = MOI.EqualTo(hyperplane.β)
-        MOI.add_constraint(model, func, set)
-    end
-    for halfspace in halfspaces
-        func = _saf(halfspace.a, vars)
-        set = MOI.LessThan(halfspace.β)
-        MOI.add_constraint(model, func, set)
-    end
+    _constrain_in(model, hyperplanes, vars, T)
+    _constrain_in(model, halfspaces, vars, T)
     return LPHRep(model)
 end
 
