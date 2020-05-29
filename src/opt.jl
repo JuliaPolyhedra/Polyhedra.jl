@@ -115,6 +115,9 @@ end
 _optimize!(model::JuMP.Model) = JuMP.optimize!(model)
 _optimize!(model::MOI.ModelLike) = MOI.optimize!(model)
 
+function _unknown_status(model, status, message)
+    error("Solver returned ", status, " when ", message, " Solver specific status: ", MOI.get(model, MOI.RawStatusString()))
+end
 function is_feasible(model, message)
     @assert MOI.get(model, MOI.ObjectiveSense()) == MOI.FEASIBILITY_SENSE
     _optimize!(model)
@@ -127,7 +130,7 @@ function is_feasible(model, message)
     elseif status == MOI.OPTIMAL
         return true
     else
-        error("Solver returned ", status, " when ", message, " Solver specific status: ", MOI.get(model, MOI.RawStatusString()))
+        _unknown_status(model, status, message)
     end
 end
 

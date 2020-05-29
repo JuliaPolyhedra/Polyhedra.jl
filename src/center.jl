@@ -1,52 +1,97 @@
 export hchebyshevcenter, vchebyshevcenter, chebyshevcenter
 using JuMP
 
+_shrink(h::HyperPlane, radius, T::Type) = convert(similar_type(typeof(h), T), h)
+_shrink(h::HalfSpace, radius, T::Type) = HalfSpace{T}(h.a, h.β - norm(h.a, 2) * radius)
+function _shrink(p::HRep{Tin}, radius) where Tin
+    T = _promote_type(Tin, typeof(radius))
+    f = (i, h) -> _shrink(h, radius, T)
+    d = FullDim(p)
+    return similar(p, d, T, hmap(f, d, T, p)...)
+end
+
+# TODO reference thesis where proper chebyshev center is defined
 """
-    hchebyshevcenter(p::HRep[, solver])
+    hchebyshevcenter(p::HRep[, solver]; linearity_detected=false, proper=true)
 
 Return a tuple with the center and radius of the largest euclidean ball contained in the polyhedron `p`.
 Throws an error if the polyhedron is empty or if the radius is infinite.
+Linearity is detected first except if `linearity_detected`.
+
+Note that a polytope may have several chebyshev center.
+In general, the set of chebyshev center of a polytope `p` is a polytope which has a lower dimension than `p` if `p` has a positive dimension.
+For instance, if `p` is the rectangle `[-2, 2] x [-1, 1]`, the chebyshev radius of `p` is 1
+and the set of chebyshev centers is `[-1, 1] x {0}`.
+The *proper* chebyshev center is `(0, 0)`, the chebyshev center of `[-1, 1] x {0}`.
+If `!proper` then any chebyshev center is returned (the one returned depends on the solver).
+Otherwise the proper chebyshev center is computed.
+The proper chebyshev center is defined by induction on the dimension of `p`.
+If `p` has dimension 0 then it is a singleton and its proper chebyshev center
+  is the only element of `p`.
+Otherwise, the dimension of the set `q` of chebyshev centers of `p` is smaller than
+the dimension of `p` and the proper chebyshev center of `p` is the proper chebyshev center of `q`.
 """
-function hchebyshevcenter(p::HRep, solver=default_solver(p; T=Float64)) # Need Float64 for `norm(a, 2)`
-    model = JuMP.Model(solver)
-    c = JuMP.@variable(model, [1:fulldim(p)])
-    for hp in hyperplanes(p)
-        a = convert(Vector{Float64}, hp.a)
-        β = convert(Float64, hp.β)
-        JuMP.@constraint(model, dot(a, c) == β)
+function hchebyshevcenter(p::HRepresentation, solver=default_solver(p; T=Float64); # Need Float64 for `norm(a, 2)`
+                          linearity_detected=false, # workaround for https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/25
+                          proper=true, verbose=1)
+    if !linearity_detected
+        p = detecthlinearity(p, solver)
     end
-    JuMP.@variable(model, r[1:nhalfspaces(p)] >= 0)
+    model, T = layered_optimizer(solver)
+    c = MOI.add_variables(model, fulldim(p))
+    _constrain_in(model, hyperplanes(p), c, T)
+    r, cr = MOI.add_constrained_variables(model, MOI.Nonnegatives(nhalfspaces(p) + 1))
     for (i, hs) in enumerate(halfspaces(p))
-        a = convert(Vector{Float64}, hs.a)
-        β = convert(Float64, hs.β)
-        JuMP.@constraint(model, dot(a, c) + r[i] * norm(a, 2) <= β)
+        func, set = _constrain_in_func_set(hs, c, T)
+        push!(func.terms, MOI.ScalarAffineTerm{T}(norm(hs.a, 2), r[i]))
+        MOI.add_constraint(model, func, set)
     end
-    JuMP.@variable(model, minr >= 0)
-    JuMP.@constraint(model, minr .<= r)
-    JuMP.@objective(model, Max, minr)
-    JuMP.optimize!(model)
-    term = JuMP.termination_status(model)
+    minr = MOI.SingleVariable(r[end])
+    for i in 1:(length(r) - 1)
+        func = MOI.Utilities.operate(-, T, minr, MOI.SingleVariable(r[i]))
+        MOI.add_constraint(model, func, MOI.LessThan(zero(T)))
+    end
+    MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
+    MOI.set(model, MOI.ObjectiveFunction{MOI.SingleVariable}(), minr)
+    MOI.optimize!(model)
+    term = MOI.get(model, MOI.TerminationStatus())
     if term ∉ [MOI.OPTIMAL, MOI.LOCALLY_SOLVED]
         if term == MOI.INFEASIBLE
             error("An empty polyhedron has no H-Chebyshev center.")
         elseif term == MOI.DUAL_INFEASIBLE
             error("The polyhedron contains euclidean ball of arbitrary large radius.")
         else
-            error("Solver returned $term when computing the H-Chebyshev center.")
+            _unknown_status(model, term, "computing the H-Chebyshev center.")
         end
     end
-    JuMP.@constraint(model, minr == JuMP.value(minr))
-    JuMP.@variable(model, maxr >= 0)
-    JuMP.@constraint(model, maxr .>= r)
-    JuMP.@objective(model, Min, maxr)
-    JuMP.optimize!(model)
-    term = JuMP.termination_status(model)
-    if term ∈ [MOI.OPTIMAL, MOI.LOCALLY_SOLVED]
-        return (JuMP.value.(c), JuMP.value(minr))
-    else
-        error("Solver returned $term when computing the H-Chebyshev center.")
+    radius = MOI.get(model, MOI.VariablePrimal(), r[end])
+    if proper
+        q = detecthlinearity(_shrink(p, radius), solver)
+        p_dim = dim(p, true)
+        q_dim = dim(q, true)
+        if !iszero(q_dim)
+            if q_dim >= p_dim
+                error("The dimension of the set of chebyshev centers `$q` is `$q_dim` while we expect it to have a smaller dimension than the original polyhedron which has dimension `$p_dim`.")
+            end
+            if verbose >= 1
+                println("The set `q` of chebyshev centers has dimension `$q_dim` which is nonzero but lower than the previous dimension `$p_dim`: we now compute the set of chebyshev center of `q`.")
+            end
+            center, _ = hchebyshevcenter(q, solver, linearity_detected=true)
+            return center, radius
+        end
     end
+    center = MOI.get(model, MOI.VariablePrimal(), c)
+    return center, radius
 end
+function hchebyshevcenter(p::Polyhedron, solver=default_solver(p; T=Float64); linearity_detected=false, kws...)
+    if !linearity_detected
+        # We are going to detect it so we might as well do it at the level
+        # of the `Polyhedron` so that it is saved and not recomputed if it is needed later.
+        detecthlinearity!(p, solver) # FIXME `solver` was forced to be for `T=Float64` but it might not be the best choice here
+    end
+    return hchebyshevcenter(hrep(p), solver; linearity_detected=true, kws...)
+end
+
 
 # TODO solver here should not be VRepOptimizer
 """
