@@ -1,3 +1,4 @@
+using JuMP
 @testset "Dual Type" begin
     model = JuMP.Model()
     x = @variable(model, [1:2])

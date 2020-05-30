@@ -1,5 +1,3 @@
-using JuMP
-
 import GLPK
 # Need `"presolve" => GLPK.ON` for `detect_new_linearities`, see
 # https://travis-ci.org/github/JuliaPolyhedra/Polyhedra.jl/jobs/691916637#L486
