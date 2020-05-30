@@ -70,6 +70,17 @@ function MOI.add_constraint(optimizer::AbstractPolyhedraOptimizer{T},
     optimizer.feasible_set = nothing # Invalidated by the new constraint
     return MOI.add_constraint(optimizer.lphrep, func, set)
 end
+function MOI.delete(optimizer::AbstractPolyhedraOptimizer{T},
+                    ci::MOI.ConstraintIndex{MOI.ScalarAffineFunction{T}, <:Union{MOI.EqualTo{T}, MOI.LessThan{T}}}) where T
+    optimizer.feasible_set = nothing # Invalidated by the deleted constraint
+    return MOI.delete(optimizer.lphrep, ci)
+end
+function MOI.modify(optimizer::AbstractPolyhedraOptimizer{T},
+                    ci::MOI.ConstraintIndex{MOI.ScalarAffineFunction{T}, <:Union{MOI.EqualTo{T}, MOI.LessThan{T}}},
+                    change::MOI.AbstractFunctionModification) where T
+    optimizer.feasible_set = nothing # Invalidated by the deleted constraint
+    return MOI.modify(optimizer.lphrep.model, ci, change)
+end
 function MOI.supports_constraint(::AbstractPolyhedraOptimizer,
                                  ::Type{MOI.VectorOfVariables},
                                  ::Type{<:PolyhedraOptSet})
