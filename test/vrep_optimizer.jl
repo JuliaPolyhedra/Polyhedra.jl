@@ -17,3 +17,12 @@ const MOIB = MOI.Bridges
                         # linear8a and linear12 will be solved by https://github.com/JuliaOpt/MathOptInterface.jl/pull/702
                         ["linear8a", "linear12", "partial_start"])
 end
+@testset "simplex chebyshev center with $T" for T in [Float64, Rational{BigInt}]
+    h = HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0) ∩ HyperPlane([1, 1], 1)
+    lib = DefaultLibrary{T}(VRepOptimizer{T})
+    poly = polyhedron(h, lib)
+    center, radius = chebyshevcenter(poly)
+    @test center ≈ [1/2, 1/2]
+    @test radius ≈ 1/2
+    @test dim(poly) == 1
+end

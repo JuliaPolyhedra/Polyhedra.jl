@@ -103,6 +103,11 @@ function MOI.add_constraint(rep::LPHRep{T},
     rep.hyperplane_indices = nothing
     return MOI.add_constraint(rep.model, func, set)
 end
+function MOI.delete(rep::LPHRep{T},
+                    ci::MOI.ConstraintIndex{MOI.ScalarAffineFunction{T}, MOI.EqualTo{T}}) where T
+    rep.hyperplane_indices = nothing
+    return MOI.delete(rep.model, ci)
+end
 
 function constraint_indices(rep::LPHRep{T},
                             ::Union{HalfSpaceIndex, HalfSpaceIndices}) where T
@@ -119,6 +124,11 @@ function MOI.add_constraint(rep::LPHRep{T},
                             set::MOI.LessThan{T}) where T
     rep.halfspace_indices = nothing
     return MOI.add_constraint(rep.model, func, set)
+end
+function MOI.delete(rep::LPHRep{T},
+                    ci::MOI.ConstraintIndex{MOI.ScalarAffineFunction{T}, MOI.LessThan{T}}) where T
+    rep.halfspace_indices = nothing
+    return MOI.delete(rep.model, ci)
 end
 
 function Base.length(idxs::HIndices{T, LPHRep{T}}) where {T}
