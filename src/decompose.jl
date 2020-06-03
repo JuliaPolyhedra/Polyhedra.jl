@@ -1,19 +1,25 @@
-import GeometryTypes
+import GeometryBasics
 
 """
-    struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryTypes.GeometryPrimitive{N, T}
+    struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryBasics.GeometryPrimitive{N, T}
         polyhedron::PT
+        coordinates::Vector{GeometryBasics.Point{3, T}}
+        faces::Vector{GeometryBasics.TriangleFace{Int}}
+        normals::Vector{GeometryBasics.Point{3, T}}
     end
 
 Mesh wrapper type that inherits from `GeometryPrimitive` to be used for plotting
 a polyhedron. Note that `Mesh(p)` is type unstable but one can use `Mesh{3}(p)`
 instead if it is known that `p` is defined in a 3-dimensional space.
 """
-struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryTypes.GeometryPrimitive{N, T}
+mutable struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryBasics.GeometryPrimitive{N, T}
     polyhedron::PT
+    coordinates::Union{Nothing, Vector{GeometryBasics.Point{N, T}}}
+    faces::Union{Nothing, Vector{GeometryBasics.TriangleFace{Int}}}
+    normals::Union{Nothing, Vector{GeometryBasics.Point{N, T}}}
 end
 function Mesh{N}(polyhedron::Polyhedron{T}) where {N, T}
-    return Mesh{N, T, typeof(polyhedron)}(polyhedron)
+    return Mesh{N, T, typeof(polyhedron)}(polyhedron, nothing, nothing, nothing)
 end
 function Mesh(polyhedron::Polyhedron, ::StaticArrays.Size{N}) where N
     return Mesh{N[1]}(polyhedron)
@@ -27,6 +33,13 @@ function Mesh(polyhedron::Polyhedron)
     return Mesh(polyhedron, FullDim(polyhedron))
 end
 
+function fulldecompose!(mesh::Mesh)
+    if mesh.coordinates === nothing
+        mesh.coordinates, mesh.faces, mesh.normals = fulldecompose(mesh)
+    end
+    return
+end
+
 # Creates a scene for the vizualisation to be used to truncate the lines and rays
 function scene(vr::VRep, ::Type{T}) where T
     # First compute the smallest rectangle containing the P-representation (i.e. the points).
@@ -37,10 +50,10 @@ function scene(vr::VRep, ::Type{T}) where T
     if width == zero(T)
         width = 2
     end
-    scene = GeometryTypes.HyperRectangle{3, T}([(xmin + xmax) / 2 - width,
-                                                (ymin + ymax) / 2 - width,
-                                                (zmin + zmax) / 2 - width],
-                                               2 * width * ones(T, 3))
+    scene = GeometryBasics.HyperRectangle{3, T}([(xmin + xmax) / 2 - width,
+                                                 (ymin + ymax) / 2 - width,
+                                                 (zmin + zmax) / 2 - width],
+                                                2 * width * ones(T, 3))
     # Intersection of rays with the limits of the scene
     (start, r) -> begin
         ray = coord(r)
@@ -158,9 +171,9 @@ function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
     end
 
     ntri = length(triangles)
-    pts = Vector{GeometryTypes.Point{3, T}}(undef, 3ntri)
-    faces = Vector{GeometryTypes.Face{3, Int}}(undef, ntri)
-    ns = Vector{GeometryTypes.Normal{3, T}}(undef, 3ntri)
+    pts = Vector{GeometryBasics.Point{3, T}}(undef, 3ntri)
+    faces = Vector{GeometryBasics.TriangleFace{Int}}(undef, ntri)
+    ns = Vector{GeometryBasics.Point{3, T}}(undef, 3ntri)
     for i in 1:ntri
         tri = pop!(triangles)
         normal = tri[2]
@@ -189,23 +202,7 @@ end
 
 fulldecompose(poly::Mesh{N, T}) where {N, T} = fulldecompose(poly, typeof(one(T)/2))
 
-GeometryTypes.isdecomposable(::Type{<:GeometryTypes.Point{3}},  ::Type{<:Mesh{3}}) = true
-GeometryTypes.isdecomposable(::Type{<:GeometryTypes.Face{3}},   ::Type{<:Mesh{3}}) = true
-GeometryTypes.isdecomposable(::Type{<:GeometryTypes.Normal{3}}, ::Type{<:Mesh{3}}) = true
-function GeometryTypes.decompose(PT::Type{<:GeometryTypes.Point}, poly::Mesh)
-    points = fulldecompose(poly)[1]
-    map(PT, points)
-end
-function GeometryTypes.decompose(FT::Type{<:GeometryTypes.Face}, poly::Mesh)
-    faces = fulldecompose(poly)[2]
-    GeometryTypes.decompose(FT, faces)
-end
-function GeometryTypes.decompose(NT::Type{<:GeometryTypes.Normal}, poly::Mesh)
-    ns = fulldecompose(poly)[3]
-    map(NT, ns)
-end
-
-# In AbstractPlotting, when asking to plot an object, it calls this constructor
-# which is only defined for `GeometryTypes.GeometryPrimitive` which is a
-# supertype of `Polyhedra.Mesh`
-GeometryTypes.GLNormalMesh(p::Polyhedron) = GeometryTypes.GLNormalMesh(Mesh(p))
+GeometryBasics.coordinates(poly::Mesh) = (fulldecompose!(poly); poly.coordinates)
+GeometryBasics.faces(poly::Mesh) = (fulldecompose!(poly); poly.faces)
+GeometryBasics.texturecoordinates(poly::Mesh) = nothing
+GeometryBasics.normals(poly::Mesh) = (fulldecompose!(poly); poly.normals)
