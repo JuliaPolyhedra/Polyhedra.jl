@@ -6,7 +6,7 @@ MOI.Utilities.@model(_MOIModel,
 # We need the `SingleVariable` constraints to be bridged so we should say that
 # they are not supported. We notably exclude `Integer` as we just ignore
 # integrality constraints. Binary constraint should be bridged to integrality
-# once https://github.com/JuliaOpt/MathOptInterface.jl/issues/704 is done.
+# once https://github.com/jump-dev/MathOptInterface.jl/issues/704 is done.
 function MOI.supports_constraint(
     ::_MOIModel{T}, ::Type{MOI.SingleVariable},
     ::Type{<:Union{MOI.EqualTo{T}, MOI.GreaterThan{T}, MOI.LessThan{T},

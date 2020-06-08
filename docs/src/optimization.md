@@ -12,7 +12,7 @@ If the V-representation of the polyhedron has been computed, it can be used to s
 VRepOptimizer
 ```
 
-Otherwise, any programming solver implementing the [MathOptInterface](https://github.com/JuliaOpt/MathOptInterface.jl) interface can be used.
+Otherwise, any programming solver implementing the [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl) interface can be used.
 See [here](http://jump.dev/JuMP.jl/dev/installation/#Getting-Solvers-1) for a list of available solvers.
 ```@docs
 Polyhedra.default_solver
