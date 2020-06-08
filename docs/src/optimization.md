@@ -13,7 +13,7 @@ VRepOptimizer
 ```
 
 Otherwise, any programming solver implementing the [MathOptInterface](https://github.com/JuliaOpt/MathOptInterface.jl) interface can be used.
-See [here](http://www.juliaopt.org/JuMP.jl/dev/installation/#Getting-Solvers-1) for a list of available solvers.
+See [here](http://jump.dev/JuMP.jl/dev/installation/#Getting-Solvers-1) for a list of available solvers.
 ```@docs
 Polyhedra.default_solver
 Polyhedra.linear_objective_solver
@@ -104,7 +104,7 @@ For instance, GLPK, does not support
 `MOI.LessThan{Float64}`. The polyhedral constraints are therefore
 bridged into several `MOI.EqualTo{Float64}` and `MOI.LessThan{Float64}`
 constraints using the following
-[constraint bridge](http://www.juliaopt.org/MathOptInterface.jl/stable/apimanual/#Constraint-bridges-1):
+[constraint bridge](http://jump.dev/MathOptInterface.jl/stable/apimanual/#Constraint-bridges-1):
 ```@docs
 Polyhedra.PolyhedraToLPBridge
 ```
