@@ -14,7 +14,7 @@ const MOIB = MOI.Bridges
     bridged = MOIB.full_bridge_optimizer(cached, Float64)
     config = MOIT.TestConfig(duals=false)
     MOIT.contlineartest(bridged, config,
-                        # linear8a and linear12 will be solved by https://github.com/JuliaOpt/MathOptInterface.jl/pull/702
+                        # linear8a and linear12 will be solved by https://github.com/jump-dev/MathOptInterface.jl/pull/702
                         ["linear8a", "linear12", "partial_start"])
 end
 @testset "simplex chebyshev center with $T" for T in [Float64, Rational{BigInt}]

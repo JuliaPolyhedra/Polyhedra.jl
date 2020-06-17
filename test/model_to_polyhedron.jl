@@ -19,5 +19,5 @@ using Polyhedra
         @test p isa DefaultPolyhedron{Float64}
         @test nhalfspaces(p) == 3
     end
-    # TODO add test with binary variables once https://github.com/JuliaOpt/MathOptInterface.jl/issues/704 is done.
+    # TODO add test with binary variables once https://github.com/jump-dev/MathOptInterface.jl/issues/704 is done.
 end
