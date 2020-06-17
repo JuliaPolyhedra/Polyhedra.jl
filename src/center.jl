@@ -18,18 +18,18 @@ Return a tuple with the center and radius of the largest euclidean ball containe
 Throws an error if the polyhedron is empty or if the radius is infinite.
 Linearity is detected first except if `linearity_detected`.
 
-Note that a polytope may have several chebyshev center.
-In general, the set of chebyshev center of a polytope `p` is a polytope which has a lower dimension than `p` if `p` has a positive dimension.
-For instance, if `p` is the rectangle `[-2, 2] x [-1, 1]`, the chebyshev radius of `p` is 1
-and the set of chebyshev centers is `[-1, 1] x {0}`.
-The *proper* chebyshev center is `(0, 0)`, the chebyshev center of `[-1, 1] x {0}`.
-If `!proper` then any chebyshev center is returned (the one returned depends on the solver).
-Otherwise the proper chebyshev center is computed.
-The proper chebyshev center is defined by induction on the dimension of `p`.
-If `p` has dimension 0 then it is a singleton and its proper chebyshev center
+Note that a polytope may have several Chebyshev center.
+In general, the set of Chebyshev center of a polytope `p` is a polytope which has a lower dimension than `p` if `p` has a positive dimension.
+For instance, if `p` is the rectangle `[-2, 2] x [-1, 1]`, the Chebyshev radius of `p` is 1
+and the set of Chebyshev centers is `[-1, 1] x {0}`.
+The *proper* Chebyshev center is `(0, 0)`, the Chebyshev center of `[-1, 1] x {0}`.
+If `!proper` then any Chebyshev center is returned (the one returned depends on the solver).
+Otherwise the proper Chebyshev center is computed.
+The proper Chebyshev center is defined by induction on the dimension of `p`.
+If `p` has dimension 0 then it is a singleton and its proper Chebyshev center
   is the only element of `p`.
-Otherwise, the dimension of the set `q` of chebyshev centers of `p` is smaller than
-the dimension of `p` and the proper chebyshev center of `p` is the proper chebyshev center of `q`.
+Otherwise, the dimension of the set `q` of Chebyshev centers of `p` is smaller than
+the dimension of `p` and the proper Chebyshev center of `p` is the proper Chebyshev center of `q`.
 """
 function hchebyshevcenter(p::HRepresentation, solver=default_solver(p; T=Float64); # Need Float64 for `norm(a, 2)`
                           linearity_detected=false, # workaround for https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/25
@@ -40,19 +40,15 @@ function hchebyshevcenter(p::HRepresentation, solver=default_solver(p; T=Float64
     model, T = layered_optimizer(solver)
     c = MOI.add_variables(model, fulldim(p))
     _constrain_in(model, hyperplanes(p), c, T)
-    r, cr = MOI.add_constrained_variables(model, MOI.Nonnegatives(nhalfspaces(p) + 1))
+    rs, _ = MOI.add_constrained_variables(model, MOI.Nonnegatives(1))
+    r = rs[1]
     for (i, hs) in enumerate(halfspaces(p))
         func, set = _constrain_in_func_set(hs, c, T)
-        push!(func.terms, MOI.ScalarAffineTerm{T}(norm(hs.a, 2), r[i]))
+        push!(func.terms, MOI.ScalarAffineTerm{T}(norm(hs.a, 2), r))
         MOI.add_constraint(model, func, set)
     end
-    minr = MOI.SingleVariable(r[end])
-    for i in 1:(length(r) - 1)
-        func = MOI.Utilities.operate(-, T, minr, MOI.SingleVariable(r[i]))
-        MOI.add_constraint(model, func, MOI.LessThan(zero(T)))
-    end
     MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
-    MOI.set(model, MOI.ObjectiveFunction{MOI.SingleVariable}(), minr)
+    MOI.set(model, MOI.ObjectiveFunction{MOI.SingleVariable}(), MOI.SingleVariable(r))
     MOI.optimize!(model)
     term = MOI.get(model, MOI.TerminationStatus())
     if term ∉ [MOI.OPTIMAL, MOI.LOCALLY_SOLVED]
@@ -64,17 +60,17 @@ function hchebyshevcenter(p::HRepresentation, solver=default_solver(p; T=Float64
             _unknown_status(model, term, "computing the H-Chebyshev center.")
         end
     end
-    radius = MOI.get(model, MOI.VariablePrimal(), r[end])
+    radius = MOI.get(model, MOI.VariablePrimal(), r)
     if proper
         q = detecthlinearity(_shrink(p, radius), solver)
         p_dim = dim(p, true)
         q_dim = dim(q, true)
         if !iszero(q_dim)
             if q_dim >= p_dim
-                error("The dimension of the set of chebyshev centers `$q` is `$q_dim` while we expect it to have a smaller dimension than the original polyhedron which has dimension `$p_dim`.")
+                error("The dimension of the set of Chebyshev centers `$q` is `$q_dim` while we expect it to have a smaller dimension than the original polyhedron which has dimension `$p_dim`.")
             end
             if verbose >= 1
-                println("The set `q` of chebyshev centers has dimension `$q_dim` which is nonzero but lower than the previous dimension `$p_dim`: we now compute the set of chebyshev center of `q`.")
+                println("The set `q` of Chebyshev centers has dimension `$q_dim` which is nonzero but lower than the previous dimension `$p_dim`: we now compute the set of Chebyshev center of `q`.")
             end
             center, _ = hchebyshevcenter(q, solver, linearity_detected=true)
             return center, radius
