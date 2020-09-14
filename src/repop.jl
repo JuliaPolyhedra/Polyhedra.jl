@@ -257,3 +257,10 @@ end
 function Base.:(*)(α::Number, p::HRepresentation)
     return p / (inv(α) * LinearAlgebra.I)
 end
+
+function polar(vr::VRepresentation{T}) where T
+    points_halfspaces = [HalfSpace(x, one(T)) for x in points(vr)]
+    rays_halfspaces = [HalfSpace(coord(r), zero(T)) for r in rays(vr)]
+    lines_hyperplanes = [HyperPlane(coord(r), zero(T)) for r in lines(vr)]
+    return hrep(lines_hyperplanes, [points_halfspaces; rays_halfspaces])
+end
