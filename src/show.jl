@@ -6,10 +6,21 @@ Base.show(io::IO, r::Ray) = print(io, "Ray($(r.a))")
 
 Base.summary(it::Polyhedra.AbstractRepIterator{T, ElemT}) where {T, ElemT} = "$(length(it))-element iterator of $ElemT"
 
+function _print_typeinfo_prefix(io, v)
+    x = Base.typeinfo_prefix(io, v)
+    if x isa Tuple
+        # On Julia v1.5, `x` is `prefix, implicit`
+        prefix = x[1]
+    else
+        prefix = x
+    end
+    print(io, prefix)
+end
+
 # Inspired from Base.show_vector
 function show_repit(io::IO, v::Polyhedra.AbstractRepIterator, print_prefix::Bool, start_str::String, end_str::String, join_str::String=",")
     if print_prefix
-        print(io, Base.typeinfo_prefix(io, v))
+        _print_typeinfo_prefix(io, v)
     end
     io = IOContext(io, :typeinfo => eltype(v), :compact => get(io, :compact, true))
     limited = get(io, :limit, false)

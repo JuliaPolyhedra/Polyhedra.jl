@@ -160,7 +160,7 @@ function detect_new_linearities(rep::Representation, solver; verbose=0)
         verbose >= 2 && println(_model)
         # FIXME stopping when we have enough hyperplanes to prove that it's empty
         #       should also resolve the issue with presolve.
-        is_feasible(model, "detecting new linearity (you may need to activate presolve for some solvers, e.g. by replacing `GLPK.Optimizer` with `optimizer_with_attributes(GLPK.Optimizer, \"presolve\" => GLPK.ON)`).") || break
+        is_feasible(model, "detecting new linearity (you may need to activate presolve for some solvers, e.g. by replacing `GLPK.Optimizer` with `optimizer_with_attributes(GLPK.Optimizer, \"presolve\" => GLPK.GLP_ON)`).") || break
         if rep isa HRepresentation && !isapproxzero((β_primal = MOI.get(model, MOI.ConstraintPrimal(), β_con);))
             verbose >= 1 && @info("The polyhedron is empty as $β_primal is negative.")
             return nothing
