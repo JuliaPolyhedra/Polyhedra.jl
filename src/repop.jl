@@ -120,6 +120,17 @@ end
 sumpoints(::FullDim, ::Type{T}, p1::Rep, p2::VCone) where {T} = change_coefficient_type.(preps(p1), T)
 sumpoints(::FullDim, ::Type{T}, p1::VCone, p2::Rep) where {T} = change_coefficient_type.(preps(p2), T)
 
+"""
+    +(p1::VRep, p2::VRep)
+
+Minkowski sum between `p1` and `p2` using the V-representation.
+If the V-representation is not computed for `p1` or `p2`, it is computed.
+
+    +(p::Rep, el::Union{Line, Ray})
+    +(el::Union{Line, Ray}, p::Rep)
+
+Same as `p + vrep([el])`.
+"""
 function Base.:+(p1::VRep{T1}, p2::VRep{T2}) where {T1, T2}
     T = typeof(zero(T1) + zero(T2))
     similar((p1, p2), FullDim(p1), T, sumpoints(FullDim(p1), T, p1, p2)..., change_coefficient_type.(rreps(p1, p2), T)...)
