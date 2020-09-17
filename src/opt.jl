@@ -4,6 +4,10 @@ struct PolyhedraOptSet{T, RepT <: Rep{T}} <: MOI.AbstractVectorSet
     rep::RepT
 end
 MOI.dimension(set::PolyhedraOptSet) = fulldim(set.rep)
+# This is called by `UniversalFallback` when the constraint is added.
+# As `PolyhedraOptSet` has no API for modifying the `rep`, we don't expect that it
+# will be modified so we don't copy it as it would be expensive.
+Base.copy(set::PolyhedraOptSet) = set
 
 function JuMP.build_constraint(error_fun::Function, func, set::Rep)
     return JuMP.BridgeableConstraint(
