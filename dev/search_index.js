@@ -977,6 +977,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "utilities/#Base.:+",
+    "page": "Utilities",
+    "title": "Base.:+",
+    "category": "function",
+    "text": "+(p1::VRep, p2::VRep)\n\nMinkowski sum between p1 and p2 using the V-representation. If the V-representation is not computed for p1 or p2, it is computed.\n\n+(p::Rep, el::Union{Line, Ray})\n+(el::Union{Line, Ray}, p::Rep)\n\nSame as p + vrep([el]).\n\n\n\n\n\n"
+},
+
+{
     "location": "utilities/#Base.:*",
     "page": "Utilities",
     "title": "Base.:*",
@@ -1045,7 +1053,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Operations",
     "category": "section",
-    "text": "*\n\\\n/\nintersect\nintersect!\nconvexhull\nconvexhull!\ntranslate"
+    "text": "+\n*\n\\\n/\nintersect\nintersect!\nconvexhull\nconvexhull!\ntranslate"
 },
 
 {
@@ -1085,7 +1093,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Utilities",
     "title": "Polyhedra.hchebyshevcenter",
     "category": "function",
-    "text": "hchebyshevcenter(p::HRep[, solver]; linearity_detected=false, proper=true)\n\nReturn a tuple with the center and radius of the largest euclidean ball contained in the polyhedron p. Throws an error if the polyhedron is empty or if the radius is infinite. Linearity is detected first except if linearity_detected.\n\nNote that a polytope may have several chebyshev center. In general, the set of chebyshev center of a polytope p is a polytope which has a lower dimension than p if p has a positive dimension. For instance, if p is the rectangle [-2, 2] x [-1, 1], the chebyshev radius of p is 1 and the set of chebyshev centers is [-1, 1] x {0}. The proper chebyshev center is (0, 0), the chebyshev center of [-1, 1] x {0}. If !proper then any chebyshev center is returned (the one returned depends on the solver). Otherwise the proper chebyshev center is computed. The proper chebyshev center is defined by induction on the dimension of p. If p has dimension 0 then it is a singleton and its proper chebyshev center   is the only element of p. Otherwise, the dimension of the set q of chebyshev centers of p is smaller than the dimension of p and the proper chebyshev center of p is the proper chebyshev center of q.\n\n\n\n\n\n"
+    "text": "hchebyshevcenter(p::HRep[, solver]; linearity_detected=false, proper=true)\n\nReturn a tuple with the center and radius of the largest euclidean ball contained in the polyhedron p. Throws an error if the polyhedron is empty or if the radius is infinite. Linearity is detected first except if linearity_detected.\n\nNote that a polytope may have several Chebyshev center. In general, the set of Chebyshev center of a polytope p is a polytope which has a lower dimension than p if p has a positive dimension. For instance, if p is the rectangle [-2, 2] x [-1, 1], the Chebyshev radius of p is 1 and the set of Chebyshev centers is [-1, 1] x {0}. The proper Chebyshev center is (0, 0), the Chebyshev center of [-1, 1] x {0}. If !proper then any Chebyshev center is returned (the one returned depends on the solver). Otherwise the proper Chebyshev center is computed. The proper Chebyshev center is defined by induction on the dimension of p. If p has dimension 0 then it is a singleton and its proper Chebyshev center   is the only element of p. Otherwise, the dimension of the set q of Chebyshev centers of p is smaller than the dimension of p and the proper Chebyshev center of p is the proper Chebyshev center of q.\n\n\n\n\n\n"
 },
 
 {
