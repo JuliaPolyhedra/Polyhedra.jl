@@ -1,4 +1,19 @@
-using Documenter, Polyhedra
+using Polyhedra
+using Documenter, Literate
+
+const EXAMPLES_DIR = joinpath(@__DIR__, "..", "examples")
+const OUTPUT_DIR   = joinpath(@__DIR__, "src/generated")
+
+const EXAMPLES = [
+    "Minimal Robust Positively Invariant Set.jl",
+]
+
+for example in EXAMPLES
+    example_filepath = joinpath(EXAMPLES_DIR, example)
+    Literate.markdown(example_filepath, OUTPUT_DIR)
+    Literate.notebook(example_filepath, OUTPUT_DIR)
+    Literate.script(example_filepath, OUTPUT_DIR)
+end
 
 makedocs(
     sitename = "Polyhedra",
@@ -15,7 +30,10 @@ makedocs(
         "Containment/Redundancy" => "redundancy.md",
         "Projection/Elimination" => "projection.md",
         "Optimization" => "optimization.md",
-        "Utilities" => "utilities.md"
+        "Utilities" => "utilities.md",
+        "Examples" => Any[
+            "Minimal Robust Positively Invariant Set" => "generated/Minimal Robust Positively Invariant Set.md",
+        ]
     ],
     # The following ensures that we only include the docstrings from
     # this module for functions define in Base that we overwrite.
