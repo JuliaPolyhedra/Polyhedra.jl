@@ -15,6 +15,9 @@ for example in EXAMPLES
     Literate.script(example_filepath, OUTPUT_DIR)
 end
 
+# See https://juliadocs.github.io/Documenter.jl/v0.25/man/doctests/#Setup-Code
+DocMeta.setdocmeta!(Polyhedra, :DocTestSetup, :(using Polyhedra); recursive=true)
+
 makedocs(
     sitename = "Polyhedra",
     # See https://github.com/JuliaDocs/Documenter.jl/issues/868
