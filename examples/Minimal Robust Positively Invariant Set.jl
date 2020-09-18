@@ -91,10 +91,10 @@ plot!()
 
 # Now, suppose we want to compute an invariant set by scaling $F_s$ by the appropriate $\alpha$.
 # In equation (11) of [RKKM05], we want to check whether $A^s W \subseteq \alpha W$ which is equivalent to $W \subseteq \alpha A^{-s} W$.
+# Note that `A^s \ W` triggers the computation of the H-representation of `W` and `A_W` is H-represented.
 
 function αo(s)
-    A_W = A^s \ W # This triggers the computation of the H-representation of W
-    # A_W is H-represented
+    A_W = A^s \ W
     hashyperplanes(A_W) && error("HyperPlanes not supported")
     return maximum([Polyhedra.support_function(h.a, W) / h.β for h in halfspaces(A_W)])
 end
