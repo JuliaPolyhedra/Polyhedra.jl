@@ -44,6 +44,7 @@ vectortype(p::Rep) = vectortype(typeof(p))
 
 vectortype(::Type{<:AbstractSparseArray{T}}) where T = SparseVector{T, Int}
 vectortype(::Type{<:AbstractMatrix{T}}) where T = Vector{T}
+vectortype(::Type{StaticArrays.SArray{Tuple{N, M}, T, 2, NM}}) where {N, M, T, NM} = StaticArrays.SVector{M, T}
 
 hmatrixtype(RepT::Type{<:HRep}, T::Type) = matrixtype(similar_type(hvectortype(RepT), T))
 vmatrixtype(RepT::Type{<:VRep}, T::Type) = matrixtype(similar_type(vvectortype(RepT), T))

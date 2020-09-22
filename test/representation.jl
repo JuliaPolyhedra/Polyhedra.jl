@@ -89,8 +89,10 @@ end
         #htest((@inferred hrep(shps, shss)), SVector{3, Float64})
         htest(hrep(shps, shss), SVector{3, Float64})
         htest(hrep([1 2 3; 4 5 6], [7., 8], BitSet([1])), Vector{Float64})
+        htest(hrep(@SMatrix([1 2 3; 4 5 6]), @SVector([7., 8]), BitSet([1])), SVector{3, Float64})
         htest(hrep(spzeros(2, 3), [7., 8], BitSet([1])), SparseVector{Float64, Int})
         htest(hrep([1 2 3; 4 5 6], [7., 8]), Vector{Float64})
+        htest(hrep(@SMatrix([1 2 3; 4 5 6]), @SVector([7., 8])), SVector{3, Float64})
         ps = [[1, 2], [3, 4]]
         sps = [(@SVector [1, 2]), (@SVector [3, 4])]
         rs = [Ray([0, 1])]
