@@ -8,7 +8,8 @@
 # In this example, we implement the method presented in [RKKM05] to compute a robust positively invariant polytope of a linear system under a disturbance bounded by a polytopic set.
 #
 # We consider the example given in equation (15) of [RKKM05]:
-# $$x^+ =
+# ```math
+# x^+ =
 # \begin{bmatrix}
 #   1 & 1\\
 #   0 & 1
@@ -17,10 +18,12 @@
 #   1\\
 #   1
 # \end{bmatrix} u
-# + w$$
+# + w
+# ```
 # with the state feedback control $u(x) = -\begin{bmatrix}1.17 & 1.03\end{bmatrix} x$.
 # The controlled system is therefore
-# $$x^+ =
+# ```math
+# x^+ =
 # \left(\begin{bmatrix}
 #   1 & 1\\
 #   0 & 1
@@ -35,7 +38,8 @@
 #   -0.17 & -0.03\\
 #   -1.17 & -0.03
 # \end{bmatrix}x
-# + w.$$
+# + w.
+# ```
 #
 # [RKKM05] Sasa V. Rakovic, Eric C. Kerrigan, Konstantinos I. Kouramas, David Q. Mayne *Invariant approximations of the minimal robust positively Invariant set*. IEEE Transactions on Automatic Control 50 (**2005**): 406-410.
 
