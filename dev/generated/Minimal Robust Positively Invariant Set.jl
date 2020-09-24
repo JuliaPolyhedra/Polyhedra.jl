@@ -1,5 +1,6 @@
 A = [1 1; 0 1] - [1; 1] * [1.17 1.03]
 
+using Test
 using Polyhedra
 Wv = vrep([[x, y] for x in [-1.0, 1.0] for y in [-1.0, 1.0]])
 
@@ -26,15 +27,7 @@ function Fs(s::Integer, verbose=1)
     return F
 end
 
-@time Fs(4)
-
-using Plots
-plot()
-for i in 10:-1:1
-    plot!(Fs(i, 0))
-end
-
-plot!()
+@test npoints(Fs(4)) == 16
 
 function αo(s)
     A_W = A^s \ W
@@ -43,9 +36,7 @@ function αo(s)
 end
 
 α = αo(10)
-
-using Plots
-plot((1 - α)^(-1) * Fs(10, 0))
+@test α ≈ 1.91907e-5
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
 
