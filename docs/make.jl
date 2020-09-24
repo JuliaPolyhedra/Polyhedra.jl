@@ -5,6 +5,7 @@ const EXAMPLES_DIR = joinpath(@__DIR__, "..", "examples")
 const OUTPUT_DIR   = joinpath(@__DIR__, "src/generated")
 
 const EXAMPLES = [
+    "Extended Formulation.jl",
     "Minimal Robust Positively Invariant Set.jl",
 ]
 
@@ -12,7 +13,6 @@ for example in EXAMPLES
     example_filepath = joinpath(EXAMPLES_DIR, example)
     Literate.markdown(example_filepath, OUTPUT_DIR)
     Literate.notebook(example_filepath, OUTPUT_DIR)
-    Literate.script(example_filepath, OUTPUT_DIR)
 end
 
 # See https://juliadocs.github.io/Documenter.jl/v0.25/man/doctests/#Setup-Code
@@ -35,6 +35,7 @@ makedocs(
         "Optimization" => "optimization.md",
         "Utilities" => "utilities.md",
         "Examples" => Any[
+            "Extended Formulation" => "generated/Extended Formulation.md",
             "Minimal Robust Positively Invariant Set" => "generated/Minimal Robust Positively Invariant Set.md",
         ]
     ],
