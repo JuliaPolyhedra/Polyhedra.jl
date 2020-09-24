@@ -215,6 +215,18 @@ function Base.:*(P::AbstractMatrix, v::ElemT) where {T, ElemT<:VStruct{T}}
       return ElemTout(P * v.a)
 end
 
+function zeropad(a::AbstractSparseVector{T}, n::Integer, start::Integer) where T
+    if iszero(n)
+        return a
+    elseif iszero(start)
+        return zeropad(a, -n)
+    elseif start == length(a)
+        return zeropad(a, n)
+    else
+        return [a[1:start]; spzeros(T, n); a[start+1:end]]::AbstractSparseVector{T}
+    end
+end
+
 function zeropad(a::AbstractSparseVector{T}, n::Integer) where T
     if iszero(n)
         return a
@@ -247,6 +259,7 @@ function zeropad(a::Vector{T}, n::Integer) where T
         return [a; zeros(T, n)]
     end
 end
+zeropad(h::HRepElement, d, start) = constructor(h)(zeropad(h.a, d, start), h.β)
 zeropad(h::HRepElement, d::FullDim) = constructor(h)(zeropad(h.a, d), h.β)
 zeropad(v::VStruct, d::FullDim)     = constructor(v)(zeropad(v.a, d))
 # Called in cartesian product of two polyhedra, only the second using static arrays.
@@ -298,14 +311,31 @@ function pushbefore(a::StaticArrays.SVector, β)
     StaticArrays.SVector(β, a...)
 end
 
+function push_after(a::AbstractSparseVector{T}, β::T) where T
+    b = spzeros(T, length(a)+1)
+    b[end] = β
+    b[1:end-1] = a
+    return b
+end
+push_after(a::AbstractVector, β) = [a; β]
+function push_after(a::StaticArrays.SVector, β)
+    StaticArrays.SVector(a..., β)
+end
+
 constructor(::HyperPlane) = HyperPlane
 constructor(::HalfSpace) = HalfSpace
 constructor(::Ray) = Ray
 constructor(::Line) = Line
 
-function lift(h::HRepElement{T}) where {T}
-    constructor(h)(pushbefore(h.a, -h.β), zero(T))
+function lift(h::HRepElement{T}, pre::Bool=true) where T
+    a = pre ? pushbefore(h.a, -h.β) : push_after(h.a, -h.β)
+    constructor(h)(a, zero(T))
 end
+function complement_lift(h::HRepElement{T}, pre::Bool=true) where T
+    a = pre ? pushbefore(h.a, h.β) : push_after(h.a, h.β)
+    constructor(h)(a, h.β)
+end
+
 lift(v::VStruct{T}) where {T} = constructor(v)(pushbefore(v.a, zero(T)))
 lift(v::AbstractVector{T}) where {T} = pushbefore(v, one(T))
 
