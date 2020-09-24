@@ -34,3 +34,5 @@ for (arith, T) in (("floating point", Float64), ("exact", Rational{BigInt}))
         polyhedratest(Polyhedra.DefaultLibrary{T}(lp_solver), ["board"])
     end
 end
+
+include("../examples/test_examples.jl")

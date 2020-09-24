@@ -21,7 +21,8 @@ julia = "1"
 [extras]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 GLPK = "60bf3e95-4087-53dc-ae20-288a0d20c6a6"
+Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Combinatorics", "GLPK", "Test"]
+test = ["Combinatorics", "GLPK", "Literate", "Test"]

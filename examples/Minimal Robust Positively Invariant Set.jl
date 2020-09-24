@@ -47,6 +47,7 @@ A = [1 1; 0 1] - [1; 1] * [1.17 1.03]
 
 # The set of disturbance is the unit ball of the infinity norm.
 
+using Test #jl
 using Polyhedra
 Wv = vrep([[x, y] for x in [-1.0, 1.0] for y in [-1.0, 1.0]])
 
@@ -80,18 +81,19 @@ end
 
 # We can see below that only the V-representation is computed. In fact, no H-representation was ever computed during `Fs`. Computing $AW$ is done by multiplying all the points by $A$ and doing the Minkowski sum is done by summing each pair of points. The redundancy removal is carried out by CDD's internal LP solver.
 
-@time Fs(4)
+@time Fs(4) #!jl
+@test npoints(Fs(4)) == 16 #jl
 
 # The Figure 1 of [RKKM05] can be reproduced as follows:
 
-using Plots
-plot()
-for i in 10:-1:1
-    plot!(Fs(i, 0))
-end
+using Plots          #!jl
+plot()               #!jl
+for i in 10:-1:1     #!jl
+    plot!(Fs(i, 0))  #!jl
+end                  #!jl
 # The cell needs to return the plot for it to be displayed
 # but the `for` loop returns `nothing` so we add this dummy `plot!` that returns the plot
-plot!()
+plot!()              #!jl
 
 # Now, suppose we want to compute an invariant set by scaling $F_s$ by the appropriate $\alpha$.
 # In equation (11) of [RKKM05], we want to check whether $A^s W \subseteq \alpha W$ which is equivalent to $W \subseteq \alpha A^{-s} W$.
@@ -106,8 +108,9 @@ end
 # We obtain $\alpha \approx 1.9 \cdot 10^{-5}$ like in [RKKM05].
 
 α = αo(10)
+@test α ≈ 1.91907e-5
 
 # The scaled set is is the following:
 
-using Plots
-plot((1 - α)^(-1) * Fs(10, 0))
+using Plots                    #!jl
+plot((1 - α)^(-1) * Fs(10, 0)) #!jl
