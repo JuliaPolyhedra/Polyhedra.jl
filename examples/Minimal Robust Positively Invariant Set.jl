@@ -108,7 +108,7 @@ end
 # We obtain $\alpha \approx 1.9 \cdot 10^{-5}$ like in [RKKM05].
 
 α = αo(10)
-@test α ≈ 1.91907e-5
+@test α ≈ 1.91907e-5 #jl
 
 # The scaled set is is the following:
 
