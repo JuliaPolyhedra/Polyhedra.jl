@@ -66,6 +66,7 @@ include("aff.jl")
 include("linearity.jl")
 include("redundancy.jl")
 include("projection.jl")
+include("extended.jl")
 
 # Implementations of representations
 include("vecrep.jl")
@@ -85,6 +86,7 @@ include("opt.jl")
 include("polyhedra_to_lp_bridge.jl")
 include("vrep_optimizer.jl")
 include("default.jl")
+include("projection_opt.jl")
 
 # Visualization
 include("show.jl")
