@@ -38,7 +38,7 @@ Pch = convexhull(P1, P2)
 # Note that the convex hull operation is done in the V-representation so no representation conversion is needed for this operation since `P1` and `P2` where constructed from their V-representation:
 
 hrepiscomputed(P1), hrepiscomputed(P2), hrepiscomputed(Pch) #!jl
-@test (hrepiscomputed(P1), hrepiscomputed(P2), hrepiscomputed(Pch)) == (false, false, false)
+@test (hrepiscomputed(P1), hrepiscomputed(P2), hrepiscomputed(Pch)) == (false, false, false) #jl
 
 # Let us note that the `convexhull` of a V-representation contains points and rays and represents the convex hull of the points together with the conic hull of the rays. So, `convexhull(P1, P2)` does the union of the vertices:
 
@@ -67,7 +67,7 @@ scatter!(Pch, color="green")         #!jl
 # Below we compute the intersection of the two polygons from the previous example.
 
 Pint = intersect(P1, P2)
-@test nhalfspaces(Pint) == 10
+@test nhalfspaces(Pint) == 10 #jl
 
 # While `P1` and `P2` have been constructed from their V-representation, their H-representation has been computed to build the intersection `Pint`.
 
