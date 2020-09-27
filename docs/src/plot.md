@@ -17,10 +17,11 @@ The H-representation cannot be given to Plots directly, it first need to be tran
 p = polyhedron(h)
 ```
 
-The polyhedron can be given to Plots as follows
+The polyhedron can be given to Plots as follows.
+We use `ratio=:equal` so that the horizontal and vertical axis have the same scale.
 ```@example plots2
 using Plots
-plot(p)
+plot(p, ratio=:equal)
 ```
 
 See [Polyhedral Function](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/Polyhedral%20Function.ipynb) and [3D Plotting a projection of the 4D permutahedron](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/3D%20Plotting%20a%20projection%20of%20the%204D%20permutahedron.ipynb) for example notebooks.
