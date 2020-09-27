@@ -36,7 +36,7 @@ makedocs(
         "Optimization" => "optimization.md",
         "Utilities" => "utilities.md",
         "Examples" => Any[
-            "Convex hull and intersection" => "generated/Convex hull and intersection.jl.md",
+            "Convex hull and intersection" => "generated/Convex hull and intersection.md",
             "Extended Formulation" => "generated/Extended Formulation.md",
             "Minimal Robust Positively Invariant Set" => "generated/Minimal Robust Positively Invariant Set.md",
         ]
