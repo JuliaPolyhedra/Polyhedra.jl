@@ -5,6 +5,7 @@ const EXAMPLES_DIR = joinpath(@__DIR__, "..", "examples")
 const OUTPUT_DIR   = joinpath(@__DIR__, "src/generated")
 
 const EXAMPLES = [
+    "Convex hull and intersection.jl",
     "Extended Formulation.jl",
     "Minimal Robust Positively Invariant Set.jl",
 ]
@@ -35,6 +36,7 @@ makedocs(
         "Optimization" => "optimization.md",
         "Utilities" => "utilities.md",
         "Examples" => Any[
+            "Convex hull and intersection" => "generated/Convex hull and intersection.jl.md",
             "Extended Formulation" => "generated/Extended Formulation.md",
             "Minimal Robust Positively Invariant Set" => "generated/Minimal Robust Positively Invariant Set.md",
         ]

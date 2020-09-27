@@ -5,6 +5,7 @@ const EXAMPLES_DIR = @__DIR__
 const OUTPUT_DIR   = joinpath(@__DIR__, "generated")
 
 const EXAMPLES = [
+    "Convex hull and intersection.jl",
     "Extended Formulation.jl",
     "Minimal Robust Positively Invariant Set.jl"
 ]
