@@ -7,32 +7,20 @@ polyhedron, see [Polyhedron](@ref) for how to construct a polyhedron, e.g. from 
 
 A 2-dimensional polytope, i.e. *bounded* polyhedron, can be visualized with [Plots](https://github.com/JuliaPlots/Plots.jl).
 Suppose for instance that we want to visualize the polyhedron having the following H-representation:
-```jldoctest plots2
-julia> using Polyhedra
-
-julia> h = HalfSpace([1, 1], 1) ∩ HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0)
-H-representation Polyhedra.Intersection{Int64,Array{Int64,1},Int64}:
-3-element iterator of HalfSpace{Int64,Array{Int64,1}}:
- HalfSpace([1, 1], 1)
- HalfSpace([-1, 0], 0)
- HalfSpace([0, -1], 0)
+```@example plots2
+using Polyhedra
+h = HalfSpace([1, 1], 1) ∩ HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0)
 ```
 
 The H-representation cannot be given to Plots directly, it first need to be transformed into a polyhedron:
-```jldoctest plots2
-julia> p = polyhedron(h)
-Polyhedron DefaultPolyhedron{Rational{BigInt},Polyhedra.Intersection{Rational{BigInt},Array{Rational{BigInt},1},Int64},Polyhedra.Hull{Rational{BigInt},Array{Rational{BigInt},1},Int64}}:
-3-element iterator of HalfSpace{Rational{BigInt},Array{Rational{BigInt},1}}:
- HalfSpace(Rational{BigInt}[1//1, 1//1], 1//1)
- HalfSpace(Rational{BigInt}[-1//1, 0//1], 0//1)
- HalfSpace(Rational{BigInt}[0//1, -1//1], 0//1)
+```@example plots2
+p = polyhedron(h)
 ```
 
 The polyhedron can be given to Plots as follows
-```julia
-julia> using Plots
-
-julia> plot(p)
+```@example plots2
+using Plots
+plot(p)
 ```
 
 See [Polyhedral Function](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/Polyhedral%20Function.ipynb) and [3D Plotting a projection of the 4D permutahedron](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/3D%20Plotting%20a%20projection%20of%20the%204D%20permutahedron.ipynb) for example notebooks.
