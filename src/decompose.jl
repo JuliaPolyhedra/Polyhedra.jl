@@ -42,7 +42,8 @@ function scene(vr::VRep, ::Type{T}) where T
                                                 (zmin + zmax) / 2 - width],
                                                2 * width * ones(T, 3))
     # Intersection of rays with the limits of the scene
-    (start, ray) -> begin
+    (start, r) -> begin
+        ray = coord(r)
         times = max.((Vector(minimum(scene))-start) ./ ray, (Vector(maximum(scene))-start) ./ ray)
         times[ray .== 0] .= Inf # To avoid -Inf with .../(-0)
         time = minimum(times)
