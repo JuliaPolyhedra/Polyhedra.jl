@@ -92,10 +92,10 @@ function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
                 return
             end
             @assert length(rays) <= 2
-            if length(rays) == 2
-                push!(hull, exit_point(last(hull), last(rays)))
-            end
-            if length(rays) == 1
+            if !isempty(rays)
+                if length(rays) + length(hull) >= 2
+                    push!(hull, exit_point(last(hull), last(rays)))
+                end
                 push!(hull, exit_point(first(hull), first(rays)))
             end
         else
