@@ -85,7 +85,7 @@ function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
                 push!(face_vert, x)
             end
         end
-        hull, lines, rays = _planar_hull(3, face_vert, incidentlines(poly, hidx), incidentrays(poly, hidx), r -> cross(zray, r))
+        hull, lines, rays = _planar_hull(3, face_vert, incidentlines(poly, hidx), incidentrays(poly, hidx), counterclockwise, r -> cross(zray, r))
         if isempty(lines)
             if length(hull) + length(rays) < 3
                 return
