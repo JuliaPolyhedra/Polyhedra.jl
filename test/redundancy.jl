@@ -286,7 +286,7 @@ include("solvers.jl")
             @test collect(points(p)) == [[-1, 0], [0, -1]]
             @test !haslines(p)
             @test collect(rays(p)) == [Ray([1, 1]), Ray([-1, 1])]
-            removevredundancy!(p)
+            removevredundancy!(p, planar=false)
             @test collect(points(p)) == [[0, -1]]
             @test !haslines(p)
             @test collect(rays(p)) == [Ray([1, 1]), Ray([-1, 1])]
