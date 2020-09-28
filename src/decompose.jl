@@ -79,107 +79,67 @@ function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
 
         # Checking rays
         counterclockwise(a, b) = dot(cross(a, b), zray)
-        line = nothing
-        lineleft = false
-        lineright = false
-        function checkleftright(r::Union{Ray, Line})
-            cc = counterclockwise(r, line)
-            if !isapproxzero(cc)
-                if cc < 0 || islin(r)
-                    lineleft = true
-                end
-                if cc > 0 || islin(r)
-                    lineright = true
-                end
-            end
-        end
-        for l in incidentlines(poly, hidx)
-            if !isapproxzero(l)
-                if line === nothing
-                    line = l
-                else
-                    checkleftright(l)
-                end
-            end
-        end
-        for r in incidentrays(poly, hidx)
-            if !isapproxzero(r)
-                if line === nothing
-                    if xray === nothing || counterclockwise(r, xray) > 0
-                        xray = coord(r) # r is more right than xray
-                    end
-                    if yray === nothing || counterclockwise(r, yray) < 0
-                        yray = coord(r) # r is more left than xray
-                    end
-                else
-                    checkleftright(r)
-                end
-            end
-        end
-
-        # Checking vertices
         face_vert = pointtype(poly)[]
         for x in points(poly)
             if _isapprox(dot(x, zray), h.β)
                 push!(face_vert, x)
             end
         end
-
-        if line !== nothing
-            if isempty(face_vert)
-                center = origin(pointtype(poly), 3)
-            else
-                center = first(face_vert)
-            end
-            hull = pointtype(poly)[]
-            push!(hull, exit_point(center, line))
-            if lineleft
-                push!(hull, exit_point(center, cross(zray, line)))
-            end
-            push!(hull, exit_point(center, -line))
-            if lineright
-                push!(hull, exit_point(center, cross(line, zray)))
-            end
-            hulls = (hull,)
-        else
-            #if length(face_vert) < 3 # Wrong, they are also the rays
-            #  error("Not enough vertices and rays to form a face, it may be because of numerical rounding. Otherwise, please report this bug.")
-            #end
-            if length(face_vert) < 3 && (xray == nothing || (length(face_vert) < 2 && (yray == xray || length(face_vert) < 1)))
+        hull, lines, rays = _planar_hull(3, face_vert, incidentlines(poly, hidx), incidentrays(poly, hidx), r -> cross(zray, r))
+        if isempty(lines)
+            if length(hull) + length(rays) < 3
                 return
             end
-            if xray == nothing
-                sweep_norm = cross(zray, [1,0,0])
-                if sum(abs, sweep_norm) == 0
-                    sweep_norm = cross(zray, [0,1,0])
-                end
-            else
-                sweep_norm = cross(zray, xray)
+            @assert length(rays) <= 2
+            if length(rays) == 2
+                push!(hull, exit_point(last(hull), last(rays)))
             end
-            sort!(face_vert, by = x -> dot(x, sweep_norm))
-            xtoy_hull = getsemihull(face_vert, 1, counterclockwise, yray)
-            if yray == nothing
-                ytox_hull = getsemihull(face_vert, -1, counterclockwise, yray)
-            else
-                ytox_hull = Any[]
-                push!(ytox_hull, face_vert[1])
-                if last(xtoy_hull) != face_vert[1]
-                    push!(ytox_hull, last(xtoy_hull))
-                end
-                push!(ytox_hull, exit_point(last(xtoy_hull), yray))
-                push!(ytox_hull, exit_point(face_vert[1], xray))
+            if length(rays) == 1
+                push!(hull, exit_point(first(hull), first(rays)))
             end
-            hulls = (xtoy_hull, ytox_hull)
+        else
+            if length(hull) == 2
+                @assert length(lines) == 1 && isempty(rays)
+                a, b = hull
+                line = first(lines)
+                empty!(hull)
+                push!(hull, exit_point(a, line))
+                push!(hull, exit_point(a, -line))
+                push!(hull, exit_point(b, -line))
+                push!(hull, exit_point(b, line))
+            else
+                @assert length(hull) == 1 && isempty(rays)
+                center = first(hull)
+                empty!(hull)
+                a = first(lines)
+                b = nothing
+                if length(lines) == 2
+                    @assert isempty(rays)
+                    b = last(lines)
+                elseif !isempty(rays)
+                    @assert length(lines) == 1
+                    @assert length(rays) == 1
+                    b = linearize(first(rays))
+                end
+                push!(hull, exit_point(center, a))
+                if b !== nothing
+                    push!(hull, exit_point(center, b))
+                end
+                push!(hull, exit_point(center, -a))
+                if b !== nothing && length(lines) == 2 || length(rays) >= 2
+                    @assert length(rays) == 2
+                    push!(hull, exit_point(center, -b))
+                end
+            end
         end
-        for hull in hulls
-            if length(hull) >= 3
-                a = pop!(hull)
-                b = pop!(hull)
-                while !isempty(hull)
-                    c = pop!(hull)
-                    push!(triangles, ((a,b,c), zray))
-                    b = c
-                end
+
+        if length(hull) >= 3
+            a = pop!(hull)
+            b = pop!(hull)
+            while !isempty(hull)
+                c = pop!(hull)
+                push!(triangles, ((a, b, c), zray))
+                b = c
             end
         end
     end

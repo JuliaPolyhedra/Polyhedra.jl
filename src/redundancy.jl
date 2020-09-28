@@ -56,6 +56,9 @@ but are not in the relative interior either, may be kept.
 """
 function removevredundancy! end
 function removevredundancy!(p::Polyhedron; strongly=false)
+    if fulldim(p) == 2
+        setvrep!(p, planar_hull(vrep(p)))
+    end
     solver = nothing
     if !strongly && !hrepiscomputed(p) && supportssolver(typeof(p))
         solver = default_solver(p)

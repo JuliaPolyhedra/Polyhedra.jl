@@ -1,32 +1,5 @@
 using RecipesBase
 
-function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray = nothing) where PT
-    hull = PT[]
-    if length(ps) == 0
-        return hull
-    end
-    prev = sign_sense == 1 ? first(ps) : last(ps)
-    cur = prev
-    for j in (sign_sense == 1 ? (2:length(ps)) : ((length(ps)-1):-1:1))
-        while prev != cur && counterclockwise(cur - prev, ps[j] - prev) >= 0
-            cur = prev
-            pop!(hull)
-            if !isempty(hull)
-                prev = last(hull)
-            end
-        end
-        if yray !== nothing && counterclockwise(ps[j] - cur, yray) >= 0
-            break
-        else
-            push!(hull, cur)
-            prev = cur
-            cur = ps[j]
-        end
-    end
-    push!(hull, cur)
-    hull
-end
-
 function planar_contour(p::Polyhedron)
     if fulldim(p) != 2
         if fulldim(p) == 3
