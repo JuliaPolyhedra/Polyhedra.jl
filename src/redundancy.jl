@@ -45,7 +45,7 @@ function to remove this warning.
 end
 
 """
-    removevredundancy!(p::VRep; strongly=false)
+    removevredundancy!(p::VRep; strongly=false, planar=true)
 
 Removes the elements of the V-representation of `p` that can be removed without
 changing the polyhedron represented by `p`. That is, it only keeps the extreme
@@ -53,9 +53,14 @@ points and rays. This operation is often called "convex hull" as the remaining
 points are the extreme points of the convex hull of the initial set of points.
 If `strongly=true`, weakly redundant points, i.e., points that are not extreme
 but are not in the relative interior either, may be kept.
+If `fulldim(p)` is 2, `strongly` is `false` and `planar` is `true`, a planar convex hull algorithm
+is used.
 """
 function removevredundancy! end
-function removevredundancy!(p::Polyhedron; strongly=false)
+function removevredundancy!(p::Polyhedron; strongly=false, planar=true)
+    if fulldim(p) == 2 && !strongly && planar
+        setvrep!(p, planar_hull(vrep(p)))
+    end
     solver = nothing
     if !strongly && !hrepiscomputed(p) && supportssolver(typeof(p))
         solver = default_solver(p)

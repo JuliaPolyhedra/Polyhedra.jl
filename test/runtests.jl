@@ -16,6 +16,7 @@ include("representation.jl")
 include("polyhedron.jl")
 
 include("redundancy.jl")
+include("planar.jl")
 include("doubledescription.jl")
 
 include("interval.jl")
