@@ -59,6 +59,18 @@ fulltype(::Type{LPHRep{T}}) where {T} = LPHRep{T}
 LPHRep(h::HRep{T}) where {T} = LPHRep{T}(h)
 LPHRep{T}(h::HRep) where {T} = convert(LPHRep{T}, h)
 
+supports_names(::Type{<:LPHRep}) = true
+function dimension_names(h::LPHRep)
+    if MOI.VariableName() in MOI.get(h.model, MOI.ListOfVariableAttributesSet())
+        names = [
+            MOI.get(h.model, MOI.VariableName(), MOI.VariableIndex(i))
+            for i in 1:fulldim(h)
+        ]
+    else
+        return nothing
+    end
+end
+
 function _constrain_in_func_set(h::HyperPlane, vars, T)
     return _dot(h.a, vars, T), MOI.EqualTo{T}(h.β)
 end
@@ -73,9 +85,20 @@ end
 
 function LPHRep{T}(d::FullDim,
                    hyperplanes::ElemIt{<:HyperPlane{T}},
-                   halfspaces::ElemIt{<:HalfSpace{T}}) where {T}
+                   halfspaces::ElemIt{<:HalfSpace{T}};
+                   dimension_names = nothing) where {T}
     model = _MOIModel{T}()
     vars = MOI.add_variables(model, fulldim(d))
+    if dimension_names !== nothing
+        if length(dimension_names) !== fulldim(d)
+            throw(DimensionMismatch("Length of dimension_names ($(length(dimension_names))) does not match the full dimension of the polyhedron ($(fulldim(d)))."))
+        end
+        for (i, name) in enumerate(dimension_names)
+            if !isempty(name)
+                MOI.set(model, MOI.VariableName(), MOI.VariableIndex(i), name)
+            end
+        end
+    end
     _constrain_in(model, hyperplanes, vars, T)
     _constrain_in(model, halfspaces, vars, T)
     return LPHRep(model)

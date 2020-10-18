@@ -9,9 +9,34 @@ MOI.dimension(set::PolyhedraOptSet) = fulldim(set.rep)
 # will be modified so we don't copy it as it would be expensive.
 Base.copy(set::PolyhedraOptSet) = set
 
+struct VariableInSet{V <: JuMP.ScalarVariable, S <: Union{Rep, Projection}} <: JuMP.AbstractVariable
+    variables::Vector{V}
+    set::S
+end
+function JuMP.build_variable(error_fun::Function, variables::Vector{<:JuMP.ScalarVariable}, set::Union{Rep, Projection})
+    if length(variables) != fulldim(set)
+        _error("Number of variables ($(length(variables))) does not match the full dimension of the polyhedron ($(fulldim(set))).")
+    end
+    return VariableInSet(variables, set)
+end
+function JuMP.add_variable(model::JuMP.AbstractModel, v::VariableInSet, names)
+    dim_names = dimension_names(v.set)
+    if dim_names !== nothing
+        names = copy(names)
+        for i in eachindex(names)
+            if isempty(names[i]) && !isempty(dim_names[i])
+                names[i] = dim_names[i]
+            end
+        end
+    end
+    JuMP.add_bridge(model, PolyhedraToLPBridge)
+    JuMP.add_bridge(model, ProjectionBridge)
+    return JuMP.add_variable(model, JuMP.VariablesConstrainedOnCreation(v.variables, _moi_set(v.set)), names)
+end
+_moi_set(set::Rep) = PolyhedraOptSet(set)
 function JuMP.build_constraint(error_fun::Function, func, set::Rep)
     return JuMP.BridgeableConstraint(
-        JuMP.build_constraint(error_fun, func, PolyhedraOptSet(set)),
+        JuMP.build_constraint(error_fun, func, _moi_set(set)),
         PolyhedraToLPBridge)
 end
 
