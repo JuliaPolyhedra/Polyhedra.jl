@@ -169,8 +169,10 @@ function startindex(idxs::HIndices{T, LPHRep{T}}) where {T}
 end
 function Base.get(rep::LPHRep{T}, idx::HIndex{T}) where {T}
     ci = constraint_indices(rep, idx)[idx.value]
-    func = MOI.get(rep.model, MOI.ConstraintFunction(), ci)::MOI.ScalarAffineFunction
-    indices = [t.variable_index.value for t in func.terms]
+    func = MOI.get(rep.model, MOI.ConstraintFunction(), ci)::MOI.ScalarAffineFunction{T}
+    # MOI uses `Int64` but `SparseArrays` uses `Int32` by default so `Int64` will create
+    # issues with, e.g. preimages with `spzeros(d, n)`, etc...
+    indices = Int[t.variable_index.value for t in func.terms]
     values = [t.coefficient for t in func.terms]
     a = sparsevec(indices, values, FullDim(rep))
     set = MOI.get(rep.model, MOI.ConstraintSet(), ci)
