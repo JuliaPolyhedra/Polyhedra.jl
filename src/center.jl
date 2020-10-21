@@ -105,11 +105,11 @@ end
 
 If `p` is a H-representation or is a polyhedron for which the H-representation has already been computed, calls `hchebyshevcenter`, otherwise, call `vchebyshevcenter`.
 """
-function chebyshevcenter(p::Polyhedron, solver=Polyhedra.default_solver(p; T=Float64))
+function chebyshevcenter(p::Polyhedron, solver=Polyhedra.default_solver(p; T=Float64); kws...)
     if hrepiscomputed(p)
-        hchebyshevcenter(p, solver)
+        hchebyshevcenter(p, solver; kws...)
     else
-        vchebyshevcenter(p, solver)
+        vchebyshevcenter(p, solver; kws...)
     end
 end
 chebyshevcenter(p::HRepresentation, solver=Polyhedra.default_solver(p; T=Float64)) = hchebyshevcenter(p, solver)
