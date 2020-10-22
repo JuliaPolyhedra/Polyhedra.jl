@@ -1,4 +1,4 @@
-export default_type, default_library, similar_library, library
+export default_type, default_library, similar_library, library, dimension_names
 
 """
     default_type(d::FullDim, ::Type{T}) where {T}
@@ -126,21 +126,49 @@ promote_reptype(P::Type{<:Rep}) = P
 
 # whether Rep has the constructor Rep(::It...; solver=...)
 supportssolver(::Type{<:Rep}) = false
+supports_names(::Type{<:Rep}) = false
+dimension_names(::Rep) = nothing
 
-function constructpolyhedron(RepT::Type{<:Rep{T}}, d::FullDim, p::Tuple{Vararg{Rep}}, it::It{T}...) where T
+function constructpolyhedron(RepT::Type{<:Rep{T}}, d::FullDim, p::Tuple{Vararg{Rep}}, it::It{T}...; dimension_map::Function = i -> (1, i)) where T
+    solver = names = nothing
     if supportssolver(RepT)
         solver = default_solver(p...)
         if solver !== nothing
-            return RepT(d, it..., solver=solver)
         end
     end
-    return RepT(d, it...)::RepT # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
+    if supports_names(RepT)
+        names = nothing
+        sub_names = dimension_names.(p)
+        for i in 1:fulldim(d)
+            j = dimension_map(i)
+            if j !== nothing && sub_names[j[1]] !== nothing
+                if names === nothing
+                    names = fill("", fulldim(d))
+                end
+                names[i] = sub_names[j[1]][j[2]]
+            end
+        end
+    end
+    if names !== nothing
+        if solver !== nothing
+            return RepT(d, it...; solver=solver, dimension_names=names)::RepT
+        else
+            return RepT(d, it...; dimension_names=names)::RepT
+        end
+    else
+        if solver !== nothing
+            return RepT(d, it...; solver=solver)::RepT
+        else
+            # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
+            return RepT(d, it...)::RepT
+        end
+    end
 end
 
-function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...) where T
+function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...; kws...) where T
     # Some types in p may not support `d` or `T` so we call `similar_type` after `promote_reptype`
     RepT = similar_type(promote_reptype(typeof.(p)...), d, T)
-    return constructpolyhedron(RepT, d, p, it...)
+    return constructpolyhedron(RepT, d, p, it...; kws...)
 end
 
 """
@@ -149,15 +177,15 @@ end
 Creates a representation with a type similar to `p` of a polyhedron of full dimension `d`, element type `T` and initialize it with the iterators `it`.
 The type of the result will be chosen closer to the type of `p[1]`.
 """
-Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...) where {T} = default_similar(p, d, T, it...)
+Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...; kws...) where {T} = default_similar(p, d, T, it...; kws...)
 function promote_coefficient_type(p::Tuple{Vararg{Rep}})
     return promote_type(coefficient_type.(p)...)
 end
-function Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, it::It...)
+function Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, it::It...; kws...)
     T = promote_coefficient_type(p)
-    return similar(p, d, T, it...)
+    return similar(p, d, T, it...; kws...)
 end
-function Base.similar(p::Tuple{Vararg{Rep}}, it::It...)
-    return similar(p, FullDim(p[1]), it...)
+function Base.similar(p::Tuple{Vararg{Rep}}, it::It...; kws...)
+    return similar(p, FullDim(p[1]), it...; kws...)
 end
-Base.similar(p::Rep, args...) = similar((p,), args...)
+Base.similar(p::Rep, args...; kws...) = similar((p,), args...; kws...)

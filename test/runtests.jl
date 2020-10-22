@@ -13,6 +13,7 @@ include("solvers.jl")
 include("elements.jl")
 include("comp.jl")
 include("representation.jl")
+include("dimension_names.jl")
 include("polyhedron.jl")
 
 include("redundancy.jl")

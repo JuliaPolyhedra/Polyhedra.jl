@@ -59,6 +59,18 @@ fulltype(::Type{LPHRep{T}}) where {T} = LPHRep{T}
 LPHRep(h::HRep{T}) where {T} = LPHRep{T}(h)
 LPHRep{T}(h::HRep) where {T} = convert(LPHRep{T}, h)
 
+supports_names(::Type{<:LPHRep}) = true
+function dimension_names(h::LPHRep)
+    if MOI.VariableName() in MOI.get(h.model, MOI.ListOfVariableAttributesSet())
+        names = [
+            MOI.get(h.model, MOI.VariableName(), MOI.VariableIndex(i))
+            for i in 1:fulldim(h)
+        ]
+    else
+        return nothing
+    end
+end
+
 function _constrain_in_func_set(h::HyperPlane, vars, T)
     return _dot(h.a, vars, T), MOI.EqualTo{T}(h.β)
 end
@@ -73,9 +85,20 @@ end
 
 function LPHRep{T}(d::FullDim,
                    hyperplanes::ElemIt{<:HyperPlane{T}},
-                   halfspaces::ElemIt{<:HalfSpace{T}}) where {T}
+                   halfspaces::ElemIt{<:HalfSpace{T}};
+                   dimension_names = nothing) where {T}
     model = _MOIModel{T}()
     vars = MOI.add_variables(model, fulldim(d))
+    if dimension_names !== nothing
+        if length(dimension_names) !== fulldim(d)
+            throw(DimensionMismatch("Length of dimension_names ($(length(dimension_names))) does not match the full dimension of the polyhedron ($(fulldim(d)))."))
+        end
+        for (i, name) in enumerate(dimension_names)
+            if !isempty(name)
+                MOI.set(model, MOI.VariableName(), MOI.VariableIndex(i), name)
+            end
+        end
+    end
     _constrain_in(model, hyperplanes, vars, T)
     _constrain_in(model, halfspaces, vars, T)
     return LPHRep(model)
@@ -146,8 +169,10 @@ function startindex(idxs::HIndices{T, LPHRep{T}}) where {T}
 end
 function Base.get(rep::LPHRep{T}, idx::HIndex{T}) where {T}
     ci = constraint_indices(rep, idx)[idx.value]
-    func = MOI.get(rep.model, MOI.ConstraintFunction(), ci)::MOI.ScalarAffineFunction
-    indices = [t.variable_index.value for t in func.terms]
+    func = MOI.get(rep.model, MOI.ConstraintFunction(), ci)::MOI.ScalarAffineFunction{T}
+    # MOI uses `Int64` but `SparseArrays` uses `Int32` by default so `Int64` will create
+    # issues with, e.g. preimages with `spzeros(d, n)`, etc...
+    indices = Int[t.variable_index.value for t in func.terms]
     values = [t.coefficient for t in func.terms]
     a = sparsevec(indices, values, FullDim(rep))
     set = MOI.get(rep.model, MOI.ConstraintSet(), ci)

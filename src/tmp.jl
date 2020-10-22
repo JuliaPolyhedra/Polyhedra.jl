@@ -1,9 +1,3 @@
-struct ProjectionOptSet{T, RepT<:Rep{T}, I} <: MOI.AbstractVectorSet
-    p::Projection{RepT, I}
-end
-MOI.dimension(set::ProjectionOptSet) = fulldim(set.p)
-Base.copy(set::ProjectionOptSet) = set
-
 struct ProjectionBridge{T, F, RepT, I} <: MOI.Bridges.Constraint.AbstractBridge
     variables::Vector{MOI.VariableIndex}
     constraint::MOI.ConstraintIndex{F, PolyhedraOptSet{T, RepT}}
@@ -57,9 +51,9 @@ function MOI.delete(model::MOI.ModelLike, b::ProjectionBridge)
         MOI.delete(model, vi)
     end
 end
-_moi_set(set::Projection) = ProjectionOptSet(set)
+
 function JuMP.build_constraint(error_fun::Function, func, set::Projection)
     return JuMP.BridgeableConstraint(JuMP.BridgeableConstraint(
-        JuMP.build_constraint(error_fun, func, _moi_set(set)),
+        JuMP.build_constraint(error_fun, func, ProjectionOptSet(set)),
         ProjectionBridge), PolyhedraToLPBridge)
 end

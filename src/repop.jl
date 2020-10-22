@@ -147,7 +147,15 @@ function hcartesianproduct(p1::HRep, p2::HRep)
     d = sum_fulldim(FullDim(p1), FullDim(p2))
     T = promote_coefficient_type((p1, p2))
     f = (i, x) -> zeropad(x, i == 1 ? FullDim(p2) : neg_fulldim(FullDim(p1)))
-    similar((p1, p2), d, T, hmap(f, d, T, p1, p2)...)
+    function dimension_map(i)
+        if i <= fulldim(p1)
+            return (1, i)
+        else
+            return (2, i - fulldim(p1))
+        end
+    end
+    similar((p1, p2), d, T, hmap(f, d, T, p1, p2)...;
+            dimension_map = dimension_map)
 end
 function vcartesianproduct(p1::VRep, p2::VRep)
     d = sum_fulldim(FullDim(p1), FullDim(p2))
@@ -187,7 +195,8 @@ Base.:(\)(P::Union{AbstractMatrix, UniformScaling}, rep::HRep) = rep / P'
 function linear_preimage_transpose(P, p::HRep{Tin}, d) where Tin
     f = (i, h) -> h / P
     T = _promote_type(Tin, eltype(P))
-    return similar(p, d, T, hmap(f, d, T, p)...)
+    return similar(p, d, T, hmap(f, d, T, p)...,
+                   dimension_map = i -> nothing)
 end
 
 """

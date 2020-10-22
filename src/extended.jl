@@ -24,12 +24,43 @@ struct Projection{S, I}
     dimensions::I
 end
 fulldim(p::Projection) = length(p.dimensions)
+dimension_names(p::Projection) = dimension_names(p.set)[p.dimensions]
+
+function __pad_map(i, d, n, start)
+    if i <= start
+        return i
+    elseif i <= start + n
+        return nothing
+    else
+        return i - n
+    end
+end
+function __pad_map(i, d, n)
+    if n < 0
+        if i <= n
+            return nothing
+        else
+            return i - n
+        end
+    else
+        if i <= d
+            return i
+        else
+            return nothing
+        end
+    end
+end
+function _pad_map(i, d, padding...)
+    j = __pad_map(i, d, padding...)
+    return j === nothing ? nothing : (1, j)
+end
 
 # TODO should be cartesian product with FullSpace
 function zeropad(p::HRep{T}, padding...) where T
     d = map_fulldim(N -> N + abs(padding[1]), FullDim(p))
     f = (i, el) -> zeropad(el, padding...)
-    return similar(p, d, T, hmap(f, d, T, p)...)
+    return similar(p, d, T, hmap(f, d, T, p)...;
+                   dimension_map = i -> _pad_map(i, fulldim(p), padding...))
 end
 
 function Base.intersect(p1::Projection{S1, <:Base.OneTo}, p2::Projection{S2, <:Base.OneTo}) where {S1, S2}
@@ -74,6 +105,7 @@ function convexhull(p1::HRepresentation, p2::HRepresentation)
     ei = basis(hvectortype(p1), map_fulldim(N -> 1, d), 1)
     λ = HalfSpace(-ei, zero(T)) ∩ HalfSpace(ei, one(T))
     lifted = similar((p1, p2), map_fulldim(N -> 3N + 1, d), T,
-        hmap(f, d, T, p1, p2, HSumSpace{T}(fulldim(p1)), λ)...)
+        hmap(f, d, T, p1, p2, HSumSpace{T}(fulldim(p1)), λ)...;
+        dimension_map = i -> (1 <= i <= fulldim(d)) ? (1, i) : nothing)
     return Projection(lifted, Base.OneTo(fulldim(p1)))
 end
