@@ -9,7 +9,9 @@ square = hrep(model)</code></pre><pre class="documenter-example-output">H-repres
  HalfSpace(  [1]  =  -1.0, 1.0)
  HalfSpace(  [2]  =  -1.0, 1.0)
  HalfSpace(  [1]  =  1.0, 1.0)
- HalfSpace(  [2]  =  1.0, 1.0)</pre><p>In the following, <code>diagonal</code> and <code>antidiag</code> are projections of extended Hrepresentations of dimension 7 hence <code>diamond</code> is a projection of an extended H-representation of dimensions 12.</p><pre><code class="language-julia">diagonal = convexhull(translate(square, [-2, -2]), translate(square, [2, 2]))
+ HalfSpace(  [2]  =  1.0, 1.0)</pre><p>Note that the names of the JuMP variables are used as the names of the corresponding dimensions for the polyhedron <code>square</code>.</p><pre><code class="language-julia">dimension_names(square)</code></pre><pre class="documenter-example-output">2-element Array{String,1}:
+ &quot;x&quot;
+ &quot;y&quot;</pre><p>In the following, <code>diagonal</code> and <code>antidiag</code> are projections of extended H-representations of dimension 7 hence <code>diamond</code> is a projection of an extended H-representation of dimensions 12.</p><pre><code class="language-julia">diagonal = convexhull(translate(square, [-2, -2]), translate(square, [2, 2]))
 antidiag = convexhull(translate(square, [-2,  2]), translate(square, [2, -2]))
 diamond = diagonal ∩ antidiag</code></pre><pre class="documenter-example-output">Polyhedra.Projection{LPHRep{Float64},Base.OneTo{Int64}}(HyperPlane(  [1 ]  =  1.0
   [3 ]  =  -1.0
@@ -35,21 +37,32 @@ diamond = diagonal ∩ antidiag</code></pre><pre class="documenter-example-outpu
   [12]  =  -1.0, -1.0) ∩ HalfSpace(  [11]  =  -1.0
   [12]  =  3.0, 3.0) ∩ HalfSpace(  [10]  =  1.0
   [12]  =  3.0, 3.0) ∩ HalfSpace(  [11]  =  1.0
-  [12]  =  -1.0, -1.0) ∩ HalfSpace(  [12]  =  -1.0, 0.0) ∩ HalfSpace(  [12]  =  1.0, 1.0), Base.OneTo(2))</pre><p>We don&#39;t need to compute the result of the projection to solve an optimization problem over <code>diamond</code>.</p><pre><code class="language-julia">import GLPK
+  [12]  =  -1.0, -1.0) ∩ HalfSpace(  [12]  =  -1.0, 0.0) ∩ HalfSpace(  [12]  =  1.0, 1.0), Base.OneTo(2))</pre><p>Note that the names the first two dimensions are still identical to the names of the JuMP variables and the auxiliary variables have no name.</p><pre><code class="language-julia">dimension_names(diamond.set)</code></pre><pre class="documenter-example-output">12-element Array{String,1}:
+ &quot;x&quot;
+ &quot;y&quot;
+ &quot;&quot; 
+ &quot;&quot; 
+ &quot;&quot; 
+ &quot;&quot; 
+ &quot;&quot; 
+ &quot;&quot; 
+ &quot;&quot; 
+ &quot;&quot; 
+ &quot;&quot; 
+ &quot;&quot; </pre><p>We don&#39;t need to compute the result of the projection to solve an optimization problem over <code>diamond</code>. For instance, to compute the maximal value that <code>y</code> can take over this polytope with the GLPK solver, we can do as follows. Note that if we use anonymous JuMP variables, the name of the JuMP variables will be the names of the corresponding dimensions of the polyhedron. Therefore, we can retrieve the JuMP variable according to the corresponding dimension name with <code>variable_by_name</code>.</p><pre><code class="language-julia">import GLPK
 model = Model(GLPK.Optimizer)
-@variable(model, x[1:2])
-@constraint(model, x in diamond)
-@objective(model, Max, x[2])
+@variable(model, [1:2] in diamond)
+x = variable_by_name(model, &quot;x&quot;)
+y = variable_by_name(model, &quot;y&quot;)
+@objective(model, Max, y)
 optimize!(model)
-value.(x)</code></pre><pre class="documenter-example-output">2-element Array{Float64,1}:
- 0.0
- 2.0</pre><p>In the optimization problem, above, the auxiliary variables of the extended formulation are transparently added inside a bridge. To manipulate the auxiliary variables, one can use the extended H-representation directly instead of its projection.</p><pre><code class="language-julia">import GLPK
+value(x), value(y)</code></pre><pre class="documenter-example-output">(0.0, 2.0)</pre><p>In the optimization problem, above, the auxiliary variables of the extended formulation are transparently added inside a bridge. To manipulate the auxiliary variables, one can use the extended H-representation directly instead of its projection. Note that as the auxiliary dimensions have no name, we cannot use <code>variable_by_name</code> to retrieve the corresponding JuMP variables. We can instead catch the returned value of <code>@variable</code> in some variable <code>v</code> in order to use anonymous JuMP variables while still assigning the created JuMP variables to <code>v</code>.</p><pre><code class="language-julia">import GLPK
 model = Model(GLPK.Optimizer)
-@variable(model, x[1:12])
-@constraint(model, x in diamond.set)
-@objective(model, Max, x[2])
+v = @variable(model, [1:12] in diamond.set)
+y = variable_by_name(model, &quot;y&quot;)
+@objective(model, Max, y)
 optimize!(model)
-value.(x)</code></pre><pre class="documenter-example-output">12-element Array{Float64,1}:
+value.(v)</code></pre><pre class="documenter-example-output">12-element Array{Float64,1}:
   0.0 
   2.0 
  -0.75
@@ -61,4 +74,4 @@ value.(x)</code></pre><pre class="documenter-example-output">12-element Array{Fl
   2.25
   0.75
  -0.25
-  0.75</pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Convex hull and intersection/">« Convex hull and intersection</a><a class="docs-footer-nextpage" href="../Minimal Robust Positively Invariant Set/">Minimal Robust Positively Invariant Set »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 29 September 2020 07:39">Tuesday 29 September 2020</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  0.75</pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Convex hull and intersection/">« Convex hull and intersection</a><a class="docs-footer-nextpage" href="../Minimal Robust Positively Invariant Set/">Minimal Robust Positively Invariant Set »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 22 October 2020 23:30">Thursday 22 October 2020</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
