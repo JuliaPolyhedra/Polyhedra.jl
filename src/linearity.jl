@@ -165,21 +165,31 @@ function detect_new_linearities(rep::Representation, solver; verbose=0)
             verbose >= 1 && @info("The polyhedron is empty as $β_primal is negative.")
             return nothing
         end
+        ray_to_line = Int[]
+        ray_to_drop = Int[]
         for i in eachindex(λ)
             if active[i] && !is_lin[i]
                 if !isapproxzero((primal = MOI.get(model, MOI.VariablePrimal(), λ[i]);))
                     # `λ_i > 0`, we know that `-r_i` belongs to the cone so we transform the ray into a line.
                     verbose >= 1 && @info("$(i)th element is linear as $primal is positive.")
-                    MOI.delete(model, cλ[i])
                     is_lin[i] = true
-                    MOI.modify(model, sum_con, MOI.ScalarCoefficientChange(λ[i], 0.0))
+                    push!(ray_to_line, i)
                 elseif !isapproxzero((dual = MOI.get(model, MOI.ConstraintDual(), cλ[i]);))
                     # `r_i'x > 0`, we know that `r_i` does not belong to the cone so we just drop the ray from the search for lines.
                     verbose >= 1 && @info("$(i)th element is nonlinear as $dual is positive.")
-                    MOI.delete(model, λ[i])
                     active[i] = false
+                    push!(ray_to_drop, i)
                 end # otherwise, we are still uncertain about this ray and we'll do a new solve.
             end
+        end
+        # Query `primal` and `dual` before doing any `MOI.delete` and `MOI.modify` as they
+        # won't be available afterwards.
+        for i in ray_to_line
+            MOI.delete(model, cλ[i])
+            MOI.modify(model, sum_con, MOI.ScalarCoefficientChange(λ[i], 0.0))
+        end
+        for i in ray_to_drop
+            MOI.delete(model, λ[i])
         end
     end
     return findall(is_lin)
