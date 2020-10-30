@@ -3,9 +3,9 @@ import GeometryBasics
 """
     struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryBasics.GeometryPrimitive{N, T}
         polyhedron::PT
-        coordinates::Vector{GeometryBasics.Point{3, T}}
-        faces::Vector{GeometryBasics.TriangleFace{Int}}
-        normals::Vector{GeometryBasics.Point{3, T}}
+        coordinates::Union{Nothing, Vector{GeometryBasics.Point{3, T}}}
+        faces::Union{Nothing, Vector{GeometryBasics.TriangleFace{Int}}}
+        normals::Union{Nothing, Vector{GeometryBasics.Point{3, T}}}
     end
 
 Mesh wrapper type that inherits from `GeometryPrimitive` to be used for plotting
