@@ -1,4 +1,6 @@
-import GeometryTypes
+using Test
+using Polyhedra
+import GeometryBasics
 
 struct Face
     points::Vector{Vector{Float64}}
@@ -21,12 +23,10 @@ end
 nfaces(d::Dict{<:Any, Face}) = length(d)
 nfaces(d::Dict{<:Any, <:Vector}) = sum(map(length, values(d)))
 function test_decompose(p::Polyhedra.Mesh, d::Dict)
-    @test GeometryTypes.isdecomposable(GeometryTypes.Point{3, Float32}, typeof(p))
-    points = GeometryTypes.decompose(GeometryTypes.Point{3, Float32}, p)
-    @test GeometryTypes.isdecomposable(GeometryTypes.Face{3, Int}, typeof(p))
-    faces = GeometryTypes.decompose(GeometryTypes.Face{3, Int}, p)
-    @test GeometryTypes.isdecomposable(GeometryTypes.Normal{3,Float64}, typeof(p))
-    normals = GeometryTypes.decompose(GeometryTypes.Normal{3,Float64}, p)
+    P = GeometryBasics.Point{3, Float64}
+    points = GeometryBasics.decompose(P, p)
+    faces = GeometryBasics.decompose(GeometryBasics.GLTriangleFace, p)
+    normals = GeometryBasics.decompose(GeometryBasics.Normal{P}(), p)
     nf = nfaces(d)
     @test length(points) == 3nf
     @test length(faces) == nf

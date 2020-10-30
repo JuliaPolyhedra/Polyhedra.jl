@@ -4,7 +4,7 @@ repo = "https://github.com/JuliaPolyhedra/Polyhedra.jl.git"
 version = "0.6.7"
 
 [deps]
-GeometryTypes = "4d00f742-c7ba-57c2-abde-4428a4b178cb"
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
@@ -12,7 +12,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-GeometryTypes = "0.7, 0.8"
+GeometryBasics = "0.2, 0.3"
 JuMP = "0.21"
 RecipesBase = "0.7, 0.8, 1.0"
 StaticArrays = "0.12"

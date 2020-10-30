@@ -60,7 +60,7 @@ Polyhedron DefaultPolyhedron{Rational{BigInt},Polyhedra.Intersection{Rational{Bi
 Then, we need to create a mess from the polyhedron:
 ```jldoctest plots3
 julia> m = Polyhedra.Mesh(p)
-Polyhedra.Mesh{3,Rational{BigInt},DefaultPolyhedron{Rational{BigInt},Polyhedra.Intersection{Rational{BigInt},Array{Rational{BigInt},1},Int64},Polyhedra.Hull{Rational{BigInt},Array{Rational{BigInt},1},Int64}}}(convexhull([0//1, 0//1, 0//1]) + convexhull(Ray(Rational{BigInt}[1//1, 0//1, 0//1]), Ray(Rational{BigInt}[0//1, 1//1, 0//1]), Ray(Rational{BigInt}[0//1, 0//1, 1//1])))
+Polyhedra.Mesh{3,Rational{BigInt},DefaultPolyhedron{Rational{BigInt},Polyhedra.Intersection{Rational{BigInt},Array{Rational{BigInt},1},Int64},Polyhedra.Hull{Rational{BigInt},Array{Rational{BigInt},1},Int64}}}(convexhull([0//1, 0//1, 0//1]) + convexhull(Ray(Rational{BigInt}[1//1, 0//1, 0//1]), Ray(Rational{BigInt}[0//1, 1//1, 0//1]), Ray(Rational{BigInt}[0//1, 0//1, 1//1])), nothing, nothing, nothing)
 ```
 
 ```@docs
