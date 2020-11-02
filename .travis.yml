@@ -1,19 +1,20 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
-coveralls: true
 codecov: true
-os:
-  - linux
-  - osx
-julia:
-  - 1
-#addons:
-#  apt_packages:
-#    - libgmp-dev # For CDDLib and LRSLib
 notifications:
   email: false
 jobs:
   include:
+    - os: linux
+      arch: x64
+      julia: 1
+    - os: linux
+      arch: x86  # Test 32-bit
+      julia: 1
+    - os: linux
+      arch: x64
+      julia: nightly
+      allow_failure: true
     - stage: "Documentation"
       julia: 1
       os: linux
