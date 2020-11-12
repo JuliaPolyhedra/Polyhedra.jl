@@ -2,7 +2,7 @@
 
 | **Documentation** | **Build Status** | **Social** | **References to cite** |
 |:-----------------:|:----------------:|:----------:|:----------------------:|
-| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
+| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
 | [![][docs-latest-img]][docs-latest-url] | [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
 
 [<img src="examples/drakeperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/drakeperm.jl)
@@ -28,12 +28,10 @@ See [CITATION.bib](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/CI
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-stable-url]: https://juliapolyhedra.github.io/Polyhedra.jl/stable
-[docs-latest-url]: https://juliapolyhedra.github.io/Polyhedra.jl/latest
+[docs-latest-url]: https://juliapolyhedra.github.io/Polyhedra.jl/dev
 
-[build-img]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl.svg?branch=master
-[build-url]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl
-[winbuild-img]: https://ci.appveyor.com/api/projects/status/1c4frdxet094tntc/branch/master?svg=true
-[winbuild-url]: https://ci.appveyor.com/project/JuliaPolyhedra/polyhedra-jl/branch/master
+[build-img]: https://github.com/JuliaPolyhedra/Polyhedra.jl/workflows/CI/badge.svg?branch=master
+[build-url]: https://github.com/JuliaPolyhedra/Polyhedra.jl/actions?query=workflow%3ACI
 [codecov-img]: http://codecov.io/github/JuliaPolyhedra/Polyhedra.jl/coverage.svg?branch=master
 [codecov-url]: http://codecov.io/github/JuliaPolyhedra/Polyhedra.jl?branch=master
 
