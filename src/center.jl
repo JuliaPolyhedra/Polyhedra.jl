@@ -1,6 +1,40 @@
 export hchebyshevcenter, vchebyshevcenter, chebyshevcenter
 using JuMP
 
+"""
+    maximum_radius_with_center(h::HRep, center)
+
+Return the maximum radius `r` such that the Euclidean ball of center `center`
+and radius `r` is included in the polyhedron `h`.
+"""
+function maximum_radius_with_center(h::HRep{T}, center) where T
+    if any(hp -> !isapproxzero(coord(hp)), hyperplanes(h))
+        return zero(T)
+    else
+        radius = nothing
+        for hs in halfspaces(h)
+            n = norm(hs.a, 2)
+            if iszero(n)
+                if hs.β < 0
+                    # The polyhedron is empty
+                    return zero(T)
+                end
+            else
+                new_radius = (hs.β - center ⋅ hs.a) / n
+                if radius === nothing
+                    radius = new_radius
+                else
+                    radius = min(radius, new_radius)
+                end
+            end
+        end
+        if radius === nothing
+            error("The polyhedron is the full space, its maximum radius is infinite.")
+        end
+        return radius
+    end
+end
+
 _shrink(h::HyperPlane, radius, T::Type) = convert(similar_type(typeof(h), T), h)
 _shrink(h::HalfSpace, radius, T::Type) = HalfSpace{T}(h.a, h.β - norm(h.a, 2) * radius)
 function _shrink(p::HRep{Tin}, radius) where Tin
