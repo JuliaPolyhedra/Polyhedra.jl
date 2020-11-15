@@ -30,6 +30,8 @@ function maximum_radius_with_center(h::HRep{T}, center) where T
         end
         if radius === nothing
             error("The polyhedron is the full space, its maximum radius is infinite.")
+        elseif radius < 0
+            error("The polyhedron does not contain the provided center $center.")
         end
         return radius
     end
