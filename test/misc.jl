@@ -4,6 +4,7 @@ include("permutahedron.jl")
 include("board.jl")
 include("docexample.jl")
 include("issue48.jl")
+include("issue224.jl")
 include("empty.jl")
 include("sparse.jl")
 include("sparserect.jl")
@@ -19,6 +20,7 @@ const misctests = Dict(
     "permutahedron" => permutahedrontest,
     "board" => boardtest,
     "issue48" => issue48test,
+    "issue224" => issue224test,
     "empty" => emptytest,
     "sparse" => sparsetest,
     "sparserect" => sparserecttest,

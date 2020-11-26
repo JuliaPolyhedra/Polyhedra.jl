@@ -44,8 +44,9 @@ vrep(p::Polyhedron) = error("`vrep` not implemented for `$(eltype(p))`")
 Returns the `fulldim(p)`-dimensional hyper-volume of the polyhedron `p`.
 Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
 """
-function volume(p::Polyhedron)
-    return sum(unscaled_volume_simplex(Δ) for Δ in triangulation(p)) / factorial(fulldim(p))
+function volume(p::Polyhedron{T}) where T
+    return reduce(+, unscaled_volume_simplex(Δ) for Δ in triangulation(p);
+                  init=zero(T)) / factorial(fulldim(p))
 end
 
 function unscaled_volume_simplex(s)
