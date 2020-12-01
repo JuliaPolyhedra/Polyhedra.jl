@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Since MultivariatePolynomials doesn't have binary dependencies,
+        # Since Polyhedra doesn't have binary dependencies,
         # only test on a subset of possible platforms.
         include:
           - version: '1'
