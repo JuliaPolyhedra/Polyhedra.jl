@@ -1,4 +1,4 @@
-export hchebyshevcenter, vchebyshevcenter, chebyshevcenter
+export maximum_radius_with_center, hchebyshevcenter, vchebyshevcenter, chebyshevcenter
 using JuMP
 
 """
