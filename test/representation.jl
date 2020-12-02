@@ -184,7 +184,9 @@ end
         @test r == 0
 
         p = hrep([0 0], [0])
-        @test_throws ErrorException Polyhedra.maximum_radius_with_center(p, [0])
+        @test_throws ErrorException Polyhedra.maximum_radius_with_center(p, zeros(2))
+        p = hrep([1 0], [-1])
+        @test_throws ErrorException Polyhedra.maximum_radius_with_center(p, zeros(2))
 
         A = [ 2  1
               2 -1
@@ -199,12 +201,12 @@ end
                               1  0
                               1  1
                               0  1]))
-        @show Polyhedra.maximum_radius_with_center(p, [0.00, 0.00]) == 0.00
-        @show Polyhedra.maximum_radius_with_center(p, [1.00, 1.00]) == 0.00
-        @show Polyhedra.maximum_radius_with_center(p, [0.50, 0.50]) == 0.50
-        @show Polyhedra.maximum_radius_with_center(p, [0.50, 0.25]) == 0.25
-        @show Polyhedra.maximum_radius_with_center(p, [0.25, 0.50]) == 0.25
-        @show Polyhedra.maximum_radius_with_center(p, [0.25, 0.25]) == 0.25
+        @test Polyhedra.maximum_radius_with_center(p, [0.00, 0.00]) == 0.00
+        @test Polyhedra.maximum_radius_with_center(p, [1.00, 1.00]) == 0.00
+        @test Polyhedra.maximum_radius_with_center(p, [0.50, 0.50]) == 0.50
+        @test Polyhedra.maximum_radius_with_center(p, [0.50, 0.25]) == 0.25
+        @test Polyhedra.maximum_radius_with_center(p, [0.25, 0.50]) == 0.25
+        @test Polyhedra.maximum_radius_with_center(p, [0.25, 0.25]) == 0.25
     end
 
     @testset "Chebyshev center" begin
