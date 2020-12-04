@@ -1,7 +1,7 @@
 # These examples illustrate common operations on polyhedra using [Polyhedra.jl](https://github.com/JuliaPolyhedra/Polyhedra.jl):
 #
-# - [Convex hull](#Convex-hull).
-# - [Intersection](#Intersection).
+# - The convex hull of the union of polytopes
+# - The intersection of polytopes
 #
 # We start by choosing a polyhedral library that will be used for computing the H-representation from the V-representation and vice-versa as well as removing redundant points.
 # In these example, we use the default library available in Polyhedra but it can be replaced by any other library listed [here](https://juliapolyhedra.github.io/), e.g. by changing the last two lines below by `import CDDLib` and `lib = CDDLib.Library()` to use [CDDLib](https://github.com/JuliaPolyhedra/CDDLib.jl).
@@ -11,7 +11,7 @@ using Polyhedra
 import GLPK
 lib = DefaultLibrary{Float64}(GLPK.Optimizer)
 
-# ### Convex hull <a name="Convex-hull"></a>
+# ### Convex hull
 #
 # The binary convex hull operation between two polyhedra is obtained with the [`convexhull`](https://juliapolyhedra.github.io/Polyhedra.jl/latest/utilities.html#Polyhedra.convexhull) function.
 #
@@ -60,7 +60,7 @@ plot!(P2, color="red", alpha=0.2)    #!jl
 plot!(Pch, color="green", alpha=0.1) #!jl
 scatter!(Pch, color="green")         #!jl
 
-# ### Intersection <a name="Intersection"></a>
+# ### Intersection
 #
 # Intersection of polyhedra is obtained with the [`intersect`](https://juliapolyhedra.github.io/Polyhedra.jl/latest/utilities.html#Base.intersect) function.
 #
