@@ -178,6 +178,37 @@ end
         @test Polyhedra.coefficient_type(LiftedVRepresentation{Float64}([1 2; 3 4])) == Float64
     end
 
+    @testset "Radius of largest inscribed ball at a given center" begin
+        p = hrep(Matrix(1I, 2, 2), zeros(2))
+        r = Polyhedra.maximum_radius_with_center(p, zeros(2))
+        @test r == 0
+
+        p = hrep([0 0], [0])
+        @test_throws ErrorException Polyhedra.maximum_radius_with_center(p, zeros(2))
+        p = hrep([1 0], [-1])
+        @test_throws ErrorException Polyhedra.maximum_radius_with_center(p, zeros(2))
+
+        A = [ 2  1
+              2 -1
+             -1  2
+             -1 -2]
+        b = ones(4)
+        p = hrep(A, b)
+        r = Polyhedra.maximum_radius_with_center(p, zeros(2))
+        @test r ≈ inv(√5) atol=1e-6
+
+        p = polyhedron(vrep([ 0  0
+                              1  0
+                              1  1
+                              0  1]))
+        @test Polyhedra.maximum_radius_with_center(p, [0.00, 0.00]) == 0.00
+        @test Polyhedra.maximum_radius_with_center(p, [1.00, 1.00]) == 0.00
+        @test Polyhedra.maximum_radius_with_center(p, [0.50, 0.50]) == 0.50
+        @test Polyhedra.maximum_radius_with_center(p, [0.50, 0.25]) == 0.25
+        @test Polyhedra.maximum_radius_with_center(p, [0.25, 0.50]) == 0.25
+        @test Polyhedra.maximum_radius_with_center(p, [0.25, 0.25]) == 0.25
+    end
+
     @testset "Chebyshev center" begin
         p = hrep(Matrix(1I, 2, 2), zeros(2))
         @test_throws ErrorException chebyshevcenter(p, lp_solver) # unbounded

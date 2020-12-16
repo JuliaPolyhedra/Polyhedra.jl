@@ -19,6 +19,11 @@ volume
 surface
 ```
 
+## Largest inscribed ball with center
+```@docs
+maximum_radius_with_center
+```
+
 ## Chebyshev center
 ```@docs
 chebyshevcenter
