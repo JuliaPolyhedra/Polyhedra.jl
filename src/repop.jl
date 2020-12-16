@@ -1,4 +1,4 @@
-export convexhull, convexhull!, conichull
+export convexhull, convexhull!, conichull, polar
 
 const HAny{T} = Union{HRep{T}, HRepElement{T}}
 const VAny{T} = Union{VRep{T}, VRepElement{T}}
@@ -258,9 +258,49 @@ function Base.:(*)(α::Number, p::HRepresentation)
     return p / (inv(α) * LinearAlgebra.I)
 end
 
+"""
+    polar(rep::Representation)
+
+Return the polar of the polyhedron `rep` assumed to contain
+the origin.
+The polar of a convex set `S` is defined as the set of `y`
+such that `⟨x, y⟩ ≤ 1` for all `x in S`.
+Note that the polar of a V-representation is a H-representation
+and vice versa.
+"""
+function polar end
+
 function polar(vr::VRepresentation{T}) where T
     points_halfspaces = [HalfSpace(x, one(T)) for x in points(vr)]
     rays_halfspaces = [HalfSpace(coord(r), zero(T)) for r in rays(vr)]
     lines_hyperplanes = [HyperPlane(coord(r), zero(T)) for r in lines(vr)]
     return hrep(lines_hyperplanes, [points_halfspaces; rays_halfspaces])
+end
+
+_polar_error(h) = error("Cannot take the polar of a H-representation with `$h` as it does not contain the origin.")
+function _polar(h::HyperPlane)
+    if !isapproxzero(h.β)
+        _polar_error(h)
+    end
+    return Line(h.a)
+end
+function polar(hr::HRepresentation{T}) where T
+    U = MA.promote_operation(/, T, T)
+    V = similar_type(vectortype(typeof(hr)), U)
+    points = V[]
+    rays = Ray{U, V}[]
+    for h in halfspaces(hr)
+        if isapproxzero(h.β)
+            push!(rays, Ray(h.a))
+        elseif h.β > 0
+            push!(points, h.a / h.β)
+        else
+            _polar_error(h)
+        end
+    end
+    lines = Line{U, V}[_polar(h) for h in hyperplanes(hr)]
+    if isempty(points)
+        push!(points, origin(V, fulldim(hr)))
+    end
+    return vrep(points, lines, rays, d = FullDim(hr))
 end

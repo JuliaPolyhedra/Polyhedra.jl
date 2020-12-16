@@ -231,7 +231,8 @@ similar_type(PT::Type{<:RaysHull}, d::FullDim, ::Type{T}) where {T} = RaysHull{T
 vreptype(::Type{RaysHull{T, AT, D}}) where {T, AT, D} = Hull{T, AT, D}
 
 """
-    vrep(points::PointIt, lines::LineIt, rays::RayIt)
+    vrep(points::PointIt, lines::LineIt, rays::RayIt;
+         d = Polyhedra.FullDim_rec(points, lines, rays))
 
 Creates a V-representation for the polyhedron of full dimension `d` equal to the
 minkowski sum of the convex hull of `points` with the conic hull of `lines` and
