@@ -3,6 +3,9 @@ module Polyhedra
 using SparseArrays
 using LinearAlgebra
 
+import MutableArithmetics
+const MA = MutableArithmetics
+
 export Polyhedron
 
 abstract type Library end
