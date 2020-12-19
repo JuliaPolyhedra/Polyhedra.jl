@@ -1,4 +1,9 @@
+using Test
+using StaticArrays, JuMP
+using Polyhedra
+
 @testset "Default" begin
+    solver = MOI.Utilities.MockOptimizer(MOIU.Model{Float64}())
     @testset "Library" begin
         function default_library_test(d)
             @test default_library(d(2), Float64) isa Polyhedra.DefaultLibrary
@@ -13,6 +18,9 @@
     end
     @testset "LP Solver" begin
         @test Polyhedra.default_solver(hrep([HalfSpace((@SVector [1, 2]), 3)])) === nothing
-        @test Polyhedra.linear_objective_solver(hrep([HalfSpace((@SVector [1, 2]), 3)]), lp_solver) === lp_solver
+        @test Polyhedra.linear_objective_solver(hrep([HalfSpace((@SVector [1, 2]), 3)]), solver) === solver
+        lib = Polyhedra.DefaultLibrary{Float64}(solver)
+        p = polyhedron(convexhull([0.0, 0.0]), lib)
+        @test library(p).solver === solver
     end
 end

@@ -37,7 +37,8 @@ function DefaultPolyhedron{T, HRepT, VRepT}(vrep::VRepresentation, solver) where
 end
 
 FullDim(p::DefaultPolyhedron) = FullDim_rep(p.hrep, p.vrep)
-library(::Union{DefaultPolyhedron{T}, Type{<:DefaultPolyhedron{T}}}) where {T} = DefaultLibrary{T}()
+library(::Type{<:DefaultPolyhedron{T}}) where {T} = DefaultLibrary{T}()
+library(p::DefaultPolyhedron{T}) where {T} = DefaultLibrary{T}(p.solver)
 default_solver(p::DefaultPolyhedron; T = nothing) = p.solver
 supportssolver(::Type{<:DefaultPolyhedron}) = true
 
