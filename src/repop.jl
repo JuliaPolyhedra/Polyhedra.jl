@@ -304,7 +304,7 @@ function polar(hr::HRepresentation{T}) where T
     end
     return vrep(points, lines, rays, d = FullDim(hr))
 end
-function _polar(p::Polyhedron)
+function polar(p::Polyhedron)
     if hrepiscomputed(p) # TODO we should compute the polar of both rep if both are computed
         return polyhedron(polar(hrep(p)), library(p))
     else
