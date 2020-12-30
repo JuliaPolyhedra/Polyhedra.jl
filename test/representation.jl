@@ -138,9 +138,11 @@ end
 
 function polar_test()
     v = convexhull([-1, 2]) + conichull([1, 0], Line([1, 0]))
-    h = polar(v)
-    @test collect(hyperplanes(h)) == [HyperPlane([1, 0], 0)]
-    @test collect(halfspaces(h)) == [HalfSpace([-1, 2], 1), HalfSpace([1, 0], 0)]
+    for p in [v, polyhedron(v)]
+        h = polar(p)
+        @test collect(hyperplanes(h)) == [HyperPlane([1, 0], 0)]
+        @test collect(halfspaces(h)) == [HalfSpace([-1, 2], 1), HalfSpace([1, 0], 0)]
+    end
     h = intersect(HalfSpace([1, 0], 1e-13), HyperPlane([1, 1], -1e-13))
     v = polar(h)
     @test collect(points(v)) == [[0.0, 0.0]]
@@ -152,10 +154,12 @@ function polar_test()
     @test collect(lines(v)) == [Line([0.0, 1.0])]
     @test collect(rays(v)) == [Ray([1.0, 1.0])]
     h = intersect(HalfSpace([1, 0], 2), HalfSpace([1, 1], 0))
-    v = polar(h)
-    @test collect(points(v)) == [[0.5, 0.0]]
-    @test !haslines(v)
-    @test collect(rays(v)) == [Ray([1.0, 1.0])]
+    for p in [h, polyhedron(h)]
+        v = polar(p)
+        @test collect(points(v)) == [[0.5, 0.0]]
+        @test !haslines(v)
+        @test collect(rays(v)) == [Ray([1.0, 1.0])]
+    end
 end
 
 @testset "Representation tests" begin
