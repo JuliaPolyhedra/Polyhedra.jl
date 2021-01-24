@@ -1,7 +1,7 @@
 using LinearAlgebra, SparseArrays, Test
 include("inconsistentvrep.jl")
 
-using StaticArrays
+using JuMP, StaticArrays
 
 function change_fulldim_test(Rep)
     T = Int
@@ -165,6 +165,7 @@ end
 @testset "Representation tests" begin
 
     include("vecrep.jl")
+    include("lphrep.jl")
     include("matrep.jl")
     include("liftedrep.jl")
 
