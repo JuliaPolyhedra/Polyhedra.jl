@@ -185,6 +185,20 @@ function DoubleDescriptionData{PointT, RayT, LineT}(fulldim::Integer, hyperplane
         zeros(Int, m + n)
     )
 end
+function tight_halfspace_indices(data::DoubleDescriptionData, p::CutoffPointIndex)
+    if iszero(p.cutoff)
+        return data.pz[p.index]
+    else
+        return data.cutpz[p.cutoff][p.index]
+    end
+end
+function tight_halfspace_indices(data::DoubleDescriptionData, r::CutoffRayIndex)
+    if iszero(r.cutoff)
+        return data.rz[r.index]
+    else
+        return data.cutrz[r.cutoff][r.index]
+    end
+end
 function Base.getindex(data::DoubleDescriptionData, p::CutoffPointIndex)
     if iszero(p.cutoff)
         return data.points[p.index]
@@ -209,41 +223,16 @@ function _bitdot_range(b1::BitSet, b2::BitSet, i, n)
     end
     return count
 end
-function isadjacent(data, i::Integer, p1::CutoffPointIndex, p2::CutoffPointIndex)
-    pz1 = data.cutpz[p1.cutoff][p1.index]
-    pz2 = data.cutpz[p2.cutoff][p2.index]
-    n = length(data.halfspaces)
-    return _bitdot_range(pz1, pz2, i, n) + data.lines[i] + 1 == data.fulldim
+_adj_dim(p1, p2) = 1
+_adj_dim(::CutoffRayIndex, ::CutoffRayIndex) = 2
+function isadjacent(data, i::Integer, p1, p2)
+    return data.fulldim == _adj_dim(p1, p2) + data.nlines[i] + _bitdot_range(
+        tight_halfspace_indices(data, p1),
+        tight_halfspace_indices(data, p2),
+        i, length(data.halfspaces)
+    )
 end
-function isadjacent(data, i::Integer, p::CutoffPointIndex, r::CutoffRayIndex)
-    pz = data.cutpz[p.cutoff][p.index]
-    rz = data.cutrz[r.cutoff][r.index]
-    n = length(data.halfspaces)
-    return _bitdot_range(pz, rz, i, n) + data.lines[i] + 1 == data.fulldim
-end
-function isadjacent(data, i::Integer, r::CutoffRayIndex, p::CutoffPointIndex)
-    return isadjacent(data, i, p, r)
-end
-function isadjacent(data, i::Integer, r1::CutoffPointIndex, r2::CutoffPointIndex)
-    rz1 = data.cutrz[r1.cutoff][r1.index]
-    rz2 = data.cutrz[r2.cutoff][r2.index]
-    n = length(data.halfspaces)
-    return _bitdot_range(rz1, rz2, i, n) + data.lines[i] + 2 == data.fulldim
-end
-function isin(data, i, p::CutoffPointIndex)
-    if p.cutoff == 0
-        return i in data.pz[p.index]
-    else
-        return i in data.cutpz[p.cutoff][p.index]
-    end
-end
-function isin(data, i, r::CutoffRayIndex)
-    if r.cutoff == 0
-        return i in data.rz[r.index]
-    else
-        return i in data.cutrz[r.cutoff][r.index]
-    end
-end
+isin(data, i, p) = i in tight_halfspace_indices(data, p)
 
 resized_bitset(data) = sizehint!(BitSet(), length(data.halfspaces))
 function add_index!(data, cutoff::Nothing, p::AbstractVector)
@@ -269,24 +258,15 @@ end
 
 function add_in!(data, i, index::CutoffPointIndex)
     push!(data.pin[i], index)
-    if index.cutoff == 0
-        push!(data.pz[index.index], i)
-    else
-        push!(data.cutpz[index.cutoff][index.index], i)
-    end
 end
 function add_in!(data, i, index::CutoffRayIndex)
     push!(data.rin[i], index)
-    if index.cutoff == 0
-        push!(data.rz[index.index], i)
-    else
-        push!(data.cutrz[index.cutoff][index.index], i)
-    end
 end
 function set_in!(data, I, el, index)
     for i in I
         if el in Polyhedra.hyperplane(data.halfspaces[i])
             add_in!(data, i, index)
+            push!(tight_halfspace_indices(data, index), i)
         end
     end
 end
@@ -325,6 +305,7 @@ function add_adjacent_element!(data, k, el, parent)
     index = add_element!(data, k, el)
     # Condition (c_k) in [FP96]
     if index.cutoff != parent.cutoff
+        # TODO remove, it only creates redundant
         addintersection!(data, index, parent)
     end
     return index
@@ -366,7 +347,14 @@ function addintersection!(data, idx1, idx2)
     el2 = data[idx2]
     h = data.halfspaces[i]
     newel = combine(h.β, el1, h.a ⋅ el1, el2, h.a ⋅ el2)
-    add_adjacent_element!(data, i - 1, newel, idx1)
+    # `newel` and `idx1` have inherited adjacency, see 3.2 (i) of [FP96].
+    # TODO are we sure that they are adjacent ?
+    #      or should we check rank or combinatorial check ?
+    #      In `DDMethodVariation2` of [FP96], `Adj` is not called
+    #      in case `rj, rj'` have inherited adjacency
+    index = add_adjacent_element!(data, i - 1, newel, idx1)
+    set_in!(data, i:i, newel, index)
+    return index
 end
 function add_if_adjacent!(data, i::Integer, el1, el2)
     # Condition (c_k) in [FP96]
@@ -440,6 +428,7 @@ function doubledescription(hr::HRepresentation, solver = nothing)
         if line !== nothing
             ray = Polyhedra.Ray(Polyhedra.coord(line))
             data.lineray[i] = add_element!(data, i - 1, ray)
+            # FIXME `set_in!` for `i` ?
         end
     end
     @assert isone(npoints(v))
@@ -452,24 +441,21 @@ function doubledescription(hr::HRepresentation, solver = nothing)
         if isempty(data.cutpoints[i]) && isempty(data.cutrays[i])
             # Redundant, remove its contribution to avoid incorrect `isadjacent`
             for p in data.pin[i]
-                if p.cutoff == 0
-                    delete!(data.pz[p.index], i)
-                else
-                    delete!(data.cutpz[p.cutoff][p.index], i)
-                end
+                delete!(tight_halfspace_indices(data, p), i)
             end
             for r in data.rin[i]
-                if r.cutoff == 0
-                    delete!(data.rz[r.index], i)
-                else
-                    delete!(data.cutrz[r.cutoff][r.index], i)
-                end
+                delete!(tight_halfspace_indices(data, r), i)
             end
             continue
         end
         if i > 1
+            # Catches new adjacent rays, see 3.2 (ii) of [FP96]
             for p1 in data.pin[i], p2 in data.pin[i]
-                add_if_adjacent!(data, i, p1, p2)
+                # We encounter both `p1, p2` and `p2, p1`.
+                # Break this symmetry with:
+                if p1.cutoff < p2.cutoff
+                    add_if_adjacent!(data, i, p1, p2)
+                end
             end
             for p in data.pin[i], r in data.rin[i]
                 add_if_adjacent!(data, i, p, r)
@@ -495,6 +481,10 @@ function doubledescription(hr::HRepresentation, solver = nothing)
         empty!(data.lines)
         empty!(data.rays)
     end
+    println(data)
+    @show data.points
+    @show data.rays
+    @show data.lines
     return similar(v, data.points, data.lines, data.rays)
 end
 

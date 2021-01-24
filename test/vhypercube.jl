@@ -16,6 +16,7 @@ function vhypercubetest(lib::Polyhedra.Library, n, α, β)
     v = vrep(V)
 
     poly = polyhedron(v, lib)
+    @show hrep(poly)
 
     h = hrep([Matrix(1I, n, n); Matrix(-1I, n, n)], [β * ones(Int, n); -α * ones(Int, n)])
 

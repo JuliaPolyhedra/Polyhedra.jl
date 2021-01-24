@@ -1,3 +1,6 @@
+using Test
+using StaticArrays
+
 function empty_test(h::HRepresentation{T}) where T
     #v = @inferred doubledescription(h)
     v = doubledescription(h)
@@ -111,6 +114,15 @@ empty_range_test(z) = empty_test(HalfSpace([1, z], -1) ∩ HalfSpace([-1, z], -1
             @test !hasrays(v) == 1
             @test npoints(v) == 1
             @test first(points(v)) == [1, 0]
+        end
+        @testset "Quadrilateral $(_str(z))" for z in [0, 0.0]
+            h = HalfSpace([2, 1], 4) ∩ HalfSpace([1, 2], 4) ∩
+                HalfSpace([-1, z], z) ∩ HalfSpace([z, -1], z)
+            v = doubledescription(h)
+            @test !haslines(v)
+            @test !hasrays(v)
+            @test npoints(v) == 4
+            @test all(points(v) .≈ [[0, 0], [2, 0], [0, 2], [4//3, 4//3]])
         end
     end
     @testset "V-representation -> H-representation" begin
