@@ -46,6 +46,7 @@ function LPHRep(model::MOI.ModelLike, T::Type = Float64)
     # This one creates variables so the user need to consider the polyhedra as the
     # feasible set of the extended formulation.
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.NormOneBridge{T})
+    MOI.Bridges.add_bridge(bridged, PolyhedraToLPBridge{T})
     MOI.copy_to(bridged, model)
     return LPHRep(_model)
 end
