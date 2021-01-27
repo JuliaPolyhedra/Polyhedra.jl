@@ -216,7 +216,7 @@ end
 
 function _bitdot_range(b1::BitSet, b2::BitSet, i, n)
     count = 1 # They share the hyperplance `i`
-    for j in (i+1):n
+    for j in (i + 1):n
         if j in b1 && j in b2
             count += 1
         end
@@ -226,33 +226,36 @@ end
 _adj_dim(p1, p2) = 1
 _adj_dim(::CutoffRayIndex, ::CutoffRayIndex) = 2
 function isadjacent(data, i::Integer, p1, p2)
-    return data.fulldim == _adj_dim(p1, p2) + data.nlines[i] + _bitdot_range(
+    rhs = _adj_dim(p1, p2) + data.nlines[i] + _bitdot_range(
         tight_halfspace_indices(data, p1),
         tight_halfspace_indices(data, p2),
         i, length(data.halfspaces)
     )
+    # FIXME not true in high dim
+    #@assert rhs <= data.fulldim
+    return data.fulldim >= rhs
 end
 isin(data, i, p) = i in tight_halfspace_indices(data, p)
 
 resized_bitset(data) = sizehint!(BitSet(), length(data.halfspaces))
-function add_index!(data, cutoff::Nothing, p::AbstractVector)
+function add_index!(data, cutoff::Nothing, p::AbstractVector, tight::BitSet)
     push!(data.points, p)
-    push!(data.pz, resized_bitset(data))
+    push!(data.pz, tight)
     return CutoffPointIndex(0, length(data.points))
 end
-function add_index!(data, cutoff::Integer, p::AbstractVector)
+function add_index!(data, cutoff::Integer, p::AbstractVector, tight::BitSet)
     push!(data.cutpoints[cutoff], p)
-    push!(data.cutpz[cutoff], resized_bitset(data))
+    push!(data.cutpz[cutoff], tight)
     return CutoffPointIndex(cutoff, length(data.cutpoints[cutoff]))
 end
-function add_index!(data, cutoff::Nothing, r::Polyhedra.Ray)
+function add_index!(data, cutoff::Nothing, r::Polyhedra.Ray, tight::BitSet)
     push!(data.rays, r)
-    push!(data.rz, resized_bitset(data))
+    push!(data.rz, tight)
     return CutoffRayIndex(0, length(data.rays))
 end
-function add_index!(data, cutoff::Integer, r::Polyhedra.Ray)
+function add_index!(data, cutoff::Integer, r::Polyhedra.Ray, tight::BitSet)
     push!(data.cutrays[cutoff], r)
-    push!(data.cutrz[cutoff], resized_bitset(data))
+    push!(data.cutrz[cutoff], tight)
     return CutoffRayIndex(cutoff, length(data.cutrays[cutoff]))
 end
 
@@ -262,30 +265,35 @@ end
 function add_in!(data, i, index::CutoffRayIndex)
     push!(data.rin[i], index)
 end
-function set_in!(data, I, el, index)
+function set_in!(data, I, index)
     for i in I
-        if el in Polyhedra.hyperplane(data.halfspaces[i])
+        if isin(data, i, index)
             add_in!(data, i, index)
-            push!(tight_halfspace_indices(data, index), i)
         end
     end
 end
-function add_element!(data, k, el)
+function add_element!(data, k, el, tight)
     cutoff = nothing
     for i in reverse(1:k)
         if data.cutline[i] !== nothing
             el = line_project(el, data.cutline[i], data.halfspaces[i])
-            index = add_adjacent_element!(data, i - 1, el, data.lineray[i])
-            set_in!(data, i:k, el, index)
+            # The line is in all halfspaces from `i+1` up so projecting with it does not change it.
+            push!(tight, i)
+            index = add_adjacent_element!(data, i - 1, el, data.lineray[i], tight)
+            set_in!(data, i:k, index)
             return index
         end
+        # Could avoid computing `dot` twice between `el` and the halfspace here.
         if !(el in data.halfspaces[i])
             cutoff = i
             break
         end
+        if el in hyperplane(data.halfspaces[i])
+            push!(tight, i)
+        end
     end
-    index = add_index!(data, cutoff, el)
-    set_in!(data, (index.cutoff+1):k, el, index)
+    index = add_index!(data, cutoff, el, tight)
+    set_in!(data, (index.cutoff + 1):k, index)
     return index
 end
 function project_onto_affspace(data, offset, el, hyperplanes)
@@ -301,8 +309,8 @@ function project_onto_affspace(data, offset, el, hyperplanes)
     end
     return el
 end
-function add_adjacent_element!(data, k, el, parent)
-    index = add_element!(data, k, el)
+function add_adjacent_element!(data, k, el, parent, tight)
+    index = add_element!(data, k, el, tight)
     # Condition (c_k) in [FP96]
     if index.cutoff != parent.cutoff
         # TODO remove, it only creates redundant
@@ -335,31 +343,36 @@ function combine(β, r1::Polyhedra.Ray, value1, r2::Polyhedra.Ray, value2)
     return Polyhedra.simplify(newr)
 end
 
+combine(h, el1, el2) = combine(h.β, el1, h.a ⋅ el1, el2, h.a ⋅ el2)
+
 function addintersection!(data, idx1, idx2)
     if idx1.cutoff > idx2.cutoff
         return addintersection!(data, idx2, idx1)
     end
     i = idx2.cutoff
-    if isin(data, i, idx1)
-        return
-    end
-    el1 = data[idx1]
-    el2 = data[idx2]
-    h = data.halfspaces[i]
-    newel = combine(h.β, el1, h.a ⋅ el1, el2, h.a ⋅ el2)
+    isin(data, i, idx1) && return
+    newel = combine(data.halfspaces[i], data[idx1], data[idx2])
     # `newel` and `idx1` have inherited adjacency, see 3.2 (i) of [FP96].
     # TODO are we sure that they are adjacent ?
     #      or should we check rank or combinatorial check ?
     #      In `DDMethodVariation2` of [FP96], `Adj` is not called
     #      in case `rj, rj'` have inherited adjacency
-    index = add_adjacent_element!(data, i - 1, newel, idx1)
-    set_in!(data, i:i, newel, index)
+    tight = tight_halfspace_indices(data, idx1) ∩ tight_halfspace_indices(data, idx2)
+    push!(tight, i)
+    index = add_adjacent_element!(data, i - 1, newel, idx1, tight)
+    set_in!(data, i:i, index)
     return index
 end
 function add_if_adjacent!(data, i::Integer, el1, el2)
-    # Condition (c_k) in [FP96]
-    if el1.cutoff != el2.cutoff
-        if isadjacent(data, i, el1, el2)
+    if el1.cutoff > el2.cutoff
+        add_if_adjacent!(data, i, el2, el1)
+    elseif el1.cutoff < el2.cutoff && # Condition (c_k) in [FP96]
+           !isin(data, el2.cutoff, el1) # Cheap to check, better do it early
+        if el1.cutoff > el2.cutoff
+            el2, el1 = el1, el2
+        end
+        # If it's in both at some lower `j` then we'll add it then otherwise, it will be added twice.
+        if !any(j -> isin(data, j, el1) && isin(data, j, el2), (el2.cutoff + 1):(i - 1)) && isadjacent(data, i, el1, el2)
             addintersection!(data, el1, el2)
         end
     end
@@ -427,17 +440,17 @@ function doubledescription(hr::HRepresentation, solver = nothing)
         line = data.cutline[i]
         if line !== nothing
             ray = Polyhedra.Ray(Polyhedra.coord(line))
-            data.lineray[i] = add_element!(data, i - 1, ray)
-            # FIXME `set_in!` for `i` ?
+            data.lineray[i] = add_element!(data, i - 1, ray, BitSet((i + 1):length(hss)))
         end
     end
     @assert isone(npoints(v))
     # Add the origin
     orig = project_onto_affspace(data, nhalfspaces(hr), first(points(v)), hps)
     if orig !== nothing
-        add_element!(data, nhalfspaces(hr), orig)
+        add_element!(data, nhalfspaces(hr), orig, resized_bitset(data))
     end
     for i in reverse(eachindex(hss))
+        data.cutline[i] !== nothing && continue
         if isempty(data.cutpoints[i]) && isempty(data.cutrays[i])
             # Redundant, remove its contribution to avoid incorrect `isadjacent`
             for p in data.pin[i]
@@ -451,8 +464,6 @@ function doubledescription(hr::HRepresentation, solver = nothing)
         if i > 1
             # Catches new adjacent rays, see 3.2 (ii) of [FP96]
             for p1 in data.pin[i], p2 in data.pin[i]
-                # We encounter both `p1, p2` and `p2, p1`.
-                # Break this symmetry with:
                 if p1.cutoff < p2.cutoff
                     add_if_adjacent!(data, i, p1, p2)
                 end
@@ -465,7 +476,11 @@ function doubledescription(hr::HRepresentation, solver = nothing)
         deleteat!(data.cutpz, i)
         if i > 1
             for r1 in data.rin[i], r2 in data.rin[i]
-                add_if_adjacent!(data, i, r1, r2)
+                # We encounter both `r1, r2` and `r2, r1`.
+                # Break this symmetry with:
+                if r1.cutoff < r2.cutoff
+                    add_if_adjacent!(data, i, r1, r2)
+                end
             end
         end
         deleteat!(data.cutrays, i)
@@ -481,10 +496,6 @@ function doubledescription(hr::HRepresentation, solver = nothing)
         empty!(data.lines)
         empty!(data.rays)
     end
-    println(data)
-    @show data.points
-    @show data.rays
-    @show data.lines
     return similar(v, data.points, data.lines, data.rays)
 end
 
