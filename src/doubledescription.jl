@@ -319,7 +319,6 @@ function add_adjacent_element!(data, k, el, parent, tight)
     return index
 end
 
-using LinearAlgebra
 function combine(β, p1::AbstractVector, value1, p2::AbstractVector, value2)
     λ = (value2 - β) / (value2 - value1)
     return λ * p1 + (1 - λ) * p2
@@ -411,8 +410,8 @@ function hline(data, line::Line, i, h)
     data.nlines[i] += 1
     return false, line
 end
-# TODO remove solver arg
-function doubledescription(hr::HRepresentation, solver = nothing)
+# TODO remove solver arg `_`, it is kept to avoid breaking code
+function doubledescription(hr::HRepresentation, _ = nothing)
     v = Polyhedra.dualfullspace(hr)
     hps = Polyhedra.lazy_collect(hyperplanes(hr))
     hss = Polyhedra.lazy_collect(halfspaces(hr))

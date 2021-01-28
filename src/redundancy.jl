@@ -5,6 +5,10 @@
 # Redundancy
 export isredundant, removevredundancy!, removevredundancy, removehredundancy!, removehredundancy
 
+@enum Redundancy UNKNOWN_REDUNDANCY LINEARITY_DETECTED NO_REDUNDANCY
+hredundancy(::Polyhedron) = UNKNOWN_REDUNDANCY
+vredundancy(::Polyhedron) = UNKNOWN_REDUNDANCY
+
 """
     isredundant(p::Rep, idx::Index; strongly=false)
 
@@ -22,6 +26,7 @@ Removes the elements of the H-representation of `p` that can be removed without 
 """
 function removehredundancy! end
 function removehredundancy!(p::Polyhedron)
+    hredundancy(p) == NO_REDUNDANCY && return
     solver = nothing
     if !vrepiscomputed(p) && supportssolver(typeof(p))
         solver = default_solver(p)
@@ -37,11 +42,12 @@ function to remove this warning.
     if solver === nothing
         detectvlinearity!(p)
         detecthlinearity!(p)
-        sethrep!(p, removehredundancy(hrep(p), vrep(p)))
+        nonred = removehredundancy(hrep(p), vrep(p))
     else
         detecthlinearity!(p)
-        sethrep!(p, removehredundancy(hrep(p), solver))
+        nonred = removehredundancy(hrep(p), solver)
     end
+    sethrep!(p, nonred, NO_REDUNDANCY)
 end
 
 """
@@ -58,8 +64,9 @@ is used.
 """
 function removevredundancy! end
 function removevredundancy!(p::Polyhedron; strongly=false, planar=true)
+    vredundancy(p) == NO_REDUNDANCY && return
     if fulldim(p) == 2 && !strongly && planar
-        setvrep!(p, planar_hull(vrep(p)))
+        setvrep!(p, planar_hull(vrep(p)), NO_REDUNDANCY)
     end
     solver = nothing
     if !strongly && !hrepiscomputed(p) && supportssolver(typeof(p))
@@ -76,11 +83,14 @@ function to remove this warning.
     if solver === nothing
         detecthlinearity!(p)
         detectvlinearity!(p)
-        setvrep!(p, removevredundancy(vrep(p), hrep(p), strongly=strongly))
+        nonred = removevredundancy(vrep(p), hrep(p), strongly=strongly)
     else
         detectvlinearity!(p)
-        setvrep!(p, removevredundancy(vrep(p), solver))
+        nonred = removevredundancy(vrep(p), solver)
     end
+    # If `strongly` then we only remove strongly redundant elements
+    # henwe we cannot say that the redundancy is `NO_REDUNDANCY`.
+    setvrep!(p, nonred, strongly ? LINEARITY_DETECTED : NO_REDUNDANCY)
 end
 
 function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
