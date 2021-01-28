@@ -223,17 +223,32 @@ function _bitdot_range(b1::BitSet, b2::BitSet, i, n)
     end
     return count
 end
-_adj_dim(p1, p2) = 1
-_adj_dim(::CutoffRayIndex, ::CutoffRayIndex) = 2
-function isadjacent(data, i::Integer, p1, p2)
-    rhs = _adj_dim(p1, p2) + data.nlines[i] + _bitdot_range(
+_ray_pair(p1, p2) = false
+_ray_pair(::CutoffRayIndex, ::CutoffRayIndex) = true
+# Necessary condition for adjacency.
+# See Proposition 9 (NC1) of [FP96].
+function is_adjacent_nc1(data, i, p1, p2)
+    rhs = 1 + _ray_pair(p1, p2) + data.nlines[i] + _bitdot_range(
         tight_halfspace_indices(data, p1),
         tight_halfspace_indices(data, p2),
         i, length(data.halfspaces)
     )
-    # FIXME not true in high dim
-    #@assert rhs <= data.fulldim
     return data.fulldim >= rhs
+end
+function is_adjacency_breaker(data, i, p, p1, p2)
+    return p != p1 && p != p2 && all((i + 1):length(data.halfspaces)) do j
+        isin(data, j, p) || !(isin(data, j, p1) && isin(data, j, p2))
+    end
+end
+function isadjacent(data, i::Integer, p1, p2)
+    return is_adjacent_nc1(data, i, p1, p2) &&
+        # According to Proposition 7 (c) of [FP96], we need to check
+        # that there is not other point or ray that is in the same hyperplanes as `p1` and `p2`.
+        # If it's the case, it is in hyperplane `i` in particular,
+        # we can use it to restrict our attention to points and
+        # rays in `pin[i]` and `rin[i]`.
+        (_ray_pair(p1, p2) || !any(p -> is_adjacency_breaker(data, i, p, p1, p2), data.pin[i])) &&
+        !any(r -> is_adjacency_breaker(data, i, r, p1, p2), data.rin[i])
 end
 isin(data, i, p) = i in tight_halfspace_indices(data, p)
 
@@ -311,11 +326,7 @@ function project_onto_affspace(data, offset, el, hyperplanes)
 end
 function add_adjacent_element!(data, k, el, parent, tight)
     index = add_element!(data, k, el, tight)
-    # Condition (c_k) in [FP96]
-    if index.cutoff != parent.cutoff
-        # TODO remove, it only creates redundant
-        addintersection!(data, index, parent)
-    end
+    addintersection!(data, index, parent, nothing)
     return index
 end
 
@@ -344,12 +355,27 @@ end
 
 combine(h, el1, el2) = combine(h.β, el1, h.a ⋅ el1, el2, h.a ⋅ el2)
 
-function addintersection!(data, idx1, idx2)
+"""
+    addintersection!(data, idx1, idx2, hp_idx)
+
+`hp_idx === nothing` means inherited adjacency, otherwise, it is
+an index such that `idx1` and `idx2` are both in the
+hyperplane `hp_idx`.
+"""
+function addintersection!(data, idx1, idx2, hp_idx)
     if idx1.cutoff > idx2.cutoff
-        return addintersection!(data, idx2, idx1)
+        return addintersection!(data, idx2, idx1, hp_idx)
     end
     i = idx2.cutoff
-    isin(data, i, idx1) && return
+       # Condition (c_k) in [FP96]
+    if idx1.cutoff == idx2.cutoff ||
+        isin(data, i, idx1) ||
+        # If it's in both at some lower `j` then we'll
+        # add it then otherwise, it will be added twice.
+        any(j -> isin(data, j, idx1) && isin(data, j, idx2), (idx2.cutoff + 1):(i - 1)) ||
+        (hp_idx !== nothing && !isadjacent(data, hp_idx, idx1, idx2))
+        return
+    end
     newel = combine(data.halfspaces[i], data[idx1], data[idx2])
     # `newel` and `idx1` have inherited adjacency, see 3.2 (i) of [FP96].
     # TODO are we sure that they are adjacent ?
@@ -361,20 +387,6 @@ function addintersection!(data, idx1, idx2)
     index = add_adjacent_element!(data, i - 1, newel, idx1, tight)
     set_in!(data, i:i, index)
     return index
-end
-function add_if_adjacent!(data, i::Integer, el1, el2)
-    if el1.cutoff > el2.cutoff
-        add_if_adjacent!(data, i, el2, el1)
-    elseif el1.cutoff < el2.cutoff && # Condition (c_k) in [FP96]
-           !isin(data, el2.cutoff, el1) # Cheap to check, better do it early
-        if el1.cutoff > el2.cutoff
-            el2, el1 = el1, el2
-        end
-        # If it's in both at some lower `j` then we'll add it then otherwise, it will be added twice.
-        if !any(j -> isin(data, j, el1) && isin(data, j, el2), (el2.cutoff + 1):(i - 1)) && isadjacent(data, i, el1, el2)
-            addintersection!(data, el1, el2)
-        end
-    end
 end
 
 _shift(el::AbstractVector, line::Line) = el + Polyhedra.coord(line)
@@ -464,11 +476,11 @@ function doubledescription(hr::HRepresentation, _ = nothing)
             # Catches new adjacent rays, see 3.2 (ii) of [FP96]
             for p1 in data.pin[i], p2 in data.pin[i]
                 if p1.cutoff < p2.cutoff
-                    add_if_adjacent!(data, i, p1, p2)
+                    addintersection!(data, p1, p2, i)
                 end
             end
             for p in data.pin[i], r in data.rin[i]
-                add_if_adjacent!(data, i, p, r)
+                addintersection!(data, p, r, i)
             end
         end
         deleteat!(data.cutpoints, i)
@@ -478,7 +490,7 @@ function doubledescription(hr::HRepresentation, _ = nothing)
                 # We encounter both `r1, r2` and `r2, r1`.
                 # Break this symmetry with:
                 if r1.cutoff < r2.cutoff
-                    add_if_adjacent!(data, i, r1, r2)
+                    addintersection!(data, r1, r2, i)
                 end
             end
         end
