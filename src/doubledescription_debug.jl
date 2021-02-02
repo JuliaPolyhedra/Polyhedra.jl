@@ -215,13 +215,8 @@ function Base.getindex(data::DoubleDescriptionData, r::CutoffRayIndex)
 end
 
 function _bitdot_range(b1::BitSet, b2::BitSet, i, n)
-    # They share the hyperplance `i` so we could
-    # start `count` at `1` and the iteration at `i + 1`
-    # but in the case where `i` is redundant, it was
-    # removed from the `BitSet` and it should not be counted
-    # so we also need to re-check `i`.
-    count = 0
-    for j in i:n
+    count = 1 # They share the hyperplance `i`
+    for j in (i + 1):n
         if j in b1 && j in b2
             count += 1
         end
@@ -238,11 +233,7 @@ function is_adjacent_nc1(data, i, p1, p2)
         tight_halfspace_indices(data, p2),
         i, length(data.halfspaces)
     )
-    # `length(data.cutline) - length(data.halfspaces)` is the number of
-    # hyperplanes (some may be redundant) in which case this condition is less effective.
-    # TODO detect linearity and store the dimension instead of `fulldim`.
-    dim = data.fulldim - length(data.nlines) + length(data.halfspaces)
-    return dim <= rhs
+    return data.fulldim >= rhs
 end
 function is_adjacency_breaker(data, i, p, p1, p2)
     return p != p1 && p != p2 && all((i + 1):length(data.halfspaces)) do j
@@ -376,13 +367,118 @@ function addintersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1)
         return addintersection!(data, idx2, idx1, hp_idx, hs_idx)
     end
     i = idx2.cutoff
+    if idx1.cutoff == idx2.cutoff ||
+        isin(data, i, idx1) ||
+        any(j -> isin(data, j, idx1) && isin(data, j, idx2), (idx2.cutoff + 1):hs_idx)
+        for j in (idx2.cutoff + 1):hs_idx
+            if isin(data, j, idx1) && isin(data, j, idx2)
+                @show idx1
+                @show idx2
+                @show hp_idx
+                @show hs_idx
+                @show tight_halfspace_indices(data, idx1)
+                @show tight_halfspace_indices(data, idx2)
+                @show j
+            end
+        end
+        return
+    end
+    newel = combine(data.halfspaces[i], data[idx1], data[idx2])
+    ok = newel in [
+ [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0],
+# [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+# [0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0],
+# [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+# [0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0],
+# [1.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 0.0, 0.5],
+# [0.5, 1.0, 1.0, 1.0, 0.5, 0.5, 1.0, 0.0, 0.5],
+# [0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 0.5, 0.0, 1.0],
+# [1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.5, 0.0, 1.0],
+# [0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 0.0, 0.0, 1.0],
+# [0.5, 1.0, 0.5, 1.0, 0.5, 1.0, 1.0, 0.0, 0.0],
+# [1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0],
+# [1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0],
+# [0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0],
+# [1.0, 0.5, 0.0, 0.5, 1.0, 1.0, 1.0, 0.5, 0.5],
+# [0.5, 1.0, 0.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0],
+# [0.5, 1.0, 0.0, 1.0, 0.5, 1.0, 0.5, 1.0, 0.5],
+# [0.5, 0.0, 1.0, 0.5, 1.0, 1.0, 1.0, 0.5, 0.5],
+# [0.5, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0],
+# [1.0, 0.0, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 0.5],
+# [1.0, 0.0, 0.5, 1.0, 0.5, 0.5, 0.5, 1.0, 1.0],
+# [0.5, 0.0, 1.0, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5],
+# [0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0],
+# [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0],
+# [0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0],
+# [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0],
+# [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],
+# [0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0],
+    ]
        # Condition (c_k) in [FP96]
-    if idx1.cutoff == i ||
+        bb = intersect(tight_halfspace_indices(data, idx1), tight_halfspace_indices(data, idx2))
+        A = zeros(length(bb), data.fulldim)
+        for (ii, b) in enumerate(bb)
+            A[ii, :] = data.halfspaces[b].a
+        end
+    if hp_idx !== nothing
+        if isadjacent(data, hp_idx, idx1, idx2) != (rank(A) == data.fulldim - 1 - _ray_pair(idx1, idx2))
+            @show hp_idx
+            @show idx1
+            @show idx2
+            @show isadjacent(data, hp_idx, idx1, idx2)
+            @show tight_halfspace_indices(data, idx1)
+            @show tight_halfspace_indices(data, idx2)
+            @show bb
+            for p in data.pin[hp_idx]
+                if is_adjacency_breaker(data, hp_idx, p, idx1, idx2)
+                    @show tight_halfspace_indices(data, p)
+                    @show p
+                end
+            end
+            for r in data.rin[hp_idx]
+                if is_adjacency_breaker(data, hp_idx, r, idx1, idx2)
+                    @show tight_halfspace_indices(data, r)
+                    @show r
+                end
+            end
+            @show rank(A)
+        end
+    end
+    if idx1.cutoff == idx2.cutoff ||
         isin(data, i, idx1) ||
         # If it's in both at some lower `j` then we'll
         # add it then otherwise, it will be added twice.
-        any(j -> isin(data, j, idx1) && isin(data, j, idx2), (i + 1):hs_idx) ||
+        any(j -> isin(data, j, idx1) && isin(data, j, idx2), (idx2.cutoff + 1):hs_idx) ||
         (hp_idx !== nothing && !isadjacent(data, hp_idx, idx1, idx2))
+        #(hp_idx !== nothing && !isadjacent(data, hp_idx, idx1, idx2))
+        if ok
+            @show idx1
+            @show idx2
+            if hp_idx !== nothing
+                @show isadjacent(data, hp_idx, idx1, idx2)
+                @show is_adjacent_nc1(data, hp_idx, idx1, idx2)
+                @show _ray_pair(idx1, idx2)
+                @show any(p -> is_adjacency_breaker(data, hp_idx, p, idx1, idx2), data.pin[hp_idx])
+                for p in data.pin[hp_idx]
+                    if is_adjacency_breaker(data, hp_idx, p, idx1, idx2)
+                        @show hp_idx
+                        @show tight_halfspace_indices(data, idx1)
+                        @show tight_halfspace_indices(data, idx2)
+                        @show size(A)
+                        @show rank(A)
+                        @show bb
+                        @show tight_halfspace_indices(data, p)
+                        @show p
+                    end
+                end
+                @show any(r -> is_adjacency_breaker(data, hp_idx, r, idx1, idx2), data.rin[hp_idx])
+                for r in data.rin[hp_idx]
+                    if is_adjacency_breaker(data, hp_idx, r, idx1, idx2)
+                        @show r
+                    end
+                end
+            end
+        end
         return
     end
     newel = combine(data.halfspaces[i], data[idx1], data[idx2])
@@ -470,15 +566,27 @@ function doubledescription(hr::HRepresentation, _ = nothing)
         add_element!(data, nhalfspaces(hr), orig, resized_bitset(data))
     end
     for i in reverse(eachindex(hss))
-        if data.cutline[i] === nothing && isempty(data.cutpoints[i]) && isempty(data.cutrays[i])
-            # Redundant, remove its contribution to allow more pruning with `is_adjacent_nc1`
-            for p in data.pin[i]
-                delete!(tight_halfspace_indices(data, p), i)
-            end
-            for r in data.rin[i]
-                delete!(tight_halfspace_indices(data, r), i)
-            end
-        end
+        println("===================================")
+        println("===================================")
+        @show i
+        println("===================================")
+        println("===================================")
+        @show data.pin[i]
+        @show data.rin[i]
+        #data.cutline[i] !== nothing && continue
+        @show data.pin[i]
+        @show data.rin[i]
+#        if data.cutline[i] === nothing && isempty(data.cutpoints[i]) && isempty(data.cutrays[i])
+#            @show @__LINE__
+#            # Redundant, remove its contribution to avoid incorrect `isadjacent`
+#            for p in data.pin[i]
+#                delete!(tight_halfspace_indices(data, p), i)
+#            end
+#            for r in data.rin[i]
+#                delete!(tight_halfspace_indices(data, r), i)
+#            end
+#            continue
+#        end
         if i > 1
             # Catches new adjacent rays, see 3.2 (ii) of [FP96]
             for p1 in data.pin[i], p2 in data.pin[i]
@@ -487,6 +595,8 @@ function doubledescription(hr::HRepresentation, _ = nothing)
                 end
             end
             for p in data.pin[i], r in data.rin[i]
+                @show p
+                @show r
                 addintersection!(data, p, r, i)
             end
         end

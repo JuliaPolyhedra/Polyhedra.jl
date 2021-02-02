@@ -15,30 +15,37 @@ empty_halfspace_test(z) = empty_test(intersect(HalfSpace([z, z], -1)))
 empty_space_test(z) = empty_test(HyperPlane([z, 1], 1) ∩ HyperPlane([z, 1], -1))
 empty_range_test(z) = empty_test(HalfSpace([1, z], -1) ∩ HalfSpace([-1, z], -1))
 
+function simplex_test(z)
+    h = hrep([HalfSpace([ 1,  1], 1),
+              HalfSpace([ 1, -1], z),
+              HalfSpace([-1,  z], z)])
+    v = doubledescription(h)
+    T = z isa AbstractFloat ? Float64 : Rational{BigInt}
+    @test v isa Polyhedra.Hull{T,Vector{T}}
+    @test collect(points(v)) == [[z, z], [z, 1], [1//2, 1//2]]
+    @test !hasallrays(v)
+    h = hrep([HalfSpace(zeros(typeof(z), 2), z); h.halfspaces])
+    h = hrep([HalfSpace([ 1,  1], 1),
+              HalfSpace([ z,  z], z),
+              HalfSpace([ 1, -1], z),
+              HalfSpace([-1,  z], z)])
+    #intersect!(h, )
+    v = doubledescription(h)
+    @test v isa Polyhedra.Hull{T,Vector{T}}
+    @test collect(points(v)) == [[z, z], [z, 1], [1//2, 1//2]]
+    @test !hasallrays(v)
+end
+
 @testset "Double Description" begin
     @test Polyhedra.polytypefor(Float32) == Float64
     @testset "H-representation -> V-representation" begin
         @testset "Intersection" begin
             @testset "Vector" begin
                 @testset "Exact" begin
-                    h = hrep([HalfSpace([ 1,  1], 1),
-                              HalfSpace([ 1, -1], 0),
-                              HalfSpace([-1,  0], 0)])
-                    #v = @inferred doubledescription(h)
-                    v = doubledescription(h)
-                    @test v isa Polyhedra.Hull{Rational{BigInt},Vector{Rational{BigInt}}}
-                    @test collect(points(v)) == [[0, 0], [0, 1], [1//2, 1//2]]
-                    @test !hasallrays(v)
+                    simplex_test(0)
                 end
                 @testset "Numerical" begin
-                    h = hrep([HalfSpace([ 1.,  1], 1),
-                              HalfSpace([ 1., -1], 0),
-                              HalfSpace([-1.,  0], 0)])
-                    #v = @inferred doubledescription(h)
-                    v = doubledescription(h)
-                    @test v isa Polyhedra.Hull{Float64,Vector{Float64}}
-                    @test collect(points(v)) == [[0.0, 0.0], [0.0, 1.0], [1/2, 1/2]]
-                    @test !hasallrays(v)
+                    simplex_test(0.0)
                 end
             end
             @testset "SVector" begin

@@ -19,6 +19,63 @@ If `strongly` is `true`,
 """
 function isredundant end
 
+function isredundant(p::Polyhedron, idx::HIndex; kws...)
+    hredundancy(p) == NO_REDUNDANCY && return false
+    solver = _solver_warn(p, false, false)
+    if solver !== nothing
+        @warn("""
+`isredundant` with a solver is not supported yet so it triggers the computation of the V-representation, which
+is computationally demanding because no solver was provided to the library.
+If this is expected, call `computevrep!` explicitely before calling this
+function to remove this warning.
+""")
+    end
+    # `detecthlinearity(p)` might remove redundancy but we get `h` first here.
+    h = get(p, idx)
+    detectvlinearity!(p)
+    detecthlinearity!(p)
+    return isredundant(vrep(p), h; d = dim(p), kws...)
+end
+
+function isredundant(p::Polyhedron, idx::VIndex; strongly=false, kws...)
+    vredundancy(p) == NO_REDUNDANCY && return false
+    solver = _solver_warn(p, true, strongly)
+    if solver !== nothing
+        @warn("""
+`isredundant` with a solver is not supported yet so it triggers the computation of the H-representation, which
+is computationally demanding because no solver was provided to the library.
+If this is expected, call `computehrep!` explicitely before calling this
+function to remove this warning.
+""")
+    end
+    # `detectvlinearity(p)` might remove redundancy but we get `v` first here.
+    v = get(p, idx)
+    detecthlinearity!(p)
+    detectvlinearity!(p)
+    return isredundant(hrep(p), h; strongly=strongly, kws...)
+end
+
+function _solver_warn(p::Polyhedron, v_or_h::Bool, strongly::Bool)
+    computed = v_or_h ? hrepiscomputed(p) : vrepiscomputed(p)
+    v = v_or_h ? 'v' : 'h'
+    V = uppercase(v)
+    h = v_or_h ? 'h' : 'v'
+    solver = nothing
+    if !strongly && !computed && supportssolver(typeof(p))
+        solver = default_solver(p)
+        if solver === nothing
+            @warn("""
+`remove$(v)redundancy!` will trigger the computation of the $V-representation, which
+is computationally demanding because no solver was provided to the library.
+If this is expected, call `compute$(h)rep!` explicitely before calling this
+function to remove this warning.
+""" * NO_SOLVER_HELP)
+        end
+    end
+    return solver
+
+end
+
 """
     removehredundancy!(p::HRep)
 
@@ -27,18 +84,7 @@ Removes the elements of the H-representation of `p` that can be removed without 
 function removehredundancy! end
 function removehredundancy!(p::Polyhedron)
     hredundancy(p) == NO_REDUNDANCY && return
-    solver = nothing
-    if !vrepiscomputed(p) && supportssolver(typeof(p))
-        solver = default_solver(p)
-        if solver === nothing
-            @warn("""
-`removehredundancy!` will trigger the computation of the V-representation, which
-is computationally demanding because no solver was provided to the library.
-If this is expected, call `computevrep!` explicitely before calling this
-function to remove this warning.
-""" * NO_SOLVER_HELP)
-        end
-    end
+    solver = _solver_warn(p, false, false)
     if solver === nothing
         detectvlinearity!(p)
         detecthlinearity!(p)
@@ -68,18 +114,7 @@ function removevredundancy!(p::Polyhedron; strongly=false, planar=true)
     if fulldim(p) == 2 && !strongly && planar
         setvrep!(p, planar_hull(vrep(p)), NO_REDUNDANCY)
     end
-    solver = nothing
-    if !strongly && !hrepiscomputed(p) && supportssolver(typeof(p))
-        solver = default_solver(p)
-        if solver === nothing
-            @warn("""
-`removevredundancy!` will trigger the computation of the H-representation, which
-is computationally demanding because no solver was provided to the library.
-If this is expected, call `computehrep!` explicitely before calling this
-function to remove this warning.
-""" * NO_SOLVER_HELP)
-        end
-    end
+    solver = _solver_warn(p, true, strongly)
     if solver === nothing
         detecthlinearity!(p)
         detectvlinearity!(p)
@@ -297,14 +332,33 @@ function removehredundancy(hrep::HRepresentation, vrep::VRep; kws...)
     _removehred_withvred(hrep, vrep; kws...)
 end
 
+function coord_matrix!(A, elements, condition, offset)
+    for el in elements
+        if condition(el)
+            offset += 1
+            A[offset, :] = coord(el)
+        end
+    end
+    return offset
+end
+
 # V-redundancy
 # If p is an H-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 # TODO nlines should be the number of non-redundant lines so something similar to dim
 function isredundant(p::HRep{T}, v::Union{AbstractVector, Line, Ray}; strongly = false, nl::Int=nlines(p), solver=nothing) where {T}
     # v is in every hyperplane otherwise it would not be valid
     hcount = nhyperplanes(p) + count(h -> v in hyperplane(h), halfspaces(p))
-    strong = (isray(v) ? fulldim(p)-1 : fulldim(p)) - nl
-    return hcount < (strongly ? min(strong, 1) : strong)
+    strong = (isray(v) ? fulldim(p) - 1 : fulldim(p)) - nl
+    bound = strongly ? min(strong, 1) : strong
+    if hcount < bound
+        return true
+    else
+        A = Matrix{T}(undef, hcount, fulldim(p))
+        offset = coord_matrix!(A, hyperplanes(p), _ -> true, 0)
+        offset = coord_matrix!(A, halfspaces(p), h -> v in hyperplane(h), offset)
+        @assert offset == size(A, 1)
+        return rank(A) < bound
+    end
 end
 # A line is never redundant but it can be a duplicate
 isredundant(p::HRep{T}, v::Line; strongly = false, nl::Int=nlines(p), solver=nothing) where {T} = false
@@ -317,7 +371,31 @@ function isredundant(p::VRep{T}, h::HRepElement; strongly = false, d::Int=dim(p)
     pcount = count(p -> p in hp, points(p))
     # every line is in h, otherwise it would not be valid
     rcount = nlines(p) + count(r -> r in hp, rays(p))
-    pcount < min(d, 1) || (!strongly && pcount + rcount < d)
+    if pcount < min(d, 1) || (!strongly && pcount + rcount < d)
+        return true
+    else
+        strongly && return false
+        A = Matrix{T}(undef, max(0, pcount - 1) + rcount, fulldim(p))
+        offset = 0
+        if pcount > 1
+            orig = nothing
+            for x in points(p)
+                if x in hp
+                    if orig === nothing
+                        orig = x
+                    else
+                        offset += 1
+                        @. A[offset, :] = x - orig
+                    end
+                end
+            end
+        end
+        if !iszero(rcount)
+            offset = coord_matrix!(A, rays(p), r -> r in hp, offset)
+        end
+        @assert offset == size(A, 1)
+        return rank(A) + min(1, pcount) < d
+    end
 end
 # An hyperplane is never redundant but it can be a duplicate
 isredundant(p::VRep{T}, h::HyperPlane; strongly = false, d::Int=dim(p), solver=nothing) where {T} = false
