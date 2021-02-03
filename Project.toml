@@ -14,6 +14,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
+GenericLinearAlgebra = "0.2"
 GeometryBasics = "0.2, 0.3"
 JuMP = "0.21"
 MutableArithmetics = "0.2"
