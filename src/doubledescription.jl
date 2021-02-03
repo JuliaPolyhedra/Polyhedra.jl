@@ -21,17 +21,25 @@ end
 """
     doubledescription(h::HRepresentation)
 
-Computes the V-representation of the polyhedron represented by `h` using the Double-Description algorithm [1, 2].
+Computes the V-representation of the polyhedron represented by `h` using the Double-Description algorithm [MRTT53, FP96].
+It maintains a list of the points, rays and lines that are in the resulting representation
+and in the hyperplane corresponding to each halfspace and then add their intersection for each halfspace
+with [`Polyhedra.add_intersection!`](@ref).
+The resulting V-representation has no redundancy.
 
     doubledescription(V::VRepresentation)
 
-Computes the H-representation of the polyhedron represented by `v` using the Double-Description algorithm [1, 2].
+Computes the H-representation of the polyhedron represented by `v` using the Double-Description algorithm [MRTT53, FP96].
+Currently, this fallbacks to lifting it to the V-representation
+of a cone by homogenization, interpreting it
+as the H-representation of the dual cone so that
+it can rely on `doubledescription(::HRepresentation)`.
 
-[1] Motzkin, T. S., Raiffa, H., Thompson, G. L. and Thrall, R. M.
+[MRTT53] Motzkin, T. S., Raiffa, H., Thompson, G. L. and Thrall, R. M.
 The double description method
 *Contribution to the Theory of Games*, *Princeton University Press*, **1953**
 
-[2] Fukuda, K. and Prodon, A.
+[FP96] Fukuda, K. and Prodon, A.
 Double description method revisited
 *Combinatorics and computer science*, *Springer*, **1996**, 91-111
 """
@@ -303,9 +311,7 @@ function add_element!(data, k, el, tight)
             el = line_project(el, data.cutline[i], data.halfspaces[i])
             # The line is in all halfspaces from `i+1` up so projecting with it does not change it.
             push!(tight, i)
-            index = add_adjacent_element!(data, i - 1, el, data.lineray[i], tight)
-            set_in!(data, i:k, index)
-            return index
+            return add_adjacent_element!(data, i, k, el, data.lineray[i], tight)
         end
         # Could avoid computing `dot` twice between `el` and the halfspace here.
         if !(el in data.halfspaces[i])
@@ -333,9 +339,10 @@ function project_onto_affspace(data, offset, el, hyperplanes)
     end
     return el
 end
-function add_adjacent_element!(data, k, el, parent, tight)
-    index = add_element!(data, k, el, tight)
-    addintersection!(data, index, parent, nothing, k)
+function add_adjacent_element!(data, i, k, el, parent, tight)
+    index = add_element!(data, i - 1, el, tight)
+    add_intersection!(data, index, parent, nothing, i - 1)
+    set_in!(data, i:k, index)
     return index
 end
 
@@ -365,15 +372,24 @@ end
 combine(h, el1, el2) = combine(h.β, el1, h.a ⋅ el1, el2, h.a ⋅ el2)
 
 """
-    addintersection!(data, idx1, idx2, hp_idx)
+    add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1)
 
-`hp_idx === nothing` means inherited adjacency, otherwise, it is
-an index such that `idx1` and `idx2` are both in the
-hyperplane `hp_idx`.
+Add the intersection of the elements of indices `idx1` and `idx2` that belong to
+the hyperplane corresponding the halfspace of index `hp_idx` (see 3.2 (ii) of
+[FP96]) or have inherited adjacency if `hp_idx === nothing` (see 3.2 (i) of
+[FP96]). In case of inherited adjacency, `hs_idx` is the halfspace where `idx1`
+was created.
+If `idx1` and `idx2` are not adjacent or if they are in the hyperplane
+corresponding to a halfspace of lower index then the intersection is not added
+to avoid adding redundant elements.
+
+[FP96] Fukuda, K. and Prodon, A.
+Double description method revisited
+*Combinatorics and computer science*, *Springer*, **1996**, 91-111
 """
-function addintersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1)
+function add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1)
     if idx1.cutoff > idx2.cutoff
-        return addintersection!(data, idx2, idx1, hp_idx, hs_idx)
+        return add_intersection!(data, idx2, idx1, hp_idx, hs_idx)
     end
     i = idx2.cutoff
        # Condition (c_k) in [FP96]
@@ -393,9 +409,7 @@ function addintersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1)
     #      in case `rj, rj'` have inherited adjacency
     tight = tight_halfspace_indices(data, idx1) ∩ tight_halfspace_indices(data, idx2)
     push!(tight, i)
-    index = add_adjacent_element!(data, i - 1, newel, idx1, tight)
-    set_in!(data, i:i, index)
-    return index
+    return add_adjacent_element!(data, i, i, newel, idx1, tight)
 end
 
 _shift(el::AbstractVector, line::Line) = el + Polyhedra.coord(line)
@@ -483,11 +497,11 @@ function doubledescription(hr::HRepresentation, _ = nothing)
             # Catches new adjacent rays, see 3.2 (ii) of [FP96]
             for p1 in data.pin[i], p2 in data.pin[i]
                 if p1.cutoff < p2.cutoff
-                    addintersection!(data, p1, p2, i)
+                    add_intersection!(data, p1, p2, i)
                 end
             end
             for p in data.pin[i], r in data.rin[i]
-                addintersection!(data, p, r, i)
+                add_intersection!(data, p, r, i)
             end
         end
         deleteat!(data.cutpoints, i)
@@ -497,7 +511,7 @@ function doubledescription(hr::HRepresentation, _ = nothing)
                 # We encounter both `r1, r2` and `r2, r1`.
                 # Break this symmetry with:
                 if r1.cutoff < r2.cutoff
-                    addintersection!(data, r1, r2, i)
+                    add_intersection!(data, r1, r2, i)
                 end
             end
         end
