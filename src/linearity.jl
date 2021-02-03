@@ -32,7 +32,11 @@ h = HalfSpace([1, 1], 1]) ∩ HalfSpace([-1, -1], -1)
 contains the hyperplane `HyperPlane([1, 1], 1)`.
 """
 detecthlinearity!(p::HRep) = error("detecthlinearity! not implemented for $(typeof(p))")
-detecthlinearity!(p::Polyhedron, solver=default_solver(p); verbose=0) = sethrep!(p, detecthlinearity(hrep(p), solver; verbose=verbose))
+function detecthlinearity!(p::Polyhedron, solver=default_solver(p); verbose=0)
+    if hredundancy(p) == UNKNOWN_REDUNDANCY
+        sethrep!(p, detecthlinearity(hrep(p), solver; verbose=verbose), LINEARITY_DETECTED)
+    end
+end
 
 """
     detectvlinearity!(p::VRep)
@@ -47,7 +51,11 @@ v = conichull([1, 1], [-1, -1])
 contains the line `Line([1, 1])`.
 """
 detectvlinearity!(p::VRep) = error("detectvlinearity! not implemented for $(typeof(p))")
-detectvlinearity!(p::Polyhedron, solver=default_solver(p); verbose=0) = setvrep!(p, detectvlinearity(vrep(p), solver; verbose=verbose))
+function detectvlinearity!(p::Polyhedron, solver=default_solver(p); verbose=0)
+    if vredundancy(p) == UNKNOWN_REDUNDANCY
+        setvrep!(p, detectvlinearity(vrep(p), solver; verbose=verbose), LINEARITY_DETECTED)
+    end
+end
 
 # No ray so no line
 function detectvlinearity!(p::VPolytope) end

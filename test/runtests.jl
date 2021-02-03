@@ -33,7 +33,7 @@ include("show.jl")
 include("polyhedra.jl")
 for (arith, T) in (("floating point", Float64), ("exact", Rational{BigInt}))
     @testset "Polyhedra tests in $arith arithmetic" begin
-        polyhedratest(Polyhedra.DefaultLibrary{T}(lp_solver), ["board"])
+        polyhedratest(Polyhedra.DefaultLibrary{T}(lp_solver))
     end
 end
 

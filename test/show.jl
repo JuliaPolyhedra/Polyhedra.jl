@@ -43,20 +43,38 @@ end
         @test replstr(v, false) == "V-representation $(typeof(v)):\n3-element iterator of $PT:\n [1, -1]\n [2, -2]\n [3, -3],\n1-element iterator of $RT:\n Ray([1, 0])"
         @test showstr(v) == "convexhull([1, -1], [2, -2], [3, -3]) + convexhull(Ray([1, 0]))"
     end
+    it_expected = """
+3-element iterator of $HS:
+ HalfSpace(Rational{BigInt}[0//1, -1//1], 3//1)
+ HalfSpace(Rational{BigInt}[0//1, 1//3], -1//3)
+ HalfSpace(Rational{BigInt}[-1//1, -1//1], 0//1)"""
+    expected = """
+H-representation $(typeof(h)):
+$it_expected"""
+    short = "HalfSpace(Rational{BigInt}[0//1, -1//1], 3//1) ∩ HalfSpace(Rational{BigInt}[0//1, 1//3], -1//3) ∩ HalfSpace(Rational{BigInt}[-1//1, -1//1], 0//1)"
     @testset "H-Representation" begin
-        @test replstr(h)        == "H-representation $(typeof(h)):\n3-element iterator of $HS:\n HalfSpace(Rational{BigInt}[-1//2, -1//2], 0//1)\n HalfSpace(Rational{BigInt}[0//1, -1//4], 3//4)\n HalfSpace(Rational{BigInt}[0//1, 1//2], -1//2)"
-        @test replstr(h, false) == "H-representation $(typeof(h)):\n3-element iterator of $HS:\n HalfSpace(Rational{BigInt}[-1//2, -1//2], 0//1)\n HalfSpace(Rational{BigInt}[0//1, -1//4], 3//4)\n HalfSpace(Rational{BigInt}[0//1, 1//2], -1//2)"
-        @test showstr(h) == "HalfSpace(Rational{BigInt}[-1//2, -1//2], 0//1) ∩ HalfSpace(Rational{BigInt}[0//1, -1//4], 3//4) ∩ HalfSpace(Rational{BigInt}[0//1, 1//2], -1//2)"
+        @test replstr(h)        == expected
+        @test replstr(h, false) == expected
+        @test showstr(h) == short
     end
     @testset "Polyhedron" begin
-        @test replstr(p)        == "Polyhedron $(typeof(p)):\n3-element iterator of $HS:\n HalfSpace(Rational{BigInt}[-1//2, -1//2], 0//1)\n HalfSpace(Rational{BigInt}[0//1, -1//4], 3//4)\n HalfSpace(Rational{BigInt}[0//1, 1//2], -1//2):\n3-element iterator of $PPT:\n Rational{BigInt}[1//1, -1//1]\n Rational{BigInt}[2//1, -2//1]\n Rational{BigInt}[3//1, -3//1],\n1-element iterator of $PRT:\n Ray(Rational{BigInt}[1//1, 0//1])"
-        @test replstr(p, false) == "Polyhedron $(typeof(p)):\n3-element iterator of $HS:\n HalfSpace(Rational{BigInt}[-1//2, -1//2], 0//1)\n HalfSpace(Rational{BigInt}[0//1, -1//4], 3//4)\n HalfSpace(Rational{BigInt}[0//1, 1//2], -1//2):\n3-element iterator of $PPT:\n Rational{BigInt}[1//1, -1//1]\n Rational{BigInt}[2//1, -2//1]\n Rational{BigInt}[3//1, -3//1],\n1-element iterator of $PRT:\n Ray(Rational{BigInt}[1//1, 0//1])"
-        @test showstr(p) == "HalfSpace(Rational{BigInt}[-1//2, -1//2], 0//1) ∩ HalfSpace(Rational{BigInt}[0//1, -1//4], 3//4) ∩ HalfSpace(Rational{BigInt}[0//1, 1//2], -1//2) : convexhull([1//1, -1//1], [2//1, -2//1], [3//1, -3//1]) + convexhull(Ray(Rational{BigInt}[1//1, 0//1]))"
+        expected = """
+Polyhedron $(typeof(p)):
+$it_expected:
+3-element iterator of $PPT:
+ Rational{BigInt}[1//1, -1//1]
+ Rational{BigInt}[2//1, -2//1]
+ Rational{BigInt}[3//1, -3//1],
+1-element iterator of $PRT:
+ Ray(Rational{BigInt}[1//1, 0//1])"""
+        @test replstr(p)        == expected
+        @test replstr(p, false) == expected
+        @test showstr(p) == "$short : convexhull([1//1, -1//1], [2//1, -2//1], [3//1, -3//1]) + convexhull(Ray(Rational{BigInt}[1//1, 0//1]))"
     end
     p = polyhedron(h)
     @testset "Polyhedron without V-representation" begin
-        @test replstr(p)        == "Polyhedron $(typeof(p)):\n3-element iterator of $HS:\n HalfSpace(Rational{BigInt}[-1//2, -1//2], 0//1)\n HalfSpace(Rational{BigInt}[0//1, -1//4], 3//4)\n HalfSpace(Rational{BigInt}[0//1, 1//2], -1//2)"
-        @test replstr(p, false) == "Polyhedron $(typeof(p)):\n3-element iterator of $HS:\n HalfSpace(Rational{BigInt}[-1//2, -1//2], 0//1)\n HalfSpace(Rational{BigInt}[0//1, -1//4], 3//4)\n HalfSpace(Rational{BigInt}[0//1, 1//2], -1//2)"
-        @test showstr(p) == "HalfSpace(Rational{BigInt}[-1//2, -1//2], 0//1) ∩ HalfSpace(Rational{BigInt}[0//1, -1//4], 3//4) ∩ HalfSpace(Rational{BigInt}[0//1, 1//2], -1//2)"
+        @test replstr(p)        == "Polyhedron $(typeof(p)):\n$it_expected"
+        @test replstr(p, false) == "Polyhedron $(typeof(p)):\n$it_expected"
+        @test showstr(p) == short
     end
 end

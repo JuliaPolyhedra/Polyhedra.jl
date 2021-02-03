@@ -2,6 +2,12 @@ module Polyhedra
 
 using SparseArrays
 using LinearAlgebra
+# For `rank` with `Rational{BigInt}` or `BigFloat`,
+# it calls `svdvals` for `BigFloat` which is implemented in
+# `GenericLinearAlgebra`.
+# TODO use exact arithmetic for rank of `Rational{BigInt}`.
+#      like RowEchelon.jl (slow) or LU (faster).
+import GenericLinearAlgebra
 
 import MutableArithmetics
 const MA = MutableArithmetics

@@ -1,3 +1,14 @@
+function cartesian_product_test()
+    p1 = polyhedron(hrep([HalfSpace([1.0], 1.0), HalfSpace([-1.0], 0.0)]))
+    p2 = polyhedron(hrep([HalfSpace([1.0], 1.0), HalfSpace([-1.0], 0.0)]))
+    p = Polyhedra.hcartesianproduct(p1, p2)
+    @test p isa DefaultPolyhedron{Float64,
+                                  Polyhedra.Intersection{Float64,StaticArrays.SArray{Tuple{2},Float64,1,2},StaticArrays.Size{(2,)}},
+                                  Polyhedra.Hull{Float64,StaticArrays.SArray{Tuple{2},Float64,1,2},StaticArrays.Size{(2,)}}}
+    expected = HalfSpace((@SVector [1.0, 0.0]), 1.0) ∩ HalfSpace((@SVector [-1.0, 0.0]), 0.0) ∩ HalfSpace((@SVector [0.0, 1.0]), 1.0) ∩ HalfSpace((@SVector [0.0, -1.0]), 0.0)
+    inequality_fulltest(p, expected)
+end
+
 @testset "Interval tests" begin
 
     # Closed interval
@@ -191,13 +202,6 @@
     inequality_fulltest(p, h)
 
     @testset "Cartesian product (#132)" begin
-        p1 = polyhedron(hrep([HalfSpace([1.0], 1.0), HalfSpace([-1.0], 0.0)]))
-        p2 = polyhedron(hrep([HalfSpace([1.0], 1.0), HalfSpace([-1.0], 0.0)]))
-        p = Polyhedra.hcartesianproduct(p1, p2)
-        @test p isa DefaultPolyhedron{Float64,
-                                      Polyhedra.Intersection{Float64,StaticArrays.SArray{Tuple{2},Float64,1,2},StaticArrays.Size{(2,)}},
-                                      Polyhedra.Hull{Float64,StaticArrays.SArray{Tuple{2},Float64,1,2},StaticArrays.Size{(2,)}}}
-        expected = HalfSpace((@SVector [1.0, 0.0]), 1.0) ∩ HalfSpace((@SVector [-1.0, 0.0]), 0.0) ∩ HalfSpace((@SVector [0.0, 1.0]), 1.0) ∩ HalfSpace((@SVector [0.0, -1.0]), 0.0)
-        inequality_fulltest(p, expected)
+        cartesian_product_test()
     end
 end
