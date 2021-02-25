@@ -21,6 +21,7 @@
         @test p isa Interval{Float64}
         @test !isempty(p)
         @test volume(p) == 11
+        @test centerofmass(p) ≈ [2.5]
         @test dim(p) == 1
         inequality_fulltest(p, h)
         generator_fulltest(p, v)
@@ -37,6 +38,7 @@
         @test !isempty(p)
         @test iszero(surface(p))
         @test volume(p) == 11
+        @test centerofmass(p) ≈ [2.5]
         @test dim(p) == 1
         generator_fulltest(p, v)
         inequality_fulltest(p, h)
