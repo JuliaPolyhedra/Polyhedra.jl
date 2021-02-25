@@ -14,5 +14,4 @@ function comsquarepyramidtest(lib::Polyhedra.Library)
     # Centroid is [1/2, 1/2, 1/5].
     # Center of mass is [1/2, 1/2, 1/4].
     @test centerofmass(poly) ≈ [1/2, 1/2, 1/4]
-    println("woohoo!")
 end
