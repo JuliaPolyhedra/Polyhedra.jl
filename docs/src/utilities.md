@@ -17,6 +17,7 @@ translate
 ```@docs
 volume
 surface
+centerofmass
 ```
 
 ## Chebyshev center

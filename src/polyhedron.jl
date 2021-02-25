@@ -1,7 +1,7 @@
 # Mandatory
 export polyhedron, loadpolyhedron!
 export hrepiscomputed, hrep, vrepiscomputed, vrep
-export volume, volume_simplex, unscaled_volume_simplex, surface
+export volume, volume_simplex, unscaled_volume_simplex, surface, centerofmass
 
 """
     polyhedron(rep::Representation{T})
@@ -58,6 +58,28 @@ function unscaled_volume_simplex(s)
 end
 function volume_simplex(s)
     return unscaled_volume_simplex(s) / factorial(fulldim(s))
+end
+
+"""
+    centerofmass(p::Polyhedron{T}) where {T}
+
+Returns the center of mass of `p`, represented as a `Vector{T}` of length `fulldim(p)`.
+Throws an error if `p` is degenerate.
+"""
+function centerofmass(p::Polyhedron{T}) where T
+    simplices = triangulation(p)
+    isempty(simplices) && error("Tried to compute center of mass of a degenerate polyhedron")
+    unscaled_center = zeros(T, fulldim(p))
+    unscaled_vol = zero(T)
+    for Δ in simplices
+        v = unscaled_volume_simplex(Δ)
+        # Note, the scaling constants for `unscaled_center` and `unscaled_vol`
+        # differ by a factor of `fulldim(p) + 1` (the `sum(points(Δ))` later
+        # becomes an average)
+        unscaled_center += v * sum(points(Δ))
+        unscaled_vol += v
+    end
+    return unscaled_center / (unscaled_vol * (fulldim(p) + 1))
 end
 
 """
