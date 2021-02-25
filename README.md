@@ -2,8 +2,8 @@
 
 | **Documentation** | **Build Status** | **Social** | **References to cite** |
 |:-----------------:|:----------------:|:----------:|:----------------------:|
-| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] [![Build Status][winbuild-img]][winbuild-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
-| [![][docs-latest-img]][docs-latest-url] | [![Coveralls branch][coveralls-img]][coveralls-url] [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
+| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] | [![Gitter][gitter-img]][gitter-url] | [![DOI][zenodo-img]][zenodo-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Discourse_logo.png/799px-Discourse_logo.png" width="64">][discourse-url] | |
 
 [<img src="examples/drakeperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/drakeperm.jl)
 [<img src="examples/glvizperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/glvizperm.jl)
@@ -14,7 +14,7 @@ These manipulation notably include the transformation from (resp. to) an inequal
 It defines the abstract type `Polyhedron` and splits the operations on this type in two categories:
 
 * Mandatory: Operations that needs to be implemented by the Polyhedral Computation Libraries: e.g. Transformation between the two representations described above and variable elimination.
-* Optional: Operations that can be implemented using the other operations and hence have a default implementation: e.g. creation of the polyhedron from the feasible set of a [JuMP](https://github.com/jump-dev/JuMP.jl) model, linear transformation, intersection, [Minkowski addition](https://en.wikipedia.org/wiki/Minkowski_addition), decomposition into points and faces for e.g. 3D visualization using [DrakeVisualizer](https://github.com/rdeits/DrakeVisualizer.jl) or [GLVisualize.jl](https://github.com/JuliaGL/GLVisualize.jl)...
+* Optional: Operations that can be implemented using the other operations and hence have a default implementation: e.g. creation of the polyhedron from the feasible set of a [JuMP](https://github.com/jump-dev/JuMP.jl) model, linear transformation, intersection, [Minkowski addition](https://en.wikipedia.org/wiki/Minkowski_addition), decomposition into points and faces for e.g. 3D visualization using [MeshCat](https://github.com/rdeits/MeshCat.jl) or [Makie.jl](https://github.com/JuliaPlots/Makie.jl)...
 
 ## Documentation
 
@@ -28,14 +28,10 @@ See [CITATION.bib](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/CI
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-stable-url]: https://juliapolyhedra.github.io/Polyhedra.jl/stable
-[docs-latest-url]: https://juliapolyhedra.github.io/Polyhedra.jl/latest
+[docs-latest-url]: https://juliapolyhedra.github.io/Polyhedra.jl/dev
 
-[build-img]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl.svg?branch=master
-[build-url]: https://travis-ci.org/JuliaPolyhedra/Polyhedra.jl
-[winbuild-img]: https://ci.appveyor.com/api/projects/status/1c4frdxet094tntc/branch/master?svg=true
-[winbuild-url]: https://ci.appveyor.com/project/JuliaPolyhedra/polyhedra-jl/branch/master
-[coveralls-img]: https://coveralls.io/repos/github/JuliaPolyhedra/Polyhedra.jl/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/github/JuliaPolyhedra/Polyhedra.jl?branch=master
+[build-img]: https://github.com/JuliaPolyhedra/Polyhedra.jl/workflows/CI/badge.svg?branch=master
+[build-url]: https://github.com/JuliaPolyhedra/Polyhedra.jl/actions?query=workflow%3ACI
 [codecov-img]: http://codecov.io/github/JuliaPolyhedra/Polyhedra.jl/coverage.svg?branch=master
 [codecov-url]: http://codecov.io/github/JuliaPolyhedra/Polyhedra.jl?branch=master
 

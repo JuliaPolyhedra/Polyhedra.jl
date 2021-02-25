@@ -6,7 +6,7 @@ and a Polyhedra Manipulation Library of your choice.
 ## Getting Julia
 
 The first step is to install Julia.
-Polyhedra supports Julia v0.4 to Julia v1.0 but the latest version only supports Julia v0.7 and v1.0.
+Polyhedra supports Julia v1.0 but the latest version only supports Julia v1.3 or later.
 Download links and more detailed instructions are available on the [Julia website](http://julialang.org).
 
 ## Getting Polyhedra
