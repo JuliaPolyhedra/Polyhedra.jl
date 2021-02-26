@@ -68,15 +68,16 @@ Returns the center of mass of `p`, represented as a `Vector{T}` of length `fulld
 Throws an error if `p` is degenerate.
 """
 function center_of_mass(p::Polyhedron{T}) where T
+    # Implementation strategy: For a simplex, the center of mass coincides with
+    # the centroid which is easy to compute.  So we triangulate `p` into
+    # simplices and compute a volume-weighted average of these simplices'
+    # centers of mass.
     simplices = triangulation(p)
     isempty(simplices) && error("Tried to compute center of mass of a degenerate polyhedron")
     unscaled_center = zeros(T, fulldim(p))
     unscaled_vol = zero(T)
     for Δ in simplices
         v = unscaled_volume_simplex(Δ)
-        # Note, the scaling constants for `unscaled_center` and `unscaled_vol`
-        # differ by a factor of `fulldim(p) + 1` (the `sum(points(Δ))` later
-        # becomes an average)
         unscaled_center += v * sum(points(Δ))
         unscaled_vol += v
     end
