@@ -194,7 +194,7 @@ function detect_new_linearities(rep::Representation, solver; verbose=0)
         # won't be available afterwards.
         for i in ray_to_line
             MOI.delete(model, cλ[i])
-            MOI.modify(model, sum_con, MOI.ScalarCoefficientChange(λ[i], 0.0))
+            MOI.modify(model, sum_con, MOI.ScalarCoefficientChange(λ[i], zero(T)))
         end
         for i in ray_to_drop
             MOI.delete(model, λ[i])
