@@ -90,13 +90,14 @@ end
 """
 The representation `rep` does not contain any `elem`.
 """
-macro norepelem(rep, elem)
+macro norepelem(rep::Symbol, elem::Symbol, typed::Bool = true)
     idxs = Symbol(string(elem) * "Indices")
     idx = Symbol(string(elem) * "Index")
+    repT = esc(typed ? :($rep{T}) : rep)
     quote
-        Base.length(idxs::$idxs{T, <:$rep{T}}) where {T} = 0
-        Base.isempty(idxs::$idxs{T, <:$rep{T}}) where {T} = true
-        Base.iterate(idxs::$idxs{T, <:$rep{T}}) where {T} = nothing
+        Base.length(::$idxs{T, <:$repT}) where {T} = 0
+        Base.isempty(::$idxs{T, <:$repT}) where {T} = true
+        Base.iterate(::$idxs{T, <:$repT}) where {T} = nothing
     end
 end
 
@@ -138,21 +139,22 @@ _promote_reptype(P1::Type{<:VLinearSpace}, ::Type{<:VRep}) = vreptype(P1)
 """
 The representation `rep` contain the elements `elem` inside a vector in the field `field`.
 """
-macro vecrepelem(rep, elem, field)
+macro vecrepelem(rep, elem, field, typed = true)
     idxs = Symbol(string(elem) * "Indices")
     idx = Symbol(string(elem) * "Index")
+    repT = esc(typed ? :($rep{T}) : rep)
     esc(quote
-        Base.length(idxs::$idxs{T, <:$rep{T}}) where {T} = length(idxs.rep.$field)
-        Base.isempty(idxs::$idxs{T, <:$rep{T}}) where {T} = isempty(idxs.rep.$field)
-        function Polyhedra.startindex(idxs::$idxs{T, <:$rep{T}}) where {T}
+        Base.length(idxs::$idxs{T, <:$repT}) where {T} = length(idxs.rep.$field)
+        Base.isempty(idxs::$idxs{T, <:$repT}) where {T} = isempty(idxs.rep.$field)
+        function Polyhedra.startindex(idxs::$idxs{T, <:$repT}) where {T}
             if isempty(idxs.rep.$field)
                 return nothing
             else
                 return eltype(idxs)(1)
             end
         end
-        Base.get(rep::$rep{T}, idx::$idx{T}) where {T} = rep.$field[idx.value]
-        function Polyhedra.nextindex(rep::$rep{T}, idx::$idx{T}) where {T}
+        Base.get(rep::$repT, idx::$idx{T}) where {T} = rep.$field[idx.value]
+        function Polyhedra.nextindex(rep::$repT, idx::$idx{T}) where {T}
             if idx.value >= length(rep.$field)
                 return nothing
             else
@@ -163,19 +165,49 @@ macro vecrepelem(rep, elem, field)
 end
 
 """
+The representation `rep` contain the elements `elem` inside a vector in the field `field`.
+"""
+macro matrepelem(rep, elem, field, typed = true)
+    idxs = Symbol(string(elem) * "Indices")
+    idx = Symbol(string(elem) * "Index")
+    repT = esc(typed ? :($rep{T}) : rep)
+    esc(quote
+        Base.length(idxs::Polyhedra.$idxs{T, <:$repT}) where {T} = size(idxs.rep.$field, 1)
+        Base.isempty(idxs::Polyhedra.$idxs{T, <:$repT}) where {T} = isempty(idxs.rep.$field)
+        function Polyhedra.startindex(idxs::Polyhedra.$idxs{T, <:$repT}) where {T}
+            if isempty(idxs.rep.$field)
+                return nothing
+            else
+                return eltype(idxs)(1)
+            end
+        end
+        function Polyhedra.nextindex(rep::$repT, idx::Polyhedra.$idx{T}) where {T}
+            if idx.value >= size(rep.$field, 1)
+                return nothing
+            else
+                return typeof(idx)(idx.value + 1)
+            end
+        end
+    end)
+end
+
+
+
+"""
 The representation `rep` contain the elements `elem` inside a representation in the field `field`.
 """
-macro subrepelem(rep, elem, field)
+macro subrepelem(rep, elem, field, typed = true)
     idxst = Symbol(string(elem) * "Indices")
     idxs = :(Polyhedra.$idxst)
     idxt = Symbol(string(elem) * "Index")
     idx = :(Polyhedra.$idxt)
     subidxs = :(Polyhedra.Indices{T, Polyhedra.valuetype(idxs)}(idxs.rep.$field))
+    repT = esc(typed ? :($rep{T}) : rep)
     esc(quote
-        Base.length(idxs::$idxs{T, <:$rep{T}}) where {T} = length($subidxs)
-        Base.isempty(idxs::$idxs{T, <:$rep{T}}) where {T} = isempty($subidxs)
-        Polyhedra.startindex(idxs::$idxs{T, <:$rep{T}}) where {T} = Polyhedra.startindex($subidxs)
-        Base.get(rep::$rep{T}, idx::$idx{T}) where {T} = get(rep.$field, idx)
-        Polyhedra.nextindex(rep::$rep{T}, idx::$idx{T}) where {T} = Polyhedra.nextindex(rep.$field, idx)
+        Base.length(idxs::$idxs{T, <:$repT}) where {T} = length($subidxs)
+        Base.isempty(idxs::$idxs{T, <:$repT}) where {T} = isempty($subidxs)
+        Polyhedra.startindex(idxs::$idxs{T, <:$repT}) where {T} = Polyhedra.startindex($subidxs)
+        Base.get(rep::$repT, idx::$idx{T}) where {T} = get(rep.$field, idx)
+        Polyhedra.nextindex(rep::$repT, idx::$idx{T}) where {T} = Polyhedra.nextindex(rep.$field, idx)
     end)
 end
