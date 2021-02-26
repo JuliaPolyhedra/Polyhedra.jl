@@ -1,3 +1,10 @@
+# # Convex hull and intersection
+
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/generated/Convex hull and intersection.ipynb)
+#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/generated/Convex hull and intersection.ipynb)
+
+# ### Introduction
+
 # These examples illustrate common operations on polyhedra using [Polyhedra.jl](https://github.com/JuliaPolyhedra/Polyhedra.jl):
 #
 # - The convex hull of the union of polytopes
