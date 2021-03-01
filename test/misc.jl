@@ -11,6 +11,7 @@ include("sparserect.jl")
 include("recipe.jl")
 include("support_function.jl")
 include("vhypercube.jl")
+include("center_of_mass.jl")
 include("cartesian_interval.jl")
 
 const misctests = Dict(
@@ -32,6 +33,7 @@ const misctests = Dict(
     "vhypercubetest2u" => lib -> vhypercubetest(lib, 2,  1, 2),
     "vhypercubetest3c" => lib -> vhypercubetest(lib, 3, -1, 1),
     "vhypercubetest3u" => lib -> vhypercubetest(lib, 3,  1, 2),
+    "center_of_mass" => comsquarepyramidtest,
     "cartesian_interval" => cartesian_interval_test
 )
 

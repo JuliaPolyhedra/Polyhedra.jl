@@ -20,6 +20,7 @@ polar
 ```@docs
 volume
 surface
+center_of_mass
 ```
 
 ## Largest inscribed ball with center
