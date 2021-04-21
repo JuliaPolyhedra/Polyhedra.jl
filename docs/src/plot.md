@@ -36,10 +36,10 @@ Suppose for instance that we want to visualize the polyhedron having the followi
 julia> using Polyhedra
 
 julia> v = convexhull([0, 0, 0]) + conichull([1, 0, 0], [0, 1, 0], [0, 0, 1])
-V-representation Polyhedra.Hull{Int64,Array{Int64,1},Int64}:
-1-element iterator of Array{Int64,1}:
+V-representation Polyhedra.Hull{Int64, Vector{Int64}, Int64}:
+1-element iterator of Vector{Int64}:
  [0, 0, 0],
-3-element iterator of Ray{Int64,Array{Int64,1}}:
+3-element iterator of Ray{Int64, Vector{Int64}}:
  Ray([1, 0, 0])
  Ray([0, 1, 0])
  Ray([0, 0, 1])
@@ -48,10 +48,10 @@ V-representation Polyhedra.Hull{Int64,Array{Int64,1},Int64}:
 The V-representation cannot be given to [MeshCat](https://github.com/rdeits/MeshCat.jl) or [Makie](https://github.com/JuliaPlots/Makie.jl) directly, it first need to be transformed into a polyhedron:
 ```jldoctest plots3
 julia> p = polyhedron(v)
-Polyhedron DefaultPolyhedron{Rational{BigInt},Polyhedra.Intersection{Rational{BigInt},Array{Rational{BigInt},1},Int64},Polyhedra.Hull{Rational{BigInt},Array{Rational{BigInt},1},Int64}}:
-1-element iterator of Array{Rational{BigInt},1}:
+Polyhedron DefaultPolyhedron{Rational{BigInt}, Polyhedra.Intersection{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}, Polyhedra.Hull{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}}:
+1-element iterator of Vector{Rational{BigInt}}:
  Rational{BigInt}[0//1, 0//1, 0//1],
-3-element iterator of Ray{Rational{BigInt},Array{Rational{BigInt},1}}:
+3-element iterator of Ray{Rational{BigInt}, Vector{Rational{BigInt}}}:
  Ray(Rational{BigInt}[1//1, 0//1, 0//1])
  Ray(Rational{BigInt}[0//1, 1//1, 0//1])
  Ray(Rational{BigInt}[0//1, 0//1, 1//1])
@@ -60,7 +60,7 @@ Polyhedron DefaultPolyhedron{Rational{BigInt},Polyhedra.Intersection{Rational{Bi
 Then, we need to create a mess from the polyhedron:
 ```jldoctest plots3
 julia> m = Polyhedra.Mesh(p)
-Polyhedra.Mesh{3,Rational{BigInt},DefaultPolyhedron{Rational{BigInt},Polyhedra.Intersection{Rational{BigInt},Array{Rational{BigInt},1},Int64},Polyhedra.Hull{Rational{BigInt},Array{Rational{BigInt},1},Int64}}}(convexhull([0//1, 0//1, 0//1]) + convexhull(Ray(Rational{BigInt}[1//1, 0//1, 0//1]), Ray(Rational{BigInt}[0//1, 1//1, 0//1]), Ray(Rational{BigInt}[0//1, 0//1, 1//1])), nothing, nothing, nothing)
+Polyhedra.Mesh{3, Rational{BigInt}, DefaultPolyhedron{Rational{BigInt}, Polyhedra.Intersection{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}, Polyhedra.Hull{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}}}(convexhull([0//1, 0//1, 0//1]) + convexhull(Ray(Rational{BigInt}[1//1, 0//1, 0//1]), Ray(Rational{BigInt}[0//1, 1//1, 0//1]), Ray(Rational{BigInt}[0//1, 0//1, 1//1])), nothing, nothing, nothing)
 ```
 
 ```@docs
