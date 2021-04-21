@@ -27,10 +27,10 @@ For instance, consider the 1-simplex:
 julia> using Polyhedra
 
 julia> simplex = HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0) ∩ HyperPlane([1, 1], 1)
-H-representation Polyhedra.Intersection{Int64,Array{Int64,1},Int64}:
-1-element iterator of HyperPlane{Int64,Array{Int64,1}}:
+H-representation Polyhedra.Intersection{Int64, Vector{Int64}, Int64}:
+1-element iterator of HyperPlane{Int64, Vector{Int64}}:
  HyperPlane([1, 1], 1),
-2-element iterator of HalfSpace{Int64,Array{Int64,1}}:
+2-element iterator of HalfSpace{Int64, Vector{Int64}}:
  HalfSpace([-1, 0], 0)
  HalfSpace([0, -1], 0)
 ```
@@ -47,7 +47,7 @@ CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 
 julia> @variable(model, λ[1:2])
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  λ[1]
  λ[2]
 ```
@@ -55,18 +55,18 @@ julia> @variable(model, λ[1:2])
 The variables can be constrained to belong to the simplex as follows:
 ```jldoctest jump-in-hrep
 julia> @constraint(model, λ in simplex)
-[λ[1], λ[2]] ∈ Polyhedra.PolyhedraOptSet{Int64,Polyhedra.Intersection{Int64,Array{Int64,1},Int64}}(HyperPlane([1, 1], 1) ∩ HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0))
+[λ[1], λ[2]] ∈ Polyhedra.PolyhedraOptSet{Int64, Polyhedra.Intersection{Int64, Vector{Int64}, Int64}}(HyperPlane([1, 1], 1) ∩ HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0))
 ```
 but a vector of affine or quadratic expressions can also be constrained to belong to the simplex:
 ```jldoctest jump-in-hrep
 julia> A = [1  1
             1 -1]
-2×2 Array{Int64,2}:
+2×2 Matrix{Int64}:
  1   1
  1  -1
 
 julia> @constraint(model, A * λ in simplex)
-[λ[1] + λ[2], λ[1] - λ[2]] ∈ Polyhedra.PolyhedraOptSet{Int64,Polyhedra.Intersection{Int64,Array{Int64,1},Int64}}(HyperPlane([1, 1], 1) ∩ HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0))
+[λ[1] + λ[2], λ[1] - λ[2]] ∈ Polyhedra.PolyhedraOptSet{Int64, Polyhedra.Intersection{Int64, Vector{Int64}, Int64}}(HyperPlane([1, 1], 1) ∩ HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0))
 ```
 We can verify that the model contains both constraints:
 ```julia
