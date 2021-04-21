@@ -19,7 +19,14 @@ If `strongly` is `true`,
 """
 function isredundant end
 
-function isredundant(p::Polyhedron, idx::HIndex; kws...)
+# `isredundant(::Polyhedron, ::HIndex)` would cause ambiguity with LRSLib
+# which defines `isredundant(::LRSLib.Polyhedron, ::Index)` so we add a
+# `_fallback` layer to circumvent this.
+function isredundant(p::Polyhedron, idx::Index; kws...)
+    return isredundant_fallback(p, idx; kws...)
+end
+
+function isredundant_fallback(p::Polyhedron, idx::HIndex; kws...)
     hredundancy(p) == NO_REDUNDANCY && return false
     solver = _solver_warn(p, false, false)
     if solver !== nothing
@@ -37,7 +44,7 @@ function to remove this warning.
     return isredundant(vrep(p), h; d = dim(p), kws...)
 end
 
-function isredundant(p::Polyhedron, idx::VIndex; strongly=false, kws...)
+function isredundant_fallback(p::Polyhedron, idx::VIndex; strongly=false, kws...)
     vredundancy(p) == NO_REDUNDANCY && return false
     solver = _solver_warn(p, true, strongly)
     if solver !== nothing
