@@ -152,7 +152,7 @@ function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
             MOI.set(model, MOI.ConstraintSet(), ci, MOI.EqualTo{T}(ai))
         end
         #if !isone(length(indices)) &&
-        if  is_feasible(model, "attempting to determine whether $element of index $index is redundant.")
+        if  is_feasible(model, "attempting to determine whether $element of index $idx is redundant.")
             MOI.delete(model, λ[i])
             push!(red_indices, i)
         else
