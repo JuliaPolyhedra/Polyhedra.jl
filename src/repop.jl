@@ -194,7 +194,7 @@ Base.:(\)(P::Union{AbstractMatrix, UniformScaling}, rep::HRep) = rep / P'
 
 function linear_preimage_transpose(P, p::HRep{Tin}, d) where Tin
     f = (i, h) -> h / P
-    T = _promote_type(Tin, eltype(P))
+    T = MA.promote_sum_mul(Tin, eltype(P))
     return similar(p, d, T, hmap(f, d, T, p)...,
                    dimension_map = i -> nothing)
 end
@@ -217,7 +217,7 @@ end
 
 function linear_image(P, p::VRep{Tin}, d) where Tin
     f = (i, v) -> P * v
-    T = _promote_type(Tin, eltype(P))
+    T = MA.promote_sum_mul(Tin, eltype(P))
     return similar(p, d, T, vmap(f, d, T, p)...)
 end
 
