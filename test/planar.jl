@@ -59,10 +59,42 @@ function test_planar_square(VT, d)
     end
 end
 
+# Square + redundant points + [+-1.5, -+0.25]
+function test_planar_square_with_more()
+    expected = [[-1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [1.0, -1.0]]
+    v0 = convexhull([-1.0, -1.0], [1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [0.0, 1.0])
+    v1 = Polyhedra.planar_hull(v0)
+    @test collect(points(v1)) == expected
+    v0 = convexhull([-1.0, -1.0], [1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [0.0, 1.0 + 1e-10])
+    v1 = Polyhedra.planar_hull(v0)
+    @test collect(points(v1)) == expected
+    v0 = convexhull([0.0, 1.0 + 1e-10], [-1.0, -1.0], [1.0, -1.0], [-1.0, 1.0], [1.0, 1.0])
+    v1 = Polyhedra.planar_hull(v0)
+    @test collect(points(v1)) == expected
+    expected = [[-1.0, -1.0], [-1.0, 1.0], [0.0, 1.0 + 1e-4], [1.0, 1.0], [1.0, -1.0]]
+    v0 = convexhull([-1.0, -1.0], [1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [0.0, 1.0 + 1e-4])
+    v1 = Polyhedra.planar_hull(v0)
+    @test collect(points(v1)) == expected
+    expected = [[-1.0, -1.0], [-1.5, 0.25], [-1.0, 1.0], [1.0, 1.0], [1.5, -0.25], [1.0, -1.0]]
+    v0 = convexhull([-1.0, -1.0], [1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [0.0, 1.0], [-1.5, 0.25], [1.5, -0.25])
+    v1 = Polyhedra.planar_hull(v0)
+    @test collect(points(v1)) == expected
+    v0 = convexhull([-1.0, -1.0], [1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [0.0, 1.0], [-0.5, -1.0], [-1.5, 0.25], [0.0, -0.75], [0.0, 0.75], [1.5, -0.25])
+    v1 = Polyhedra.planar_hull(v0)
+    @test collect(points(v1)) == expected
+    v0 = convexhull([-1.0, -1.0], [1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [0.0, -1.0], [0.0, 1.0], [-0.5, -1.0], [-1.5, 0.25], [0.0, -0.75], [0.0, 0.75], [1.5, -0.25])
+    v1 = Polyhedra.planar_hull(v0)
+    @test collect(points(v1)) == expected
+    v0 = convexhull([-1.0, -1.0], [1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [0.5, 1.0], [0.0, -1.0], [0.0, 1.0], [-0.5, -1.0], [-1.5, 0.25], [0.0, -0.75], [0.0, 0.75], [1.5, -0.25])
+    v1 = Polyhedra.planar_hull(v0)
+    @test collect(points(v1)) == expected
+end
+
 @testset "Planar" begin
     for T in [Float64, Int]
         for (VT, d) in [(Vector{T}, 2), (SVector{2, T}, StaticArrays.Size(2))]
             test_planar_square(VT, d)
         end
     end
+    test_planar_square_with_more()
 end

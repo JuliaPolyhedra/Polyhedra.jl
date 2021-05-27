@@ -5,17 +5,41 @@ function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray::Nothing
     end
     prev = sign_sense == 1 ? first(ps) : last(ps)
     cur = prev
+    # Invariant:
+    # We either have:
+    # * `hull` is empty and `cur == prev` or
+    # * `hull` is nonempty and `prev = last(hull)`.
+    # In any case, the semihull of `ps[1:(j-1)]` is given by `[hull; cur]`.
     for j in (sign_sense == 1 ? (2:length(ps)) : ((length(ps)-1):-1:1))
-        while prev != cur && counterclockwise(cur - prev, ps[j] - prev) >= 0
+        skip = false
+        while prev != cur
+            cur_vec = cur - prev
+            psj_vec = ps[j] - prev
+            cc = counterclockwise(cur_vec, psj_vec)
+            if isapproxzero(cc)
+                # `cur` and `ps[j]` are on the same ray from `cur`.
+                # The one that is closer to `prev` is redundant.
+                # If `j` is the last index and redundant (it may happen if this
+                # ray is perpendicular to the direction of sorting) then we should
+                # also avoid adding `ps[j]` to `hull` so we set `skip` to `true`.
+                if norm(cur_vec, 1) > norm(psj_vec, 1)
+                    skip = true
+                    break
+                end
+            elseif cc < 0
+                break
+            end
             cur = prev
             pop!(hull)
             if !isempty(hull)
                 prev = last(hull)
             end
         end
-        push!(hull, cur)
-        prev = cur
-        cur = ps[j]
+        if !skip
+            push!(hull, cur)
+            prev = cur
+            cur = ps[j]
+        end
     end
     push!(hull, cur)
     return hull
