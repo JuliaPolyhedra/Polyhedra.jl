@@ -58,11 +58,3 @@ _pos(x::T) where {T<:Real} = _gt(x, zero(T))
 _neg(x::T) where {T<:Real} = _lt(x, zero(T))
 _nonneg(x::T) where {T<:Real} = _geq(x, zero(T))
 _nonpos(x::T) where {T<:Real} = _leq(x, zero(T))
-
-function _promote_type(::Type{T1}, ::Type{T2}) where {T1,T2}
-    if T1 <: AbstractFloat || T2 <: AbstractFloat
-        Float64
-    else
-        Rational{BigInt}
-    end
-end

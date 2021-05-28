@@ -75,12 +75,12 @@ Base.:(*)(h::HalfSpace, α::Real) = HalfSpace(h.a * α, h.β * α)
 Base.:(*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
 
 function Base.:(/)(h::ElemT, P::UniformScaling) where {T, ElemT<:HRepElement{T}}
-    Tout = _promote_type(T, eltype(P))
+    Tout = MA.promote_operation(*, eltype(P), T)
     ElemTout = similar_type(ElemT, FullDim(h), Tout)
     ElemTout(P * _vec(Tout, h.a), Tout(h.β))
 end
 function Base.:(/)(h::ElemT, P::AbstractMatrix) where {T, ElemT<:HRepElement{T}}
-    Tout = _promote_type(T, eltype(P))
+    Tout = MA.promote_sum_mul(T, eltype(P))
     ElemTout = similar_type(ElemT, size(P, 2), Tout)
     ElemTout(AbstractMatrix{Tout}(P) * _vec(Tout, h.a), Tout(h.β))
 end
@@ -212,7 +212,7 @@ coord(v::AbstractVector) = v
 coord(v::Union{HRepElement, VStruct}) = v.a
 
 function Base.:*(P::AbstractMatrix, v::ElemT) where {T, ElemT<:VStruct{T}}
-      Tout = _promote_type(T, eltype(P))
+      Tout = MA.promote_sum_mul(T, eltype(P))
       ElemTout = similar_type(ElemT, size(P, 1), Tout)
       return ElemTout(P * v.a)
 end
