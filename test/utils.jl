@@ -1,6 +1,35 @@
 using Test
 using Polyhedra
 
+# Allocating size for allocating a `BigInt`.
+# Half size on 32-bit.
+const BIGINT_ALLOC = Sys.WORD_SIZE == 64 ? 48 : 24
+
+function alloc_test(f, n)
+    f() # compile
+    @test n == @allocated f()
+end
+
+function rec_identical(vr::Polyhedra.LinesHull, vr2::Polyhedra.LinesHull)
+    @test vr === vr2
+    @test vr.lines === vr2.lines
+end
+function rec_identical(vr::Polyhedra.RaysHull, vr2::Polyhedra.RaysHull)
+    @test vr === vr2
+    @test vr2.rays === vr.rays
+    rec_identical(vr.lines, vr2.lines)
+end
+function rec_identical(vr::Polyhedra.PointsHull, vr2::Polyhedra.PointsHull)
+    @test vr === vr2
+    @test vr2.points === vr.points
+end
+
+function rec_identical(vr::Polyhedra.Hull, vr2::Polyhedra.Hull)
+    @test vr2 === vr
+    rec_identical(vr.points, vr2.points)
+    rec_identical(vr.rays, vr2.rays)
+end
+
 _isapprox(x::Real, y::Real) = _isapprox(promote(x, y)...)
 _isapprox(x::T, y::T) where {T<:Real} = x == y
 _isapprox(x::T, y::T) where {T<:AbstractFloat} = y < x+1024*eps(T) && x < y+1024*eps(T)
