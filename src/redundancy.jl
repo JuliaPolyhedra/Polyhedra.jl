@@ -120,19 +120,20 @@ function removevredundancy!(p::Polyhedron; strongly=false, planar=true)
     vredundancy(p) == NO_REDUNDANCY && return
     if fulldim(p) == 2 && !strongly && planar
         setvrep!(p, planar_hull(vrep(p)), NO_REDUNDANCY)
-    end
-    solver = _solver_warn(p, true, strongly)
-    if solver === nothing
-        detecthlinearity!(p)
-        detectvlinearity!(p)
-        nonred = removevredundancy(vrep(p), hrep(p), strongly=strongly)
     else
-        detectvlinearity!(p)
-        nonred = removevredundancy(vrep(p), solver)
+        solver = _solver_warn(p, true, strongly)
+        if solver === nothing
+            detecthlinearity!(p)
+            detectvlinearity!(p)
+            nonred = removevredundancy(vrep(p), hrep(p), strongly=strongly)
+        else
+            detectvlinearity!(p)
+            nonred = removevredundancy(vrep(p), solver)
+        end
+        # If `strongly` then we only remove strongly redundant elements
+        # henwe we cannot say that the redundancy is `NO_REDUNDANCY`.
+        setvrep!(p, nonred, strongly ? LINEARITY_DETECTED : NO_REDUNDANCY)
     end
-    # If `strongly` then we only remove strongly redundant elements
-    # henwe we cannot say that the redundancy is `NO_REDUNDANCY`.
-    setvrep!(p, nonred, strongly ? LINEARITY_DETECTED : NO_REDUNDANCY)
 end
 
 function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
