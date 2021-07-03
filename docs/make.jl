@@ -8,6 +8,7 @@ const EXAMPLES = [
     "Convex hull and intersection.jl",
     "Extended Formulation.jl",
     "Minimal Robust Positively Invariant Set.jl",
+    "Convex hull of a set of points.jl",
 ]
 
 for example in EXAMPLES
