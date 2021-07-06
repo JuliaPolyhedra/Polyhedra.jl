@@ -9,7 +9,7 @@ using Polyhedra
 
 v = convexhull([0, 0], [0, 1], [1, 0], [0.1, 0.1]) # list of points
 v = vrep([[0, 0], [0, 1], [1, 0], [0.1, 0.1]]) # vector of points
-# number of poi nts × dimension matrix
+# number of points × dimension matrix
 x = [0,0,1,0.1]
 y = [0,1,0,0.1]
 v = vrep([x y])
