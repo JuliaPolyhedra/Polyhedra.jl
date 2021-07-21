@@ -15,7 +15,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 GenericLinearAlgebra = "0.2"
-GeometryBasics = "0.2, 0.3, 0.4"
+GeometryBasics = "0.2, 0.3"
 JuMP = "0.21"
 MutableArithmetics = "0.2"
 RecipesBase = "0.7, 0.8, 1.0"
