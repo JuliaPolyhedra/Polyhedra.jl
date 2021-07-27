@@ -35,7 +35,7 @@ surface(::Interval{T}) where {T} = zero(T)
 volume(p::Interval) = p.length
 Base.isempty(p::Interval) = isempty(p.vrep)
 
-function Interval{T, AT, D}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) where {T, AT, D}
+function _interval(AT, haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) where {T}
     if haslb && hasub && _gt(lb, ub)
         isempty = true
     end
@@ -77,10 +77,14 @@ function Interval{T, AT, D}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Boo
     h = hrep(hps, hss)
     v = vrep(ps, ls, rs)
     volume = isempty ? zero(T) : (haslb && hasub ? max(zero(T), ub - lb) : -one(T))
-    Interval{T, AT, D}(h, v, volume)
+    return h, v, volume
 end
 
-function _hinterval(rep::HRep{T}, ::Type{AT}, D) where {T, AT}
+function Interval{T, AT, D}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) where {T, AT, D}
+    return Interval{T, AT, D}(_interval(AT, haslb, lb, hasub, ub, isempty)...)
+end
+
+function _hinterval(rep::HRep{T}, ::Type{AT}) where {T, AT}
     haslb = false
     lb = zero(T)
     hasub = false
@@ -125,7 +129,11 @@ function _hinterval(rep::HRep{T}, ::Type{AT}, D) where {T, AT}
             _setub(hs.β / α)
         end
     end
-    Interval{T, AT, D}(haslb, lb, hasub, ub, empty)
+    return _interval(AT, haslb, lb, hasub, ub, empty)
+end
+
+function _hinterval(rep::HRep{T}, ::Type{AT}, D) where {T, AT}
+    return Interval{T, AT, D}(_hinterval(rep, AT)...)
 end
 
 function _vinterval(v::VRep{T}, ::Type{AT}, D) where {T, AT}
@@ -191,3 +199,11 @@ function detecthlinearity!(::Interval) end
 function detectvlinearity!(::Interval) end
 function removehredundancy!(::Interval) end
 function removevredundancy!(::Interval) end
+
+function sethrep!(p::Interval{T, AT}, h::HRep) where {T, AT}
+    hnew, v, volume = _hinterval(h, AT)
+    hrep = hnew
+    vrep = v
+    length = volume
+    return p
+end    
