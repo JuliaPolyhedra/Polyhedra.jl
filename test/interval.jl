@@ -9,6 +9,24 @@ function cartesian_product_test()
     inequality_fulltest(p, expected)
 end
 
+function sethrep_test()
+    #             x_1 ≤ 2   x_1 ≥ -1 <=> -x_1 ≤ 1
+    h1 = HalfSpace([1], 2) ∩ HalfSpace([-1], 1)
+    v1 = convexhull([-1], [2])
+    p = polyhedron(h1)
+    @test volume(p) == 3
+    inequality_fulltest(p, h1)
+    generator_fulltest(p, v1)
+    #             x_1 ≤ 1   x_1 ≥ -1 <=> -x_1 ≤ 1
+    h2 = HalfSpace([1], 1) ∩ HalfSpace([-1], 1)
+    v2 = convexhull([-1], [1])
+    Polyhedra.sethrep!(p, h2)
+    # Test that the three fields have been modified
+    @test volume(p) == 2
+    inequality_fulltest(p, h2)
+    generator_fulltest(p, v2)
+end
+
 @testset "Interval tests" begin
 
     # Closed interval
@@ -205,5 +223,9 @@ end
 
     @testset "Cartesian product (#132)" begin
         cartesian_product_test()
+    end
+
+    @testset "sethrep! (#267)" begin
+        sethrep_test()
     end
 end

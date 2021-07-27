@@ -202,8 +202,8 @@ function removevredundancy!(::Interval) end
 
 function sethrep!(p::Interval{T, AT}, h::HRep) where {T, AT}
     hnew, v, volume = _hinterval(h, AT)
-    hrep = hnew
-    vrep = v
-    length = volume
+    p.hrep = hnew
+    p.vrep = v
+    p.length = volume
     return p
 end    
