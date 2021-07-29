@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Fix for Plots with GR backend, see https://github.com/JuliaPolyhedra/Polyhedra.jl/pull/265
+      GKSwstype: nul
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
