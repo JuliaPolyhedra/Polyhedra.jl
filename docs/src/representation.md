@@ -36,11 +36,11 @@ HalfSpace
 An H-representation can be created as the intersection of several halfspaces.
 For instance, the polytope
 ```math
-\begin{align*}
+\begin{aligned}
   x_1 + x_2 &\leq 1 \\
   x_1 - x_2 &\leq 0 \\
   x_1 & \geq 0.
-\end{align*}
+\end{aligned}
 ```
 can be created as follows:
 ```julia
@@ -50,11 +50,11 @@ HalfSpace([1, 1], 1) ∩ HalfSpace([1, -1], 0) ∩ HalfSpace([-1, 0], 0)
 Even if `HalfSpace`s are enough to describe any polyhedron, it is sometimes important to represent the fact that the polyhedron is contained in an affine subspace.
 For instance, the simplex
 ```math
-\begin{align*}
+\begin{aligned}
   x_1 + x_2 &= 1 \\
   x_1 &\geq 0 \\
   x_2 &\geq 0
-\end{align*}
+\end{aligned}
 ```
 is 1-dimensional even if it is defined in a 2-dimensional space.
 
