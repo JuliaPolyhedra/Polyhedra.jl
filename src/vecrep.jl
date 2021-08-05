@@ -14,11 +14,11 @@ the intersection of the hyperplanes `hyperplanes` and halfspaces `halfspaces`.
 ### Examples
 For instance, the simplex
 ```math
-\\begin{align*}
+\\begin{aligned}
   x_1 + x_2 &= 1 \\\\
   x_1 &\\geq 0 \\\\
   x_2 &\\geq 0
-\\end{align*}
+\\end{aligned}
 ```
 can be created as follows:
 ```jldoctest
@@ -45,11 +45,11 @@ the intersection of the halfspaces `halfspaces`.
 ### Examples
 For instance, the polytope
 ```math
-\\begin{align*}
+\\begin{aligned}
   x_1 + x_2 &\\leq 1 \\\\
   x_1 - x_2 &\\leq 0 \\\\
   x_1 & \\geq 0.
-\\end{align*}
+\\end{aligned}
 ```
 can be created as follows:
 ```julia
