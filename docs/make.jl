@@ -5,14 +5,14 @@ const EXAMPLES_DIR = joinpath(@__DIR__, "..", "examples")
 const OUTPUT_DIR   = joinpath(@__DIR__, "src/generated")
 
 const EXAMPLES = [
-    "Convex hull and intersection.jl",
-    "Extended Formulation.jl",
-    "Minimal Robust Positively Invariant Set.jl",
-    "Convex hull of a set of points.jl",
+    "Convex hull and intersection",
+    "Extended Formulation",
+    "Minimal Robust Positively Invariant Set",
+    "Convex hull of a set of points",
 ]
 
 for example in EXAMPLES
-    example_filepath = joinpath(EXAMPLES_DIR, example)
+    example_filepath = joinpath(EXAMPLES_DIR, example * ".jl")
     Literate.markdown(example_filepath, OUTPUT_DIR)
     Literate.notebook(example_filepath, OUTPUT_DIR)
 end
@@ -36,11 +36,9 @@ makedocs(
         "Projection/Elimination" => "projection.md",
         "Optimization" => "optimization.md",
         "Utilities" => "utilities.md",
-        "Examples" => Any[
-            "Convex hull and intersection" => "generated/Convex hull and intersection.md",
-            "Extended Formulation" => "generated/Extended Formulation.md",
-            "Minimal Robust Positively Invariant Set" => "generated/Minimal Robust Positively Invariant Set.md",
-        ]
+        "Examples" => map(EXAMPLES) do example
+            example => "generated/$example.md"
+        end
     ],
     # The following ensures that we only include the docstrings from
     # this module for functions define in Base that we overwrite.
