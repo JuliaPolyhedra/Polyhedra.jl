@@ -5,8 +5,13 @@ polyhedron, see [Polyhedron](@ref) for how to construct a polyhedron, e.g. from 
 
 ## 2D plotting with Plots
 
-A 2-dimensional polyhedron can be visualized with [Plots](https://github.com/JuliaPlots/Plots.jl) if it is bounded
-or with [MeshCat](https://github.com/rdeits/MeshCat.jl) or [Makie](https://github.com/JuliaPlots/Makie.jl) whether it is bounded or not (if it is not bounded, it will be truncated).
+A 2-dimensional polyhedron can be visualized either
+* with [Plots](https://github.com/JuliaPlots/Plots.jl) if it is bounded or
+* with [MeshCat](https://github.com/rdeits/MeshCat.jl) or [Makie](https://github.com/JuliaPlots/Makie.jl) whether it is bounded or not (if it is not bounded, it will be truncated).
+
+In this section, we show how to plot 2-dimensional polytopes with Plots.
+The procedure for plotting 2-dimensional polyhedra with MeshCat or Makie is identical to the plotting of 3-dimensional polyhedra; see [3D plotting with Plots](@ref).
+
 Suppose for instance that we want to visualize the polyhedron having the following H-representation:
 ```@example plots2
 using Polyhedra
