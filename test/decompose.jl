@@ -1,6 +1,7 @@
 using Test
-using Polyhedra
+using StaticArrays
 import GeometryBasics
+using Polyhedra
 
 struct Face
     points::Vector{Vector{Float64}}
@@ -56,10 +57,10 @@ function test_decompose(p::Polyhedra.Mesh, d::Dict)
 end
 test_decompose(p::Polyhedron, d::Dict) = test_decompose(Polyhedra.Mesh(p), d)
 
-function orthantdecomposetest(lib::Polyhedra.Library)
-    v = vrep([Ray([1., 0, 0]),
-              Ray([0, 1., 0]),
-              Ray([0, 0, 1.])])
+function _orthantdecomposetest(lib::Polyhedra.Library, V)
+    v = vrep([Ray(convert(V, [1., 0, 0])),
+              Ray(convert(V, [0, 1., 0])),
+              Ray(convert(V, [0, 0, 1.]))])
     p = polyhedron(v, lib)
     d = Dict([-1.0,  0.0,  0.0] => Face([0.0, 0.0, 0.0],
                                         [0.0, 2.0, 0.0],
@@ -72,16 +73,20 @@ function orthantdecomposetest(lib::Polyhedra.Library)
                                         [0.0, 2.0, 0.0]))
     test_decompose(p, d)
 end
+function orthantdecomposetest(lib::Polyhedra.Library)
+    _orthantdecomposetest(lib, Vector{Float64})
+    _orthantdecomposetest(lib, SVector{3,Float64})
+end
 
-function cubedecomposetest(lib::Polyhedra.Library)
-    p = polyhedron(convexhull([ 1.,  1,   1],
-                              [ 1., -1,   1],
-                              [ 1.,  1,  -1],
-                              [ 1., -1,  -1],
-                              [-1.,  1,  1],
-                              [-1., -1,  1],
-                              [-1.,  1, -1],
-                              [-1., -1, -1]), lib)
+function _cubedecomposetest(lib::Polyhedra.Library, V)
+    p = polyhedron(convexhull(convert(V, [ 1.,  1,  1]),
+                              convert(V, [ 1., -1,  1]),
+                              convert(V, [ 1.,  1, -1]),
+                              convert(V, [ 1., -1, -1]),
+                              convert(V, [-1.,  1,  1]),
+                              convert(V, [-1., -1,  1]),
+                              convert(V, [-1.,  1, -1]),
+                              convert(V, [-1., -1, -1])), lib)
     # FIXME failing
     #p = polyhedron(convexhull(SymPoint([1., 1, 1]),
     #                          SymPoint([1., -1, 1]),
@@ -101,6 +106,11 @@ function cubedecomposetest(lib::Polyhedra.Library)
                                     Face([ 1.0,  1.0, -1.0], [ 1.0, -1.0, -1.0], [ 1.0, -1.0,  1.0])])
     test_decompose(p, d)
 end
+function cubedecomposetest(lib::Polyhedra.Library)
+    _cubedecomposetest(lib, Vector{Float64})
+    _cubedecomposetest(lib, SVector{3,Float64})
+end
+
 function largedecomposetest(lib::Polyhedra.Library)
     V = [-1 -1  1;
          -1  1  1;
