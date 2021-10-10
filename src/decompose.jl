@@ -16,7 +16,7 @@ mutable struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryBasics.GeometryPrimiti
     polyhedron::PT
     coordinates::Union{Nothing, Vector{GeometryBasics.Point{N, T}}}
     faces::Union{Nothing, Vector{GeometryBasics.TriangleFace{Int}}}
-    normals::Union{Nothing, Vector{GeometryBasics.Point{N, T}}}
+    normals::Union{Nothing, Vector{GeometryBasics.Point{3, T}}}
 end
 function Mesh{N}(polyhedron::Polyhedron{T}) where {N, T}
     return Mesh{N, T, typeof(polyhedron)}(polyhedron, nothing, nothing, nothing)
@@ -52,14 +52,14 @@ function scene(vr::Mesh{N}, ::Type{T}) where {N,T}
     end
     lower = StaticArrays.SVector((coord_min .+ coord_max) ./ 2 .- width)
     width_vector = StaticArrays.SVector(ntuple(_ -> convert(T, 2width), Val(N)))
-    scene = GeometryBasics.HyperRectangle{3, T}(lower, width_vector)
+    scene = GeometryBasics.HyperRectangle{N, T}(lower, width_vector)
     # Intersection of rays with the limits of the scene
     (start, r) -> begin
         ray = coord(r)
         λ = nothing
         min_scene = minimum(scene)
         max_scene = maximum(scene)
-        for i in 1:3
+        for i in 1:N
             r = ray[i]
             if !iszero(r)
                 cur = max((min_scene[i] - start[i]) / r, (max_scene[i] - start[i]) / r)
@@ -84,7 +84,7 @@ function _isdup(zray, triangles)
 end
 _isdup(poly, hidx, triangles) = _isdup(get(poly, hidx).a, triangles)
 
-function decompose_plane!(triangles::Vector, d::FullDim, zray, incident_points, incident_lines, incident_rays, exit_point::Function)
+function decompose_plane!(triangles::Vector, d::FullDim, zray, incident_points, incident_lines, incident_rays, exit_point::Function, counterclockwise::Function, rotate::Function)
     # xray should be the rightmost ray
     xray = nothing
     # xray should be the leftmost ray
@@ -92,8 +92,7 @@ function decompose_plane!(triangles::Vector, d::FullDim, zray, incident_points, 
     isapproxzero(zray) && return
 
     # Checking rays
-    counterclockwise(a, b) = dot(cross(a, b), zray)
-    hull, lines, rays = _planar_hull(d, incident_points, incident_lines, incident_rays, counterclockwise, r -> cross(zray, r))
+    hull, lines, rays = _planar_hull(d, incident_points, incident_lines, incident_rays, counterclockwise, rotate)
     if isempty(lines)
         if length(hull) + length(rays) < 3
             return
@@ -152,13 +151,13 @@ function decompose_plane!(triangles::Vector, d::FullDim, zray, incident_points, 
     end
 end
 
-const _Tri{N,T} = Tuple{Tuple{StaticArrays.SVector{N,T},StaticArrays.SVector{N,T},StaticArrays.SVector{N,T}},StaticArrays.SVector{N,T}}
+const _Tri{N,T} = Tuple{Tuple{StaticArrays.SVector{N,T},StaticArrays.SVector{N,T},StaticArrays.SVector{N,T}},StaticArrays.SVector{3,T}}
 
 function fulldecompose(triangles::Vector{_Tri{N,T}}) where {N,T}
     ntri = length(triangles)
     pts = Vector{GeometryBasics.Point{N, T}}(undef, 3ntri)
     faces = Vector{GeometryBasics.TriangleFace{Int}}(undef, ntri)
-    ns = Vector{GeometryBasics.Point{N, T}}(undef, 3ntri)
+    ns = Vector{GeometryBasics.Point{3, T}}(undef, 3ntri)
     for i in 1:ntri
         tri = pop!(triangles)
         normal = tri[2]
@@ -189,8 +188,8 @@ function fulldecompose(poly_geom::Mesh, ::Type{T}) where T
     poly = poly_geom.polyhedron
     exit_point = scene(poly_geom, T)
     triangles = _Tri{2,T}[]
-    z = SVector(zero(T), zero(T), one(T))
-    decompose_plane!(triangles, FullDim(poly), z, points(poly), lines(poly, hidx), rays(poly, hidx), exit_point)
+    z = StaticArrays.SVector(zero(T), zero(T), one(T))
+    decompose_plane!(triangles, FullDim(poly), z, collect(points(poly)), lines(poly), rays(poly), exit_point, counterclockwise, rotate)
     return fulldecompose(triangles)
 end
 
@@ -198,14 +197,20 @@ function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
     poly = poly_geom.polyhedron
     exit_point = scene(poly_geom, T)
     triangles = _Tri{3,T}[]
+    function decompose_plane(hidx)
+        zray = get(poly, hidx).a
+        counterclockwise(a, b) = dot(cross(a, b), zray)
+        rotate(r) = cross(zray, r)
+        decompose_plane!(triangles, FullDim(poly), zray, incidentpoints(poly, hidx), incidentlines(poly, hidx), incidentrays(poly, hidx), exit_point, counterclockwise, rotate)
+    end
     for hidx in eachindex(hyperplanes(poly))
-        decompose_plane!(triangles, FullDim(poly), get(poly, hidx).a, incidentpoints(poly, hidx), incidentlines(poly, hidx), incidentrays(poly, hidx), exit_point)
+        decompose_plane(hidx)
     end
     # If there is already a triangle, its normal is a hyperplane and it is the only face
     if isempty(triangles)
         for hidx in eachindex(halfspaces(poly))
             if !_isdup(poly, hidx, triangles)
-                decompose_plane!(triangles, FullDim(poly), get(poly, hidx).a, incidentpoints(poly, hidx), incidentlines(poly, hidx), incidentrays(poly, hidx), exit_point)
+                decompose_plane(hidx)
             end
         end
     end

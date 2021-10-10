@@ -23,11 +23,12 @@ end
 
 nfaces(d::Dict{<:Any, Face}) = length(d)
 nfaces(d::Dict{<:Any, <:Vector}) = sum(map(length, values(d)))
-function test_decompose(p::Polyhedra.Mesh, d::Dict)
-    P = GeometryBasics.Point{3, Float64}
+function test_decompose(p::Polyhedra.Mesh{N}, d::Dict) where N
+    P = GeometryBasics.Point{N, Float64}
+    NR = GeometryBasics.Point{3, Float64}
     points = GeometryBasics.decompose(P, p)
     faces = GeometryBasics.decompose(GeometryBasics.GLTriangleFace, p)
-    normals = GeometryBasics.decompose(GeometryBasics.Normal{P}(), p)
+    normals = GeometryBasics.decompose(GeometryBasics.Normal{NR}(), p)
     nf = nfaces(d)
     @test length(points) == 3nf
     @test length(faces) == nf
@@ -57,6 +58,19 @@ function test_decompose(p::Polyhedra.Mesh, d::Dict)
 end
 test_decompose(p::Polyhedron, d::Dict) = test_decompose(Polyhedra.Mesh(p), d)
 
+function _quadrantdecomposetest(lib::Polyhedra.Library, V)
+    v = vrep([Ray(convert(V, [1., 0])),
+              Ray(convert(V, [0, 1.]))])
+    p = polyhedron(v, lib)
+    d = Dict([0.0,  0.0, 1.0] => Face([0.0, 0.0],
+                                      [2.0, 0.0],
+                                      [0.0, 2.0]))
+    test_decompose(p, d)
+end
+function quadrantdecomposetest(lib::Polyhedra.Library)
+    _quadrantdecomposetest(lib, Vector{Float64})
+    _quadrantdecomposetest(lib, SVector{2,Float64})
+end
 function _orthantdecomposetest(lib::Polyhedra.Library, V)
     v = vrep([Ray(convert(V, [1., 0, 0])),
               Ray(convert(V, [0, 1., 0])),
@@ -76,6 +90,20 @@ end
 function orthantdecomposetest(lib::Polyhedra.Library)
     _orthantdecomposetest(lib, Vector{Float64})
     _orthantdecomposetest(lib, SVector{3,Float64})
+end
+
+function _squaredecomposetest(lib::Polyhedra.Library, V)
+    p = polyhedron(convexhull(convert(V, [ 1,  1]),
+                              convert(V, [-1,  1]),
+                              convert(V, [ 1, -1]),
+                              convert(V, [-1, -1])), lib)
+    d = Dict([0.0,  0.0,  1.0] => [Face([-1.0,  1.0], [ 1.0,  1.0], [ 1.0, -1.0]),
+                                   Face([ 1.0, -1.0], [-1.0, -1.0], [-1.0,  1.0])])
+    test_decompose(p, d)
+end
+function squaredecomposetest(lib::Polyhedra.Library)
+    _squaredecomposetest(lib, Vector{Float64})
+    _squaredecomposetest(lib, SVector{2,Float64})
 end
 
 function _cubedecomposetest(lib::Polyhedra.Library, V)
@@ -149,6 +177,7 @@ function largedecomposetest(lib::Polyhedra.Library)
 end
 
 decomposetests = Dict("orthantdecompose" => orthantdecomposetest,
+                      "squaredecompose"  => squaredecomposetest,
                       "cubedecompose"    => cubedecomposetest,
                       "largedecompose"   => largedecomposetest)
 
