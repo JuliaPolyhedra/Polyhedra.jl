@@ -16,7 +16,7 @@ mutable struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryBasics.GeometryPrimiti
     polyhedron::PT
     coordinates::Union{Nothing, Vector{GeometryBasics.Point{N, T}}}
     faces::Union{Nothing, Vector{GeometryBasics.TriangleFace{Int}}}
-    normals::Union{Nothing, Vector{GeometryBasics.Point{N, T}}}
+    normals::Union{Nothing, Vector{GeometryBasics.Point{3, T}}}
 end
 function Mesh{N}(polyhedron::Polyhedron{T}) where {N, T}
     return Mesh{N, T, typeof(polyhedron)}(polyhedron, nothing, nothing, nothing)
@@ -41,26 +41,25 @@ function fulldecompose!(mesh::Mesh)
 end
 
 # Creates a scene for the vizualisation to be used to truncate the lines and rays
-function scene(vr::VRep, ::Type{T}) where T
+function scene(vr::Mesh{N}, ::Type{T}) where {N,T}
     # First compute the smallest rectangle containing the P-representation (i.e. the points).
-    (xmin, xmax) = extrema(map((x)->x[1], points(vr)))
-    (ymin, ymax) = extrema(map((x)->x[2], points(vr)))
-    (zmin, zmax) = extrema(map((x)->x[3], points(vr)))
-    width = max(xmax-xmin, ymax-ymin, zmax-zmin)
-    if width == zero(T)
+    ps = points(vr.polyhedron)
+    coord_min = ntuple(i -> minimum(Base.Fix2(getindex, i), ps), Val(N))
+    coord_max = ntuple(i -> maximum(Base.Fix2(getindex, i), ps), Val(N))
+    width = maximum(coord_max .- coord_min)
+    if iszero(width)
         width = 2
     end
-    scene = GeometryBasics.HyperRectangle{3, T}([(xmin + xmax) / 2 - width,
-                                                 (ymin + ymax) / 2 - width,
-                                                 (zmin + zmax) / 2 - width],
-                                                2 * width * ones(T, 3))
+    lower = StaticArrays.SVector((coord_min .+ coord_max) ./ 2 .- width)
+    width_vector = StaticArrays.SVector(ntuple(_ -> convert(T, 2width), Val(N)))
+    scene = GeometryBasics.HyperRectangle{N, T}(lower, width_vector)
     # Intersection of rays with the limits of the scene
     (start, r) -> begin
         ray = coord(r)
         λ = nothing
         min_scene = minimum(scene)
         max_scene = maximum(scene)
-        for i in 1:3
+        for i in 1:N
             r = ray[i]
             if !iszero(r)
                 cur = max((min_scene[i] - start[i]) / r, (max_scene[i] - start[i]) / r)
@@ -85,102 +84,78 @@ function _isdup(zray, triangles)
 end
 _isdup(poly, hidx, triangles) = _isdup(get(poly, hidx).a, triangles)
 
-function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
-    poly = poly_geom.polyhedron
-    exit_point = scene(poly, T)
+function decompose_plane!(triangles::Vector, d::FullDim, zray, incident_points, incident_lines, incident_rays, exit_point::Function, counterclockwise::Function, rotate::Function)
+    # xray should be the rightmost ray
+    xray = nothing
+    # xray should be the leftmost ray
+    yray = nothing
+    isapproxzero(zray) && return
 
-    triangles = Tuple{Tuple{Vector{T},Vector{T},Vector{T}}, Vector{T}}[]
-
-    function decomposeplane(hidx)
-        h = get(poly, hidx)
-        # xray should be the rightmost ray
-        xray = nothing
-        # xray should be the leftmost ray
-        yray = nothing
-        zray = h.a
-        isapproxzero(zray) && return
-
-        # Checking rays
-        counterclockwise(a, b) = dot(cross(a, b), zray)
-        face_vert = pointtype(poly)[]
-        for x in points(poly)
-            if _isapprox(dot(x, zray), h.β)
-                push!(face_vert, x)
-            end
+    # Checking rays
+    hull, lines, rays = _planar_hull(d, incident_points, incident_lines, incident_rays, counterclockwise, rotate)
+    if isempty(lines)
+        if length(hull) + length(rays) < 3
+            return
         end
-        hull, lines, rays = _planar_hull(FullDim(poly_geom.polyhedron), face_vert, incidentlines(poly, hidx), incidentrays(poly, hidx), counterclockwise, r -> cross(zray, r))
-        if isempty(lines)
-            if length(hull) + length(rays) < 3
-                return
+        @assert length(rays) <= 2
+        if !isempty(rays)
+            if length(rays) + length(hull) >= 2
+                push!(hull, exit_point(last(hull), last(rays)))
             end
-            @assert length(rays) <= 2
-            if !isempty(rays)
-                if length(rays) + length(hull) >= 2
-                    push!(hull, exit_point(last(hull), last(rays)))
-                end
-                push!(hull, exit_point(first(hull), first(rays)))
-            end
+            push!(hull, exit_point(first(hull), first(rays)))
+        end
+    else
+        if length(hull) == 2
+            @assert length(lines) == 1 && isempty(rays)
+            a, b = hull
+            line = first(lines)
+            empty!(hull)
+            push!(hull, exit_point(a, line))
+            push!(hull, exit_point(a, -line))
+            push!(hull, exit_point(b, -line))
+            push!(hull, exit_point(b, line))
         else
-            if length(hull) == 2
-                @assert length(lines) == 1 && isempty(rays)
-                a, b = hull
-                line = first(lines)
-                empty!(hull)
-                push!(hull, exit_point(a, line))
-                push!(hull, exit_point(a, -line))
-                push!(hull, exit_point(b, -line))
-                push!(hull, exit_point(b, line))
-            else
-                @assert length(hull) == 1 && isempty(rays)
-                center = first(hull)
-                empty!(hull)
-                a = first(lines)
-                b = nothing
-                if length(lines) == 2
-                    @assert isempty(rays)
-                    b = last(lines)
-                elseif !isempty(rays)
-                    @assert length(lines) == 1
-                    @assert length(rays) == 1
-                    b = linearize(first(rays))
-                end
-                push!(hull, exit_point(center, a))
-                if b !== nothing
-                    push!(hull, exit_point(center, b))
-                end
-                push!(hull, exit_point(center, -a))
-                if b !== nothing && length(lines) == 2 || length(rays) >= 2
-                    @assert length(rays) == 2
-                    push!(hull, exit_point(center, -b))
-                end
+            @assert length(hull) == 1 && isempty(rays)
+            center = first(hull)
+            empty!(hull)
+            a = first(lines)
+            b = nothing
+            if length(lines) == 2
+                @assert isempty(rays)
+                b = last(lines)
+            elseif !isempty(rays)
+                @assert length(lines) == 1
+                @assert length(rays) == 1
+                b = linearize(first(rays))
             end
-        end
-
-        if length(hull) >= 3
-            a = pop!(hull)
-            b = pop!(hull)
-            while !isempty(hull)
-                c = pop!(hull)
-                push!(triangles, ((a, b, c), zray))
-                b = c
+            push!(hull, exit_point(center, a))
+            if b !== nothing
+                push!(hull, exit_point(center, b))
+            end
+            push!(hull, exit_point(center, -a))
+            if b !== nothing && length(lines) == 2 || length(rays) >= 2
+                @assert length(rays) == 2
+                push!(hull, exit_point(center, -b))
             end
         end
     end
 
-    for hidx in eachindex(hyperplanes(poly))
-        decomposeplane(hidx)
-    end
-    # If there is already a triangle, his normal is an hyperplane and it is the only face
-    if isempty(triangles)
-        for hidx in eachindex(halfspaces(poly))
-            if !_isdup(poly, hidx, triangles)
-                decomposeplane(hidx)
-            end
+    if length(hull) >= 3
+        a = pop!(hull)
+        b = pop!(hull)
+        while !isempty(hull)
+            c = pop!(hull)
+            push!(triangles, ((a, b, c), zray))
+            b = c
         end
     end
+end
 
+const _Tri{N,T} = Tuple{Tuple{StaticArrays.SVector{N,T},StaticArrays.SVector{N,T},StaticArrays.SVector{N,T}},StaticArrays.SVector{3,T}}
+
+function fulldecompose(triangles::Vector{_Tri{N,T}}) where {N,T}
     ntri = length(triangles)
-    pts = Vector{GeometryBasics.Point{3, T}}(undef, 3ntri)
+    pts = Vector{GeometryBasics.Point{N, T}}(undef, 3ntri)
     faces = Vector{GeometryBasics.TriangleFace{Int}}(undef, ntri)
     ns = Vector{GeometryBasics.Point{3, T}}(undef, 3ntri)
     for i in 1:ntri
@@ -206,7 +181,40 @@ function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
     # If the type of ns is Rational, it also works.
     # The normalized array in in float but then it it recast into Rational
     map!(normalize, ns, ns)
-    (pts, faces, ns)
+    return pts, faces, ns
+end
+
+function fulldecompose(poly_geom::Mesh, ::Type{T}) where T
+    poly = poly_geom.polyhedron
+    exit_point = scene(poly_geom, T)
+    triangles = _Tri{2,T}[]
+    z = StaticArrays.SVector(zero(T), zero(T), one(T))
+    decompose_plane!(triangles, FullDim(poly), z, collect(points(poly)), lines(poly), rays(poly), exit_point, counterclockwise, rotate)
+    return fulldecompose(triangles)
+end
+
+function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
+    poly = poly_geom.polyhedron
+    exit_point = scene(poly_geom, T)
+    triangles = _Tri{3,T}[]
+    function decompose_plane(hidx)
+        zray = get(poly, hidx).a
+        counterclockwise(a, b) = dot(cross(a, b), zray)
+        rotate(r) = cross(zray, r)
+        decompose_plane!(triangles, FullDim(poly), zray, incidentpoints(poly, hidx), incidentlines(poly, hidx), incidentrays(poly, hidx), exit_point, counterclockwise, rotate)
+    end
+    for hidx in eachindex(hyperplanes(poly))
+        decompose_plane(hidx)
+    end
+    # If there is already a triangle, its normal is a hyperplane and it is the only face
+    if isempty(triangles)
+        for hidx in eachindex(halfspaces(poly))
+            if !_isdup(poly, hidx, triangles)
+                decompose_plane(hidx)
+            end
+        end
+    end
+    return fulldecompose(triangles)
 end
 
 fulldecompose(poly::Mesh{N, T}) where {N, T} = fulldecompose(poly, typeof(one(T)/2))
