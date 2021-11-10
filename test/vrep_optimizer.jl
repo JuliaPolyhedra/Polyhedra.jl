@@ -1,7 +1,6 @@
 using Test
 using Polyhedra
 using JuMP
-const MOIT = MOI.Test
 const MOIB = MOI.Bridges
 
 @testset "Continuous Linear problems with VRepOptimizer" begin
@@ -12,10 +11,27 @@ const MOIB = MOI.Bridges
     cache = MOIU.UniversalFallback(Polyhedra._MOIModel{Float64}())
     cached = MOIU.CachingOptimizer(cache, optimizer)
     bridged = MOIB.full_bridge_optimizer(cached, Float64)
-    config = MOIT.TestConfig(duals=false)
-    MOIT.contlineartest(bridged, config,
-                        # linear8a and linear12 will be solved by https://github.com/jump-dev/MathOptInterface.jl/pull/702
-                        ["linear8a", "linear12", "partial_start"])
+    config = MOI.Test.Config(
+        exclude=Any[
+            MOI.ConstraintBasisStatus,
+            MOI.VariableBasisStatus,
+            MOI.ConstraintDual,
+            MOI.DualObjectiveValue,
+            MOI.ObjectiveBound,
+        ],
+    )
+    MOI.Test.runtests(
+        bridged,
+        config,
+        exclude = String[
+            "test_attribute_RawStatusString",
+            "test_attribute_SolveTimeSec",
+            "test_attribute_SolverVersion",
+            #   MathOptInterface.jl issue #1431
+            "test_model_LowerBoundAlreadySet",
+            "test_model_UpperBoundAlreadySet",
+        ],
+    )
 end
 @testset "simplex chebyshev center with $T" for T in [Float64, Rational{BigInt}]
     h = HalfSpace([-1, 0], 0) ∩ HalfSpace([0, -1], 0) ∩ HyperPlane([1, 1], 1)

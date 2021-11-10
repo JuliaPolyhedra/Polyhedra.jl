@@ -144,7 +144,7 @@ function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
     hull_con = MOI.add_constraint.(model, hull, MOI.EqualTo(zero(T)))
     for (i, idx) in enumerate(indices)
         if cλ === nothing
-            fix_con = MOI.add_constraint(model, MOI.SingleVariable(λ[i]), MOI.EqualTo(zero(T)))
+            fix_con = MOI.add_constraint(model, λ[i], MOI.EqualTo(zero(T)))
         else
             fix_con = MOI.transform(model, cλ[i], MOI.EqualTo(zero(T)))
         end
@@ -267,10 +267,7 @@ end
 function _hull(model::MOI.ModelLike, ::Type{T}, hull::Vector{MOI.ScalarAffineFunction{T}}, rep, idxs, sum_one = idxs isa PointIndices) where T
     λ = MOI.add_variables(model, length(idxs))
     if !(idxs isa Union{HyperPlaneIndices, LineIndices})
-        cλ = [
-            MOI.add_constraint(model, MOI.SingleVariable(λ), MOI.GreaterThan(zero(T)))
-            for λ in λ
-        ]
+        cλ = [MOI.add_constraint(model, λ, MOI.GreaterThan(zero(T))) for λ in λ]
     else
         cλ = nothing
     end

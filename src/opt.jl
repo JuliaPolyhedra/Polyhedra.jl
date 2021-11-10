@@ -45,7 +45,7 @@ abstract type AbstractPolyhedraOptimizer{T} <: MOI.AbstractOptimizer end
 function MOI.copy_to(dest::AbstractPolyhedraOptimizer, src::MOI.ModelLike; kws...)
     return MOI.Utilities.automatic_copy_to(dest, src; kws...)
 end
-MOI.Utilities.supports_default_copy_to(optimizer::AbstractPolyhedraOptimizer, copy_names::Bool) = true
+MOI.supports_incremental_interface(optimizer::AbstractPolyhedraOptimizer) = true
 
 function MOI.add_variable(optimizer::AbstractPolyhedraOptimizer)
     return MOI.add_variable(optimizer.lphrep.model)
@@ -56,7 +56,7 @@ end
 
 function MOI.supports(::AbstractPolyhedraOptimizer{T},
                       ::Union{MOI.ObjectiveSense,
-                              MOI.ObjectiveFunction{MOI.SingleVariable},
+                              MOI.ObjectiveFunction{MOI.VariableIndex},
                               MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}}) where T
     return true
 end
@@ -66,15 +66,16 @@ end
 function MOI.set(optimizer::AbstractPolyhedraOptimizer, ::MOI.ObjectiveSense,
                  sense::MOI.OptimizationSense)
     optimizer.objective_sense = sense
+    return
 end
 function MOI.set(optimizer::AbstractPolyhedraOptimizer{T}, ::MOI.ObjectiveFunction,
-                 func::MOI.SingleVariable) where T
+                 func::MOI.VariableIndex) where T
     MOI.set(optimizer, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
             convert(MOI.ScalarAffineFunction{T}, func))
 end
 function MOI.set(optimizer::AbstractPolyhedraOptimizer, ::MOI.ObjectiveFunction,
                  func::MOI.ScalarAffineFunction)
-    indices = [term.variable_index.value for term in func.terms]
+    indices = [term.variable.value for term in func.terms]
     coefs = [term.coefficient for term in func.terms]
     optimizer.objective_func = sparsevec(indices, coefs, fulldim(optimizer.lphrep))
     optimizer.objective_constant = func.constant
@@ -143,7 +144,7 @@ function layered_optimizer(solver)
     solver === nothing && error("No solver specified.\n", NO_SOLVER_HELP)
     optimizer = MOI.instantiate(solver)
     T = coefficient_type(optimizer)
-    if !MOIU.supports_default_copy_to(optimizer, false)
+    if !MOI.supports_incremental_interface(optimizer)
         universal_fallback = MOIU.UniversalFallback(_MOIModel{T}())
         optimizer = MOIU.CachingOptimizer(universal_fallback, optimizer)
     end

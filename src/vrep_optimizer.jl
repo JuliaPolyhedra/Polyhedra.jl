@@ -76,6 +76,11 @@ function MOI.optimize!(lpm::VRepOptimizer{T}) where T
         @assert lpm.feasible_set isa Polyhedron
         prob = vrep(lpm.feasible_set)
     end
+    if lpm.objective_sense == MOI.FEASIBILITY_SENSE
+        obj = sparsevec(Int64[], T[], fulldim(lpm.lphrep))
+    else
+        obj = lpm.objective_func
+    end
     N = fulldim(prob)
     if !haspoints(prob) && !haslines(prob) && !hasrays(prob)
         lpm.status = MOI.INFEASIBLE
@@ -89,7 +94,7 @@ function MOI.optimize!(lpm::VRepOptimizer{T}) where T
         bestobjval = zero(T)
         lpm.solution = nothing
         for r in allrays(prob)
-            objval = lpm.objective_func ⋅ r
+            objval = obj ⋅ r
             if _better(objval, bestobjval)
                 bestobjval = objval
                 lpm.solution = coord(r)
@@ -99,7 +104,7 @@ function MOI.optimize!(lpm::VRepOptimizer{T}) where T
             lpm.status = MOI.DUAL_INFEASIBLE
         else
             for p in points(prob)
-                objval = lpm.objective_func ⋅ p
+                objval = obj ⋅ p
                 if lpm.solution === nothing || better(objval, bestobjval)
                     bestobjval = objval
                     lpm.solution = p
@@ -123,9 +128,14 @@ function MOI.get(lpm::VRepOptimizer{T}, attr::MOI.ConstraintPrimal,
                  ci::MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},
                                          <:Union{MOI.EqualTo{T},
                                                  MOI.LessThan{T}}}) where T
+    MOI.check_result_index_bounds(lpm, attr)
     return MOIU.get_fallback(lpm, attr, ci)
 end
-function MOI.get(lpm::VRepOptimizer, ::MOI.ObjectiveValue)
+function MOI.get(lpm::VRepOptimizer{T}, attr::MOI.ObjectiveValue) where T
+    MOI.check_result_index_bounds(lpm, attr)
+    if lpm.objective_sense == MOI.FEASIBILITY_SENSE
+        return zero(T)
+    end
     if lpm.status == MOI.OPTIMAL
         return lpm.objective_func ⋅ lpm.solution + lpm.objective_constant
     elseif lpm.status == MOI.DUAL_INFEASIBLE
@@ -134,8 +144,13 @@ function MOI.get(lpm::VRepOptimizer, ::MOI.ObjectiveValue)
         error("No objective value available when termination status is $(lpm.status).")
     end
 end
-function MOI.get(lpm::VRepOptimizer, ::MOI.PrimalStatus)
-    if lpm.status == MOI.OPTIMAL
+function MOI.get(lpm::VRepOptimizer, ::MOI.DualStatus)
+    return MOI.NO_SOLUTION
+end
+function MOI.get(lpm::VRepOptimizer, attr::MOI.PrimalStatus)
+    if attr.result_index > MOI.get(lpm, MOI.ResultCount())
+        return MOI.NO_SOLUTION
+    elseif lpm.status == MOI.OPTIMAL
         return MOI.FEASIBLE_POINT
     elseif lpm.status == MOI.DUAL_INFEASIBLE
         return MOI.INFEASIBILITY_CERTIFICATE
@@ -143,7 +158,8 @@ function MOI.get(lpm::VRepOptimizer, ::MOI.PrimalStatus)
         return MOI.NO_SOLUTION
     end
 end
-function MOI.get(lpm::VRepOptimizer, ::MOI.VariablePrimal, vi::MOI.VariableIndex)
+function MOI.get(lpm::VRepOptimizer, attr::MOI.VariablePrimal, vi::MOI.VariableIndex)
+    MOI.check_result_index_bounds(lpm, attr)
     if lpm.status != MOI.OPTIMAL && lpm.status != MOI.DUAL_INFEASIBLE
         error("No primal value available when termination status is $(lpm.status).")
     end

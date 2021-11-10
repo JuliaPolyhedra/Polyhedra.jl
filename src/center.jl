@@ -84,7 +84,7 @@ function hchebyshevcenter(p::HRepresentation, solver=default_solver(p; T=Float64
         MOI.add_constraint(model, func, set)
     end
     MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
-    MOI.set(model, MOI.ObjectiveFunction{MOI.SingleVariable}(), MOI.SingleVariable(r))
+    MOI.set(model, MOI.ObjectiveFunction{MOI.VariableIndex}(), r)
     MOI.optimize!(model)
     term = MOI.get(model, MOI.TerminationStatus())
     if term ∉ [MOI.OPTIMAL, MOI.LOCALLY_SOLVED]
