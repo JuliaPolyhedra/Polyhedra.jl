@@ -42,8 +42,8 @@ end
 
 abstract type AbstractPolyhedraOptimizer{T} <: MOI.AbstractOptimizer end
 
-function MOI.copy_to(dest::AbstractPolyhedraOptimizer, src::MOI.ModelLike; kws...)
-    return MOI.Utilities.automatic_copy_to(dest, src; kws...)
+function MOI.copy_to(dest::AbstractPolyhedraOptimizer, src::MOI.ModelLike)
+    return MOI.Utilities.default_copy_to(dest, src)
 end
 MOI.supports_incremental_interface(optimizer::AbstractPolyhedraOptimizer) = true
 
