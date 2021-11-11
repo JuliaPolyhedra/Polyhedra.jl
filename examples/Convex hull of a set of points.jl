@@ -32,10 +32,4 @@ p = polyhedron(v)
 removevredundancy!(p)
 p
 
-# We can also specify a library:
-
-using CDDLib
-
-p = polyhedron(v, CDDLib.Library())
-removevredundancy!(p)
-p
+# We can also specify a library. For instance, to use `CDDLib`, write `using CDDLib` and then `p = polyhedron(v, CDDLib.Library())`.

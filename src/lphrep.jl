@@ -3,12 +3,12 @@ export LPHRep
 MOI.Utilities.@model(_MOIModel,
                      (), (MOI.EqualTo, MOI.LessThan,), (), (),
                      (), (MOI.ScalarAffineFunction,), (), ())
-# We need the `SingleVariable` constraints to be bridged so we should say that
+# We need the `VariableIndex` constraints to be bridged so we should say that
 # they are not supported. We notably exclude `Integer` as we just ignore
 # integrality constraints. Binary constraint should be bridged to integrality
 # once https://github.com/jump-dev/MathOptInterface.jl/issues/704 is done.
 function MOI.supports_constraint(
-    ::_MOIModel{T}, ::Type{MOI.SingleVariable},
+    ::_MOIModel{T}, ::Type{MOI.VariableIndex},
     ::Type{<:Union{MOI.EqualTo{T}, MOI.GreaterThan{T}, MOI.LessThan{T},
                    MOI.Interval{T}, MOI.ZeroOne}}) where T
     return false
@@ -173,7 +173,7 @@ function Base.get(rep::LPHRep{T}, idx::HIndex{T}) where {T}
     func = MOI.get(rep.model, MOI.ConstraintFunction(), ci)::MOI.ScalarAffineFunction{T}
     # MOI uses `Int64` but `SparseArrays` uses `Int32` by default so `Int64` will create
     # issues with, e.g. preimages with `spzeros(d, n)`, etc...
-    indices = Int[t.variable_index.value for t in func.terms]
+    indices = Int[t.variable.value for t in func.terms]
     values = [t.coefficient for t in func.terms]
     a = sparsevec(indices, values, FullDim(rep))
     set = MOI.get(rep.model, MOI.ConstraintSet(), ci)

@@ -20,7 +20,7 @@ function MOI.Bridges.Constraint.bridge_constraint(
     N = fulldim(p.p.set)
     variables = MOI.add_variables(model, N - fulldim(p.p))
     for (i, j) in enumerate(setdiff(1:N, p.p.dimensions))
-        func[j] = MOI.SingleVariable(variables[i])
+        func[j] = variables[i]
     end
     constraint = MOI.add_constraint(model, MOI.Utilities.vectorize(func), PolyhedraOptSet(p.p.set))
     return ProjectionBridge{T, F, RepT, I}(variables, constraint, p.p.dimensions)
