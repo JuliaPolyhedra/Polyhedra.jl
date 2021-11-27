@@ -17,7 +17,7 @@ function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray::Nothing
             psj_vec = ps[j] - prev
             cc = counterclockwise(cur_vec, psj_vec)
             if isapproxzero(cc)
-                # `cur` and `ps[j]` are on the same ray from `cur`.
+                # `cur` and `ps[j]` are on the same ray starting from `prev`.
                 # The one that is closer to `prev` is redundant.
                 # If `j` is the last index and redundant (it may happen if this
                 # ray is perpendicular to the direction of sorting) then we should
@@ -29,6 +29,7 @@ function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray::Nothing
             elseif cc < 0
                 break
             end
+            # `cur` is redundant so `cur` is dropped and `prev` becomes `cur`
             cur = prev
             pop!(hull)
             if !isempty(hull)
@@ -124,6 +125,21 @@ function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate)
         sweep_norm = rotate(coord(line))
     end
     sort!(points, by = x -> dot(x, sweep_norm))
+
+    # `getsemihull` fails if `points` starts or end with several points on the same sweep line that are not ordered clockwise
+    start_line = dot(points[1], sweep_norm)
+    # `isapprox` won't work well with `atol=0` (which is the default) if `start_line` is zero, so we set a nonzero `atol`.
+    # TODO We should also multiply it with a scaling.
+    end_start = something(findfirst(x -> !isapprox(dot(x, sweep_norm), start_line, atol=Base.rtoldefault(typeof(start_line))), points), length(points) + 1) - 1
+    if end_start > 1
+        sort!(view(points, 1:end_start), by = x -> counterclockwise(x, sweep_norm), rev=true)
+    end
+    end_line = dot(points[1], sweep_norm)
+    start_end = something(findfirst(x -> !isapprox(dot(x, sweep_norm), start_line, atol=Base.rtoldefault(typeof(start_line))), points), 0) + 1
+    if start_end < length(points)
+        sort!(view(points, start_end:length(points)), by = x -> counterclockwise(x, sweep_norm))
+    end
+
     _points = eltype(points)[]
     _lines = eltype(lines)[]
     _rays = eltype(rays)[]
