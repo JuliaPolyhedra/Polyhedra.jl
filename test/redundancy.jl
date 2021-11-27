@@ -5,6 +5,7 @@ using StaticArrays
 using Polyhedra
 
 include("solvers.jl")
+include("dummy_optimizer.jl")
 
 @testset "Redundancy removal" begin
     @testset "LP-based" begin
@@ -308,6 +309,11 @@ include("solvers.jl")
 #        @test !haslines(vr)
 #        @test collect(rays(vr)) == [Ray([-1, 1])]
 #    end
+        @testset "Solver error in redundancy" begin
+            vr = convexhull([1.0, 0.0], [0.0, 1.0])
+            err = ErrorException("Solver returned `OTHER_ERROR` when attempting to determine whether `[1.0, 0.0]` of index `Polyhedra.Index{Float64, Vector{Float64}}(1)` is redundant. Solver specific status: Dummy status")
+            @test_throws err removevredundancy(vr, DummyOptimizer)
+        end
     end
 end
 @testset "Duplicate removal" begin
