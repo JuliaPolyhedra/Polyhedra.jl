@@ -136,6 +136,21 @@ function removevredundancy!(p::Polyhedron; strongly=false, planar=true)
     end
 end
 
+# Interpolating the string can take more time than the LP solve:
+# https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/279
+# This `struct` allows to interpolate it lazily only when an error is actually thrown.
+struct _RedundantMessage{ET, IT}
+    element::ET
+    index::IT
+end
+function Base.show(io::IO, message::_RedundantMessage)
+    print(io, "attempting to determine whether `")
+    print(io, message.element)
+    print(io, "` of index `")
+    print(io, message.index)
+    print(io, "` is redundant.")
+end
+
 function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
                             hull, indices, clean)
     red_indices = Int[]
@@ -153,7 +168,7 @@ function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
             MOI.set(model, MOI.ConstraintSet(), ci, MOI.EqualTo{T}(ai))
         end
         #if !isone(length(indices)) &&
-        if  is_feasible(model, "attempting to determine whether $element of index $idx is redundant.")
+        if  is_feasible(model, _RedundantMessage(element, idx))
             MOI.delete(model, λ[i])
             push!(red_indices, i)
         else
