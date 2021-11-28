@@ -223,6 +223,9 @@ function remproj(el::RepElement, L::Union{HyperPlanesIntersection, LinesHull})
     end
     return el
 end
-function Base.in(el::RepElement, L::Union{HyperPlanesIntersection, LinesHull})
+function Base.in(el::HRepElement, L::HyperPlanesIntersection)
+    return isapproxzero(remproj(el, L))
+end
+function Base.in(el::VRepElement, L::LinesHull)
     return isapproxzero(remproj(el, L))
 end
