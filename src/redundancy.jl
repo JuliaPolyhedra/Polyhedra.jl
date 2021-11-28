@@ -116,18 +116,18 @@ If `fulldim(p)` is 2, `strongly` is `false` and `planar` is `true`, a planar con
 is used.
 """
 function removevredundancy! end
-function removevredundancy!(p::Polyhedron; strongly=false, planar=true)
+function removevredundancy!(p::Polyhedron; strongly=false, planar=true, kws...)
     vredundancy(p) == NO_REDUNDANCY && return
     if fulldim(p) == 2 && !strongly && planar
         setvrep!(p, planar_hull(vrep(p)), NO_REDUNDANCY)
     else
         solver = _solver_warn(p, true, strongly)
         if solver === nothing
-            detecthlinearity!(p)
-            detectvlinearity!(p)
+            detecthlinearity!(p; kws...)
+            detectvlinearity!(p; kws...)
             nonred = removevredundancy(vrep(p), hrep(p), strongly=strongly)
         else
-            detectvlinearity!(p)
+            detectvlinearity!(p; kws...)
             nonred = removevredundancy(vrep(p), solver)
         end
         # If `strongly` then we only remove strongly redundant elements

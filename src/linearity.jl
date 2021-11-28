@@ -12,15 +12,15 @@ That is the number of non-redundant hyperplanes that define it.
 If `current` is `true` then it simply returns the dimension according the current number of hyperplanes, assuming that the H-linearity has already been detected.
 Otherwise, it first calls [`detecthlinearity!`](@ref).
 """
-function dim(h::HRep, current=false)
+function dim(h::HRep, current=false; kws...)
     if !current
-        detecthlinearity!(h)
+        detecthlinearity!(h; kws...)
     end
     fulldim(h) - nhyperplanes(h)
 end
 
 """
-    detecthlinearity!(p::VRep)
+    detecthlinearity!(p::HRep)
 
 Detects all the hyperplanes contained in the H-representation and remove all redundant hyperplanes.
 
@@ -32,9 +32,9 @@ h = HalfSpace([1, 1], 1]) ∩ HalfSpace([-1, -1], -1)
 contains the hyperplane `HyperPlane([1, 1], 1)`.
 """
 detecthlinearity!(p::HRep) = error("detecthlinearity! not implemented for $(typeof(p))")
-function detecthlinearity!(p::Polyhedron, solver=default_solver(p); verbose=0)
+function detecthlinearity!(p::Polyhedron, solver=default_solver(p); kws...)
     if hredundancy(p) == UNKNOWN_REDUNDANCY
-        sethrep!(p, detecthlinearity(hrep(p), solver; verbose=verbose), LINEARITY_DETECTED)
+        sethrep!(p, detecthlinearity(hrep(p), solver; kws...), LINEARITY_DETECTED)
     end
 end
 
@@ -51,9 +51,9 @@ v = conichull([1, 1], [-1, -1])
 contains the line `Line([1, 1])`.
 """
 detectvlinearity!(p::VRep) = error("detectvlinearity! not implemented for $(typeof(p))")
-function detectvlinearity!(p::Polyhedron, solver=default_solver(p); verbose=0)
+function detectvlinearity!(p::Polyhedron, solver=default_solver(p); kws...)
     if vredundancy(p) == UNKNOWN_REDUNDANCY
-        setvrep!(p, detectvlinearity(vrep(p), solver; verbose=verbose), LINEARITY_DETECTED)
+        setvrep!(p, detectvlinearity(vrep(p), solver; kws...), LINEARITY_DETECTED)
     end
 end
 
@@ -66,9 +66,9 @@ linearize(r::Ray) = line(r)
 _aff_push!(aff::HAffineSpace, h) = intersect!(aff, h)
 _aff_push!(aff::VLinearSpace, l) = convexhull!(aff, l)
 
-function _detect_opposite_element(aff, non_opposite, element)
+function _detect_opposite_element(aff, non_opposite, element; kws...)
     element = remproj(element, aff)
-    if !isapproxzero(element) && !any(el -> el ≈ element, non_opposite)
+    if !isapproxzero(element; kws...) && !any(el -> el ≈ element, non_opposite)
         lin = linearize(element)
         i = findfirst(el -> linearize(el) ≈ lin, non_opposite)
         if i === nothing
@@ -82,7 +82,7 @@ function _detect_opposite_element(aff, non_opposite, element)
         return false
     end
 end
-function _detect_opposite_elements(aff, non_opposite, elements)
+function _detect_opposite_elements(aff, non_opposite, elements; kws...)
     newlin = true
     for i in 1:fulldim(aff) # could use `while newlin` but `for`-loop is safer.
         newlin || break
@@ -92,7 +92,7 @@ function _detect_opposite_elements(aff, non_opposite, elements)
         # Remove rays/halfspaces that become zero and detect new lines/hyperplanes
         # with rays/halfspaces that becomes opposite to each other.
         for element in elements
-            newlin |= _detect_opposite_element(aff, non_opposite, element)
+            newlin |= _detect_opposite_element(aff, non_opposite, element; kws...)
         end
     end
 end
@@ -138,7 +138,7 @@ to solve an LP for each ray.
 This method is therefore significantly more efficient as it's complexity is `O(dimension of linespace)` which is upper
 bounded by `O(fulldim)` while the method of CDDLib is `O(number of rays)`.
 """
-function detect_new_linearities(rep::Representation, solver; verbose=0)
+function detect_new_linearities(rep::Representation, solver; verbose=0, kws...)
     lins = _linearity(rep)
     nonlins = _nonlinearity(rep)
     isempty(nonlins) && return Int[]
@@ -169,7 +169,7 @@ function detect_new_linearities(rep::Representation, solver; verbose=0)
         # FIXME stopping when we have enough hyperplanes to prove that it's empty
         #       should also resolve the issue with presolve.
         is_feasible(model, "detecting new linearity (you may need to activate presolve for some solvers, e.g. by replacing `GLPK.Optimizer` with `optimizer_with_attributes(GLPK.Optimizer, \"presolve\" => GLPK.GLP_ON)`).") || break
-        if rep isa HRepresentation && !isapproxzero((β_primal = MOI.get(model, MOI.ConstraintPrimal(), β_con);))
+        if rep isa HRepresentation && !isapproxzero((β_primal = MOI.get(model, MOI.ConstraintPrimal(), β_con);); kws...)
             verbose >= 1 && @info("The polyhedron is empty as $β_primal is negative.")
             return nothing
         end
@@ -177,12 +177,12 @@ function detect_new_linearities(rep::Representation, solver; verbose=0)
         ray_to_drop = Int[]
         for i in eachindex(λ)
             if active[i] && !is_lin[i]
-                if !isapproxzero((primal = MOI.get(model, MOI.VariablePrimal(), λ[i]);))
+                if !isapproxzero((primal = MOI.get(model, MOI.VariablePrimal(), λ[i]);); kws...)
                     # `λ_i > 0`, we know that `-r_i` belongs to the cone so we transform the ray into a line.
                     verbose >= 1 && @info("$(i)th element is linear as $primal is positive.")
                     is_lin[i] = true
                     push!(ray_to_line, i)
-                elseif !isapproxzero((dual = MOI.get(model, MOI.ConstraintDual(), cλ[i]);))
+                elseif !isapproxzero((dual = MOI.get(model, MOI.ConstraintDual(), cλ[i]);); kws...)
                     # `r_i'x > 0`, we know that `r_i` does not belong to the cone so we just drop the ray from the search for lines.
                     verbose >= 1 && @info("$(i)th element is nonlinear as $dual is positive.")
                     active[i] = false
@@ -219,7 +219,7 @@ _linearity_space(h::HRepresentation, current) = affinehull(h, current)
 _linearity_space(v::VRepresentation, current) = linespace(v, current)
 
 struct OppositeMockOptimizer end
-function _detect_linearity(rep::Representation, solver; verbose=0)
+function _detect_linearity(rep::Representation, solver; kws...)
     aff = _linearity_space(rep, true)
     if _hasnonlinearity(rep)
         if solver === nothing
@@ -232,9 +232,9 @@ Set a solver if you believe that the polyhedron may have more linearity.
         end
         if solver == OppositeMockOptimizer
             els = _nonlin_type(rep)[]
-            _detect_opposite_elements(aff, els, _nonlinearity(rep))
+            _detect_opposite_elements(aff, els, _nonlinearity(rep); kws...)
         else
-            new_lins = detect_new_linearities(rep, solver; verbose=verbose)
+            new_lins = detect_new_linearities(rep, solver; kws...)
             if new_lins === nothing
                 empty!(aff)
                 els = eltype(_nonlinearity(rep))[]
@@ -253,11 +253,11 @@ Set a solver if you believe that the polyhedron may have more linearity.
     end
     return removeduplicates(aff), els
 end
-function detecthlinearity(hr::HRepresentation, solver; verbose=0)
-    aff, hs = _detect_linearity(hr, solver; verbose=verbose)
+function detecthlinearity(hr::HRepresentation, solver; kws...)
+    aff, hs = _detect_linearity(hr, solver; kws...)
     typeof(hr)(FullDim(hr), aff.hyperplanes, hs)
 end
-function detectvlinearity(vr::VRepresentation, solver; verbose=0)
-    aff, rays = _detect_linearity(vr, solver; verbose=verbose)
+function detectvlinearity(vr::VRepresentation, solver; kws...)
+    aff, rays = _detect_linearity(vr, solver; kws...)
     typeof(vr)(FullDim(vr), preps(vr)..., aff.lines, rays)
 end
