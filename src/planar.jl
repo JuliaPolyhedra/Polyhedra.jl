@@ -126,18 +126,20 @@ function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate)
     end
     sort!(points, by = x -> dot(x, sweep_norm))
 
-    # `getsemihull` fails if `points` starts or end with several points on the same sweep line that are not ordered clockwise
-    start_line = dot(points[1], sweep_norm)
-    # `isapprox` won't work well with `atol=0` (which is the default) if `start_line` is zero, so we set a nonzero `atol`.
-    # TODO We should also multiply it with a scaling.
-    end_start = something(findfirst(x -> !isapprox(dot(x, sweep_norm), start_line, atol=Base.rtoldefault(typeof(start_line))), points), length(points) + 1) - 1
-    if end_start > 1
-        sort!(view(points, 1:end_start), by = x -> counterclockwise(x, sweep_norm), rev=true)
-    end
-    end_line = dot(points[1], sweep_norm)
-    start_end = something(findfirst(x -> !isapprox(dot(x, sweep_norm), start_line, atol=Base.rtoldefault(typeof(start_line))), points), 0) + 1
-    if start_end < length(points)
-        sort!(view(points, start_end:length(points)), by = x -> counterclockwise(x, sweep_norm))
+    if !isempty(points)
+        # `getsemihull` fails if `points` starts or end with several points on the same sweep line that are not ordered clockwise
+        start_line = dot(points[1], sweep_norm)
+        # `isapprox` won't work well with `atol=0` (which is the default) if `start_line` is zero, so we set a nonzero `atol`.
+        # TODO We should also multiply it with a scaling.
+        end_start = something(findfirst(x -> !isapprox(dot(x, sweep_norm), start_line, atol=Base.rtoldefault(typeof(start_line))), points), length(points) + 1) - 1
+        if end_start > 1
+            sort!(view(points, 1:end_start), by = x -> counterclockwise(x, sweep_norm), rev=true)
+        end
+        end_line = dot(points[end], sweep_norm)
+        start_end = something(findlast(x -> !isapprox(dot(x, sweep_norm), end_line, atol=Base.rtoldefault(typeof(start_line))), points), 0) + 1
+        if start_end < length(points)
+            sort!(view(points, start_end:length(points)), by = x -> counterclockwise(x, sweep_norm))
+        end
     end
 
     _points = eltype(points)[]

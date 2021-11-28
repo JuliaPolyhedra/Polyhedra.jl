@@ -103,6 +103,9 @@ function test_issue_271()
     v = vrep([[1, 0], [0.0, 0.0], [0.5, 0.0], [-0.5, 0.0], [0.5, 0.5], [1.0, 0.5], [0.0, 0.5], [0.2, 0.5]])
     p = Polyhedra.planar_hull(v)
     @test collect(points(p)) == expected
+    v = vrep([[1, 0], [0.0, 0.0], [0.5, 0.0], [-0.5, 0.0], [1.0, 0.5], [0.2, 0.5], [0.5, 0.5], [0.0, 0.5]])
+    p = Polyhedra.planar_hull(v)
+    @test collect(points(p)) == expected
 end
 
 @testset "Planar" begin
