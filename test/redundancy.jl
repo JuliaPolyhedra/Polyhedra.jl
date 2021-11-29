@@ -369,3 +369,13 @@ end
     @test nhalfspaces(P) == 2
     @test npoints(P) > 0
 end
+
+@testset "Noise linearity #259" begin
+    h = HalfSpace([-1.3333333333333333, -2.220446049250313e-16], 0.0) ∩ HalfSpace([0.0, 1.333333333333333], 0.0) ∩ HalfSpace([-2.7755575615628914e-17, -0.6666666666666667], 0.0) ∩ HalfSpace([-0.33333333333333337, 0.0], 0.0)
+    # Presolve off on purpose to test that `λ_l∞` fixes it.
+    hh = detecthlinearity(h, GLPK.Optimizer)
+    @test nhyperplanes(hh) == 1
+    hhh = removehredundancy(hh, GLPK.Optimizer)
+    @test nhyperplanes(hhh) == 1
+    @test nhalfspaces(hhh) == 1
+end

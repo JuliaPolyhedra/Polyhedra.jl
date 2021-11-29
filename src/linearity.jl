@@ -175,9 +175,14 @@ function detect_new_linearities(rep::Representation, solver; verbose=0, kws...)
         end
         ray_to_line = Int[]
         ray_to_drop = Int[]
+        # If two halfspaces make a hyperplane with a small error, then their `λ` can be chosen very large
+        # so as to cancel each others and create another halfspace with the error.
+        # However, the `λ` for this other halfspace will be quite small in comparison so we need to
+        # scale to detect that.
+        λ_l∞ = maximum(abs(MOI.get(model, MOI.VariablePrimal(), λ[i])) for i in eachindex(λ) if active[i])
         for i in eachindex(λ)
             if active[i] && !is_lin[i]
-                if !isapproxzero((primal = MOI.get(model, MOI.VariablePrimal(), λ[i]);); kws...)
+                if !isapproxzero((primal = MOI.get(model, MOI.VariablePrimal(), λ[i]);) / λ_l∞; kws...)
                     # `λ_i > 0`, we know that `-r_i` belongs to the cone so we transform the ray into a line.
                     verbose >= 1 && @info("$(i)th element is linear as $primal is positive.")
                     is_lin[i] = true
