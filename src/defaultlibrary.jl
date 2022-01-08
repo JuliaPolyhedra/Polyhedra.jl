@@ -129,9 +129,11 @@ function resethrep!(p::DefaultPolyhedron, h::HRepresentation, redundancy = UNKNO
     p.hrep = h
     p.hred = redundancy
     p.vrep = nothing
+    p.vred = UNKNOWN_REDUNDANCY
 end
 function resetvrep!(p::DefaultPolyhedron, v::VRepresentation, redundancy = UNKNOWN_REDUNDANCY)
     p.vrep = v
     p.vred = redundancy
     p.hrep = nothing
+    p.hred = UNKNOWN_REDUNDANCY
 end
