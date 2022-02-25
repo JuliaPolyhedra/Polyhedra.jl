@@ -40,7 +40,7 @@ end
 _shrink(h::HyperPlane, radius, T::Type) = convert(similar_type(typeof(h), T), h)
 _shrink(h::HalfSpace, radius, T::Type) = HalfSpace{T}(h.a, h.β - norm(h.a, 2) * radius)
 function _shrink(p::HRep{Tin}, radius) where Tin
-    T = MA.promote_operation(MA.add_mul, Tin, float(Tin), eltype(radius))
+    T = typeof(radius)
     f = (i, h) -> _shrink(h, radius, T)
     d = FullDim(p)
     return similar(p, d, T, hmap(f, d, T, p)...)
