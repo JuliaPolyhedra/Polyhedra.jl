@@ -21,13 +21,13 @@ To start using Polyhedra, you can now just write
 julia> using Polyhedra
 ```
 
-Polyhedra includes a default library supporting every operation but external library can also be used.
+Polyhedra includes a default library supporting every operation but external libraries can also be used.
 See the next section on installing a library.
 
 ## Getting Libraries
 
-Many C libraries are are available for manipulating Polyhedra.
-Some of them works with floating point arithmetic and some of them can do the computation exactly using rational arithmetic and multiple precision libraries such as [GMP](https://gmplib.org/).
-Julia also natively support Rational arithmetic using multiple precision libraries and of course floating point arithmetic.
-That makes the use of both arithmetic very easy and transparent.
-A list of Polyhedra Manipulation Libraries is available in [the JuliaPolyhera website](https://juliapolyhedra.github.io/).
+Many C libraries are available for manipulating Polyhedra.
+Some of them work with floating point arithmetic and some of them can do the computation exactly using rational arithmetic and multiple precision libraries such as [GMP](https://gmplib.org/).
+Julia also natively supports rational arithmetic using multiple precision libraries and of course floating point arithmetic.
+That makes the use of both types of arithmetic very easy and transparent.
+A list of Polyhedra Manipulation Libraries is available in [the JuliaPolyhedra website](https://juliapolyhedra.github.io/).
