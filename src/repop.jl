@@ -244,18 +244,20 @@ Transform the polyhedron represented by ``p`` into ``\\alpha p`` by transforming
 each element of the V-representation (points, symmetric points, rays and lines)
 `x` into ``\\alpha x``.
 """
-function Base.:(*)(α::Number, p::Polyhedron)
+function Base.:(*)(α::Number, p::Polyhedron{T}) where T
     if vrepiscomputed(p) || iszero(α)
         return (α * LinearAlgebra.I) * p
     else
-        return p / (inv(α) * LinearAlgebra.I)
+        # If `α` is `Int` and `T` is `Rational{BigInt}`,
+        # `inv(α)` would be `Float64` and then we'll have `BigFloat`.
+        return p / (inv(convert(T, α)) * LinearAlgebra.I)
     end
 end
 function Base.:(*)(α::Number, p::VRepresentation)
     return (α * LinearAlgebra.I) * p
 end
-function Base.:(*)(α::Number, p::HRepresentation)
-    return p / (inv(α) * LinearAlgebra.I)
+function Base.:(*)(α::Number, p::HRepresentation{T}) where {T}
+    return p / (inv(convert(T, α)) * LinearAlgebra.I)
 end
 
 """
