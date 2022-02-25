@@ -365,11 +365,12 @@ end
     lib = DefaultLibrary{Float64}(lp_solver)
     P = polyhedron(hrep(A, b), lib)
     removevredundancy!(P, ztol=1e-4)
-    @test nhyperplanes(P) == 7
-    @test nhalfspaces(P) == 2
+    @test nhyperplanes(P) >= 4
+    @test nhalfspaces(P) <= 4
     @test npoints(P) > 0
 end
 
+import GLPK
 @testset "Noise linearity #259" begin
     h = HalfSpace([-1.3333333333333333, -2.220446049250313e-16], 0.0) ∩ HalfSpace([0.0, 1.333333333333333], 0.0) ∩ HalfSpace([-2.7755575615628914e-17, -0.6666666666666667], 0.0) ∩ HalfSpace([-0.33333333333333337, 0.0], 0.0)
     # Presolve off on purpose to test that `λ_l∞` fixes it.
