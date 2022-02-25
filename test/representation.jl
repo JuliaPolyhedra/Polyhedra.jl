@@ -253,27 +253,27 @@ function test_radius()
     @test Polyhedra.maximum_radius_with_center(p, [0.25, 0.25]) == 0.25
 end
 
-function test_chebyshev_center()
-    p = hrep(Matrix(1I, 2, 2), zeros(2))
+function _test_chebyshev_center(::Type{T}) where T
+    p = hrep(Matrix(1I, 2, 2), zeros(T, 2))
     @test_throws ErrorException chebyshevcenter(p, lp_solver) # unbounded
 
-    p = hrep([1 1; -1 -1], [0, -1])
+    p = hrep(T[1 1; -1 -1], T[0, -1])
     @test_throws ErrorException chebyshevcenter(p, lp_solver) # empty
 
     # examples/chebyshevcenter.ipynb
-    A = [ 2  1
-          2 -1
-         -1  2
-         -1 -2]
-    b = ones(4)
+    A = T[ 2  1
+           2 -1
+          -1  2
+          -1 -2]
+    b = ones(T, 4)
     p = hrep(A, b)
     c, r = chebyshevcenter(p, lp_solver)
-    @test c ≈ [0, 0] atol=1e-6
+    @test c ≈ zeros(T, 2) atol=1e-6
     @test r ≈ 0.4472135955 atol=1e-6
 
     _interval(c, r) = HalfSpace([1], c + r) ∩ HalfSpace([-1], -c + r)
-    c_exp = [-4, 3, 8]
-    for rs in [[1, 2, 3], [3, 1, 2], [3, 2, 1], [2, 1, 2]]
+    c_exp = T[-4, 3, 8]
+    for rs in [T[1, 2, 3], T[3, 1, 2], T[3, 2, 1], T[2, 1, 2]]
         h = _interval(c_exp[1], rs[1]) * _interval(c_exp[2], rs[2]) * _interval(c_exp[3], rs[3])
         c, r = hchebyshevcenter(h, lp_solver, verbose=1)
         @test c ≈ c_exp atol=1e-6
@@ -295,6 +295,12 @@ function test_chebyshev_center()
 
     p = convexhull([0, 0], [0, 1], [1, 0])
     @test_throws ErrorException chebyshevcenter(p) # Not yet implemented
+end
+
+function test_chebyshev_center()
+    _test_chebyshev_center(Int)
+    _test_chebyshev_center(Float64)
+    _test_chebyshev_center(Rational{BigInt})
 end
 
 # V-consistency with iterator constructor
