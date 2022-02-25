@@ -1,7 +1,7 @@
 name = "Polyhedra"
 uuid = "67491407-f73d-577b-9b50-8179a7c68029"
 repo = "https://github.com/JuliaPolyhedra/Polyhedra.jl.git"
-version = "0.6.18"
+version = "0.7.0"
 
 [deps]
 GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
@@ -20,7 +20,7 @@ JuMP = "0.23"
 MutableArithmetics = "1"
 RecipesBase = "0.7, 0.8, 1.0"
 StaticArrays = "0.12, 1.0"
-julia = "1"
+julia = "1.6"
 
 [extras]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
