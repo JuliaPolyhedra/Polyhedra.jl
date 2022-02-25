@@ -1,4 +1,4 @@
-@testset "MixMatRep" begin
+function test_MixMatRep()
     change_fulldim_test(MixedMatHRep)
     change_fulldim_test(MixedMatVRep)
 

@@ -1,4 +1,4 @@
-@testset "Lifted Representation" begin
+function test_lifted_representation()
     change_fulldim_test(LiftedHRepresentation)
     change_fulldim_test(LiftedVRepresentation)
 
