@@ -8,4 +8,3 @@ Polyhedra = "67491407-f73d-577b-9b50-8179a7c68029"
 
 [compat]
 Documenter = "0.26"
-JuMP = "0.22"
