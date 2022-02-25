@@ -1,4 +1,4 @@
-@testset "LPHRep" begin
+function test_lphrep()
     hs = HalfSpace([1, 0], 1)
     hp = HyperPlane([0, 1], 1)
     h = hs ∩ hp

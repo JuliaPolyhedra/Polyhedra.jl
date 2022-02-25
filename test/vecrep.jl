@@ -1,4 +1,4 @@
-function convexhull_test()
+function test_convexhull()
     v = convexhull([1, 0, 0]) + conichull(Ray([0, 1, 0]), Line([0, 0, 1]))
     @test npoints(v) == 1
     @test nlines(v) == 1
@@ -34,7 +34,7 @@ function convexhull_test()
     @test nrays(v) == 2
 end
 
-function intersect_test()
+function test_intersect()
     h = HalfSpace([1, 0], 1) ∩ HyperPlane([0, 1], 1)
     @test nhyperplanes(h) == 1
     @test nhalfspaces(h) == 1
@@ -53,13 +53,4 @@ function intersect_test()
     @test h.hyperplanes.hyperplanes === _hp
     @test nhyperplanes(h) == 2
     @test nhalfspaces(h) == 2
-end
-
-@testset "VecRep" begin
-    @testset "Convex hull" begin
-        convexhull_test()
-    end
-    @testset "Intersection" begin
-        intersect_test()
-    end
 end
