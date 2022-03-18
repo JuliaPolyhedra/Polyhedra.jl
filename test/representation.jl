@@ -457,6 +457,15 @@ function test_scalar_multiplication()
     _test_scalar_multiplication(Rational{BigInt})
 end
 
+function test_cartesian_product_mixed()
+    h1 = intersect(HalfSpace(@SVector([1]), 2))
+    h2 = intersect(HalfSpace([-1], 3))
+    h = @inferred h1 * h2
+    @test collect(halfspaces(h)) == [HalfSpace([1, 0], 2), HalfSpace([0, -1], 3)]
+    h = @inferred h2 * h1
+    @test collect(halfspaces(h)) == [HalfSpace([-1, 0], 3), HalfSpace([0, 1], 2)]
+end
+
 end  # module
 
 TestRepresentation.runtests()

@@ -63,3 +63,4 @@ sum_fulldim(N1::Int, N2::Int) = N1 + N2
 sum_fulldim(::StaticArrays.Size{N1}, ::StaticArrays.Size{N2}) where {N1, N2} = StaticArrays.Size{(N1[1] + N2[1],)}()
 # Called in cartesian product of two polyhedra, only the second using static arrays.
 sum_fulldim(N1::Int, ::StaticArrays.Size{N2}) where N2 = N1 + N2[1]
+sum_fulldim(::StaticArrays.Size{N1}, N2::Int) where N1 = N1[1] + N2
