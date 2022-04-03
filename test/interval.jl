@@ -1,4 +1,8 @@
-function cartesian_product_test()
+using LinearAlgebra, Test
+using StaticArrays
+using Polyhedra
+
+function test_cartesian_product()
     p1 = polyhedron(hrep([HalfSpace([1.0], 1.0), HalfSpace([-1.0], 0.0)]))
     p2 = polyhedron(hrep([HalfSpace([1.0], 1.0), HalfSpace([-1.0], 0.0)]))
     p = Polyhedra.hcartesianproduct(p1, p2)
@@ -9,26 +13,59 @@ function cartesian_product_test()
     inequality_fulltest(p, expected)
 end
 
-function sethrep_test()
+function _test_sethrep(fh, fv, args...)
     #             x_1 ≤ 2   x_1 ≥ -1 <=> -x_1 ≤ 1
     h1 = HalfSpace([1], 2) ∩ HalfSpace([-1], 1)
     v1 = convexhull([-1], [2])
-    p = polyhedron(h1)
-    @test volume(p) == 3
-    inequality_fulltest(p, h1)
-    generator_fulltest(p, v1)
+
+    ph = polyhedron(h1)
+    @test volume(ph) == 3
+    inequality_fulltest(ph, h1)
+    generator_fulltest(ph, v1)
+
+    pv = polyhedron(v1)
+    @test volume(pv) == 3
+    inequality_fulltest(pv, h1)
+    generator_fulltest(pv, v1)
+
     #             x_1 ≤ 1   x_1 ≥ -1 <=> -x_1 ≤ 1
     h2 = HalfSpace([1], 1) ∩ HalfSpace([-1], 1)
     v2 = convexhull([-1], [1])
-    Polyhedra.sethrep!(p, h2)
+
     # Test that the three fields have been modified
-    @test volume(p) == 2
-    inequality_fulltest(p, h2)
-    generator_fulltest(p, v2)
+    fh(ph, h2, args...)
+    @test volume(ph) == 2
+    inequality_fulltest(ph, h2)
+    generator_fulltest(ph, v2)
+    fv(pv, v2, args...)
+    @test volume(pv) == 2
+    inequality_fulltest(pv, h2)
+    generator_fulltest(pv, v2)
+end
+function test_sethrep()
+    _test_sethrep(Polyhedra.sethrep!, Polyhedra.setvrep!)
+    _test_sethrep(Polyhedra.sethrep!, Polyhedra.setvrep!, Polyhedra.UNKNOWN_REDUNDANCY)
+    _test_sethrep(Polyhedra.resethrep!, Polyhedra.resetvrep!)
+    _test_sethrep(Polyhedra.resethrep!, Polyhedra.resetvrep!, Polyhedra.UNKNOWN_REDUNDANCY)
+end
+
+function test_redundancy()
+    h = HalfSpace([1], 2) ∩ HalfSpace([-1], 1)
+    p = polyhedron(h)
+    function f()
+        removevredundancy!(p)
+        removevredundancy!(p, nothing; strongly = false, planar = false)
+        detectvlinearity!(p)
+        detectvlinearity!(p, nothing; verbose=1)
+        removehredundancy!(p)
+        removehredundancy!(p, nothing; strongly = false, planar = false)
+        detecthlinearity!(p)
+        detecthlinearity!(p, nothing; verbose=1)
+    end
+    alloc_test(f, 0)
 end
 
 @testset "Interval tests" begin
-
     # Closed interval
     h = HalfSpace([-1], 3.) ∩ HalfSpace([1.], 8)
     v = convexhull([-3.], [8.])
@@ -222,10 +259,14 @@ end
     inequality_fulltest(p, h)
 
     @testset "Cartesian product (#132)" begin
-        cartesian_product_test()
+        test_cartesian_product()
     end
 
     @testset "sethrep! (#267)" begin
-        sethrep_test()
+        test_sethrep()
+    end
+
+    @testset "test_redundancy (#298)" begin
+        test_redundancy()
     end
 end

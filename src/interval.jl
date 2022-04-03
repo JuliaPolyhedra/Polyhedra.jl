@@ -136,7 +136,7 @@ function _hinterval(rep::HRep{T}, ::Type{AT}, D) where {T, AT}
     return Interval{T, AT, D}(_hinterval(rep, AT)...)
 end
 
-function _vinterval(v::VRep{T}, ::Type{AT}, D) where {T, AT}
+function _vinterval(v::VRep{T}, ::Type{AT}) where {T, AT}
     haslb = true
     lb = zero(T)
     hasub = true
@@ -171,7 +171,11 @@ function _vinterval(v::VRep{T}, ::Type{AT}, D) where {T, AT}
             end
         end
     end
-    Interval{T, AT, D}(haslb, lb, hasub, ub, isempty)
+    return _interval(AT, haslb, lb, hasub, ub, isempty)
+end
+
+function _vinterval(rep::VRep{T}, ::Type{AT}, D) where {T, AT}
+    return Interval{T, AT, D}(_vinterval(rep, AT)...)
 end
 
 Interval{T, AT, D}(p::HRepresentation{T}) where {T, AT, D} = _hinterval(p, AT, D)
@@ -195,15 +199,24 @@ hrepiscomputed(::Interval) = true
 vrepiscomputed(::Interval) = true
 
 # Nothing to do
-function detecthlinearity!(::Interval) end
-function detectvlinearity!(::Interval) end
-function removehredundancy!(::Interval) end
-function removevredundancy!(::Interval) end
+function detecthlinearity!(::Interval, args...; kws...) end
+function detectvlinearity!(::Interval, args...; kws...) end
+function removehredundancy!(::Interval, args...; kws...) end
+function removevredundancy!(::Interval, args...; kws...) end
 
-function sethrep!(p::Interval{T, AT}, h::HRep) where {T, AT}
+sethrep!(p::Interval, h::HRep) = resethrep!(p, h)
+function resethrep!(p::Interval{T, AT}, h::HRep) where {T, AT}
     hnew, v, volume = _hinterval(h, AT)
     p.hrep = hnew
     p.vrep = v
     p.length = volume
     return p
-end    
+end
+setvrep!(p::Interval, v::VRep) = resetvrep!(p, v)
+function resetvrep!(p::Interval{T, AT}, v::VRep) where {T, AT}
+    h, vnew, volume = _vinterval(v, AT)
+    p.hrep = h
+    p.vrep = vnew
+    p.length = volume
+    return p
+end
