@@ -31,14 +31,14 @@ contains the [`HyperPlane`](@ref) `HyperPlane([1, 1], 0)` as the sum of the firs
 """
     hredundancy(p::Polyhedron)
 
-Return the [`Redundancy`](@ref) of [`hrep(p)`](@ref `hrep`).
+Return the [`Redundancy`](@ref) of [`hrep(p)`](@ref hrep).
 """
 hredundancy(::Polyhedron) = UNKNOWN_REDUNDANCY
 
 """
     vredundancy(p::Polyhedron)
 
-Return the [`Redundancy`](@ref) of [`vrep(p)`](@ref `hrep`).
+Return the [`Redundancy`](@ref) of [`vrep(p)`](@ref vrep).
 """
 vredundancy(::Polyhedron) = UNKNOWN_REDUNDANCY
 
