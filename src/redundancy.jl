@@ -3,7 +3,7 @@
 ######################
 
 # Redundancy
-export isredundant, removevredundancy!, removevredundancy, removehredundancy!, removehredundancy
+export isredundant, removevredundancy!, removevredundancy, removehredundancy!, removehredundancy, Redundancy, vredundancy, hredundancy
 
 """
     @enum Redundancy UNKNOWN_REDUNDANCY LINEARITY_DETECTED NO_REDUNDANCY
