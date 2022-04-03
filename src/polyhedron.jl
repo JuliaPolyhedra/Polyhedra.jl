@@ -30,7 +30,7 @@ hrep(p::Polyhedron) = error("`hrep` not implemented for `$(eltype(p))`")
 Reset the H-representation of `p` to `h`.
 The redundancy of `p` is assumed to be `redundancy`; see [`Polyhedra.Redundancy`](@ref).
 
-!!! warning
+!!! info
     The representation is not assumed to be a valid representation for `p`
     so it invalidates the V-representation of `p`.
     Use [`Polyhedra.sethrep!`](@ref) if `h` is known to be a valid representation for `p`.
@@ -70,7 +70,7 @@ vrep(p::Polyhedron) = error("`vrep` not implemented for `$(eltype(p))`")
 Reset the V-representation of `p` to `v`.
 The redundancy of `p` is assumed to be `redundancy`; see [`Polyhedra.Redundancy`](@ref).
 
-!!! warning
+!!! info
     The representation is not assumed to be a valid representation for `p`
     so it invalidates the H-representation of `p`.
     Use [`Polyhedra.setvrep!`](@ref) if `v` is known to be a valid representation for `p`.
