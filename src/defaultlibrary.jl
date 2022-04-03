@@ -117,20 +117,20 @@ setvrep!(p, v, red) = sethrep!(p, v)
 resethrep!(p, h, red) = resethrep!(p, h)
 resetvrep!(p, v, red) = resethrep!(p, v)
 
-function sethrep!(p::DefaultPolyhedron, h::HRepresentation, redundancy = UNKNOWN_REDUNDANCY)
+function sethrep!(p::DefaultPolyhedron, h::HRepresentation, redundancy::Redundancy = UNKNOWN_REDUNDANCY)
     p.hrep = h
     p.hred = redundancy
 end
-function setvrep!(p::DefaultPolyhedron, v::VRepresentation, redundancy = UNKNOWN_REDUNDANCY)
+function setvrep!(p::DefaultPolyhedron, v::VRepresentation, redundancy::Redundancy = UNKNOWN_REDUNDANCY)
     p.vrep = v
     p.vred = redundancy
 end
-function resethrep!(p::DefaultPolyhedron, h::HRepresentation, redundancy = UNKNOWN_REDUNDANCY)
+function resethrep!(p::DefaultPolyhedron, h::HRepresentation, redundancy::Redundancy = UNKNOWN_REDUNDANCY)
     p.hrep = h
     p.hred = redundancy
     p.vrep = nothing
 end
-function resetvrep!(p::DefaultPolyhedron, v::VRepresentation, redundancy = UNKNOWN_REDUNDANCY)
+function resetvrep!(p::DefaultPolyhedron, v::VRepresentation, redundancy::Redundancy = UNKNOWN_REDUNDANCY)
     p.vrep = v
     p.vred = redundancy
     p.hrep = nothing

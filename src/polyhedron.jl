@@ -25,6 +25,32 @@ Returns an H-representation for the polyhedron `p`.
 hrep(p::Polyhedron) = error("`hrep` not implemented for `$(eltype(p))`")
 
 """
+    Polyhedra.resethrep!(p::Polyhedron, h::HRepresentation, redundancy::Redundancy = UNKNOWN_REDUNDANCY)
+
+Reset the H-representation of `p` to `h`.
+The redundancy of `p` is assumed to be `redundancy`; see [`Polyhedra.Redundancy`](@ref).
+
+!!! warning
+    The representation is not assumed to be a valid representation for `p`
+    so it invalidates the V-representation of `p`.
+    Use [`Polyhedra.sethrep!`](@ref) if `h` is known to be a valid representation for `p`.
+"""
+function resethrep! end
+
+"""
+    Polyhedra.sethrep!(p::Polyhedron, h::HRepresentation, redundancy::Redundancy = UNKNOWN_REDUNDANCY)
+
+Reset the H-representation of `p` to `h`.
+The redundancy of `p` is assumed to be `redundancy`; see [`Polyhedra.Redundancy`](@ref).
+
+!!! warning
+    The representation is assumed to be a valid representation for `p`
+    so it does not invalidate the V-representation of `p` if it was already computed previously.
+    Use [`Polyhedra.resethrep!`](@ref) if `h` is not known to be a valid representation for `p`.
+"""
+function sethrep! end
+
+"""
     vrepiscomputed(p::Polyhedron)
 
 Returns whether the V-representation of this polyhedron has been computed.
@@ -37,6 +63,32 @@ function vrepiscomputed end
 Returns a V-representation for the polyhedron `p`.
 """
 vrep(p::Polyhedron) = error("`vrep` not implemented for `$(eltype(p))`")
+
+"""
+    Polyhedra.resetvrep!(p::Polyhedron, v::VRepresentation, redundancy::Redundancy = UNKNOWN_REDUNDANCY)
+
+Reset the V-representation of `p` to `v`.
+The redundancy of `p` is assumed to be `redundancy`; see [`Polyhedra.Redundancy`](@ref).
+
+!!! warning
+    The representation is not assumed to be a valid representation for `p`
+    so it invalidates the H-representation of `p`.
+    Use [`Polyhedra.setvrep!`](@ref) if `v` is known to be a valid representation for `p`.
+"""
+function resetvrep! end
+
+"""
+    Polyhedra.setvrep!(p::Polyhedron, v::HRepresentation, redundancy::Redundancy = UNKNOWN_REDUNDANCY)
+
+Reset the H-representation of `p` to `v`.
+The redundancy of `p` is assumed to be `redundancy`; see [`Polyhedra.Redundancy`](@ref).
+
+!!! warning
+    The representation is assumed to be a valid representation for `p`
+    so it does not invalidate the H-representation of `p` if it was already computed previously.
+    Use [`Polyhedra.resetvrep!`](@ref) if `v` is not known to be a valid representation for `p`.
+"""
+function setvrep! end
 
 """
     volume(p::Polyhedron{T}) where {T}
