@@ -26,6 +26,9 @@ removeduplicates
 
 ## Redundancy
 ```@docs
+Redundancy
+hredundancy
+vredundancy
 isredundant
 removehredundancy
 removehredundancy!
