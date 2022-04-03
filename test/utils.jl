@@ -92,3 +92,8 @@ function generator_fulltest(p::Polyhedron, vrepargs...)
     removevredundancy!(p)
     generator_fulltest(vrep(p), vrepargs...)
 end
+
+function alloc_test(f, n)
+    f() # compile
+    @test n == @allocated f()
+end

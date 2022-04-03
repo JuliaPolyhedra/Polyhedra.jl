@@ -113,25 +113,29 @@ end
 # Fallback to avoid breaking library adding this new `red` arg.
 # TODO We should remove these fallbacks in the future
 sethrep!(p, h, red) = sethrep!(p, h)
-setvrep!(p, v, red) = sethrep!(p, v)
+setvrep!(p, v, red) = setvrep!(p, v)
 resethrep!(p, h, red) = resethrep!(p, h)
-resetvrep!(p, v, red) = resethrep!(p, v)
+resetvrep!(p, v, red) = resetvrep!(p, v)
 
 function sethrep!(p::DefaultPolyhedron, h::HRepresentation, redundancy = UNKNOWN_REDUNDANCY)
     p.hrep = h
     p.hred = redundancy
+    return
 end
 function setvrep!(p::DefaultPolyhedron, v::VRepresentation, redundancy = UNKNOWN_REDUNDANCY)
     p.vrep = v
     p.vred = redundancy
+    return
 end
 function resethrep!(p::DefaultPolyhedron, h::HRepresentation, redundancy = UNKNOWN_REDUNDANCY)
     p.hrep = h
     p.hred = redundancy
     p.vrep = nothing
+    return
 end
 function resetvrep!(p::DefaultPolyhedron, v::VRepresentation, redundancy = UNKNOWN_REDUNDANCY)
     p.vrep = v
     p.vred = redundancy
     p.hrep = nothing
+    return
 end
