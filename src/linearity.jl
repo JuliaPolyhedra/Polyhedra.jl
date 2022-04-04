@@ -122,16 +122,13 @@ with nonzero value, we can transform it to a line as well.
 In summary, we have a line `r_i` for each `i` such that `λ_i != 0`.
 
 The dual program is:
-```math
-\\begin{align*}
-& \\max & z
-\\\\
-& \\;\\;\\text{s.t.} & r_i^\\top x & \\ge z
-\\end{align*}
+```
+max z
+s.t. r_i'x ≥ z
 ```
 When the primal is feasible, the dual program may still be feasible.
 We know that `z = 0` by strong duality as the objective value needs to be equal to the objective of the primal which is zero.
-So the constraints are `r_i'x >= 0`. If we have `r_i'x > 0` for some `i`, it means that `-r_i` does not belong to the cone
+So the constraints are `r_i'x ≥ 0`. If we have `r_i'x > 0` for some `i`, it means that `-r_i` does not belong to the cone
 hence `r_i` can be dropped for the purpose of searching for lines.
 
 ## Note
