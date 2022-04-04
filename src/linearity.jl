@@ -122,11 +122,13 @@ with nonzero value, we can transform it to a line as well.
 In summary, we have a line `r_i` for each `i` such that `λ_i != 0`.
 
 The dual program is:
+```
 max z
-    r_i'x >= z
+s.t. r_i'x ≥ z
+```
 When the primal is feasible, the dual program may still be feasible.
 We know that `z = 0` by strong duality as the objective value needs to be equal to the objective of the primal which is zero.
-So the constraints are `r_i'x >= 0`. If we have `r_i'x > 0` for some `i`, it means that `-r_i` does not belong to the cone
+So the constraints are `r_i'x ≥ 0`. If we have `r_i'x > 0` for some `i`, it means that `-r_i` does not belong to the cone
 hence `r_i` can be dropped for the purpose of searching for lines.
 
 ## Note
@@ -135,7 +137,7 @@ In CDDLib, the dual program is solved, if the objective value is zero then linea
 by, for each `i` such that `r_i'x = 0`, solve an LP to find whether `-r_i` belongs to the cone.
 CDDLib ignores the primal results provided in `λ` which directly gives linearity without the need
 to solve an LP for each ray.
-This method is therefore significantly more efficient as it's complexity is `O(dimension of linespace)` which is upper
+The method implemented in Polyhedra is therefore significantly more efficient as its complexity is `O(dimension of linespace)` which is upper
 bounded by `O(fulldim)` while the method of CDDLib is `O(number of rays)`.
 """
 function detect_new_linearities(rep::Representation, solver; verbose=0, kws...)

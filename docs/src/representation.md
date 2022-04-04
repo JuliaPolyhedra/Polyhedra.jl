@@ -75,9 +75,18 @@ For instance, the simplex defined above can be obtained as follows:
 HalfSpace([-1, 0], 0) ∩ HyperPlane([1, 1], 1) ∩ HalfSpace([0, -1], 0)
 ```
 
-In addition to being created incrementally with intersections, an H-representation can also be created using the `hrep` function
+In addition to being created incrementally with intersections, an H-representation can also be created using the [`hrep`](@ref) function.
+The [`hrep`](@ref) function is also used to query the H-representation of a given polyhedron.
 ```@docs
 hrep
+```
+
+The H-representation of a given polyhedron can be altered with the [`Polyhedra.resethrep!`](@ref)
+and [`Polyhedra.sethrep!`](@ref). Use [`Polyhedra.sethrep!`](@ref) with caution as it does not invalidate
+the V-representation! Use [`Polyhedra.resethrep!`](@ref) in case you are unsure on which one to use.
+```@docs
+Polyhedra.resethrep!
+Polyhedra.sethrep!
 ```
 
 ### Interface
@@ -134,9 +143,18 @@ conichull(Line([1, 0]), Line([0, 1]))
 ```
 represents the full space.
 
-In addition to being created incrementally with convex hull and minkowsky addition, a V-representation can also be created using the `vrep` function
+In addition to being created incrementally with convex hull and minkowsky addition, a V-representation can also be created using the [`vrep`](@ref) function.
+The [`vrep`](@ref) function is also used to query the V-representation of a given polyhedron.
 ```@docs
 vrep
+```
+
+The H-representation of a given polyhedron can be altered with the [`Polyhedra.resetvrep!`](@ref)
+and [`Polyhedra.setvrep!`](@ref). Use [`Polyhedra.setvrep!`](@ref) with caution as it does not invalidate
+the V-representation! Use [`Polyhedra.resetvrep!`](@ref) in case you are unsure on which one to use.
+```@docs
+Polyhedra.resetvrep!
+Polyhedra.setvrep!
 ```
 
 ### Interface

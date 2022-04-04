@@ -47,4 +47,5 @@ makedocs(
 
 deploydocs(
     repo   = "github.com/JuliaPolyhedra/Polyhedra.jl.git",
+    push_preview = true,
 )
