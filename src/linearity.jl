@@ -123,11 +123,11 @@ In summary, we have a line `r_i` for each `i` such that `λ_i != 0`.
 
 The dual program is:
 ```math
-\\begin{align}
+\\begin{align*}
 & \\max & z
 \\\\
 & \\;\\;\\text{s.t.} & r_i^\\top x & \\ge z
-\\end{align}
+\\end{align*}
 ```
 When the primal is feasible, the dual program may still be feasible.
 We know that `z = 0` by strong duality as the objective value needs to be equal to the objective of the primal which is zero.
