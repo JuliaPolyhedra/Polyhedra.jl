@@ -20,9 +20,11 @@ function dim(h::HRep, current=false; kws...)
 end
 
 """
-    detecthlinearity!(p::HRep)
+    detecthlinearity!(p::HRep; kws...)
 
 Detects all the hyperplanes contained in the H-representation and remove all redundant hyperplanes.
+
+The remaining keyword arguments `kws` are passed to [`detecthlinearity`](@ref).
 
 ## Examples
 The representation
@@ -39,9 +41,11 @@ function detecthlinearity!(p::Polyhedron, solver=default_solver(p); kws...)
 end
 
 """
-    detectvlinearity!(p::VRep)
+    detectvlinearity!(p::VRep, solver=default_solver(p); kws...)
 
 Detects all the lines contained in the V-representation and remove all redundant lines.
+
+The remaining keyword arguments `kws` are passed to [`detectvlinearity`](@ref).
 
 ## Examples
 The representation
@@ -98,17 +102,19 @@ function _detect_opposite_elements(aff, non_opposite, elements; kws...)
 end
 
 """
-    detect_new_linearities(rep::HRepresentation, solver; verbose=0)
+    detect_new_linearities(rep::HRepresentation{T}, solver; verbose=0, ztol=Base.rtoldefault(T)) where {T}
 
 Given a polyhedron with H-representation `rep`, detect whether a new hyperplane can be generated from the halfspaces in `halfspaces` using an linear program solved by `solver`.
 The method is similar to the method used for lines described as follows.
 This function is automatically called by `removehredundancy` if a solver is provided.
 
-    detect_new_linearities(rep::VRepresentation, solver; verbose=0)
+    detect_new_linearities(rep::VRepresentation{T}, solver; verbose=0, ztol=Base.rtoldefault(T)) where {T}
 
 Given a cone defined by the V-representation `rep` (ignoring the points in the representation if any), detect whether a new line can be generated from the rays in `rays` using an linear program solved by `solver`.
 The method is as follows (suppose `lines` is empty for simplicity).
 This function is automatically called by `removevredundancy` if a solver is provided.
+
+The keyword argument `ztol` is used as a tolerance to decide whether a number is zero.
 
 If there was a line `l` in the cone, it would mean that there exist `μ >= 0` and `ν >= 0` such that
 `Σ μ_i r_i = l` and `Σ ν_i r_i = -l`. We deduce from this that `Σ λ_i r_i = 0` where `λ = μ + ν`.
@@ -260,10 +266,26 @@ Set a solver if you believe that the polyhedron may have more linearity.
     end
     return removeduplicates(aff), els
 end
+
+"""
+    detecthlinearity(hr::HRepresentation, solver; kws...)
+
+Return a new H-representation with linearity detected using `solver`.
+
+The remaining keyword arguments `kws` are passed to [`detect_new_linearities`](@ref).
+"""
 function detecthlinearity(hr::HRepresentation, solver; kws...)
     aff, hs = _detect_linearity(hr, solver; kws...)
     typeof(hr)(FullDim(hr), aff.hyperplanes, hs)
 end
+
+"""
+    detectvlinearity(vr::VRepresentation, solver; kws...)
+
+Return a new V-representation with linearity detected using `solver`.
+
+The remaining keyword arguments `kws` are passed to [`detect_new_linearities`](@ref).
+"""
 function detectvlinearity(vr::VRepresentation, solver; kws...)
     aff, rays = _detect_linearity(vr, solver; kws...)
     typeof(vr)(FullDim(vr), preps(vr)..., aff.lines, rays)

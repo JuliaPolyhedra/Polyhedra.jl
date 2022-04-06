@@ -5,6 +5,7 @@ include("board.jl")
 include("docexample.jl")
 include("issue48.jl")
 include("issue224.jl")
+include("issue301.jl")
 include("empty.jl")
 include("sparse.jl")
 include("sparserect.jl")
@@ -12,6 +13,7 @@ include("recipe.jl")
 include("support_function.jl")
 include("vhypercube.jl")
 include("center_of_mass.jl")
+include("cartesian_interval.jl")
 include("cartesian_interval.jl")
 
 const misctests = Dict(
@@ -22,6 +24,7 @@ const misctests = Dict(
     "board" => lib -> boardtest(lib, 3),
     "issue48" => issue48test,
     "issue224" => issue224test,
+    "issue301" => issue301test,
     "empty" => emptytest,
     "sparse" => sparsetest,
     "sparserect" => sparserecttest,
