@@ -117,27 +117,29 @@ function to remove this warning.
 end
 
 """
-    removehredundancy!(p::HRep)
+    removehredundancy!(p::HRep; kws...)
 
 Removes the elements of the H-representation of `p` that can be removed without changing the polyhedron represented by `p`. That is, it only keeps the halfspaces corresponding to facets of the polyhedron.
+
+The remaining keyword arguments `kws` are passed to [`detectvlinearity!`](@ref) and [`detecthlinearity!`](@ref).
 """
 function removehredundancy! end
-function removehredundancy!(p::Polyhedron)
+function removehredundancy!(p::Polyhedron; kws...)
     hredundancy(p) == NO_REDUNDANCY && return
     solver = _solver_warn(p, false, false)
     if solver === nothing
-        detectvlinearity!(p)
-        detecthlinearity!(p)
+        detectvlinearity!(p; kws...)
+        detecthlinearity!(p; kws...)
         nonred = removehredundancy(hrep(p), vrep(p))
     else
-        detecthlinearity!(p)
+        detecthlinearity!(p; kws...)
         nonred = removehredundancy(hrep(p), solver)
     end
     sethrep!(p, nonred, NO_REDUNDANCY)
 end
 
 """
-    removevredundancy!(p::VRep; strongly=false, planar=true)
+    removevredundancy!(p::VRep; strongly=false, planar=true, kws...)
 
 Removes the elements of the V-representation of `p` that can be removed without
 changing the polyhedron represented by `p`. That is, it only keeps the extreme
@@ -147,6 +149,8 @@ If `strongly=true`, weakly redundant points, i.e., points that are not extreme
 but are not in the relative interior either, may be kept.
 If `fulldim(p)` is 2, `strongly` is `false` and `planar` is `true`, a planar convex hull algorithm
 is used.
+
+The remaining keyword arguments `kws` are passed to [`detectvlinearity!`](@ref) and [`detecthlinearity!`](@ref).
 """
 function removevredundancy! end
 function removevredundancy!(p::Polyhedron; strongly=false, planar=true, kws...)

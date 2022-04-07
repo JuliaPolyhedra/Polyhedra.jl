@@ -1,5 +1,5 @@
 isapproxzero(x::T; kws...) where {T<:Real} = x == zero(T)
-isapproxzero(x::T; ztol=Base.rtoldefault(Float64)) where {T<:AbstractFloat} = abs(x) < ztol
+isapproxzero(x::T; ztol=Base.rtoldefault(T)) where {T<:AbstractFloat} = abs(x) < ztol
 isapproxzero(x::AbstractVector{T}; kws...) where {T<:Real} = isapproxzero(maximum(abs.(x)); kws...)
 #isapproxzero(x::Union{SymPoint, Ray, Line}; kws...) = isapproxzero(coord(x); kws...)
 isapproxzero(x::Union{Ray, Line}; kws...) = isapproxzero(coord(x); kws...)

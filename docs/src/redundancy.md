@@ -13,7 +13,9 @@ support_function
 
 ```@docs
 detecthlinearity!
+detecthlinearity
 detectvlinearity!
+detectvlinearity
 detect_new_linearities
 dim
 ```
