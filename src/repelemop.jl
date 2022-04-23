@@ -200,6 +200,50 @@ function Base.issubset(p::Polyhedron, h::HRepElement, solver=Polyhedra.linear_ob
     end
 end
 
+"""
+    issubseth(p::Rep, h::HRep)
+
+Returns whether `p` is a subset of `h` by checking whether `p` is a subset of
+each hyperplane and halfspace of `h`.
+"""
+function issubseth(rep::Rep, h::HRep, args...)
+    f(el) = issubset(rep, el, args...)
+    return all(f, hyperplanes(h)) && all(f, halfspaces(h))
+end
+
+"""
+    issubsetv(v::VRep, p::Rep)
+
+Returns whether `v` is a subset of `p` by checking whether each line, ray and
+point of `v` belongs to `p`.
+"""
+function issubsetv(v::VRep, rep::Rep, args...)
+    f(el) = in(el, rep, args...)
+    return all(f, lines(v)) && all(f, rays(v)) && all(f, points(v))
+end
+
+# `issubsetv` would work just as well for this one
+# We give a priority to `issubseth` as users are more likely to use
+# hyperrectangles that have small H-representation than its polar the
+# cross-polytope.
+Base.issubset(p::VRepresentation, q::HRepresentation, args...) = issubseth(p, q, args...)
+Base.issubset(p::HRepresentation, q::HRepresentation, args...) = issubseth(p, q, args...)
+Base.issubset(p::VRepresentation, q::VRepresentation, args...) = issubsetv(p, q, args...)
+
+"""
+    issubset(p::Rep, q::Rep)
+
+Returns whether `p` is a subset of `q`.
+"""
+function Base.issubset(p::Polyhedron, q::Polyhedron, args...)
+    # We give a priority to `issubseth` for the same reason as above.
+    if hrepiscomputed(q) || !(vrepiscomputed(p))
+        return issubseth(p, q, args...)
+    else
+        return issubsetv(p, q, args...)
+    end
+end
+
 ################
 # INTERSECTION #
 ################
