@@ -229,6 +229,9 @@ end
 Base.issubset(p::VRepresentation, q::HRepresentation, args...) = issubseth(p, q, args...)
 Base.issubset(p::HRepresentation, q::HRepresentation, args...) = issubseth(p, q, args...)
 Base.issubset(p::VRepresentation, q::VRepresentation, args...) = issubsetv(p, q, args...)
+function Base.issubset(p::HRepresentation, q::VRepresentation, args...)
+    error("`issubset(h::HRepresentation, v::VRepresentation)` is not supported, use representation conversion for at least one of the two arguments, e.g., by doing `import HiGHS; issubset(h, polyhedron(v), HiGHS.Optimizer)`.")
+end
 
 """
     issubset(p::Rep, q::Rep)
