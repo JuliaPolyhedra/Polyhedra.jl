@@ -114,7 +114,7 @@ See [Polyhedral Function](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/ma
 ## Creating a polyhedron from the feasible set of a JuMP model
 
 A typical application of polyhedral computation is the computation of the set of extreme points and rays of the feasible set of an optimization problem.
-This comes from the fact that given a minimization of a concave function (or maximization of a convex function) on a convex feasible set (e.g. Linear Programming),
+This comes from the fact that given a minimization of a convex function (or maximization of a concave function) on a convex feasible set (e.g. Linear Programming),
 we are either in the following three situations:
 
 - The feasible set is empty, i.e. the problem is infeasible.
