@@ -19,7 +19,7 @@ Polyhedra.default_solver
 Polyhedra.linear_objective_solver
 ```
 
-## Using a polyhedron for in an optimization model
+## Using a polyhedron in an optimization model
 
 A polyhedron or representation can be used in the constraint of a JuMP model.
 For instance, consider the 1-simplex:
