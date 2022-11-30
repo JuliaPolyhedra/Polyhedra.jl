@@ -184,8 +184,10 @@ for (isVrep, elt, loop_singular) in [(true, :AbstractVector, :point),
             iterator(T, ElemT, p...)
         end
 
-        function $mapit(f::Function, d::FullDim, ::Type{T}, p::$HorVRep...) where {T}
-            ElemT = promote_type(similar_type.($elemtype.(p), Ref(d), T)...)
+        function $mapit(f::F, d::FullDim, ::Type{T}, p::Vararg{$HorVRep,N}) where {F<:Function,T,N}
+            # On Julia v1.8.3, `$elemtype.(p)` leads to inference failure
+            # but `map($elemtype, p)` works.
+            ElemT = promote_type(similar_type.(map($elemtype, p), Ref(d), T)...)
             iterator(T, ElemT, f, p...)
         end
 
