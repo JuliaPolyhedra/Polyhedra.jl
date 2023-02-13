@@ -1,4 +1,4 @@
-using Test
+using LinearAlgebra, Test
 using Polyhedra
 
 _isapprox(x::Real, y::Real) = _isapprox(promote(x, y)...)

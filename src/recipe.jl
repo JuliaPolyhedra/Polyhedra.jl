@@ -18,8 +18,9 @@ function planar_contour(p::Polyhedron)
     end
     sort!(ps, by = x -> x[1])
     counterclockwise(p1, p2) = dot(cross([p1; 0], [p2; 0]), [0, 0, 1])
-    top = getsemihull(ps,  1, counterclockwise)
-    bot = getsemihull(ps, -1, counterclockwise)
+    sweep_norm = basis(eltype(ps), fulldim(p), 1)
+    top = _semi_hull(ps,  1, counterclockwise, sweep_norm)
+    bot = _semi_hull(ps, -1, counterclockwise, sweep_norm)
     if !isempty(top) && !isempty(bot)
         @assert top[end] == bot[1]
         pop!(top)

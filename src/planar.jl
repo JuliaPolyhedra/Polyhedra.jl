@@ -1,6 +1,6 @@
-function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray::Nothing = nothing) where PT
+function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yray::Nothing = nothing) where PT
     hull = PT[]
-    if length(ps) == 0
+    if isempty(ps)
         return hull
     end
     prev = sign_sense == 1 ? first(ps) : last(ps)
@@ -17,12 +17,25 @@ function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray::Nothing
             psj_vec = ps[j] - prev
             cc = counterclockwise(cur_vec, psj_vec)
             if isapproxzero(cc)
-                # `cur` and `ps[j]` are on the same ray starting from `prev`.
-                # The one that is closer to `prev` is redundant.
+                # `prev`, `cur` and `ps[j]` are on the same line
+                # Two cases here:
+                # 1) `prev`, `cur`, `ps[j]` are on a line perpendicular to `sweep_norm`
+                #    The one that is not clockwise is redundant.
+                # 2) `cur`, `ps[j]` and on the same ray starting from `prev` of direction
+                #    `sweep_norm * sign_sense`
+                #    The one that is closer to `prev` is redundant.
                 # If `j` is the last index and redundant (it may happen if this
                 # ray is perpendicular to the direction of sorting) then we should
                 # also avoid adding `ps[j]` to `hull` so we set `skip` to `true`.
-                if norm(cur_vec, 1) > norm(psj_vec, 1)
+                dcur = dot(cur_vec, sweep_norm)
+                dpsj = dot(psj_vec, sweep_norm)
+                if isapproxzero(dcur) && isapproxzero(dpsj)
+                    # Case 1
+                    if sign_sense * counterclockwise(cur_vec, sweep_norm) < sign_sense * counterclockwise(psj_vec, sweep_norm)
+                        skip = true
+                        break
+                    end
+                elseif sign_sense * dcur > sign_sense * dpsj
                     skip = true
                     break
                 end
@@ -46,8 +59,8 @@ function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray::Nothing
     return hull
 end
 
-function getsemihull(ps::Vector{PT}, sign_sense, counterclockwise, yray) where PT
-    hull = getsemihull(ps, sign_sense, counterclockwise)
+function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yray) where PT
+    hull = _semi_hull(ps, sign_sense, counterclockwise, sweep_norm)
     while length(hull) >= 2 && counterclockwise(hull[end] - hull[end - 1], yray) >= 0
         pop!(hull)
     end
@@ -124,31 +137,15 @@ function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate)
     else
         sweep_norm = rotate(coord(line))
     end
-    sort!(points, by = x -> dot(x, sweep_norm))
-
-    if !isempty(points)
-        # `getsemihull` fails if `points` starts or end with several points on the same sweep line that are not ordered clockwise
-        start_line = dot(points[1], sweep_norm)
-        # `isapprox` won't work well with `atol=0` (which is the default) if `start_line` is zero, so we set a nonzero `atol`.
-        # TODO We should also multiply it with a scaling.
-        end_start = something(findfirst(x -> !isapprox(dot(x, sweep_norm), start_line, atol=Base.rtoldefault(typeof(start_line))), points), length(points) + 1) - 1
-        if end_start > 1
-            sort!(view(points, 1:end_start), by = x -> counterclockwise(x, sweep_norm), rev=true)
-        end
-        end_line = dot(points[end], sweep_norm)
-        start_end = something(findlast(x -> !isapprox(dot(x, sweep_norm), end_line, atol=Base.rtoldefault(typeof(start_line))), points), 0) + 1
-        if start_end < length(points)
-            sort!(view(points, start_end:length(points)), by = x -> counterclockwise(x, sweep_norm))
-        end
-    end
+    sort!(points, by = Base.Fix2(dot, sweep_norm))
 
     _points = eltype(points)[]
     _lines = eltype(lines)[]
     _rays = eltype(rays)[]
     if line === nothing
-        append!(_points, getsemihull(points, 1, counterclockwise, yray))
+        append!(_points, _semi_hull(points, 1, counterclockwise, sweep_norm, yray))
         if yray === nothing
-            append!(_points, getsemihull(points, -1, counterclockwise, yray)[2:end-1])
+            append!(_points, _semi_hull(points, -1, counterclockwise, sweep_norm, yray)[2:end-1])
         else
             push!(_rays, Ray(xray))
             if !(Ray(xray) ≈ Ray(yray))
