@@ -5,7 +5,6 @@ The problem of computing the H-representation from the V-representation (or vice
 It can be solved by the Double-Description method
 ```@docs
 doubledescription
-Polyhedra.add_intersection!
 ```
 However, other methods exist such as the reverse search implemented by [LRS](https://github.com/JuliaPolyhedra/LRSLib.jl) and the quick hull algorithm implemented by [qhull](https://github.com/JuliaPolyhedra/QHull.jl).
 

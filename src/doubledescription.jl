@@ -134,28 +134,29 @@ struct DoubleDescriptionData{PointT, RayT, LineT, HST}
     lineray::Vector{Union{Nothing, CutoffRayIndex}}
     nlines::Vector{Int}
 end
+function _debug(io, name, elements, z)
+    if isempty(elements)
+        println(io, "  No $name")
+    else
+        println(io, "  $name:")
+        for i in eachindex(elements)
+            println(io, "    $i: ", elements[i], " zero at: ", z[i])
+        end
+    end
+end
 function Base.show(io::IO, data::DoubleDescriptionData)
     println(io, "DoubleDescriptionData in $(data.fulldim) dimension:")
-    println(io, data.points)
+    _debug(io, "Points", data.points, data.pz)
+    _debug(io, "Rays", data.rays, data.rz)
     println(io, data.rays)
     println(io, data.lines)
     for i in reverse(eachindex(data.cutpoints))
         println(io, " Halfspace $i: $(data.halfspaces[i]):")
-        if !isempty(data.cutpoints[i])
-            println(io, "  Cut points:")
-            for j in eachindex(data.cutpoints[i])
-                println(io, "  $j: ", data.cutpoints[i][j], " zero at: ", data.cutpz[i][j])
-            end
-        end
+        _debug(io, "Cut points", data.cutpoints[i], data.cutpz[i])
         if !isempty(data.pin[i])
             println(io, "  In: ", data.pin[i])
         end
-        if !isempty(data.cutrays[i])
-            println(io, "  Cut rays:")
-            for j in eachindex(data.cutrays[i])
-                println(io, "  $j: ", data.cutrays[i][j], " zero at: ", data.cutrz[i][j])
-            end
-        end
+        _debug(io, "Cut rays", data.cutrays[i], data.cutrz[i])
         if !isempty(data.rin[i])
             println(io, "  In: ", data.rin[i])
         end
@@ -270,7 +271,7 @@ end
 isin(data, i, p) = i in tight_halfspace_indices(data, p)
 
 resized_bitset(data) = sizehint!(BitSet(), length(data.halfspaces))
-function add_index!(data, cutoff::Nothing, p::AbstractVector, tight::BitSet)
+function add_index!(data, ::Nothing, p::AbstractVector, tight::BitSet)
     push!(data.points, p)
     push!(data.pz, tight)
     return CutoffPointIndex(0, length(data.points))
@@ -280,7 +281,7 @@ function add_index!(data, cutoff::Integer, p::AbstractVector, tight::BitSet)
     push!(data.cutpz[cutoff], tight)
     return CutoffPointIndex(cutoff, length(data.cutpoints[cutoff]))
 end
-function add_index!(data, cutoff::Nothing, r::Polyhedra.Ray, tight::BitSet)
+function add_index!(data, ::Nothing, r::Polyhedra.Ray, tight::BitSet)
     push!(data.rays, r)
     push!(data.rz, tight)
     return CutoffRayIndex(0, length(data.rays))
@@ -369,7 +370,15 @@ function combine(β, r1::Polyhedra.Ray, value1, r2::Polyhedra.Ray, value2)
     return Polyhedra.simplify(newr)
 end
 
-combine(h, el1, el2) = combine(h.β, el1, h.a ⋅ el1, el2, h.a ⋅ el2)
+"""
+    combine(h::HalfSpace, el1::VRepElement, el2::VRepElement)
+
+Combine `el1` and `el2` which are on two different sides of the halfspace `h` so
+that the combination is in the corresponding hyperplane.
+"""
+function combine(h::HalfSpace, el1::VRepElement, el2::VRepElement)
+    combine(h.β, el1, h.a ⋅ el1, el2, h.a ⋅ el2)
+end
 
 """
     add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1)
@@ -392,7 +401,7 @@ function add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1)
         return add_intersection!(data, idx2, idx1, hp_idx, hs_idx)
     end
     i = idx2.cutoff
-       # Condition (c_k) in [FP96]
+    # Condition (c_k) in [FP96]
     if idx1.cutoff == i ||
         isin(data, i, idx1) ||
         # If it's in both at some lower `j` then we'll
@@ -445,6 +454,7 @@ function hline(data, line::Line, i, h)
     data.nlines[i] += 1
     return false, line
 end
+
 # TODO remove solver arg `_`, it is kept to avoid breaking code
 function doubledescription(hr::HRepresentation, _ = nothing)
     v = Polyhedra.dualfullspace(hr)

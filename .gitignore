@@ -4,3 +4,4 @@ Manifest.toml
 *.jl.mem
 
 generated
+.vscode
