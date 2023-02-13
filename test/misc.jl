@@ -6,6 +6,7 @@ include("docexample.jl")
 include("issue48.jl")
 include("issue224.jl")
 include("issue301.jl")
+include("issue311.jl")
 include("empty.jl")
 include("sparse.jl")
 include("sparserect.jl")
@@ -25,6 +26,7 @@ const misctests = Dict(
     "issue48" => issue48test,
     "issue224" => issue224test,
     "issue301" => issue301test,
+    "issue311" => issue311test,
     "empty" => emptytest,
     "sparse" => sparsetest,
     "sparserect" => sparserecttest,
