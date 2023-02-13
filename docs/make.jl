@@ -36,6 +36,7 @@ makedocs(
         "Projection/Elimination" => "projection.md",
         "Optimization" => "optimization.md",
         "Utilities" => "utilities.md",
+        "Internal" => "internal.md",
         "Examples" => map(EXAMPLES) do example
             example => "generated/$example.md"
         end
