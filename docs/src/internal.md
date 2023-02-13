@@ -4,5 +4,5 @@ Internal functions.
 
 ```@docs
 Polyhedra.add_intersection!
-Polyhedra.combine!
+Polyhedra.combine
 ```
