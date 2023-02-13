@@ -24,9 +24,6 @@ function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yr
                 # 2) `cur`, `ps[j]` and on the same ray starting from `prev` of direction
                 #    `sweep_norm * sign_sense`
                 #    The one that is closer to `prev` is redundant.
-                # If `j` is the last index and redundant (it may happen if this
-                # ray is perpendicular to the direction of sorting) then we should
-                # also avoid adding `ps[j]` to `hull` so we set `skip` to `true`.
                 dcur = dot(cur_vec, sweep_norm)
                 dpsj = dot(psj_vec, sweep_norm)
                 if isapproxzero(dcur) && isapproxzero(dpsj)
@@ -66,6 +63,8 @@ function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yr
     end
     return hull
 end
+
+_colinear(counterclockwise, a, b, c) = isapproxzero(counterclockwise(b - a, c - a))
 
 function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate)
     line = nothing
@@ -143,10 +142,25 @@ function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate)
     _lines = eltype(lines)[]
     _rays = eltype(rays)[]
     if line === nothing
-        append!(_points, _semi_hull(points, 1, counterclockwise, sweep_norm, yray))
+        half_points = _semi_hull(points, 1, counterclockwise, sweep_norm, yray)
         if yray === nothing
-            append!(_points, _semi_hull(points, -1, counterclockwise, sweep_norm, yray)[2:end-1])
+            other_half = _semi_hull(points, -1, counterclockwise, sweep_norm, yray)[2:end-1]
+            if !isempty(other_half) && length(half_points) > 1 &&
+                _colinear(counterclockwise, half_points[1], half_points[2], other_half[end])
+                start = 2
+            else
+                start = 1
+            end
+            if !isempty(other_half) && length(half_points) > 1 &&
+                _colinear(counterclockwise, half_points[end], half_points[end - 1], other_half[1])
+                stop = length(half_points) - 1
+            else
+                stop = length(half_points)
+            end
+            append!(_points, half_points[start:stop])
+            append!(_points, other_half)
         else
+            append!(_points, half_points)
             push!(_rays, Ray(xray))
             if !(Ray(xray) ≈ Ray(yray))
                 push!(_rays, Ray(yray))

@@ -8,7 +8,7 @@ function test_planar_square(VT, d)
     no = -ei[1] - ei[2]
     ne = ei[1] - ei[2]
     se = ei[1] + ei[2]
-    expected = [ne, no, so, se]
+    expected = [no, so, se, ne]
     for ps in [
         [no, so, ne, se],
         [no, se, so, ne],
@@ -61,7 +61,7 @@ end
 
 # Square + redundant points + [+-1.5, -+0.25]
 function test_planar_square_with_more()
-    expected = [[1.0, -1.0], [-1.0, -1.0], [-1.0, 1.0], [1.0, 1.0]]
+    expected = [[-1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [1.0, -1.0]]
     v0 = convexhull([-1.0, -1.0], [1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [0.0, 1.0])
     v1 = Polyhedra.planar_hull(v0)
     @test collect(points(v1)) == expected
@@ -72,10 +72,10 @@ function test_planar_square_with_more()
     v1 = Polyhedra.planar_hull(v0)
     @test collect(points(v1)) == expected
     expected = [[1.0, -1.0], [-1.0, -1.0], [-1.0, 1.0], [0.0, 1.0 + 1e-4], [1.0, 1.0]]
-    v0 = convexhull([-1.0, -1.0], [1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [0.0, 1.0 + 1e-4])
+    v0 = convexhull([1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [0.0, 1.0 + 1e-4], [-1.0, -1.0])
     v1 = Polyhedra.planar_hull(v0)
     @test collect(points(v1)) == expected
-    expected = [[1.0, -1.0], [-1.0, -1.0], [-1.5, 0.25], [-1.0, 1.0], [1.0, 1.0], [1.5, -0.25]]
+    expected = [[-1.0, -1.0], [-1.5, 0.25], [-1.0, 1.0], [1.0, 1.0], [1.5, -0.25], [1.0, -1.0]]
     v0 = convexhull([-1.0, -1.0], [1.0, -1.0], [-1.0, 1.0], [1.0, 1.0], [0.0, 1.0], [-1.5, 0.25], [1.5, -0.25])
     v1 = Polyhedra.planar_hull(v0)
     @test collect(points(v1)) == expected
@@ -91,11 +91,11 @@ function test_planar_square_with_more()
 end
 
 function test_issue_271()
-    expected = [[1.0, 0.0], [-0.5, 0.0], [0.5, 0.5]]
+    expected = [[-0.5, 0.0], [0.5, 0.5], [1.0, 0.0]]
     v = convexhull([0.0, 0.0], [1, 0], [0.5, 0.0], [-0.5, 0.0], [0.5, 0.5])
     p = Polyhedra.planar_hull(v)
     @test collect(points(p)) == expected
-    v = convexhull([1, 0], [0.0, 0.0], [0.5, 0.0], [-0.5, 0.0], [0.5, 0.5])
+    v = convexhull([0.0, 0.0], [0.5, 0.0], [-0.5, 0.0], [0.5, 0.5], [1, 0])
     p = Polyhedra.planar_hull(v)
     @test collect(points(p)) == expected
 
