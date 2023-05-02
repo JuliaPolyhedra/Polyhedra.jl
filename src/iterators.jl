@@ -30,15 +30,15 @@ function Base.eachindex(it::AbstractSingleRepIterator{<:Any, ElemT,
                                               RepT}) where {T, ElemT, RepT<:Rep{T}}
     return Indices{T, similar_type(ElemT, FullDim(RepT), T)}(it.p)
 end
-element_and_index(it, idx::Nothing) = nothing
-function element_and_index(it::AbstractSingleRepIterator, idx::Index)
+element_and_index(::AbstractSingleRepIterator, ::Nothing) = nothing
+function element_and_index(it::AbstractSingleRepIterator, idx::AbstractIndex)
     return mapitem(it, get(it.p, idx)), idx
 end
 function Base.iterate(it::AbstractSingleRepIterator)
     idx = undouble_it(iterate(eachindex(it)))
     return element_and_index(it, idx)
 end
-function Base.iterate(it::AbstractSingleRepIterator, idx::Index)
+function Base.iterate(it::AbstractSingleRepIterator, idx::AbstractIndex)
     idx = undouble_it(iterate(eachindex(it), idx))::Union{Nothing, typeof(idx)}
     return element_and_index(it, idx)
 end

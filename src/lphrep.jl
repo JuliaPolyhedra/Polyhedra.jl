@@ -31,7 +31,7 @@ function LPHRep(model::MOI.ModelLike, T::Type = Float64)
     _model = _MOIModel{T}()
     bridged = MOI.Bridges.LazyBridgeOptimizer(_model)
     # Only enable constraint bridges that don't create variables and don't add
-    # any variable bridge so that there is an identity mapping betwenen
+    # any variable bridge so that there is an identity mapping between
     # variables of `model` and polyhedra dimensions.
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.GreaterToLessBridge{T})
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.LessToGreaterBridge{T})
