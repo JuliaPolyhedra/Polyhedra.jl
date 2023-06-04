@@ -319,7 +319,7 @@ end
 function _hull(model::MOI.ModelLike, ::Type{T}, hull::Vector{MOI.ScalarAffineFunction{T}}, rep, idxs, sum_one = idxs isa PointIndices) where T
     λ = MOI.add_variables(model, length(idxs))
     if !(idxs isa Union{HyperPlaneIndices, LineIndices})
-        cλ = [MOI.add_constraint(model, λ, MOI.GreaterThan(zero(T))) for λ in λ]
+        cλ = [MOI.add_constraint(model, λi, MOI.GreaterThan(zero(T))) for λi in λ]
     else
         cλ = nothing
     end
