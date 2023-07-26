@@ -23,7 +23,8 @@ It defines the abstract type `Polyhedron` and splits the operations on this type
 
 ## Citing
 
-See [CITATION.bib](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/CITATION.bib).
+Please cite the [JuliaCon 2023 presentation](https://pretalx.com/juliacon2023/talk/JP3SPX/) [[Slides](https://drive.google.com/file/d/1iSalXEqRO3AjHLm-3TqYLjby267n6uo5/view)].
+See [CITATION.bib](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/CITATION.bib) for the BibTeX.
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
