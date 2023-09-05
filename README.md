@@ -25,6 +25,7 @@ It defines the abstract type `Polyhedron` and splits the operations on this type
 
 Please cite the [JuliaCon 2023 presentation](https://pretalx.com/juliacon2023/talk/JP3SPX/) [[Slides](https://drive.google.com/file/d/1iSalXEqRO3AjHLm-3TqYLjby267n6uo5/view)].
 [![](https://img.youtube.com/vi/YuxJtvgg6uc/0.jpg)](https://youtu.be/YuxJtvgg6uc)
+
 See [CITATION.bib](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/CITATION.bib) for the BibTeX.
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
