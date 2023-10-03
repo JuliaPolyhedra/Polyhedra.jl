@@ -1,30 +1,33 @@
-# Index of representation element of type ElemT
+# ParmaPolyhedra has its own index type so we have an `AbstractIndex`
+# so that it can use default implementations defined here
+abstract type AbstractIndex{T,ElemT} end
+
 """
-    Index{T, ElemT}
+    Index{T,ElemT} <: AbstractIndex{T,ElemT}
 
 Index of an element of type `ElemT` in a `Rep{T}`.
 """
-struct Index{T, ElemT}
+struct Index{T,ElemT} <: AbstractIndex{T,ElemT}
     value::Int
 end
 
 # Type of the value associated to this index
-valuetype(::Union{Index{T, ElemT}, Type{Index{T, ElemT}}}) where {T, ElemT} = ElemT
+valuetype(::Union{AbstractIndex{T,ElemT},Type{<:AbstractIndex{T,ElemT}}}) where {T,ElemT} = ElemT
 
-const HyperPlaneIndex{T} = Index{T, <:HyperPlane{T}}
-const HalfSpaceIndex{T} = Index{T, <:HalfSpace{T}}
-const HIndex{T} = Union{HyperPlaneIndex{T}, HalfSpaceIndex{T}}
+const HyperPlaneIndex{T} = AbstractIndex{T,<:HyperPlane{T}}
+const HalfSpaceIndex{T} = AbstractIndex{T,<:HalfSpace{T}}
+const HIndex{T} = Union{HyperPlaneIndex{T},HalfSpaceIndex{T}}
 
 #const SymPointIndex{T} = Index{T, <:SymPoint{T}}
-const PointIndex{T} = Index{T, <:AbstractVector{T}}
+const PointIndex{T} = AbstractIndex{T,<:AbstractVector{T}}
 #const PIndex{T} = Union{SymPointIndex{T}, PointIndex{T}}
 const PIndex{T} = PointIndex{T}
-const LineIndex{T} = Index{T, <:Line{T}}
-const RayIndex{T} = Index{T, <:Ray{T}}
-const RIndex{T} = Union{LineIndex{T}, RayIndex{T}}
-const VIndex{T} = Union{PIndex{T}, RIndex{T}}
-islin(::Union{Index{T, ElemT}, Type{Index{T, ElemT}}}) where {T, ElemT} = islin(ElemT)
-ispoint(::Union{Index{T, ElemT}, Type{Index{T, ElemT}}}) where {T, ElemT} = ispoint(ElemT)
+const LineIndex{T} = AbstractIndex{T,<:Line{T}}
+const RayIndex{T} = AbstractIndex{T,<:Ray{T}}
+const RIndex{T} = Union{LineIndex{T},RayIndex{T}}
+const VIndex{T} = Union{PIndex{T},RIndex{T}}
+islin(::Union{AbstractIndex{T, ElemT},Type{<:AbstractIndex{T,ElemT}}}) where {T,ElemT} = islin(ElemT)
+ispoint(::Union{AbstractIndex{T, ElemT},Type{<:AbstractIndex{T,ElemT}}}) where {T,ElemT} = ispoint(ElemT)
 
 """
     Indices{T, ElemT, RepT<:Rep{T}}
@@ -54,15 +57,17 @@ const RayIndices{T, RepT} = Indices{T, <:Ray{T}, RepT}
 const RIndices{T, RepT} = Union{LineIndices{T, RepT}, RayIndices{T, RepT}}
 const VIndices{T, RepT} = Union{PIndices{T, RepT}, RIndices{T, RepT}}
 
-undouble_it(idx::Nothing) = nothing
-double_it(idx::Nothing) = nothing
-undouble_it(idx::NTuple{2, Index}) = idx[1]
-double_it(idx::Index) = idx, idx
+undouble_it(::Nothing) = nothing
+double_it(::Nothing) = nothing
+undouble_it(idx::NTuple{2,AbstractIndex}) = idx[1]
+double_it(idx::AbstractIndex) = idx, idx
 function Base.iterate(idxs::Indices)
     return double_it(startindex(idxs))
 end
-function Base.iterate(idxs::Indices{T, ElemT},
-                      idx::Index{T, ElemT}) where {T, ElemT}
+function Base.iterate(
+    idxs::Indices{T,ElemT},
+    idx::AbstractIndex{T,ElemT},
+) where {T, ElemT}
     return double_it(nextindex(idxs.rep, idx))
 end
 
