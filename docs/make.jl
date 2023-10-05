@@ -9,6 +9,7 @@ const EXAMPLES = [
     "Extended Formulation",
     "Minimal Robust Positively Invariant Set",
     "Convex hull of a set of points",
+    "Projection of H-representation",
 ]
 
 for example in EXAMPLES
