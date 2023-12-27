@@ -58,8 +58,3 @@ function MOI.delete(model::MOI.ModelLike, b::ProjectionBridge)
     end
 end
 _moi_set(set::Projection) = ProjectionOptSet(set)
-function JuMP.build_constraint(error_fun::Function, func, set::Projection)
-    return JuMP.BridgeableConstraint(JuMP.BridgeableConstraint(
-        JuMP.build_constraint(error_fun, func, _moi_set(set)),
-        ProjectionBridge), PolyhedraToLPBridge)
-end

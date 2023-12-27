@@ -12,12 +12,14 @@ import GenericLinearAlgebra
 import MutableArithmetics
 const MA = MutableArithmetics
 
+import MathOptInterface as MOI
+import MathOptInterface.Utilities as MOIU
+
 export Polyhedron
 
 abstract type Library end
 abstract type Polyhedron{T} end
 
-using JuMP
 export optimizer_with_attributes
 
 coefficient_type(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
@@ -81,7 +83,6 @@ include("extended.jl")
 include("vecrep.jl")
 include("mixedrep.jl")
 include("lphrep.jl")
-include("jump.jl")
 include("matrep.jl")
 include("liftedrep.jl")
 include("doubledescription.jl") # FIXME move it after projection.jl once it stops depending on LiftedRep
