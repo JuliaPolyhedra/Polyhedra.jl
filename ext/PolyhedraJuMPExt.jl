@@ -1,7 +1,8 @@
 module PolyhedraJuMPExt
 
 import JuMP
-import Polyhedra: hrep, LPHRep, polyhedron, Rep, Projection, _optimize!, _moi_set, fulldim, dimension_names, PolyhedraToLPBridge, ProjectionBridge
+import Polyhedra: hrep, LPHRep, polyhedron, _optimize!
+using Polyhedra: Rep, Projection, _moi_set, fulldim, dimension_names, PolyhedraToLPBridge, ProjectionBridge
 
 """
     hrep(model::JuMP.Model)
@@ -12,6 +13,7 @@ Note that if non-linear constraint are present in the model, they are ignored.
 hrep(model::JuMP.Model) = LPHRep(model)
 LPHRep(model::JuMP.Model) = LPHRep(JuMP.backend(model))
 polyhedron(model::JuMP.Model, args...) = polyhedron(hrep(model), args...)
+_optimize!(model::JuMP.Model) = JuMP.optimize!(model)
 
 struct VariableInSet{V <: JuMP.ScalarVariable, S <: Union{Rep, Projection}} <: JuMP.AbstractVariable
     variables::Vector{V}
@@ -42,8 +44,6 @@ function JuMP.build_constraint(error_fun::Function, func, set::Rep)
         JuMP.build_constraint(error_fun, func, _moi_set(set)),
         PolyhedraToLPBridge)
 end
-_optimize!(model::JuMP.Model) = JuMP.optimize!(model)
-
 function JuMP.build_constraint(error_fun::Function, func, set::Projection)
     return JuMP.BridgeableConstraint(JuMP.BridgeableConstraint(
         JuMP.build_constraint(error_fun, func, _moi_set(set)),
