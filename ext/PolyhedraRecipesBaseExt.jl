@@ -1,4 +1,9 @@
+module PolyhedraRecipesBaseExt
+
+using LinearAlgebra
 using RecipesBase
+using Polyhedra
+using Polyhedra: basis, _semi_hull
 
 function planar_contour(p::Polyhedron)
     if fulldim(p) != 2
@@ -17,7 +22,7 @@ function planar_contour(p::Polyhedron)
         error("Plotting empty polyhedron is not supported.")
     end
     sort!(ps, by = x -> x[1])
-    counterclockwise(p1, p2) = dot(cross([p1; 0], [p2; 0]), [0, 0, 1])
+    counterclockwise = (p1, p2) -> dot(cross([p1; 0], [p2; 0]), [0, 0, 1])
     sweep_norm = basis(eltype(ps), fulldim(p), 1)
     top = _semi_hull(ps,  1, counterclockwise, sweep_norm)
     bot = _semi_hull(ps, -1, counterclockwise, sweep_norm)
@@ -38,4 +43,6 @@ end
     seriestype --> :shape
     legend --> false
     planar_contour(p)
+end
+
 end

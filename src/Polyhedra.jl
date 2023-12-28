@@ -101,11 +101,23 @@ include("projection_opt.jl")
 
 # Visualization
 include("show.jl")
-include("recipe.jl")
-include("decompose.jl")
+
+"""
+    Mesh(p::Polyhedron)
+
+Returns wrapper of a polyhedron suitable for plotting with MeshCat.jl and Makie.jl.
+
+!!! note "Extension in Julia 1.9 and above"
+    Although we require `using GeometryBasics` to use this function in Julia 1.9 and above,
+    in most use cases this extension dependency is loaded by the plotting package and no
+    further action is required.
+"""
+function Mesh end
 
 if !isdefined(Base, :get_extension)
     include("../ext/PolyhedraJuMPExt.jl")
+    include("../ext/PolyhedraRecipesBaseExt.jl")
+    include("../ext/PolyhedraGeometryBasicsExt.jl")
 end
 
 end # module
