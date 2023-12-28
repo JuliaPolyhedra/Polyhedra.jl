@@ -104,4 +104,8 @@ include("show.jl")
 include("recipe.jl")
 include("decompose.jl")
 
+if !isdefined(Base, :get_extension)
+    include("../ext/PolyhedraJuMPExt.jl")
+end
+
 end # module
