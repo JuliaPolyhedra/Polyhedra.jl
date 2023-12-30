@@ -44,7 +44,7 @@ function triangulation_indices(p::Polyhedron)
     incident_idx = Dict(h => Set(incidentpointindices(p, h)) for h in h_idx)
     is_weak_adjacent = Dict((hi, hj) => !isempty(incident_idx[hi] ∩ incident_idx[hj]) for hi in h_idx for hj in h_idx)
     _triangulation(Δs, Δ, v_idx, h_idx, incident_idx, is_weak_adjacent, fulldim(p))
-    return Δs
+    return unique(Δs)
 end
 function triangulation(p::Polyhedron)
     return map(Δ -> vrep(get.(p, Δ)), triangulation_indices(p))
