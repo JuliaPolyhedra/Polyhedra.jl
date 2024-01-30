@@ -10,7 +10,7 @@ macro test_show(expr)
     end)
 end
 
-@testset "Show" begin
+function test_show()
     @testset "Simple show" begin
         @test_show convexhull([1, 0]) + convexhull(Line([1, 1]))
         @test_show HyperPlane([1, 0], 0) ∩ HyperPlane([0, 1], 0) ∩ HalfSpace([1, 1], 1)
@@ -77,4 +77,8 @@ $it_expected:
         @test replstr(p, false) == "Polyhedron $(typeof(p)):\n$it_expected"
         @test showstr(p) == short
     end
+end
+
+if VERSION >= v"1.10"
+    test_show()
 end
