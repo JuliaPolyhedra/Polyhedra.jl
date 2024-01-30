@@ -32,9 +32,9 @@ end
     PPT = Polyhedra.pointtype(p)
     PRT = Polyhedra.raytype(p)
     @testset "Polyhedron without H-representation" begin
-        @test replstr(p)        == "Polyhedron $(typeof(p)):\n3-element iterator of $PPT:\n Rational{BigInt}[1//1, -1//1]\n Rational{BigInt}[2//1, -2//1]\n Rational{BigInt}[3//1, -3//1],\n1-element iterator of $PRT:\n Ray(Rational{BigInt}[1//1, 0//1])"
-        @test replstr(p, false) == "Polyhedron $(typeof(p)):\n3-element iterator of $PPT:\n Rational{BigInt}[1//1, -1//1]\n Rational{BigInt}[2//1, -2//1]\n Rational{BigInt}[3//1, -3//1],\n1-element iterator of $PRT:\n Ray(Rational{BigInt}[1//1, 0//1])"
-        @test showstr(p) == "convexhull([1//1, -1//1], [2//1, -2//1], [3//1, -3//1]) + convexhull(Ray(Rational{BigInt}[1//1, 0//1]))"
+        @test replstr(p)        == "Polyhedron $(typeof(p)):\n3-element iterator of $PPT:\n Rational{BigInt}[1, -1]\n Rational{BigInt}[2, -2]\n Rational{BigInt}[3, -3],\n1-element iterator of $PRT:\n Ray(Rational{BigInt}[1, 0])"
+        @test replstr(p, false) == "Polyhedron $(typeof(p)):\n3-element iterator of $PPT:\n Rational{BigInt}[1, -1]\n Rational{BigInt}[2, -2]\n Rational{BigInt}[3, -3],\n1-element iterator of $PRT:\n Ray(Rational{BigInt}[1, 0])"
+        @test showstr(p) == "convexhull([1, -1], [2, -2], [3, -3]) + convexhull(Ray(Rational{BigInt}[1, 0]))"
     end
     h = hrep(p)
     HS = Polyhedra.halfspacetype(p)
@@ -45,13 +45,13 @@ end
     end
     it_expected = """
 3-element iterator of $HS:
- HalfSpace(Rational{BigInt}[0//1, -1//1], 3//1)
- HalfSpace(Rational{BigInt}[0//1, 1//3], -1//3)
- HalfSpace(Rational{BigInt}[-1//1, -1//1], 0//1)"""
+ HalfSpace(Rational{BigInt}[0, -1], 3//1)
+ HalfSpace(Rational{BigInt}[0, 1//3], -1//3)
+ HalfSpace(Rational{BigInt}[-1, -1], 0//1)"""
     expected = """
 H-representation $(typeof(h)):
 $it_expected"""
-    short = "HalfSpace(Rational{BigInt}[0//1, -1//1], 3//1) ∩ HalfSpace(Rational{BigInt}[0//1, 1//3], -1//3) ∩ HalfSpace(Rational{BigInt}[-1//1, -1//1], 0//1)"
+    short = "HalfSpace(Rational{BigInt}[0, -1], 3//1) ∩ HalfSpace(Rational{BigInt}[0, 1//3], -1//3) ∩ HalfSpace(Rational{BigInt}[-1, -1], 0//1)"
     @testset "H-Representation" begin
         @test replstr(h)        == expected
         @test replstr(h, false) == expected
@@ -62,14 +62,14 @@ $it_expected"""
 Polyhedron $(typeof(p)):
 $it_expected:
 3-element iterator of $PPT:
- Rational{BigInt}[1//1, -1//1]
- Rational{BigInt}[2//1, -2//1]
- Rational{BigInt}[3//1, -3//1],
+ Rational{BigInt}[1, -1]
+ Rational{BigInt}[2, -2]
+ Rational{BigInt}[3, -3],
 1-element iterator of $PRT:
- Ray(Rational{BigInt}[1//1, 0//1])"""
+ Ray(Rational{BigInt}[1, 0])"""
         @test replstr(p)        == expected
         @test replstr(p, false) == expected
-        @test showstr(p) == "$short : convexhull([1//1, -1//1], [2//1, -2//1], [3//1, -3//1]) + convexhull(Ray(Rational{BigInt}[1//1, 0//1]))"
+        @test showstr(p) == "$short : convexhull([1, -1], [2, -2], [3, -3]) + convexhull(Ray(Rational{BigInt}[1, 0]))"
     end
     p = polyhedron(h)
     @testset "Polyhedron without V-representation" begin

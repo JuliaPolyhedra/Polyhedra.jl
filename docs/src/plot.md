@@ -56,17 +56,17 @@ The V-representation cannot be given to [MeshCat](https://github.com/rdeits/Mesh
 julia> p = polyhedron(v)
 Polyhedron DefaultPolyhedron{Rational{BigInt}, Polyhedra.Intersection{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}, Polyhedra.Hull{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}}:
 1-element iterator of Vector{Rational{BigInt}}:
- Rational{BigInt}[0//1, 0//1, 0//1],
+ Rational{BigInt}[0, 0, 0],
 3-element iterator of Ray{Rational{BigInt}, Vector{Rational{BigInt}}}:
- Ray(Rational{BigInt}[1//1, 0//1, 0//1])
- Ray(Rational{BigInt}[0//1, 1//1, 0//1])
- Ray(Rational{BigInt}[0//1, 0//1, 1//1])
+ Ray(Rational{BigInt}[1, 0, 0])
+ Ray(Rational{BigInt}[0, 1, 0])
+ Ray(Rational{BigInt}[0, 0, 1])
 ```
 
 Then, we need to create a mesh from the polyhedron:
 ```jldoctest plots3
 julia> m = Polyhedra.Mesh(p)
-Polyhedra.Mesh{3, Rational{BigInt}, DefaultPolyhedron{Rational{BigInt}, Polyhedra.Intersection{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}, Polyhedra.Hull{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}}}(convexhull([0//1, 0//1, 0//1]) + convexhull(Ray(Rational{BigInt}[1//1, 0//1, 0//1]), Ray(Rational{BigInt}[0//1, 1//1, 0//1]), Ray(Rational{BigInt}[0//1, 0//1, 1//1])), nothing, nothing, nothing)
+Polyhedra.Mesh{3, Rational{BigInt}, DefaultPolyhedron{Rational{BigInt}, Polyhedra.Intersection{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}, Polyhedra.Hull{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}}}(convexhull([0, 0, 0]) + convexhull(Ray(Rational{BigInt}[1, 0, 0]), Ray(Rational{BigInt}[0, 1, 0]), Ray(Rational{BigInt}[0, 0, 1])), nothing, nothing, nothing)
 ```
 
 ```@docs
