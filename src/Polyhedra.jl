@@ -112,7 +112,7 @@ Returns wrapper of a polyhedron suitable for plotting with MeshCat.jl and Makie.
     in most use cases this extension dependency is loaded by the plotting package and no
     further action is required.
 """
-function Mesh end
+Mesh(p) = p isa Polyhedron ? error("this method requires using GeometryBasics") : throw(MethodError(Mesh, p))
 
 if !isdefined(Base, :get_extension)
     include("../ext/PolyhedraJuMPExt.jl")
