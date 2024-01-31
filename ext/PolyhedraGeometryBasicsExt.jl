@@ -3,7 +3,7 @@ module PolyhedraGeometryBasicsExt
 using LinearAlgebra
 import GeometryBasics
 using Polyhedra
-using Polyhedra: FullDim, isapproxzero, _planar_hull
+using Polyhedra: FullDim, isapproxzero, _planar_hull, counterclockwise, rotate
 using StaticArrays
 
 """
