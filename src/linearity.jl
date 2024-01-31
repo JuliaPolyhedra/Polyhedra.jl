@@ -157,11 +157,11 @@ function detect_new_linearities(rep::Representation, solver; verbose=0, kws...)
     # We pass `true` as we break homogeneity of the problem with `sum(λ) == 1`.
     hull = _zero_hull(rep, T)
     λ, cλ, sum_con = _hull(model, T, hull, rep, eachindex(nonlins), true)
-    # if verbose >= 2
-    #     for (i, λ) in enumerate(λ)
-    #         MOI.set(model, MOI.VariableName(), λ, "λ[$i]")
-    #     end
-    # end
+    if verbose >= 2
+        for (i, λ) in enumerate(λ)
+            MOI.set(model, MOI.VariableName(), λ, "λ[$i]")
+        end
+    end
     if !isempty(lins)
         η, _, _ = _hull(model, T, hull, rep, eachindex(lins))
     end
