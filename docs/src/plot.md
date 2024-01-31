@@ -90,7 +90,7 @@ julia> import Makie
 
 julia> Makie.mesh(m, color=:blue)
 
-julia> Makie.wireframe(Polyhedra.Mesh(p))
+julia> Makie.wireframe(m)
 ```
 
 See [3D Plotting a projection of the 4D permutahedron](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/3D%20Plotting%20a%20projection%20of%20the%204D%20permutahedron.ipynb) for an example notebook.
