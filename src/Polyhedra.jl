@@ -20,8 +20,6 @@ export Polyhedron
 abstract type Library end
 abstract type Polyhedron{T} end
 
-export optimizer_with_attributes
-
 coefficient_type(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
 similar_type(::Type{<:Vector}, ::Int, ::Type{T}) where T = Vector{T}
 similar_type(::Type{SparseVector{S, IT}}, ::Int, ::Type{T}) where {S, IT, T} = SparseVector{T, IT}

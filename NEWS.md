@@ -6,8 +6,9 @@
   and above. On v1.10 this reduces installation time by 15% and load time by
   18% (see [#328]).
 
-## Breaking changes 
-The following changes are only breaking on Julia v1.9 and above
-- `Polyhedra.Mesh` is now implemented in a package extension requiring
+## Breaking changes
+- `JuMP.optimizer_with_attributes` is no longer exported. Call it from JuMP.jl instead.
+- The following change is only breaking on Julia v1.9 and above:
+  `Polyhedra.Mesh` is now implemented in a package extension requiring
   GeometryBasics.jl. It is sufficient to load your plotting package, i.e.
   Makie.jl or MeshCat.jl, **before** calling `Polyhedra.Mesh`
