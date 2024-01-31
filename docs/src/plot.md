@@ -63,19 +63,11 @@ Polyhedron DefaultPolyhedron{Rational{BigInt}, Polyhedra.Intersection{Rational{B
  Ray(Rational{BigInt}[0, 0, 1])
 ```
 
-Then, we need to create a mesh from the polyhedron:
-```jldoctest plots3
-julia> m = Polyhedra.Mesh(p)
-Polyhedra.Mesh{3, Rational{BigInt}, DefaultPolyhedron{Rational{BigInt}, Polyhedra.Intersection{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}, Polyhedra.Hull{Rational{BigInt}, Vector{Rational{BigInt}}, Int64}}}(convexhull([0, 0, 0]) + convexhull(Ray(Rational{BigInt}[1, 0, 0]), Ray(Rational{BigInt}[0, 1, 0]), Ray(Rational{BigInt}[0, 0, 1])), nothing, nothing, nothing)
-```
-
-```@docs
-Polyhedra.Mesh
-```
-
-The polyhedron can be plotted with [MeshCat](https://github.com/rdeits/MeshCat.jl) as follows
+The polyhedron can then be plotted with [MeshCat](https://github.com/rdeits/MeshCat.jl) as follows
 ```julia
 julia> using MeshCat
+
+julia> m = Polyhedra.Mesh(p)
 
 julia> vis = Visualizer()
 
@@ -83,6 +75,13 @@ julia> setobject!(vis, m)
 
 julia> open(vis)
 ```
+
+Note that the `Mesh` object should be created **after** loading the plotting package:
+
+```@docs
+Polyhedra.Mesh
+```
+
 To plot it in a notebook, replace `open(vis)` with `IJuliaCell(vis)`.
 
 To plot it with [Makie](https://github.com/JuliaPlots/Makie.jl) instead, you can use for instance `mesh` or `wireframe`.
@@ -91,7 +90,7 @@ julia> import Makie
 
 julia> Makie.mesh(m, color=:blue)
 
-julia> Makie.wireframe(m)
+julia> Makie.wireframe(Polyhedra.Mesh(p))
 ```
 
 See [3D Plotting a projection of the 4D permutahedron](https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/master/examples/3D%20Plotting%20a%20projection%20of%20the%204D%20permutahedron.ipynb) for an example notebook.
