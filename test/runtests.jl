@@ -38,3 +38,4 @@ for (arith, T) in (("floating point", Float64), ("exact", Rational{BigInt}))
 end
 
 include("../examples/test_examples.jl")
+include("volume.jl")
