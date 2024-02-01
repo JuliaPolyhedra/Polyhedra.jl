@@ -151,7 +151,6 @@ function detect_new_linearities(rep::Representation, solver; verbose=0, kws...)
     nonlins = _nonlinearity(rep)
     isempty(nonlins) && return Int[]
     model, T = layered_optimizer(solver)
-    verbose >= 2 && (_model = JuMP.direct_model(model))
     is_lin = falses(length(nonlins))
     active = trues(length(nonlins))
     # We pass `true` as we break homogeneity of the problem with `sum(λ) == 1`.
@@ -173,7 +172,7 @@ function detect_new_linearities(rep::Representation, solver; verbose=0, kws...)
     end
     for i in 1:fulldim(rep) # safer than `while ...`
         (count(is_lin) == length(is_lin) || iszero(count(active))) && break
-        verbose >= 2 && println(_model)
+        verbose >= 2 && println(model)
         # FIXME stopping when we have enough hyperplanes to prove that it's empty
         #       should also resolve the issue with presolve.
         is_feasible(model, "detecting new linearity (you may need to activate presolve for some solvers, e.g. by replacing `GLPK.Optimizer` with `optimizer_with_attributes(GLPK.Optimizer, \"presolve\" => GLPK.GLP_ON)`).") || break

@@ -1,5 +1,4 @@
 export maximum_radius_with_center, hchebyshevcenter, vchebyshevcenter, chebyshevcenter
-using JuMP
 
 """
     maximum_radius_with_center(h::HRep, center)
