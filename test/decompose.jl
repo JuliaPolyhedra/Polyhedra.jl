@@ -23,7 +23,8 @@ end
 
 nfaces(d::Dict{<:Any, Face}) = length(d)
 nfaces(d::Dict{<:Any, <:Vector}) = sum(map(length, values(d)))
-function test_decompose(p::Polyhedra.Mesh{N}, d::Dict) where N
+function test_decompose(p, d::Dict)
+    N = ndims(p)
     P = GeometryBasics.Point{N, Float64}
     NR = GeometryBasics.Point{3, Float64}
     points = GeometryBasics.decompose(P, p)
