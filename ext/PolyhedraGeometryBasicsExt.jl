@@ -1,4 +1,10 @@
+module PolyhedraGeometryBasicsExt
+
+using LinearAlgebra
 import GeometryBasics
+using Polyhedra
+using Polyhedra: FullDim, isapproxzero, _planar_hull, counterclockwise, rotate
+using StaticArrays
 
 """
     struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryBasics.GeometryPrimitive{N, T}
@@ -29,7 +35,7 @@ function Mesh(polyhedron::Polyhedron, N::Int)
     # use polyhedron built from StaticArrays vector to avoid that.
     return Mesh{N}(polyhedron)
 end
-function Mesh(polyhedron::Polyhedron)
+function Polyhedra.Mesh(polyhedron::Polyhedron)
     return Mesh(polyhedron, FullDim(polyhedron))
 end
 
@@ -223,3 +229,5 @@ GeometryBasics.coordinates(poly::Mesh) = (fulldecompose!(poly); poly.coordinates
 GeometryBasics.faces(poly::Mesh) = (fulldecompose!(poly); poly.faces)
 GeometryBasics.texturecoordinates(poly::Mesh) = nothing
 GeometryBasics.normals(poly::Mesh) = (fulldecompose!(poly); poly.normals)
+
+end
