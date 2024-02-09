@@ -29,7 +29,20 @@ function similar_type(
 ) where {S,T,MT}
     return LiftedHRepresentation{T,similar_type(MT, T)}
 end
-hvectortype(p::Type{LiftedHRepresentation{T,MT}}) where {T,MT} = vectortype(MT)
+hvectortype(::Type{LiftedHRepresentation{T,MT}}) where {T,MT} = vectortype(MT)
+function fulltype(::Type{LiftedHRepresentation{T,MT}}) where {T,MT}
+    return LiftedHRepresentation{T,MT}
+end
+function dualtype(::Type{LiftedHRepresentation{T,MT}}) where {T,MT}
+    return LiftedVRepresentation{T,MT}
+end
+function dualfullspace(::LiftedHRepresentation, d::FullDim, ::Type{T}) where {T}
+    N = fulldim(d)
+    return LiftedVRepresentation{T}(
+        [SparseArrays.spzeros(T, N) one(T) * I],
+        BitSet(1:N),
+    )
+end
 
 function LiftedHRepresentation{T}(
     A::AbstractMatrix{T},
