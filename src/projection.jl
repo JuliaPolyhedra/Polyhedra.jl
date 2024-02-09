@@ -20,6 +20,56 @@ struct FourierMotzkin <: EliminationAlgorithm end
     BlockElimination
 
 Computation of the projection by computing the H-representation and applying the block elimination algorithm to it.
+
+The idea is as follows.
+Consider a H-representation given by ``Ax + By \\le c``.
+For any ``d``, the projection on the `x` variables has
+belongs to the halfspace ``d^\\top x \\le \\delta`` where ``\\delta``
+is
+```math
+\\begin{aligned}
+\\max \\;     & d^\\top x \\
+\\text{s.t.} & A x + By \\le c  \\
+\\end{aligned}
+```
+By duality, this is equal to
+```math
+\\begin{aligned}
+\\min \\;     & c^\\top \\nu \\
+\\text{s.t.} & A^\\top \\nu = d \\
+& B^\\top \\nu = 0 \\
+& \\nu \\ge 0
+\\end{aligned}
+```
+Let `R` be the matrix for which the columns are the extreme rays of the
+polyhedron with defined by
+``B^\\top \\nu = 0, \\nu \\ge 0``.
+The program can be rewritten as
+```math
+\\begin{aligned}
+\\min \\;     & c^\\top \\nu \\
+\\text{s.t.} & A^\\top \\nu = d \\
+& \\nu = R\\lambda \\
+& \\lambda \\ge 0
+\\end{aligned}
+```
+which is equivalent to
+```math
+\\begin{aligned}
+\\min \\;     & c^\\top R \\lambda \\
+\\text{s.t.} & A^\\top R \\lambda = d \\
+& \\lambda \\ge 0
+\\end{aligned}
+```
+Dualizing, we obtain
+```math
+\\begin{aligned}
+\\max \\;     & d^\\top x \\
+\\text{s.t.} & R^\\top A x \\le R^\\top c \\
+\\end{aligned}
+```
+where we see that ``R^\\top A x \\le R^\\top c``
+is the H-representation of the polyhedron.
 """
 struct BlockElimination <: EliminationAlgorithm end
 
@@ -49,8 +99,19 @@ project(p::Polyhedron, pset, algo) = eliminate(p, setdiff(1:fulldim(p), pset), a
 
 supportselimination(p::Polyhedron, ::FourierMotzkin)   = false
 eliminate(p::Polyhedron, delset, ::FourierMotzkin)     = error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
-supportselimination(p::Polyhedron, ::BlockElimination) = false
-eliminate(p::Polyhedron, delset, ::BlockElimination)   = error("Block elimination not implemented for $(typeof(p))")
+supportselimination(p::Polyhedron, ::BlockElimination) = true
+
+struct ProjectionMatrix <: AbstractMatrix{Bool}
+    indices::Vector{Int}
+    n::Int
+end
+Base.size()
+Base.adjoint(P::ProjectionMatrix) = transpose(P)
+
+function eliminate(p::Polyhedron, delset, ::BlockElimination)
+    h_eliminate = ProjectionMatrix(sort(collect(delset)), fulldim(p)) \ hrep(p)
+    return h_eliminate
+end
 
 eliminate(p::Polyhedron, algo::EliminationAlgorithm) = eliminate(p, BitSet(fulldim(p)), algo)
 

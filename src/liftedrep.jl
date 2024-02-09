@@ -18,7 +18,17 @@ end
 FullDim(rep::LiftedHRepresentation) = size(rep.A, 2) - 1
 
 similar_type(::Type{LiftedHRepresentation{S, MT}}, ::FullDim, ::Type{T}) where {S, T, MT} = LiftedHRepresentation{T, similar_type(MT, T)}
-hvectortype(p::Type{LiftedHRepresentation{T, MT}}) where {T, MT} = vectortype(MT)
+hvectortype(::Type{LiftedHRepresentation{T, MT}}) where {T, MT} = vectortype(MT)
+fulltype(::Type{LiftedHRepresentation{T,MT}}) where {T,MT} = LiftedHRepresentation{T,MT}
+dualtype(::Type{LiftedHRepresentation{T,MT}}) where {T,MT} = LiftedVRepresentation{T,MT}
+function dualfullspace(::LiftedHRepresentation, d::FullDim, ::Type{T}) where {T}
+    N = fulldim(d)
+    return LiftedVRepresentation{T}(
+        [SparseArrays.spzeros(T, N) one(T) * I],
+        BitSet(1:N),
+    )
+end
+
 
 LiftedHRepresentation{T}(A::AbstractMatrix{T}, linset::BitSet=BitSet()) where {T} = LiftedHRepresentation{T, typeof(A)}(A, linset)
 LiftedHRepresentation{T}(A::AbstractMatrix, linset::BitSet=BitSet()) where {T} = LiftedHRepresentation{T}(AbstractMatrix{T}(A), linset)
