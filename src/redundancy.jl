@@ -367,6 +367,7 @@ end
 function removevredundancy(vrep::VRepresentation, hrep::HRep; kws...)
     _removevred_withhred(vrep, hrep; kws...)
 end
+removevredundancy(vr::VEmptySpace, ::HRep) = vr # resolves ambiguity
 
 function removehredundancy(hrepit::HIt, vrep::VRep; strongly=false, d=dim(vrep))
     _filter(h -> !isredundant(vrep, h, strongly=strongly, d=d), hrepit)

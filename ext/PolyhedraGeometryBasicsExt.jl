@@ -9,9 +9,9 @@ using StaticArrays
 """
     struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryBasics.GeometryPrimitive{N, T}
         polyhedron::PT
-        coordinates::Union{Nothing, Vector{GeometryBasics.Point{3, T}}}
-        faces::Union{Nothing, Vector{GeometryBasics.TriangleFace{Int}}}
-        normals::Union{Nothing, Vector{GeometryBasics.Point{3, T}}}
+        coordinates::Vector{GeometryBasics.Point{3, T}}
+        faces::Vector{GeometryBasics.TriangleFace{Int}}
+        normals::Vector{GeometryBasics.Point{3, T}}
     end
 
 Mesh wrapper type that inherits from `GeometryPrimitive` to be used for plotting
@@ -20,12 +20,12 @@ instead if it is known that `p` is defined in a 3-dimensional space.
 """
 mutable struct Mesh{N, T, PT <: Polyhedron{T}} <: GeometryBasics.GeometryPrimitive{N, T}
     polyhedron::PT
-    coordinates::Union{Nothing, Vector{GeometryBasics.Point{N, T}}}
-    faces::Union{Nothing, Vector{GeometryBasics.TriangleFace{Int}}}
-    normals::Union{Nothing, Vector{GeometryBasics.Point{3, T}}}
+    coordinates::Vector{GeometryBasics.Point{N, T}}
+    faces::Vector{GeometryBasics.TriangleFace{Int}}
+    normals::Vector{GeometryBasics.Point{3, T}}
 end
 function Mesh{N}(polyhedron::Polyhedron{T}) where {N, T}
-    return Mesh{N, T, typeof(polyhedron)}(polyhedron, nothing, nothing, nothing)
+    return Mesh{N, T, typeof(polyhedron)}(polyhedron, [], [], [])
 end
 function Mesh(polyhedron::Polyhedron, ::StaticArrays.Size{N}) where N
     return Mesh{N[1]}(polyhedron)
@@ -40,7 +40,7 @@ function Polyhedra.Mesh(polyhedron::Polyhedron)
 end
 
 function fulldecompose!(mesh::Mesh)
-    if mesh.coordinates === nothing
+    if isempty(mesh.coordinates)
         mesh.coordinates, mesh.faces, mesh.normals = fulldecompose(mesh)
     end
     return
