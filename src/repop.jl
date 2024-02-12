@@ -18,7 +18,7 @@ The coefficient type however, will be promoted as required taking both the coeff
 function Base.intersect(p1::HRep, p2::HRep, ps::HRep...)
     p = (p1, p2, ps...)
     T = promote_coefficient_type(p)
-    similar(p, hmap((i, x) -> convert(similar_type(typeof(x), T), x), FullDim(p[1]), T, p...)...)
+    similar(p, hmap((i, x) -> convert(similar_type(typeof(x), T), x), typed_fulldim(p[1]), T, p...)...)
 end
 Base.intersect(p::HRep, el::HRepElement) = p ∩ intersect(el)
 Base.intersect(el::HRepElement, p::HRep) = p ∩ el
@@ -67,7 +67,7 @@ The coefficient type however, will be promoted as required taking both the coeff
 function convexhull(p1::VRep, p2::VRep, ps::VRep...)
     p = (p1, p2, ps...)
     T = promote_coefficient_type(p)
-    similar(p, vmap((i, x) -> convert(similar_type(typeof(x), T), x), FullDim(p[1]), T, p...)...)
+    similar(p, vmap((i, x) -> convert(similar_type(typeof(x), T), x), typed_fulldim(p[1]), T, p...)...)
 end
 convexhull(p::VRep, el::VRepElement) = convexhull(p, convexhull(el))
 convexhull(el::VRepElement, p::VRep) = convexhull(p, el)
@@ -134,7 +134,7 @@ Same as `p + vrep([el])`.
 """
 function Base.:+(p1::VRep{T1}, p2::VRep{T2}) where {T1, T2}
     T = typeof(zero(T1) + zero(T2))
-    similar((p1, p2), FullDim(p1), T, sumpoints(FullDim(p1), T, p1, p2)..., change_coefficient_type.(rreps(p1, p2), T)...)
+    similar((p1, p2), typed_fulldim(p1), T, sumpoints(typed_fulldim(p1), T, p1, p2)..., change_coefficient_type.(rreps(p1, p2), T)...)
 end
 Base.:+(p::Rep, el::Union{Line, Ray}) = p + vrep([el])
 Base.:+(el::Union{Line, Ray}, p::Rep) = p + el
@@ -145,9 +145,9 @@ function usehrep(p1::Polyhedron, p2::Polyhedron)
 end
 
 function hcartesianproduct(p1::HRep, p2::HRep)
-    d = sum_fulldim(FullDim(p1), FullDim(p2))
+    d = sum_fulldim(typed_fulldim(p1), typed_fulldim(p2))
     T = promote_coefficient_type((p1, p2))
-    f = (i, x) -> zeropad(x, i == 1 ? FullDim(p2) : neg_fulldim(FullDim(p1)))
+    f = (i, x) -> zeropad(x, i == 1 ? typed_fulldim(p2) : neg_fulldim(typed_fulldim(p1)))
     function dimension_map(i)
         if i <= fulldim(p1)
             return (1, i)
@@ -159,11 +159,11 @@ function hcartesianproduct(p1::HRep, p2::HRep)
             dimension_map = dimension_map)
 end
 function vcartesianproduct(p1::VRep, p2::VRep)
-    d = sum_fulldim(FullDim(p1), FullDim(p2))
+    d = sum_fulldim(typed_fulldim(p1), typed_fulldim(p2))
     T = promote_coefficient_type((p1, p2))
     # Always type of first arg
-    f1 = (i, x) -> zeropad(x, FullDim(p2))
-    f2 = (i, x) -> zeropad(x, neg_fulldim(FullDim(p1)))
+    f1 = (i, x) -> zeropad(x, typed_fulldim(p2))
+    f2 = (i, x) -> zeropad(x, neg_fulldim(typed_fulldim(p1)))
     q1 = similar(p1, d, T, vmap(f1, d, T, p1)...)
     q2 = similar(p2, d, T, vmap(f2, d, T, p2)...)
     q1 + q2
@@ -213,7 +213,7 @@ function Base.:(/)(p::HRep, P::AbstractMatrix)
     return linear_preimage_transpose(P, p, size(P, 1))
 end
 function Base.:(/)(p::HRep, P::UniformScaling)
-    return linear_preimage_transpose(P, p, FullDim(p))
+    return linear_preimage_transpose(P, p, typed_fulldim(p))
 end
 
 function linear_image(P, p::VRep{Tin}, d) where Tin
@@ -235,7 +235,7 @@ function Base.:(*)(P::AbstractMatrix, p::VRep)
     return linear_image(P, p, size(P, 1))
 end
 function Base.:(*)(P::UniformScaling, p::VRep)
-    return linear_image(P, p, FullDim(p))
+    return linear_image(P, p, typed_fulldim(p))
 end
 
 """
@@ -305,7 +305,7 @@ function polar(hr::HRepresentation{T}) where T
     if isempty(points)
         push!(points, origin(V, fulldim(hr)))
     end
-    return vrep(points, lines, rays, d = FullDim(hr))
+    return vrep(points, lines, rays, d = typed_fulldim(hr))
 end
 function polar(p::Polyhedron)
     if hrepiscomputed(p) # TODO we should compute the polar of both rep if both are computed

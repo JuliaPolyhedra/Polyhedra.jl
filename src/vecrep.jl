@@ -74,12 +74,12 @@ function Intersection(d::FullDim, hyperplanes::ElemIt{HyperPlane{T, AT}},
     return Intersection{T, AT, typeof(d)}(d, hyperplanes, halfspaces)
 end
 
-FullDim(h::Intersection) = FullDim(h.hyperplanes)
+typed_fulldim(h::Intersection) = typed_fulldim(h.hyperplanes)
 hvectortype(::Type{<:Intersection{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:Intersection}, d::FullDim, ::Type{T}) where {T} = Intersection{T, similar_type(hvectortype(PT), d, T), typeof(d)}
 
 Intersection(h::HRepresentation{T}) where {T} = Intersection{T}(h)
-Intersection{T}(h::HRepresentation) where {T} = convert(Intersection{T, similar_type(hvectortype(typeof(h)), T), typeof(FullDim(h))}, h)
+Intersection{T}(h::HRepresentation) where {T} = convert(Intersection{T, similar_type(hvectortype(typeof(h)), T), typeof(typed_fulldim(h))}, h)
 
 function Base.intersect!(h::Intersection, hp::HyperPlane)
     intersect!(h.hyperplanes, hp)
@@ -170,7 +170,7 @@ function PointsHull(d::FullDim, points::PointIt)
     return PointsHull{coefficient_type(eltype(points)), eltype(points),
                       typeof(d)}(d, points)
 end
-FullDim(v::PointsHull) = v.d
+typed_fulldim(v::PointsHull) = v.d
 vvectortype(::Type{<:PointsHull{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:PointsHull}, d::FullDim, ::Type{T}) where {T} = PointsHull{T, similar_type(vvectortype(PT), d, T), typeof(d)}
 
@@ -223,7 +223,7 @@ end
 function RaysHull(d::FullDim, ls::ElemIt{Line{T, AT}}, rs::ElemIt{Ray{T, AT}}) where {T, AT}
     RaysHull{T, AT, typeof(d)}(d, ls, rs)
 end
-FullDim(v::RaysHull) = FullDim(v.lines)
+typed_fulldim(v::RaysHull) = typed_fulldim(v.lines)
 vvectortype(::Type{<:RaysHull{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:RaysHull}, d::FullDim, ::Type{T}) where {T} = RaysHull{T, similar_type(vvectortype(PT), d, T), typeof(d)}
 
@@ -265,12 +265,12 @@ function Hull(d::FullDim, points::ElemIt{AT}, lines::ElemIt{Line{T, AT}},
               rays::ElemIt{Ray{T, AT}}) where {T, AT}
     Hull{T, AT, typeof(d)}(d, points, lines, rays)
 end
-FullDim(v::Hull) = FullDim(v.points)
+typed_fulldim(v::Hull) = typed_fulldim(v.points)
 vvectortype(::Type{<:Hull{T, AT}}) where {T, AT} = AT
 similar_type(PT::Type{<:Hull}, d::FullDim, ::Type{T}) where {T} = Hull{T, similar_type(vvectortype(PT), d, T), typeof(d)}
 
 Hull(v::VRepresentation{T}) where {T} = Hull{T}(v)
-Hull{T}(v::VRepresentation) where {T} = convert(Hull{T, similar_type(vvectortype(typeof(v)), T), typeof(FullDim(v))}, v)
+Hull{T}(v::VRepresentation) where {T} = convert(Hull{T, similar_type(vvectortype(typeof(v)), T), typeof(typed_fulldim(v))}, v)
 
 convexhull!(v::Hull, p::AbstractVector) = convexhull!(v.points, p)
 convexhull!(v::Hull, r::VStruct) = convexhull!(v.rays, r)

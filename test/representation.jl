@@ -30,8 +30,8 @@ function change_fulldim_test(Rep)
         @test Polyhedra.coefficient_type(RepT) == T
         changedrep = Polyhedra.similar_type(RepT, 10)
         @test fulldim(changedrep) == -1
-        @test Polyhedra.FullDim(changedrep) == -1
-        #@test (@inferred Polyhedra.FullDim(changedrep)) == 10
+        @test Polyhedra.typed_fulldim(changedrep) == -1
+        #@test (@inferred Polyhedra.typed_fulldim(changedrep)) == 10
         @test Polyhedra.coefficient_type(changedrep) == T
     end
 end

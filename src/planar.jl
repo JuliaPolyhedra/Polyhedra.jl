@@ -190,6 +190,6 @@ counterclockwise(x, y) = x[1] * y[2] - x[2] * y[1]
 rotate(x) = convert(typeof(x), StaticArrays.SVector(-x[2], x[1]))
 
 function planar_hull(vr::VRepresentation)
-    d = FullDim(vr)
-    vrep(_planar_hull(FullDim(vr), collect(points(vr)), lines(vr), rays(vr), counterclockwise, rotate)...; d = d)
+    d = typed_fulldim(vr)
+    vrep(_planar_hull(typed_fulldim(vr), collect(points(vr)), lines(vr), rays(vr), counterclockwise, rotate)...; d = d)
 end

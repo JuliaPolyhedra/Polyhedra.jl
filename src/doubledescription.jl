@@ -15,7 +15,7 @@ function dualfullspace(rep::Representation, d::FullDim, ::Type{T}) where T
     dualfullspace(rep, d, T, polyvectortype(similar_type(vectortype(rep), d, T)))
 end
 function dualfullspace(rep::Representation{T}) where T
-    dualfullspace(rep, FullDim(rep), polytypefor(T))
+    dualfullspace(rep, typed_fulldim(rep), polytypefor(T))
 end
 
 """

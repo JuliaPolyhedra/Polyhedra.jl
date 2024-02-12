@@ -76,7 +76,7 @@ Base.:(*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
 
 function Base.:(/)(h::ElemT, P::UniformScaling) where {T, ElemT<:HRepElement{T}}
     Tout = MA.promote_operation(*, eltype(P), T)
-    ElemTout = similar_type(ElemT, FullDim(h), Tout)
+    ElemTout = similar_type(ElemT, typed_fulldim(h), Tout)
     ElemTout(P * _vec(Tout, h.a), Tout(h.β))
 end
 function Base.:(/)(h::ElemT, P::AbstractMatrix) where {T, ElemT<:HRepElement{T}}
@@ -198,8 +198,8 @@ const StructElement{T, AT} = Union{VStruct{T, AT}, HRepElement{T, AT}}
 vectortype(::Type{<:StructElement{T, AT}}) where {T, AT} = AT
 vectortype(AT::Type{<:AbstractVector}) = AT
 
-FullDim(::Type{<:StructElement{T, AT}}) where {T, AT} = FullDim(AT)
-FullDim(el::StructElement) = FullDim(coord(el))
+typed_fulldim(::Type{<:StructElement{T, AT}}) where {T, AT} = typed_fulldim(AT)
+typed_fulldim(el::StructElement) = typed_fulldim(coord(el))
 coefficient_type(::Union{RepElement{T}, Type{<:RepElement{T}}}) where {T} = T
 
 islin(::Union{Line, Type{<:Line}}) = true

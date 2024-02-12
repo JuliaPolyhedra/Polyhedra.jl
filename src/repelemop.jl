@@ -17,14 +17,14 @@ export translate
 
 function htranslate(p::HRep{T}, v::Union{AbstractVector{S}}) where {S, T}
     f = (i, h) -> translate(h, v)
-    d = FullDim(p)
+    d = typed_fulldim(p)
     Tout = Base.promote_op(+, T, S)
     similar(p, d, Tout, hmap(f, d, Tout, p)...)
 end
 
 function vtranslate(p::VRep{T}, v::Union{AbstractVector{S}}) where {S, T}
     f = (i, u) -> translate(u, v)
-    d = FullDim(p)
+    d = typed_fulldim(p)
     Tout = Base.promote_op(+, T, S)
     similar(p, d, Tout, vmap(f, d, Tout, p)...)
 end

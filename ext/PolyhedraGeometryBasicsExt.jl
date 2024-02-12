@@ -3,7 +3,7 @@ module PolyhedraGeometryBasicsExt
 using LinearAlgebra
 import GeometryBasics
 using Polyhedra
-using Polyhedra: FullDim, isapproxzero, _planar_hull, counterclockwise, rotate
+using Polyhedra: FullDim, typed_fulldim, isapproxzero, _planar_hull, counterclockwise, rotate
 using StaticArrays
 
 """
@@ -36,7 +36,7 @@ function Mesh(polyhedron::Polyhedron, N::Int)
     return Mesh{N}(polyhedron)
 end
 function Polyhedra.Mesh(polyhedron::Polyhedron)
-    return Mesh(polyhedron, FullDim(polyhedron))
+    return Mesh(polyhedron, typed_fulldim(polyhedron))
 end
 
 function fulldecompose!(mesh::Mesh)
@@ -195,7 +195,7 @@ function fulldecompose(poly_geom::Mesh, ::Type{T}) where T
     exit_point = scene(poly_geom, T)
     triangles = _Tri{2,T}[]
     z = StaticArrays.SVector(zero(T), zero(T), one(T))
-    decompose_plane!(triangles, FullDim(poly), z, collect(points(poly)), lines(poly), rays(poly), exit_point, counterclockwise, rotate)
+    decompose_plane!(triangles, typed_fulldim(poly), z, collect(points(poly)), lines(poly), rays(poly), exit_point, counterclockwise, rotate)
     return fulldecompose(triangles)
 end
 
@@ -207,7 +207,7 @@ function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
         zray = get(poly, hidx).a
         counterclockwise(a, b) = dot(cross(a, b), zray)
         rotate(r) = cross(zray, r)
-        decompose_plane!(triangles, FullDim(poly), zray, incidentpoints(poly, hidx), incidentlines(poly, hidx), incidentrays(poly, hidx), exit_point, counterclockwise, rotate)
+        decompose_plane!(triangles, typed_fulldim(poly), zray, incidentpoints(poly, hidx), incidentlines(poly, hidx), incidentrays(poly, hidx), exit_point, counterclockwise, rotate)
     end
     for hidx in eachindex(hyperplanes(poly))
         decompose_plane(hidx)

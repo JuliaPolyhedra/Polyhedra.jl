@@ -11,18 +11,19 @@ similar_type(::Type{<:Vector}, ::StaticArrays.Size, T::Type) = Vector{T}
 # StaticArrays.Size for StaticArrays.SVector
 # This allows similar_type to be compiled as only one method for Vector
 # and SparseVector and be type stable for StaticArrays.SVector
+
+const FullDim = Union{Int, StaticArrays.Size}
+
 """
-    FullDim(p)::FullDim
+    typed_fulldim(p)::FullDim
 
 Similar to [`fulldim`](@ref) but used for type stability with the vector type.
 If the vector type is `StaticArrays.SVector` then it returns a
 `StaticArrays.Size`.
 """
-const FullDim = Union{Int, StaticArrays.Size}
-
-FullDim(::Type{<:AbstractVector}) = -1 # Shouldn't hurt as it will not be used
-FullDim(v::AbstractVector) = length(v)
-FullDim(v::Union{StaticArrays.SVector{N}, Type{<:StaticArrays.SVector{N}}}) where N = StaticArrays.Size(v)
+typed_fulldim(::Type{<:AbstractVector}) = -1 # Shouldn't hurt as it will not be used
+typed_fulldim(v::AbstractVector) = length(v)
+typed_fulldim(v::Union{StaticArrays.SVector{N}, Type{<:StaticArrays.SVector{N}}}) where N = StaticArrays.Size(v)
 
 function FullDim_convert(::Type{StaticArrays.Size{N}}, d::Int) where N
     @assert N[1] == d
@@ -44,7 +45,7 @@ Returns the dimension of the space in which polyhedron, representation,
 element or vector is defined. That is, a straight line in a 3D space has
 `fulldim` 3 even if its dimension is 1.
 """
-fulldim(p) = fulldim(FullDim(p))
+fulldim(p) = fulldim(typed_fulldim(p))
 
 function fulldim end
 

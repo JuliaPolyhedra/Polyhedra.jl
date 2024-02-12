@@ -36,9 +36,9 @@ Returns the type of the coefficients used in the representation of `rep`.
 """
 coefficient_type(rep::Union{Rep{T}, Type{<:Rep{T}}}) where {T} = T
 
-FullDim(rep::Type{<:VRep}) = FullDim(vvectortype(rep))
-FullDim(rep::Type{<:HRep}) = FullDim(hvectortype(rep))
-FullDim(rep::Type{<:Polyhedron}) = FullDim(hvectortype(rep))
+typed_fulldim(rep::Type{<:VRep}) = typed_fulldim(vvectortype(rep))
+typed_fulldim(rep::Type{<:HRep}) = typed_fulldim(hvectortype(rep))
+typed_fulldim(rep::Type{<:Polyhedron}) = typed_fulldim(hvectortype(rep))
 
 # Check that it is either empty or it has a point
 vconsistencyerror() = error("Non-empty V-representation must contain at least one point. If it is a polyhedral cone, the origin should be added.")
@@ -82,8 +82,8 @@ Base.convert(::Type{VRep}, p::VRepresentation) = p
 change_coefficient_type(p::Rep{T}, ::Type{T}) where {T} = p
 change_coefficient_type(p::Rep, T::Type) = convert(similar_type(typeof(p), T), p)
 
-VRepresentation{T}(v::VRepresentation) where {T} = convert(similar_type(typeof(v), FullDim(v), T), v)
-HRepresentation{T}(h::HRepresentation) where {T} = convert(similar_type(typeof(h), FullDim(h), T), h)
+VRepresentation{T}(v::VRepresentation) where {T} = convert(similar_type(typeof(v), typed_fulldim(v), T), v)
+HRepresentation{T}(h::HRepresentation) where {T} = convert(similar_type(typeof(h), typed_fulldim(h), T), h)
 
 VRep{T}(v::VRepresentation) where {T} = VRepresentation{T}(v)
 VRep{T}(p::Polyhedron) where {T} = Polyhedron{T}(p)
