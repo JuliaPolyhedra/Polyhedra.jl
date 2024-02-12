@@ -57,7 +57,7 @@ end
 
 # TODO should be cartesian product with FullSpace
 function zeropad(p::HRep{T}, padding...) where T
-    d = map_fulldim(N -> N + abs(padding[1]), FullDim(p))
+    d = map_fulldim(N -> N + abs(padding[1]), typed_fulldim(p))
     f = (i, el) -> zeropad(el, padding...)
     return similar(p, d, T, hmap(f, d, T, p)...;
                    dimension_map = i -> _pad_map(i, fulldim(p), padding...))
@@ -82,7 +82,7 @@ of `p1` and `p2`.
 SIAM Journal on Algebraic Discrete Methods, 6(3), pp.466-486.
 """
 function convexhull(p1::HRepresentation, p2::HRepresentation)
-    d = FullDim(p1)
+    d = typed_fulldim(p1)
     T = promote_coefficient_type((p1, p2))
     d_2 = map_fulldim(N -> 2N, d)
     d_3 = map_fulldim(N -> 3N, d)

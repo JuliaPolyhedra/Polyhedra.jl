@@ -275,7 +275,7 @@ The remaining keyword arguments `kws` are passed to [`detect_new_linearities`](@
 """
 function detecthlinearity(hr::HRepresentation, solver; kws...)
     aff, hs = _detect_linearity(hr, solver; kws...)
-    typeof(hr)(FullDim(hr), aff.hyperplanes, hs)
+    typeof(hr)(typed_fulldim(hr), aff.hyperplanes, hs)
 end
 
 """
@@ -287,5 +287,5 @@ The remaining keyword arguments `kws` are passed to [`detect_new_linearities`](@
 """
 function detectvlinearity(vr::VRepresentation, solver; kws...)
     aff, rays = _detect_linearity(vr, solver; kws...)
-    typeof(vr)(FullDim(vr), preps(vr)..., aff.lines, rays)
+    typeof(vr)(typed_fulldim(vr), preps(vr)..., aff.lines, rays)
 end

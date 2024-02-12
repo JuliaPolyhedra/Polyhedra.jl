@@ -262,7 +262,7 @@ function removehredundancy(hr::HRep, solver)
     #      the hyperplanes, it just remove the redundant ones.
     nr_hyperplanes = nonredundant_hyperplanes(hr, model, T, hull, true)
     nr_halfspaces = nonredundant_halfspaces(hr, model, T, hull, false)
-    return hrep(nr_hyperplanes..., nr_halfspaces...; d=FullDim(hr))
+    return hrep(nr_hyperplanes..., nr_halfspaces...; d=typed_fulldim(hr))
 end
 
 nonredundant_lines(vr::VPolytope, model, T, hull, clean) = tuple()
@@ -298,7 +298,7 @@ function removevredundancy(vr::VRepresentation, solver)
     nr_lines = nonredundant_lines(vr, model, T, hull, true)
     nr_rays = nonredundant_rays(vr, model, T, hull, true)
     nr_points = nonredundant_points(vr, model, T, hull, false)
-    return vrep(nr_points..., nr_lines..., nr_rays...; d=FullDim(vr))
+    return vrep(nr_points..., nr_lines..., nr_rays...; d=typed_fulldim(vr))
 end
 
 _dim_for_hull(h::HRepresentation) = fulldim(h) + 1
@@ -356,7 +356,7 @@ end
 function _removevred_withhred(vrep::VRep, hrep::HRep; kws...)
     nl = nlines(vrep)
     typeof(vrep)(
-        FullDim(vrep),
+        typed_fulldim(vrep),
         removevredundancy.(vreps(vrep), hrep; nl=nl, kws...)...
     )::typeof(vrep)
 end
@@ -367,6 +367,7 @@ end
 function removevredundancy(vrep::VRepresentation, hrep::HRep; kws...)
     _removevred_withhred(vrep, hrep; kws...)
 end
+removevredundancy(vr::VEmptySpace, ::HRep) = vr # resolves ambiguity
 
 function removehredundancy(hrepit::HIt, vrep::VRep; strongly=false, d=dim(vrep))
     _filter(h -> !isredundant(vrep, h, strongly=strongly, d=d), hrepit)
@@ -377,7 +378,7 @@ end
 function _removehred_withvred(hrep::HRep, vrep::VRep; strongly=false)
     R = BitSet()
     d = dim(hrep, true) # TODO dim(hrep)
-    typeof(hrep)(FullDim(hrep),
+    typeof(hrep)(typed_fulldim(hrep),
                  removehredundancy.(hreps(hrep), vrep,
                                     strongly=strongly, d=d)...)
 end
@@ -492,12 +493,12 @@ function premovedups(vrep::VRepresentation, aff::VLinearSpace)
 end
 
 function removeduplicates(vrep::VPolytope)
-    typeof(vrep)(FullDim(vrep), premovedups(vrep, emptyspace(vrep))...)
+    typeof(vrep)(typed_fulldim(vrep), premovedups(vrep, emptyspace(vrep))...)
 end
 removeduplicates(vrep::VLinearSpace, solver = nothing) = detectvlinearity(vrep, solver)
 function removeduplicates(vrep::VRepresentation, solver = nothing)
     aff, rs = _detect_linearity(vrep, solver)
-    typeof(vrep)(FullDim(vrep), premovedups(vrep, aff)..., aff.lines, rs)
+    typeof(vrep)(typed_fulldim(vrep), premovedups(vrep, aff)..., aff.lines, rs)
 end
 
 # H-duplicates

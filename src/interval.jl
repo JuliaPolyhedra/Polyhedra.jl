@@ -9,7 +9,7 @@ The library is also used as a fallback for libraries that do not support 1-dimen
 struct IntervalLibrary{T} <: Library
 end
 
-similar_library(lib::IntervalLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to DefaultLibrary if d is not FullDim(1)
+similar_library(lib::IntervalLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to DefaultLibrary if d is not typed_fulldim(1)
 
 mutable struct Interval{T, AT, D} <: Polyhedron{T}
     hrep::Intersection{T, AT, D}
@@ -22,7 +22,7 @@ Interval{T, AT, D}(d::FullDim, it::VIt...) where {T, AT, D} = _vinterval(Hull{T,
 
 # If AT is an SVector, it will be StaticArrays.Size{(1,)}
 # otherwise, it will be 1
-FullDim(p::Interval) = FullDim(p.hrep)
+typed_fulldim(p::Interval) = typed_fulldim(p.hrep)
 
 library(::Union{Interval{T}, Type{<:Interval{T}}}) where T = IntervalLibrary{T}()
 

@@ -33,7 +33,7 @@ do `default_library(2, Float64)`.
 
 Given an `StaticArrays.SVector` `v`, to obtain a default library for points
 of the type of `v` in a type stable way, do
-`default_library(Polyhedra.FullDim(v), eltype(v))`.
+`default_library(Polyhedra.typed_fulldim(v), eltype(v))`.
 """
 function default_library end
 
@@ -186,6 +186,6 @@ function Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, it::It...; kws...)
     return similar(p, d, T, it...; kws...)
 end
 function Base.similar(p::Tuple{Vararg{Rep}}, it::It...; kws...)
-    return similar(p, FullDim(p[1]), it...; kws...)
+    return similar(p, typed_fulldim(p[1]), it...; kws...)
 end
 Base.similar(p::Rep, args...; kws...) = similar((p,), args...; kws...)

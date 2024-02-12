@@ -15,7 +15,7 @@ include("dummy_optimizer.jl")
             ((@SVector [1, 0]), (@SVector [0, 1]), (@SVector [1, 1]), (@SVector [0, 0]))]
             T = eltype(x)
             AT = typeof(x)
-            d = Polyhedra.FullDim(x)
+            d = Polyhedra.typed_fulldim(x)
             @testset "HAffineSpace" begin
                 for hr in [hrep(typeof(HyperPlane(x, one(T)))[]; d=d),
                            intersect(HyperPlane(w, zero(T)))]
@@ -77,7 +77,7 @@ include("dummy_optimizer.jl")
             ((@SVector [1, 0]), (@SVector [0, 1]), (@SVector [1, 1]), (@SVector [0, 0]))]
             T = eltype(x)
             AT = typeof(x)
-            d = Polyhedra.FullDim(x)
+            d = Polyhedra.typed_fulldim(x)
             @testset "VLinearSpace" begin
                 for vr in [vrep(typeof(Line(x))[]; d=d),
                            convexhull(Line(w))]

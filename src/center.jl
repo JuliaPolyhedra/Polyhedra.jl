@@ -44,7 +44,7 @@ function _shrink(p::HRep, radius)
     # solver. `radius` is of type `Float64` so `T = typeof(radius)` is adequate.
     T = typeof(radius)
     f = (i, h) -> _shrink(h, radius, T)
-    d = FullDim(p)
+    d = typed_fulldim(p)
     return similar(p, d, T, hmap(f, d, T, p)...)
 end
 

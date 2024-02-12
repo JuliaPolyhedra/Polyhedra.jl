@@ -15,7 +15,7 @@ mutable struct LiftedHRepresentation{T, MT<:AbstractMatrix{T}} <: MixedHRep{T}
         new{T, MT}(A, linset)
     end
 end
-FullDim(rep::LiftedHRepresentation) = size(rep.A, 2) - 1
+typed_fulldim(rep::LiftedHRepresentation) = size(rep.A, 2) - 1
 
 similar_type(::Type{LiftedHRepresentation{S, MT}}, ::FullDim, ::Type{T}) where {S, T, MT} = LiftedHRepresentation{T, similar_type(MT, T)}
 hvectortype(p::Type{LiftedHRepresentation{T, MT}}) where {T, MT} = vectortype(MT)
@@ -63,7 +63,7 @@ mutable struct LiftedVRepresentation{T, MT<:AbstractMatrix{T}} <: MixedVRep{T}
         new{T, MT}(R, linset)
     end
 end
-FullDim(rep::LiftedVRepresentation) = size(rep.R, 2) - 1
+typed_fulldim(rep::LiftedVRepresentation) = size(rep.R, 2) - 1
 
 similar_type(::Type{LiftedVRepresentation{S, MT}}, ::FullDim, ::Type{T}) where {S, T, MT} = LiftedVRepresentation{T, similar_type(MT, T)}
 vvectortype(::Type{LiftedVRepresentation{T, MT}}) where {T, MT} = vectortype(MT)
