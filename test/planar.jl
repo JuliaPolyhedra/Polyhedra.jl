@@ -108,6 +108,38 @@ function test_issue_271()
     @test collect(points(p)) == expected
 end
 
+function test_issue_333()
+    vs = [
+        0.5 -0.4
+        -0.5  1
+        0    1
+        0.8  1
+    ]
+
+    h = Polyhedra.planar_hull(vrep(vs))
+    @test all(points(h) .== [vs[i, :] for i in [1, 2, 4]])
+
+    vs = [-0.96     -0.4;
+        -0.5      -0.4;
+        0.0      -0.4;
+        0.5      -0.4;
+        1.0      -0.36065655;
+        -0.995    -0.05;
+        1.0      -0.05;
+        -1.0       0.3;
+        0.97      0.3;
+        -1.0       0.65;
+        0.930928  0.65;
+        -1.0       1.0;
+        -0.5       1.0;
+        0.0       1.0;
+        0.5       1.0;
+        0.865979 1.0;]
+
+    h = Polyhedra.planar_hull(vrep(vs))
+    @test all(points(h) .== [vs[i, :] for i in [1, 6, 8, 12, 16, 11, 9, 7, 5, 4]])
+end
+
 @testset "Planar" begin
     for T in [Float64, Int]
         for (VT, d) in [(Vector{T}, 2), (SVector{2, T}, StaticArrays.Size(2))]
@@ -116,4 +148,5 @@ end
     end
     test_planar_square_with_more()
     test_issue_271()
+    test_issue_333()
 end

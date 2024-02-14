@@ -5,6 +5,7 @@ function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yr
     end
     prev = sign_sense == 1 ? first(ps) : last(ps)
     cur = prev
+    flat_start = true
     # Invariant:
     # We either have:
     # * `hull` is empty and `cur == prev` or
@@ -12,6 +13,7 @@ function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yr
     # In any case, the semihull of `ps[1:(j-1)]` is given by `[hull; cur]`.
     for j in (sign_sense == 1 ? (2:length(ps)) : ((length(ps)-1):-1:1))
         skip = false
+        flat = false
         while prev != cur
             cur_vec = cur - prev
             psj_vec = ps[j] - prev
@@ -26,9 +28,18 @@ function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yr
                 #    The one that is closer to `prev` is redundant.
                 dcur = dot(cur_vec, sweep_norm)
                 dpsj = dot(psj_vec, sweep_norm)
-                if isapproxzero(dcur) && isapproxzero(dpsj)
+                flat = isapproxzero(dcur) && isapproxzero(dpsj)
+                if flat
                     # Case 1
-                    if sign_sense * counterclockwise(cur_vec, sweep_norm) < sign_sense * counterclockwise(psj_vec, sweep_norm)
+                    sense = flat_start ? sign_sense : -sign_sense
+                    sense = sign_sense
+                    ccjsweep = sense * counterclockwise(psj_vec, sweep_norm)
+#                    if ccjsweep > 0
+#                        hull[end] = ps[j]
+#                        prev = last(hull)
+#                        break
+#                    end
+                    if sense * counterclockwise(cur_vec, sweep_norm) < ccjsweep
                         skip = true
                         break
                     end
@@ -45,6 +56,9 @@ function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yr
             if !isempty(hull)
                 prev = last(hull)
             end
+        end
+        if prev != cur && !flat
+            flat_start = false
         end
         if !skip
             push!(hull, cur)
