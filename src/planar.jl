@@ -5,6 +5,7 @@ function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yr
     end
     prev = sign_sense == 1 ? first(ps) : last(ps)
     cur = prev
+    flat_start = true
     # Invariant:
     # We either have:
     # * `hull` is empty and `cur == prev` or
@@ -12,6 +13,7 @@ function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yr
     # In any case, the semihull of `ps[1:(j-1)]` is given by `[hull; cur]`.
     for j in (sign_sense == 1 ? (2:length(ps)) : ((length(ps)-1):-1:1))
         skip = false
+        flat = false
         while prev != cur
             cur_vec = cur - prev
             psj_vec = ps[j] - prev
@@ -26,9 +28,30 @@ function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yr
                 #    The one that is closer to `prev` is redundant.
                 dcur = dot(cur_vec, sweep_norm)
                 dpsj = dot(psj_vec, sweep_norm)
-                if isapproxzero(dcur) && isapproxzero(dpsj)
+                flat = isapproxzero(dcur) && isapproxzero(dpsj)
+                if flat
                     # Case 1
-                    if sign_sense * counterclockwise(cur_vec, sweep_norm) < sign_sense * counterclockwise(psj_vec, sweep_norm)
+                    # There can be two flat plateaus. The first one at the start and then one at the end
+                    # `flat_start` indicates in which case we are. We need to a different direction in both cases
+                    sense = flat_start ? sign_sense : -sign_sense
+                    ccjsweep = sense * counterclockwise(psj_vec, sweep_norm)
+                    cccursweep = sense * counterclockwise(cur_vec, sweep_norm)
+                    if cccursweep < 0 < ccjsweep
+                        # In this case, `prev` -> `cur` was in the right direction but now that
+                        # we discover `ps[j]`, we realize that `prev` is in the interval
+                        # `[ps[j], cur]`. Even if `ps[j]` -> `cur` seems to be in the right direction, we cannot
+                        # keep it because it is in the wrong order in `ps`, it will be picked up by the other
+                        # call to `_semi_hull` in which case `ps[j]` should be skipped (this is typically the case for the first flat plateau)
+                        # For the second (and last flat plateau), it will rather be the case that `cur` should be removed.
+                        # The only thing that is sure here is that `prev` should be removed so we remove `prev` and we `continue`
+                        # as the code should then automatically decide which of `ps[j]` or `cur` should be removed
+                        pop!(hull)
+                        prev = cur
+                        if !isempty(hull)
+                            prev = last(hull)
+                        end
+                        continue
+                    elseif cccursweep < ccjsweep
                         skip = true
                         break
                     end
@@ -45,6 +68,9 @@ function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yr
             if !isempty(hull)
                 prev = last(hull)
             end
+        end
+        if prev != cur && !flat
+            flat_start = false
         end
         if !skip
             push!(hull, cur)
