@@ -132,7 +132,7 @@ The name of the variables for each dimension can be recovered as follows
 dimension_names(h)
 ```
 Note that the names of the JuMP variables are lost in the conversion to a
-polyhedron.
+polyhedron that does not support names, e.g.,
 ```julia
 poly = polyhedron(model, CDDLib.Library(:exact))
 ```
