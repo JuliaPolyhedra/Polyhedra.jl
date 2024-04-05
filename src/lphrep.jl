@@ -47,7 +47,25 @@ function LPHRep(model::MOI.ModelLike, T::Type = Float64)
     # feasible set of the extended formulation.
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.NormOneBridge{T})
     MOI.Bridges.add_bridge(bridged, PolyhedraToLPBridge{T})
-    MOI.copy_to(bridged, model)
+    # If we call `MOI.copy_to` here, it will redirect to
+    # `MOI.Utilities.default_copy_to` which will copy constrained
+    # variables first.
+    # This might create a mismatch between the order of the dimensions
+    # and `JuMP.all_variables`. To avoid this, we copy it ourself.
+    # Note that this also prevents issue with errors of attributes not
+    # supported that would be thrown by `MOI.copy_to`.
+    vis_src = MOI.get(model, MOI.ListOfVariableIndices())
+    index_map = MOI.Utilities.IndexMap()
+    vis_dst = MOI.add_variables(bridged, length(vis_src))
+    for (vi_src, vi_dst) in zip(vis_src, vis_dst)
+        index_map[vi_src] = vi_dst
+    end
+    MOI.Utilities.pass_nonvariable_constraints(
+        bridged,
+        model,
+        index_map,
+        MOI.get(model, MOI.ListOfConstraintTypesPresent()),
+    )
     return LPHRep(_model)
 end
 # returns `Int64` so need to convert for 32-bit system
@@ -197,4 +215,4 @@ function Base.isvalid(lp::LPHRep{T}, idx::HIndex{T}) where {T}
 end
 
 dualtype(::Type{LPHRep{T}}, ::Type{AT}) where {T, AT} = dualtype(Intersection{T, AT, Int}, AT)
-dualfullspace(h::LPHRep, d::FullDim, ::Type{T}, ::Type{AT}) where {T, AT} = dualfullspace(Intersection{T, AT, Int}, d, T, AT)
+dualfullspace(::LPHRep, d::FullDim, ::Type{T}, ::Type{AT}) where {T, AT} = dualfullspace(Intersection{T, AT, Int}, d, T, AT)

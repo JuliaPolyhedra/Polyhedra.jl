@@ -122,9 +122,21 @@ we are either in the following three situations:
 - An extreme point is optimal.
 
 A JuMP model is treated by `polyhedron` just like any H-representation. For example, the hypercube of dimension `n` can be created as follows
-```julia
-m = Model()
-@variable(m, 0 ≤ x[1:n] ≤ 1)
-
-poly = polyhedron(m, CDDLib.Library(:exact))
+```@example
+model = Model()
+@variable(model, 0 ≤ x[1:2] ≤ 1)
+poly = polyhedron(model, CDDLib.Library(:exact))
+```
+Note that the names of the JuMP variables are lost in the conversion to a
+polyhedron.
+The ordering of the dimension of the polyhedron is guaranteed to correspond
+to the following:
+```@example
+all_variables(model)
+```
+So `all_variables(model)[i]` provides the JuMP variable corresponding to the `i`th
+dimension.
+The reverse mapping can be constructed as follows:
+```@example
+Dict(v => i for (i, v) in enumerate(all_variables(model)))
 ```
