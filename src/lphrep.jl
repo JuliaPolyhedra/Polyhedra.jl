@@ -57,8 +57,16 @@ function LPHRep(model::MOI.ModelLike, T::Type = Float64)
     vis_src = MOI.get(model, MOI.ListOfVariableIndices())
     index_map = MOI.Utilities.IndexMap()
     vis_dst = MOI.add_variables(bridged, length(vis_src))
+    attr = MOI.VariableName()
+    has_names = attr in MOI.get(model, MOI.ListOfVariableAttributesSet())
     for (vi_src, vi_dst) in zip(vis_src, vis_dst)
         index_map[vi_src] = vi_dst
+	if has_names
+	    name = MOI.get(model, attr, vi_src)
+	    if !isnothing(name)
+	        MOI.set(bridged, attr, vi_dst, name)
+	    end
+	end
     end
     MOI.Utilities.pass_nonvariable_constraints(
         bridged,

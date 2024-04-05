@@ -125,12 +125,19 @@ A JuMP model is treated by `polyhedron` just like any H-representation. For exam
 ```@example
 model = Model()
 @variable(model, 0 ≤ x[1:2] ≤ 1)
-poly = polyhedron(model, CDDLib.Library(:exact))
+h = hrep(model)
+```
+The name of the variables for each dimension can be recovered as follows
+```@example
+dimension_names(h)
 ```
 Note that the names of the JuMP variables are lost in the conversion to a
 polyhedron.
-The ordering of the dimension of the polyhedron is guaranteed to correspond
-to the following:
+```julia
+poly = polyhedron(model, CDDLib.Library(:exact))
+```
+However, the ordering of the dimension of the polyhedron is guaranteed to
+correspond to the order of the JuMP variables as listed by `all_variables`:
 ```@example
 all_variables(model)
 ```
