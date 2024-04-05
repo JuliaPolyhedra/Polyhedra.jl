@@ -123,7 +123,7 @@ we are either in the following three situations:
 
 A JuMP model is treated by `polyhedron` just like any H-representation. For example, the hypercube of dimension `n` can be created as follows
 ```@example lphrep
-using JuMP
+using JuMP, Polyhedra
 model = Model()
 @variable(model, 0 ≤ x[1:2] ≤ 1)
 h = hrep(model)
