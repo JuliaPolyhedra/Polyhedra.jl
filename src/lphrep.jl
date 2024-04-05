@@ -5,14 +5,15 @@ MOI.Utilities.@model(_MOIModel,
                      (), (MOI.ScalarAffineFunction,), (), ())
 # We need the `VariableIndex` constraints to be bridged so we should say that
 # they are not supported. We notably exclude `Integer` as we just ignore
-# integrality constraints. Binary constraint should be bridged to integrality
-# once https://github.com/jump-dev/MathOptInterface.jl/issues/704 is done.
+# integrality constraints. Binary constraint are bridged to integrality
+# with `ZeroOneBridge`.
 function MOI.supports_constraint(
     ::_MOIModel{T}, ::Type{MOI.VariableIndex},
     ::Type{<:Union{MOI.EqualTo{T}, MOI.GreaterThan{T}, MOI.LessThan{T},
                    MOI.Interval{T}, MOI.ZeroOne}}) where T
     return false
 end
+
 
 
 mutable struct LPHRep{T} <: HRepresentation{T}
@@ -27,6 +28,15 @@ end
 function LPHRep(model::_MOIModel{T}) where T
     return LPHRep(model, nothing, nothing)
 end
+
+function _pass_constraints(dest, src, index_map, cis_src)
+    for ci_src in cis_src
+        f = MOI.get(src, MOI.ConstraintFunction(), ci_src)
+        s = MOI.get(src, MOI.ConstraintSet(), ci_src)
+        MOI.add_constraint(dest, MOI.Utilities.map_indices(index_map, f), s)
+    end
+end
+
 function LPHRep(model::MOI.ModelLike, T::Type = Float64)
     _model = _MOIModel{T}()
     bridged = MOI.Bridges.LazyBridgeOptimizer(_model)
@@ -42,6 +52,7 @@ function LPHRep(model::MOI.ModelLike, T::Type = Float64)
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.ScalarFunctionizeBridge{T})
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.VectorFunctionizeBridge{T})
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.SplitIntervalBridge{T})
+    MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.ZeroOneBridge{T})
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.NormInfinityBridge{T})
     # This one creates variables so the user need to consider the polyhedra as the
     # feasible set of the extended formulation.
@@ -61,19 +72,21 @@ function LPHRep(model::MOI.ModelLike, T::Type = Float64)
     has_names = attr in MOI.get(model, MOI.ListOfVariableAttributesSet())
     for (vi_src, vi_dst) in zip(vis_src, vis_dst)
         index_map[vi_src] = vi_dst
-	if has_names
-	    name = MOI.get(model, attr, vi_src)
-	    if !isnothing(name)
-	        MOI.set(bridged, attr, vi_dst, name)
-	    end
-	end
+        if has_names
+            name = MOI.get(model, attr, vi_src)
+            if !isnothing(name)
+                MOI.set(bridged, attr, vi_dst, name)
+            end
+        end
     end
-    MOI.Utilities.pass_nonvariable_constraints(
-        bridged,
-        model,
-        index_map,
-        MOI.get(model, MOI.ListOfConstraintTypesPresent()),
-    )
+    for (F, S) in MOI.get(model, MOI.ListOfConstraintTypesPresent())
+        _pass_constraints(
+            bridged,
+            model,
+            index_map,
+            MOI.get(model, MOI.ListOfConstraintIndices{F,S}()),
+        )
+    end
     return LPHRep(_model)
 end
 # returns `Int64` so need to convert for 32-bit system
