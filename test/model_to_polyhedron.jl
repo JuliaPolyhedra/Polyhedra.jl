@@ -19,5 +19,11 @@ using Polyhedra
         @test p isa DefaultPolyhedron{Float64}
         @test nhalfspaces(p) == 3
     end
-    # TODO add test with binary variables once https://github.com/jump-dev/MathOptInterface.jl/issues/704 is done.
+    @testset "Binary" begin
+        model = Model()
+        @variable(model, x, Bin)
+        p = polyhedron(model)
+        @test p isa Interval{Float64}
+        @test nhalfspaces(p) == 2
+    end
 end
