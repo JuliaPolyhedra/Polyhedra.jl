@@ -248,6 +248,11 @@ function vrep(points::PointIt, lines::LineIt, rays::RayIt;
     return Hull(d, points, lines, rays)
 end
 
+function vrep(points::ElemIt{AT}, rays::ElemIt{Ray{T, AT}};
+              kws...) where {T, AT}
+    return vrep(points, Line{T, AT}[], rays; kws...)
+end
+
 function vrep(points::ElemIt{AT}, lines::ElemIt{Line{T, AT}};
               kws...) where {T, AT}
     return vrep(points, lines, Ray{T, AT}[]; kws...)
