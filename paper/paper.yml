@@ -1,0 +1,15 @@
+title: "Polyhedral Computation"
+keywords:
+  - Julia
+  - Optimization
+  - Geometry
+  - Interface
+authors:
+  - name: Benoît Legat
+    orcid: 0000-0002-5921-368X
+    affiliation: 1
+affiliations:
+  - name: KU Leuven
+    index: 1
+date: 31 May 2024
+bibliography: ref.bib
