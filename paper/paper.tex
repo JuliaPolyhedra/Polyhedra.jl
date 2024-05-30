@@ -1,0 +1,51 @@
+
+% JuliaCon proceedings template
+\documentclass{juliacon}
+\setcounter{page}{1}
+
+% See https://tex.stackexchange.com/questions/550123/underscore-in-doi-in-bibtex-file
+\usepackage{underscore}
+
+\begin{document}
+
+\input{header}
+
+\maketitle
+
+\begin{abstract}
+
+    This paper introduces a Julia interface for polyhedral computation libraries such as cdd, lrs, qhull, porta or the parma polyhedra library.
+    This notably includes conversion between the representation of a polyhedron as the intersection of half-spaces and hyper-planes and
+    its representation as the convex hull of points and rays.
+    Moreover, the interface covers the removal of redundant elements from the representations as well as detection of \emph{linearity}, i.e., hyper-planes
+    formed by the intersection of half-spaces or lines by the conic hull of rays.
+    The package also include a default pure-Julia library that implements the double description method for the representation conversion
+    and redundancy removal or linearity detection using a linear programming solver implementing MathOptInterface.
+    A polyhedron object is provided in order to abstract away the differences between the libraries and hence allowing to write library-agnostic code.
+    This object lazily applies the representation conversion when needed.
+
+\end{abstract}
+
+\section{Introduction}
+
+There are two dual approaches to represent a convex set.
+First, it can be described as the Minkowski sum between the convex hull of points
+and the conic hull of rays; this is the \emph{Vertex representation} or \emph{V-representation}.
+The dual alternative is to obtain the set as the intersection of half-spaces;
+this is the \emph{Half-spaces representation} or \emph{h-representation}
+It turns out that a convex set admits a finite V-representation if and only if it admits a finite H-represention.
+Such convex sets are called \emph{polyhedra} or even \emph{polytopes} when the V-representation contains no ray.
+
+Several algorithms exists to convert a H-representation to a V-representation and vice-versa.
+This include the \emph{double description algorithm}~\cite{motzkin1953double,fukuda1996double} implemented in cdd~\cite{fukuda2003cdd},
+the reversed search vertex enumeration algorithm~\cite{avis1996reverse} implemented in lrs~\cite{avis1994ac,avis2000revised} and
+the quick hull algorithm implemented in qhull~\cite{barber1996quickhull}.
+As detailed in \cite{avis1995good}, each of these algorithms outperforms the other two for specific families of polyhedra.
+This highlights the importance of implementing algorithm relying on polyhedral computation in a library-agnostic way
+so that each user can use the appropriate libary.
+
+\input{bib.tex}
+
+\end{document}
+
+% Inspired by the International Journal of Computer Applications template
