@@ -5,10 +5,20 @@ export triangulation, triangulation_indices
 # [CH79] Cohen, J., & Hickey, T. (1979). Two algorithms for determining volumes of convex polyhedra. Journal of the ACM (JACM), 26(3), 401-414.
 # [BEK00] Büeler, B., Enge, A., & Fukuda, K. (2000). Exact volume computation for polytopes: a practical study. In Polytopes—combinatorics and computation (pp. 131-154). Birkhäuser, Basel.
 
-# TODO parallelize: this is inherently parallelizable
+# See [CH79, Fig. 4]
 function _triangulation(Δs, Δ, v_idx, h_idx, incident_idx, is_weak_adjacent, codim)
-    @assert codim >= 0
     isempty(v_idx) && return
+    L = Set{eltype(incident_idx)}()
+    for F in incident_idx
+        l = F ∩ last
+        if !(l in L)
+            push!(L, l)
+            η = first(l)
+            if !(η in Δ)
+                _triangulation(Δs, Δ, )
+            end
+        end
+    end
     v = first(v_idx)
     Δ = push!(copy(Δ), v)
     if isone(length(v_idx))
@@ -23,10 +33,8 @@ function _triangulation(Δs, Δ, v_idx, h_idx, incident_idx, is_weak_adjacent, c
         end
         return
     end
-    tail = true
     for h in h_idx
         if !(v in incident_idx[h])
-            tail = false
             # The adjacency may be outside the current face under scrutiny but that's ok,
             # it will simply end up calling `_triangulation` with an empty `v_idx`.
             weak_adjacent = [hj for hj in h_idx if hj != h && is_weak_adjacent[(h, hj)]]
@@ -41,6 +49,7 @@ function triangulation_indices(p::Polyhedron)
     h_idx = eachindex(halfspaces(p))
     Δ = eltype(v_idx)[]
     Δs = typeof(Δ)[]
+    # `incident_idx[i]` is `F_i` of [CH79]
     incident_idx = Dict(h => Set(incidentpointindices(p, h)) for h in h_idx)
     is_weak_adjacent = Dict((hi, hj) => !isempty(incident_idx[hi] ∩ incident_idx[hj]) for hi in h_idx for hj in h_idx)
     _triangulation(Δs, Δ, v_idx, h_idx, incident_idx, is_weak_adjacent, fulldim(p))
