@@ -459,7 +459,7 @@ function hline(data, line::Line, i, h; tol)
     return false, line
 end
 
-function doubledescription(hr::HRepresentation{T}; tol = Base.rtoldefault(T)) where {T}
+function doubledescription(hr::HRepresentation{T}; tol = _default_tol(T)) where {T}
     v = Polyhedra.dualfullspace(hr)
     hps = Polyhedra.lazy_collect(hyperplanes(hr))
     hss = Polyhedra.lazy_collect(halfspaces(hr))
