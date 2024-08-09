@@ -39,24 +39,33 @@ using StaticArrays
 #   samples:          9809
 #   evals/sample:     1
 
-let
-    h = hrep([HalfSpace([ 1.,  1], 1),
-              HalfSpace([ 1., -1], 0),
-              HalfSpace([-1.,  0], 0)])
+using BenchmarkTools
+using Polyhedra
+
+function vector(T)
+    h = hrep([HalfSpace(T[ 1,  1], T(1)),
+              HalfSpace(T[ 1, -1], T(0)),
+              HalfSpace(T[-1,  0], T(0))])
     display(@benchmark(doubledescription($h)))
 end
 
-let
-    h = hrep([HalfSpace((@SVector [ 1,  1]), 1),
-              HalfSpace((@SVector [ 1, -1]), 0),
-              HalfSpace((@SVector [-1,  0]), 0)])
+using StaticArrays
+function static(T)
+    h = hrep([HalfSpace((@SVector T[ 1,  1]), T(1)),
+              HalfSpace((@SVector T[ 1, -1]), T(0)),
+              HalfSpace((@SVector T[-1,  0]), T(0))])
     display(@benchmark(doubledescription($h)))
+    @profview_allocs for _ in 1:10000
+        doubledescription(h)
+    end
 end
 
-let
-    h = hrep([ 1  1
-               1 -1
-              -1  0],
-             [1., 0, 0])
+function matrix(T)
+    h = hrep(T[
+        1  1
+        1 -1
+       -1  0],
+        T[1, 0, 0],
+    )
     display(@benchmark(doubledescription($h)))
 end
