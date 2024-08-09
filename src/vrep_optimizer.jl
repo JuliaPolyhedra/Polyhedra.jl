@@ -94,7 +94,7 @@ function MOI.optimize!(lpm::VRepOptimizer{T}) where T
         bestobjval = zero(T)
         lpm.solution = nothing
         for r in allrays(prob)
-            objval = obj ⋅ r
+            objval = _dot(obj, r)
             if _better(objval, bestobjval)
                 bestobjval = objval
                 lpm.solution = coord(r)
@@ -104,7 +104,7 @@ function MOI.optimize!(lpm::VRepOptimizer{T}) where T
             lpm.status = MOI.DUAL_INFEASIBLE
         else
             for p in points(prob)
-                objval = obj ⋅ p
+                objval = _dot(obj, p)
                 if lpm.solution === nothing || better(objval, bestobjval)
                     bestobjval = objval
                     lpm.solution = p
@@ -137,9 +137,9 @@ function MOI.get(lpm::VRepOptimizer{T}, attr::MOI.ObjectiveValue) where T
         return zero(T)
     end
     if lpm.status == MOI.OPTIMAL
-        return lpm.objective_func ⋅ lpm.solution + lpm.objective_constant
+        return _dot(lpm.objective_func, lpm.solution) + lpm.objective_constant
     elseif lpm.status == MOI.DUAL_INFEASIBLE
-        return lpm.objective_func ⋅ lpm.solution
+        return _dot(lpm.objective_func, lpm.solution)
     else
         error("No objective value available when termination status is $(lpm.status).")
     end

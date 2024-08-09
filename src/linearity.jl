@@ -102,19 +102,19 @@ function _detect_opposite_elements(aff, non_opposite, elements; kws...)
 end
 
 """
-    detect_new_linearities(rep::HRepresentation{T}, solver; verbose=0, ztol=Base.rtoldefault(T)) where {T}
+    detect_new_linearities(rep::HRepresentation{T}, solver; verbose=0, tol=Base.rtoldefault(T)) where {T}
 
 Given a polyhedron with H-representation `rep`, detect whether a new hyperplane can be generated from the halfspaces in `halfspaces` using an linear program solved by `solver`.
 The method is similar to the method used for lines described as follows.
 This function is automatically called by `removehredundancy` if a solver is provided.
 
-    detect_new_linearities(rep::VRepresentation{T}, solver; verbose=0, ztol=Base.rtoldefault(T)) where {T}
+    detect_new_linearities(rep::VRepresentation{T}, solver; verbose=0, tol=Base.rtoldefault(T)) where {T}
 
 Given a cone defined by the V-representation `rep` (ignoring the points in the representation if any), detect whether a new line can be generated from the rays in `rays` using an linear program solved by `solver`.
 The method is as follows (suppose `lines` is empty for simplicity).
 This function is automatically called by `removevredundancy` if a solver is provided.
 
-The keyword argument `ztol` is used as a tolerance to decide whether a number is zero.
+The keyword argument `tol` is used as a tolerance to decide whether a number is zero.
 
 If there was a line `l` in the cone, it would mean that there exist `μ >= 0` and `ν >= 0` such that
 `Σ μ_i r_i = l` and `Σ ν_i r_i = -l`. We deduce from this that `Σ λ_i r_i = 0` where `λ = μ + ν`.

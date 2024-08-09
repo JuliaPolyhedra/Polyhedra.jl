@@ -305,21 +305,21 @@ function set_in!(data, I, index)
         end
     end
 end
-function add_element!(data, k, el, tight)
+function add_element!(data, k, el, tight; tol)
     cutoff = nothing
     for i in reverse(1:k)
         if data.cutline[i] !== nothing
             el = line_project(el, data.cutline[i], data.halfspaces[i])
             # The line is in all halfspaces from `i+1` up so projecting with it does not change it.
             push!(tight, i)
-            return add_adjacent_element!(data, i, k, el, data.lineray[i], tight)
+            return add_adjacent_element!(data, i, k, el, data.lineray[i], tight; tol)
         end
         # Could avoid computing `dot` twice between `el` and the halfspace here.
-        if !(el in data.halfspaces[i])
+        if !in(el, data.halfspaces[i]; tol)
             cutoff = i
             break
         end
-        if el in hyperplane(data.halfspaces[i])
+        if in(el, hyperplane(data.halfspaces[i]); tol)
             push!(tight, i)
         end
     end
@@ -340,9 +340,9 @@ function project_onto_affspace(data, offset, el, hyperplanes)
     end
     return el
 end
-function add_adjacent_element!(data, i, k, el, parent, tight)
-    index = add_element!(data, i - 1, el, tight)
-    add_intersection!(data, index, parent, nothing, i - 1)
+function add_adjacent_element!(data, i, k, el, parent, tight; tol)
+    index = add_element!(data, i - 1, el, tight; tol)
+    add_intersection!(data, index, parent, nothing, i - 1; tol)
     set_in!(data, i:k, index)
     return index
 end
@@ -377,11 +377,11 @@ Combine `el1` and `el2` which are on two different sides of the halfspace `h` so
 that the combination is in the corresponding hyperplane.
 """
 function combine(h::HalfSpace, el1::VRepElement, el2::VRepElement)
-    combine(h.β, el1, h.a ⋅ el1, el2, h.a ⋅ el2)
+    combine(h.β, el1, _dot(h.a, el1), el2, _dot(h.a, el2))
 end
 
 """
-    add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1)
+    add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1; tol)
 
 Add the intersection of the elements of indices `idx1` and `idx2` that belong to
 the hyperplane corresponding the halfspace of index `hp_idx` (see 3.2 (ii) of
@@ -396,9 +396,9 @@ to avoid adding redundant elements.
 Double description method revisited
 *Combinatorics and computer science*, *Springer*, **1996**, 91-111
 """
-function add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1)
+function add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1; tol)
     if idx1.cutoff > idx2.cutoff
-        return add_intersection!(data, idx2, idx1, hp_idx, hs_idx)
+        return add_intersection!(data, idx2, idx1, hp_idx, hs_idx; tol)
     end
     i = idx2.cutoff
     # Condition (c_k) in [FP96]
@@ -418,8 +418,12 @@ function add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1)
     #      in case `rj, rj'` have inherited adjacency
     tight = tight_halfspace_indices(data, idx1) ∩ tight_halfspace_indices(data, idx2)
     push!(tight, i)
-    return add_adjacent_element!(data, i, i, newel, idx1, tight)
+    return add_adjacent_element!(data, i, i, newel, idx1, tight; tol)
 end
+
+# `MA.operate` is going to redirect to an implementation that
+# exploits the mutable API of `BigFloat` of `BigInt`
+_dot(a, b) = MA.operate(LinearAlgebra.dot, a, b)
 
 _shift(el::AbstractVector, line::Line) = el + Polyhedra.coord(line)
 _shift(el::Line, line::Line) = el + line
@@ -428,21 +432,21 @@ function _λ_proj(r::VStruct, line::Line, h::HRepElement)
     # Line or ray `r`:
     # (r + λ * line) ⋅ h.a == 0
     # λ = -r ⋅ h.a / (line ⋅ h.a)
-    return -r ⋅ h.a / (line ⋅ h.a)
+    return -_dot(r, h.a) / _dot(line, h.a)
 end
 function _λ_proj(x::AbstractVector, line::Line, h::HRepElement)
     # Point `x`:
     # (x + λ * line) ⋅ h.a == h.β
     # λ = (h.β - x ⋅ h.a) / (line ⋅ h.a)
-    return (h.β - x ⋅ h.a) / (line ⋅ h.a)
+    return (h.β - _dot(x, h.a)) / _dot(line, h.a)
 end
 function line_project(el, line, h)
     λ = _λ_proj(el, line, h)
     return Polyhedra.simplify(_shift(el, λ * line))
 end
-function hline(data, line::Line, i, h)
-    value = h.a ⋅ line
-    if !Polyhedra.isapproxzero(value)
+function hline(data, line::Line, i, h; tol)
+    value = _dot(h.a, line)
+    if !Polyhedra.isapproxzero(value; tol)
         if data.cutline[i] === nothing
             # Make `lineray` point inward
             data.cutline[i] = value > 0 ? -line : line
@@ -455,8 +459,7 @@ function hline(data, line::Line, i, h)
     return false, line
 end
 
-# TODO remove solver arg `_`, it is kept to avoid breaking code
-function doubledescription(hr::HRepresentation, _ = nothing)
+function doubledescription(hr::HRepresentation{T}; tol = Base.rtoldefault(T)) where {T}
     v = Polyhedra.dualfullspace(hr)
     hps = Polyhedra.lazy_collect(hyperplanes(hr))
     hss = Polyhedra.lazy_collect(halfspaces(hr))
@@ -464,12 +467,12 @@ function doubledescription(hr::HRepresentation, _ = nothing)
     for line in lines(v)
         cut = false
         for i in reverse(eachindex(hps))
-            cut, line = hline(data, line, nhalfspaces(hr) + i, hps[i])
+            cut, line = hline(data, line, nhalfspaces(hr) + i, hps[i]; tol)
             cut && break
         end
         if !cut
             for i in reverse(eachindex(hss))
-                cut, line = hline(data, line, i, hss[i])
+                cut, line = hline(data, line, i, hss[i]; tol)
                 cut && break
             end
         end
@@ -484,14 +487,14 @@ function doubledescription(hr::HRepresentation, _ = nothing)
         line = data.cutline[i]
         if line !== nothing
             ray = Polyhedra.Ray(Polyhedra.coord(line))
-            data.lineray[i] = add_element!(data, i - 1, ray, BitSet((i + 1):length(hss)))
+            data.lineray[i] = add_element!(data, i - 1, ray, BitSet((i + 1):length(hss)); tol)
         end
     end
     @assert isone(npoints(v))
     # Add the origin
     orig = project_onto_affspace(data, nhalfspaces(hr), first(points(v)), hps)
     if orig !== nothing
-        add_element!(data, nhalfspaces(hr), orig, resized_bitset(data))
+        add_element!(data, nhalfspaces(hr), orig, resized_bitset(data); tol)
     end
     for i in reverse(eachindex(hss))
         if data.cutline[i] === nothing && isempty(data.cutpoints[i]) && isempty(data.cutrays[i])
@@ -507,11 +510,11 @@ function doubledescription(hr::HRepresentation, _ = nothing)
             # Catches new adjacent rays, see 3.2 (ii) of [FP96]
             for p1 in data.pin[i], p2 in data.pin[i]
                 if p1.cutoff < p2.cutoff
-                    add_intersection!(data, p1, p2, i)
+                    add_intersection!(data, p1, p2, i; tol)
                 end
             end
             for p in data.pin[i], r in data.rin[i]
-                add_intersection!(data, p, r, i)
+                add_intersection!(data, p, r, i; tol)
             end
         end
         deleteat!(data.cutpoints, i)
@@ -521,7 +524,7 @@ function doubledescription(hr::HRepresentation, _ = nothing)
                 # We encounter both `r1, r2` and `r2, r1`.
                 # Break this symmetry with:
                 if r1.cutoff < r2.cutoff
-                    add_intersection!(data, r1, r2, i)
+                    add_intersection!(data, r1, r2, i; tol)
                 end
             end
         end

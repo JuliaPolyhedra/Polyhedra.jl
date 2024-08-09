@@ -161,13 +161,17 @@ Base.:+(r::Line, s::Line) = Line(r.a + s.a)
 Base.:+(r::Ray, s::Ray) = Ray(r.a + s.a)
 Base.:+(p::AbstractVector, r::Ray) = p + coord(r)
 
-for op in [:dot, :cross]
-    @eval begin
-        LinearAlgebra.$op(x::VStruct, y) = $op(x.a, y)
-        LinearAlgebra.$op(x, y::VStruct) = $op(x, y.a)
-        LinearAlgebra.$op(x::VStruct, y::VStruct) = $op(x.a, y.a)
-    end
-end
+LinearAlgebra.cross(x::VStruct, y) = cross(x.a, y)
+LinearAlgebra.cross(x, y::VStruct) = cross(x, y.a)
+LinearAlgebra.cross(x::VStruct, y::VStruct) = cross(x.a, y.a)
+
+LinearAlgebra.dot(x::VStruct, y) = _dot(x, y)
+LinearAlgebra.dot(x, y::VStruct) = _dot(x, y)
+LinearAlgebra.dot(x::VStruct, y::VStruct) = _dot(x, y)
+
+_dot(x::VStruct, y) = _dot(x.a, y)
+_dot(x, y::VStruct) = _dot(x, y.a)
+_dot(x::VStruct, y::VStruct) = _dot(x.a, y.a)
 
 for ElT in (:HyperPlane, :HalfSpace, :Line, :Ray)
     @eval begin
@@ -276,22 +280,22 @@ for ElemT in [:HalfSpace, :HyperPlane, :Ray, :Line]
     end
 end
 
-ininterior(r::Ray, h::HalfSpace) = _neg(h.a ⋅ r)
-ininterior(l::Line, h::HalfSpace) = _neg(h.a ⋅ l)
-ininterior(p::AbstractVector, h::HalfSpace) = _lt(h.a ⋅ p, h.β)
+ininterior(r::Ray, h::HalfSpace) = _neg(_dot(h.a, r))
+ininterior(l::Line, h::HalfSpace) = _neg(_dot(h.a, l))
+ininterior(p::AbstractVector, h::HalfSpace) = _lt(_dot(h.a, p), h.β)
 
 inrelativeinterior(p::VRepElement, h::HalfSpace) = ininterior(p, h)
 
-Base.in(r::Ray, h::HalfSpace) = _nonpos(h.a ⋅ r)
-Base.in(l::Line, h::HalfSpace) = _nonpos(h.a ⋅ l)
-Base.in(p::AbstractVector, h::HalfSpace) = _leq(h.a ⋅ p, h.β)
+Base.in(r::Ray, h::HalfSpace; kws...) = _nonpos(_dot(h.a, r); kws...)
+Base.in(l::Line, h::HalfSpace; kws...) = _nonpos(_dot(h.a, l); kws...)
+Base.in(p::AbstractVector, h::HalfSpace; kws...) = _leq(_dot(h.a, p), h.β; kws...)
 
 ininterior(p::VRepElement, h::HyperPlane) = false
 inrelativeinterior(p::VRepElement, h::HyperPlane) = p in h
 
-Base.in(r::Ray, h::HyperPlane) = isapproxzero(h.a ⋅ r)
-Base.in(l::Line, h::HyperPlane) = isapproxzero(h.a ⋅ l)
-Base.in(p::AbstractVector, h::HyperPlane) = _isapprox(h.a ⋅ p, h.β)
+Base.in(r::Ray, h::HyperPlane) = isapproxzero(_dot(h.a, r))
+Base.in(l::Line, h::HyperPlane) = isapproxzero(_dot(h.a, l))
+Base.in(p::AbstractVector, h::HyperPlane; kws...) = _isapprox(_dot(h.a, p), h.β; kws...)
 
 #function Base.vec(x::FixedVector{T}) where {T}
 #    y = Vector{T}(N)
@@ -344,7 +348,7 @@ lift(v::AbstractVector{T}) where {T} = pushbefore(v, one(T))
 translate(p::AbstractVector, v) = p + v
 translate(r::VStruct, v) = r
 
-translate(h::ElemT, p) where {ElemT<:HRepElement} = ElemT(h.a, h.β + h.a ⋅ p)
+translate(h::ElemT, p) where {ElemT<:HRepElement} = ElemT(h.a, h.β + _dot(h.a, p))
 
 _simplify(a::AbstractVector) = a
 _simplify(a::AbstractVector, β) = a, β

@@ -68,9 +68,9 @@ function MOI.get(mock::MockOptimizer{T}, attr::MOI.ConstraintPrimal,
 end
 function MOI.get(mock::MockOptimizer, ::MOI.ObjectiveValue)
     if mock.status == MOI.OPTIMAL
-        return mock.objective_func ⋅ mock.solution + mock.objective_constant
+        return _dot(mock.objective_func, mock.solution) + mock.objective_constant
     elseif mock.status == MOI.DUAL_INFEASIBLE
-        return mock.objective_func ⋅ mock.solution
+        return _dot(mock.objective_func, mock.solution)
     else
         error("No objective value available when termination status is $(mock.status).")
     end

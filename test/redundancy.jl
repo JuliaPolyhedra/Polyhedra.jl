@@ -358,13 +358,13 @@ end
         1210.55555992692 -37126.858723322744 -13.95377106842899 -0.0 -0.0 -0.0 -0.0 -0.0
         -1860.676468633397 57155.38024488611 18.21165578673308 -0.0 -0.0 -0.0 -0.0 -0.0
     ]
-    # The last row is almost considered an equality, depends on `ztol`.
+    # The last row is almost considered an equality, depends on `tol`.
     # If it's detected as an equality then the polyhedron is detected as empty.
     # See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/270
     b = [-20.995, -1.007487377909021, -0.9877340129555137, -0.9705208833525414, -0.9548402631790559, -0.025711479466835108, 1.007487377909021, 0.9877340129555137, 0.9705208833525414, 0.9548402631790559, 0.025711479466835108, 0.8046759919340509, -11751.33121007926, 18148.933864538412]
     lib = DefaultLibrary{Float64}(lp_solver)
     P = polyhedron(hrep(A, b), lib)
-    removevredundancy!(P, ztol=1e-4)
+    removevredundancy!(P, tol=1e-4)
     @test nhyperplanes(P) >= 4
     @test nhalfspaces(P) <= 4
     @test npoints(P) > 0
