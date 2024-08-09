@@ -1,3 +1,10 @@
+# We use `Zero` so that it is allocation-free, while `zero(Rational{BigInt})` would be costly
+_default_tol(::Type{<:Union{Integer, Rational}}) = MA.Zero()
+# `rtoldefault(BigFloat)` is quite slow and allocates a lot so we hope that
+# `tol` will be called at some upper level function and passed in here instead
+# of created everytime
+_default_tol(::Type{T}) where {T<:AbstractFloat} = Base.rtoldefault(T)
+
 isapproxzero(x::T; kws...) where {T<:Real} = x == zero(T)
 isapproxzero(x::T; tol=Base.rtoldefault(T)) where {T<:AbstractFloat} = abs(x) < tol
 isapproxzero(x::AbstractVector{T}; kws...) where {T<:Real} = isapproxzero(maximum(abs, x); kws...)
