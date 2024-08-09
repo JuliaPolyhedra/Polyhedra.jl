@@ -1,0 +1,235 @@
+
+% JuliaCon proceedings template
+\documentclass{juliacon}
+\setcounter{page}{1}
+
+\usepackage{cleveref}
+
+% See https://tex.stackexchange.com/questions/550123/underscore-in-doi-in-bibtex-file
+\usepackage{underscore}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,matrix,decorations.pathreplacing,positioning,chains,fit,shapes,calc,3d}
+\tikzset{box/.style={rectangle, draw=black, fill=black!8, align=center, rounded corners}}
+\tikzset{rep/.style={rectangle, draw=juliablue, fill=juliablue!8, align=center, rounded corners}}
+
+\definecolor{juliablue}{rgb}{0.251, 0.388, 0.847}
+\definecolor{juliagreen}{rgb}{0.22 , 0.596, 0.149}
+\definecolor{juliapurple}{rgb}{0.584, 0.345, 0.698}
+\definecolor{juliared}{rgb}{0.796, 0.235, 0.2  }
+
+\newcommand{\Vrep}{V-rep}
+\newcommand{\hrep}{H-rep}
+
+\newcommand{\jlpkg}[1]{\texttt{#1.jl}}
+
+\begin{document}
+
+\input{header}
+
+\maketitle
+
+\begin{abstract}
+
+    This paper introduces a Julia interface for polyhedral computation libraries such as cdd, lrs, qhull, porta or the parma polyhedra library.
+    This notably includes conversion between the representation of a polyhedron as the intersection of half-spaces and hyperplanes and
+    its representation as the convex hull of points and rays.
+    Moreover, the interface covers canonicalization tools such as the removal of redundant elements from the representations or
+    detection of hyperplanes formed by the intersection of half-spaces or lines by a conic combination of rays.
+
+    The package also include a default pure-Julia library that implements the double description method for the representation conversion
+    and canonicalization using a linear programming solver implementing \jlpkg{MathOptInterface}.
+    A polyhedron object is provided in order to abstract away the differences between the libraries and hence allow writing library-agnostic code.
+    This object lazily applies the representation conversion when needed.
+
+\end{abstract}
+
+\section{Introduction}
+
+There are two dual approaches to represent a convex set.
+First, it can be described as the Minkowski sum between the convex hull of points
+and the conic hull of rays; this is the \emph{Vertex representation} or \emph{\Vrep{}}.
+The dual alternative is to obtain the set as the intersection of half-spaces;
+this is the \emph{Half-spaces representation} or \emph{h-representation}
+It turns out that a convex set admits a finite \Vrep{} if and only if it admits a finite \hrep{}.
+Such convex sets are called \emph{polyhedra} or even \emph{polytopes} when the \Vrep{} contains no ray.
+
+\section{Representation conversion}
+
+Several algorithms exist to convert a \hrep{} to a \Vrep{} and vice-versa.
+This include the \emph{double description} algorithm~\cite{motzkin1953double,fukuda1996double} implemented in cdd~\cite{fukuda2003cdd},
+the \emph{reversed search vertex enumeration} algorithm~\cite{avis1996reverse} implemented in lrs~\cite{avis1994ac,avis2000revised} and
+the \emph{quick hull} algorithm implemented in qhull~\cite{barber1996quickhull}.
+As detailed in \cite{avis1995good}, each of these algorithms outperforms the other two for specific families of polyhedra.
+This highlights the importance of implementing algorithm relying on polyhedral computation in a library-agnostic way
+so that each application can benefit from the appropriate library.
+
+%\subsection{Arithmetic}
+
+Representation conversion can be challenging to implement reliably using floating point arithmetic.
+For this reason, lrs and cdd allow exact arithmetic using the equivalent of \texttt{Rational\{BigInt\}}.
+The code of these libraries need to use the specific API of GMP~\cite{granlund1996gnu} in order to get the best performance.
+Thanks to \jlpkg{MutableArithmetics}~\cite{Legat2024},
+a default implementation of the double description algorithm could be implemented
+in \jlpkg{Polyhedra} that is agnostic to the number type without sacrificing performance.
+
+\section{Canonicalization}
+
+There are two aspects to reducing the size of a representation.
+First, elements can be removed if they are redundant.
+Second, several rays (resp. half-spaces) can be combined
+into a line (resp. hyperplane);
+%this is referred to as the \emph{linearity} of the representation.
+this is called \emph{linearity} detection~\cite{avis2002canonical}.
+Detecting either redundancy or linearity can be
+achieved via Linear Programming~\cite{avis2000revised}.
+Both cdd and lrs incorporate linear programming solvers within
+their library which can be used for these tasks.
+\jlpkg{Polyhedra} can also use any other linear programming solver
+implementing \jlpkg{MathOptInterface}~\cite{legat2021mathoptinterface}.
+
+By using both the primal and dual result from the linear program,
+the linearity detection implemented in \jlpkg{Polyhedra}
+only solves a number of linear programs equal to the
+number of lines (resp. hyperplanes) that are to be detected in the worst case.
+This is an improvement over the implementation in cdd
+that solves a number of linear programs equal to the number
+of rays (resp. half-spaces) of the input representation in the worst case~\cite[Remark~1.3.1]{legat2020set}.
+
+\section{Lazy conversion}
+
+A typical polyhedral computation pipeline consists in creating a few polyhedra
+either from their H or \Vrep{}, perform operations between them,
+and then querying the H or \Vrep{} of the result.
+As illustrated in \cref{op}, for some mathematical operations on polyhedra,
+the use of either the V or \hrep{} is much more natural\footnote{%
+  In view of the direct relation between the V (resp. H)-representation and the \emph{support} (resp \emph{gauge}) function
+  of the polyhedron \cite[Proposition~A.30]{legat2023Chapter} (resp. \cite[Proposition~A.27]{legat2023Chapter}),
+  this can understood from properties of the gauge and support functions summarized in \cite[Table~2]{legat2023Chapter}.
+}.
+%For instance, the intersection needs the \hrep{}
+%while the Minkowski sum needs the \Vrep{}.
+A polyhedron objects lazily performs the representation conversion
+when needed.
+
+However, this choice is not always straightforward.
+To illustrate this, consider the problem of
+checking the membership of a point in a polyhedron.
+This can either be achieved by verifying its membership to
+each half-space of the \hrep{} or by checking whether it
+would be redundant if added to the \Vrep{} by solving a linear program.
+While checking membership to a half-space is much faster
+than solving a linear program,
+the number of half-space can be much larger than the size of the linear program.
+For instance, the $n$-dimensional cross-polytope (the polar of the hypercube)
+is the intersection of $2^n$ nonredundant half-spaces but the convex hull
+of only $2n$ points.
+For this polytope, using the \Vrep{} is therefore more efficient than using the \hrep{} when $n$ is large enough.
+
+Similarly, projecting a polyhedron is straightforward given a \Vrep{}
+while for a \hrep{}, both Fourier-Motzkin~\cite[p.~155–156]{schrijver1986Theory}
+and block elimination~\cite{fukuda2003cddlib} are computationally more costly.
+However, as a $n$-dimensional hypercube is the convex hull of $2^n$ nonredundant points but
+the intersection of only $2n$ half-spaces,
+the projection of the hypercube is better done through the \hrep{} for large $n$.
+
+In order to resolve this, a polyhedron has 3 possible states:
+the \hrep{} has been computed,
+the \Vrep{} has been computed or
+both.
+If only one is computed, it is used to check whether the point belongs to the polyhedron.
+If both are computed then the \hrep{} is used for membership check and \Vrep{} for projection;
+this preference is indicated by the green arrow in \cref{op}.
+The user can then influence the choice of representation used
+%for checking the membership of a point or projecting a polyhedron
+by explicitly requesting the computation of such representation beforehand.
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[scale = 0.8, every node/.style={scale=1}]
+    \node[rep] (H)     at (-2,  0) {H-rep};
+    \node[rep] (V)     at ( 2,  0) {V-rep};
+    \node[box] (INT)   at (-4,  1) {$\cap$};
+    \draw[thick, ->] (H.north west) to (INT.south east);
+    \node[box] (CHEBY) at (-4, -1) {\begin{minipage}{3em}\centering Cheby center\end{minipage}};
+    \draw[color=juliapurple, thick, ->] (H.south west) to node[rotate=20, below] {\includegraphics[width=2.5em]{JuMP.png}} (CHEBY.north east);
+    \node[box] (CART)  at (-2.5,  2) {\begin{minipage}{4em}\centering Cartesian product\end{minipage}};
+    \draw[color = juliagreen, thick, ->] (H.north) to (CART.south);
+    \draw[color = juliared, thick, dashed, ->] (V.north west) to (CART.south east);
+    \node[box] (PLOT)  at (-1,  2) {Plot};
+    \draw[thick, -] (H.north east) to (-1, 1);
+    \draw[thick, -] (V.north west) to (-1, 1);
+    \draw[thick, ->] (-1, 1) to (PLOT.south);
+    \node[box] (VOL)   at ( 1,  2) {Volume};
+    \draw[thick, -] (H.north east) to ( 1, 1);
+    \draw[thick, -] (V.north west) to ( 1, 1);
+    \draw[thick, ->] ( 1, 1) to (VOL.south);
+    \node[box] (IN)    at (2.5,  2) {\texttt{in}};
+    \draw[color=juliagreen, thick, ->] (H.north east) to (IN.south west);
+    \draw[color=juliared, thick, -] (V.north) to (IN.south);
+    \draw[color=juliapurple, thick, dashed, ->] (V.north) to node[rotate=75, below] {\includegraphics[width=2.5em]{JuMP.png}} (IN.south);
+    \node[box] (PLUS)  at ( 4,  1) {$+$};
+    \draw[dashed, thick, ->] (V.north east) to (PLUS.south west);
+    \node[box] (CONVH) at ( 4, -1) {Convex hull};
+    \draw[thick, ->] (V.south east) to (CONVH.north west);
+    \node[box] (AM)    at ( 2, -2) {$A \times \cdot$};
+    \draw[thick, ->] (V.south) to (AM.north);
+    \node[box] (AB)    at (-2, -2) {$A \backslash \cdot$};
+    \draw[thick, ->] (H.south) to (AB.north);
+    \node[box] (PROJ)  at ( 0, -2) {Project};
+    \draw[color = juliared, thick, dashed, ->] (H.south east) to (PROJ.north west);
+    \draw[color = juliagreen, thick, ->] (V.south west) to (PROJ.north east);
+    \node[box] (TR)    at ( 0,  0) {Translate};
+    \draw[thick, ->] (H.east) to (TR.west);
+    \draw[thick, ->] (V.west) to (TR.east);
+
+    \draw[color = juliagreen, thick, ->]  (-4, -2.7) to (-3.5, -2.7) node[right] {Preferred};
+    \draw[color = juliared, thick, ->]    (-4, -3.2) to (-3.5, -3.2) node[right] {Fallback if other representation not computed};
+    \draw[color = juliapurple, thick, ->] (-4, -3.7) to (-3.5, -3.7) node[right] {Solve linear program using \includegraphics[height=1em]{jump.png}};
+    \draw[dashed, thick, ->]               (-4, -4.2) to (-3.5, -4.2) node[right] {Size of resulting representation may grow significantly};
+  \end{tikzpicture}
+  \caption{Choice of between the H and \Vrep{} for common operations}
+  \label{op}
+\end{figure}
+
+\subsection{Plotting}
+
+Polyhedra implements 2D and 3D plotting using \jlpkg{RecipesBase} and \jlpkg{GeometryBasics} respectively.
+These library-agnostic interfaces allow
+visualizing polyhedra using a variety of options including \jlpkg{MeshCat}, \jlpkg{Makie}~\cite{DanischKrumbiegel2021} and \jlpkg{Plots}~\cite{PlotsJL}.
+
+As shown in \cref{op}, 3D plotting requires both the H and \Vrep{}.
+For each half-space, the vertices incident to that half-space are selected.
+As these vertices lie on a half-space, triangulating the face is now a planar polyhedral computation problem which is then solved for each face.
+
+\subsection{Chebyshev center}
+
+The Chebyshev center of a hyperrectangle is only unique
+if it is a hypercube.
+%It is often convenient to obtain the ``most centered'' point of the set of Chebyshev centers.
+%Fortunately
+%the set of Chebyshev centers
+%this set
+%is always a polyhedron of dimension than the original set.
+\jlpkg{Polyhedra} computes
+the unique \emph{proper Chebyshev center} using
+the sequence of linear programs
+detailed in \cite[Section~4.5.1]{legat2020set},
+%this provides a recursive way to compute
+
+\section*{Acknowledgments}
+
+We would like to thank the full list of contributors available \href{https://github.com/JuliaPolyhedra/Polyhedra.jl/graphs/contributors}{on Github}.
+
+The author was supported by
+an FNRS Research fellowship,
+a Belgian American Educational Foundation (BAEF) postdoctoral fellowship,
+the National Science Foundation (NSF) under Grant No. OAC-1835443 and
+the European Commission under ERC Grant No. 864017 and ERC Adv. Grant No. 885682.
+
+
+\input{bib.tex}
+
+\end{document}
+
+% Inspired by the International Journal of Computer Applications template
