@@ -70,11 +70,11 @@ linearize(r::Ray) = line(r)
 _aff_push!(aff::HAffineSpace, h) = intersect!(aff, h)
 _aff_push!(aff::VLinearSpace, l) = convexhull!(aff, l)
 
-function _detect_opposite_element(aff, non_opposite, element; kws...)
+function _detect_opposite_element(aff, non_opposite, element; tol)
     element = remproj(element, aff)
-    if !isapproxzero(element; kws...) && !any(el -> el ≈ element, non_opposite)
+    if !isapproxzero(element; tol) && !any(el -> _isapprox(el, element; tol), non_opposite)
         lin = linearize(element)
-        i = findfirst(el -> linearize(el) ≈ lin, non_opposite)
+        i = findfirst(el -> _isapprox(linearize(el), lin; tol), non_opposite)
         if i === nothing
             push!(non_opposite, element)
         else
@@ -86,9 +86,9 @@ function _detect_opposite_element(aff, non_opposite, element; kws...)
         return false
     end
 end
-function _detect_opposite_elements(aff, non_opposite, elements; kws...)
+function _detect_opposite_elements(aff, non_opposite, elements; tol)
     newlin = true
-    for i in 1:fulldim(aff) # could use `while newlin` but `for`-loop is safer.
+    for _ in 1:fulldim(aff) # could use `while newlin` but `for`-loop is safer.
         newlin || break
         newlin = false
         empty!(non_opposite)
@@ -96,7 +96,7 @@ function _detect_opposite_elements(aff, non_opposite, elements; kws...)
         # Remove rays/halfspaces that become zero and detect new lines/hyperplanes
         # with rays/halfspaces that becomes opposite to each other.
         for element in elements
-            newlin |= _detect_opposite_element(aff, non_opposite, element; kws...)
+            newlin |= _detect_opposite_element(aff, non_opposite, element; tol)
         end
     end
 end
@@ -231,7 +231,7 @@ _linearity_space(h::HRepresentation, current) = affinehull(h, current)
 _linearity_space(v::VRepresentation, current) = linespace(v, current)
 
 struct OppositeMockOptimizer end
-function _detect_linearity(rep::Representation, solver; kws...)
+function _detect_linearity(rep::Representation, solver; verbose = 0, tol)
     aff = _linearity_space(rep, true)
     if _hasnonlinearity(rep)
         if solver === nothing
@@ -244,9 +244,9 @@ Set a solver if you believe that the polyhedron may have more linearity.
         end
         if solver == OppositeMockOptimizer
             els = _nonlin_type(rep)[]
-            _detect_opposite_elements(aff, els, _nonlinearity(rep); kws...)
+            _detect_opposite_elements(aff, els, _nonlinearity(rep); tol)
         else
-            new_lins = detect_new_linearities(rep, solver; kws...)
+            new_lins = detect_new_linearities(rep, solver; verbose, tol)
             if new_lins === nothing
                 empty!(aff)
                 els = eltype(_nonlinearity(rep))[]
@@ -273,8 +273,8 @@ Return a new H-representation with linearity detected using `solver`.
 
 The remaining keyword arguments `kws` are passed to [`detect_new_linearities`](@ref).
 """
-function detecthlinearity(hr::HRepresentation, solver; kws...)
-    aff, hs = _detect_linearity(hr, solver; kws...)
+function detecthlinearity(hr::HRepresentation{T}, solver; verbose = 0, tol = _default_tol(float(T))) where {T}
+    aff, hs = _detect_linearity(hr, solver; verbose = 0, tol)
     typeof(hr)(FullDim(hr), aff.hyperplanes, hs)
 end
 
@@ -285,7 +285,7 @@ Return a new V-representation with linearity detected using `solver`.
 
 The remaining keyword arguments `kws` are passed to [`detect_new_linearities`](@ref).
 """
-function detectvlinearity(vr::VRepresentation, solver; kws...)
-    aff, rays = _detect_linearity(vr, solver; kws...)
+function detectvlinearity(vr::VRepresentation{T}, solver; tol = _default_tol(float(T)), kws...) where {T}
+    aff, rays = _detect_linearity(vr, solver; tol, kws...)
     typeof(vr)(FullDim(vr), preps(vr)..., aff.lines, rays)
 end
