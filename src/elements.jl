@@ -293,8 +293,8 @@ Base.in(p::AbstractVector, h::HalfSpace; kws...) = _leq(_dot(h.a, p), h.β; kws.
 ininterior(p::VRepElement, h::HyperPlane) = false
 inrelativeinterior(p::VRepElement, h::HyperPlane) = p in h
 
-Base.in(r::Ray, h::HyperPlane) = isapproxzero(_dot(h.a, r))
-Base.in(l::Line, h::HyperPlane) = isapproxzero(_dot(h.a, l))
+Base.in(r::Ray, h::HyperPlane; kws...) = isapproxzero(_dot(h.a, r); kws...)
+Base.in(l::Line, h::HyperPlane; kws...) = isapproxzero(_dot(h.a, l); kws...)
 Base.in(p::AbstractVector, h::HyperPlane; kws...) = _isapprox(_dot(h.a, p), h.β; kws...)
 
 #function Base.vec(x::FixedVector{T}) where {T}

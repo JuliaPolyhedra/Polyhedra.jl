@@ -23,12 +23,12 @@ function _scaleray(r::Union{Line, Ray}, s::Union{Line, Ray})
     cs = coord(s)
     cr * sum(abs.(cs)), cs * sum(abs.(cr))
 end
-function Base.isapprox(r::Line, s::Line)
+function _isapprox(r::Line, s::Line; tol)
     rs, ss = _scaleray(r, s)
-    _isapprox(rs, ss) || _isapprox(rs, -ss)
+    _isapprox(rs, ss; tol) || _isapprox(rs, -ss; tol)
 end
-function Base.isapprox(r::Ray, s::Ray)
-    _isapprox(_scaleray(r, s)...)
+function _isapprox(r::Ray, s::Ray; tol)
+    _isapprox(_scaleray(r, s)...; tol)
 end
 # TODO check that Vec in GeometryTypes also does that
 function _scalehp(h1, h2)
@@ -40,17 +40,17 @@ function Base.:(==)(h1::HyperPlane, h2::HyperPlane)
     (a1, β1), (a2, β2) = _scalehp(h1, h2)
     (a1 == a2 && β1 == β2) || (a1 == -a2 && β1 == -β2)
 end
-function Base.isapprox(h1::HyperPlane, h2::HyperPlane)
+function _isapprox(h1::HyperPlane, h2::HyperPlane; tol)
     (a1, β1), (a2, β2) = _scalehp(h1, h2)
-    (_isapprox(a1, a2) && _isapprox(β1, β2)) || (_isapprox(a1, -a2) && _isapprox(β1, -β2))
+    (_isapprox(a1, a2; tol) && _isapprox(β1, β2; tol)) || (_isapprox(a1, -a2; tol) && _isapprox(β1, -β2; tol))
 end
 function Base.:(==)(h1::HalfSpace, h2::HalfSpace)
     (a1, β1), (a2, β2) = _scalehp(h1, h2)
     a1 == a2 && β1 == β2
 end
-function Base.isapprox(h1::HalfSpace, h2::HalfSpace)
+function _isapprox(h1::HalfSpace, h2::HalfSpace; tol)
     (a1, β1), (a2, β2) = _scalehp(h1, h2)
-    _isapprox(a1, a2) && _isapprox(β1, β2)
+    _isapprox(a1, a2; tol) && _isapprox(β1, β2; tol)
 end
 
 _lt(x::T, y::T; tol) where {T<:Real} = x < y

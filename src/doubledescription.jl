@@ -19,7 +19,7 @@ function dualfullspace(rep::Representation{T}) where T
 end
 
 """
-    doubledescription(h::HRepresentation)
+    doubledescription(h::HRepresentation; tol)
 
 Computes the V-representation of the polyhedron represented by `h` using the Double-Description algorithm [MRTT53, FP96].
 It maintains a list of the points, rays and lines that are in the resulting representation
@@ -459,7 +459,8 @@ function hline(data, line::Line, i, h; tol)
     return false, line
 end
 
-function doubledescription(hr::HRepresentation{T}; tol = _default_tol(T)) where {T}
+# TODO remove solver arg `_`, it is kept to avoid breaking code
+function doubledescription(hr::HRepresentation{T}, solver = nothing; tol = _default_tol(T)) where {T}
     v = Polyhedra.dualfullspace(hr)
     hps = Polyhedra.lazy_collect(hyperplanes(hr))
     hss = Polyhedra.lazy_collect(halfspaces(hr))

@@ -402,9 +402,9 @@ end
 # V-redundancy
 # If p is an H-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 # TODO nlines should be the number of non-redundant lines so something similar to dim
-function isredundant(p::HRep{T}, v::Union{AbstractVector, Line, Ray}; strongly = false, nl::Int=nlines(p), solver=nothing) where {T}
+function isredundant(p::HRep{T}, v::Union{AbstractVector, Line, Ray}; strongly = false, nl::Int=nlines(p), solver=nothing, tol = _default_tol(T)) where {T}
     # v is in every hyperplane otherwise it would not be valid
-    hcount = nhyperplanes(p) + count(h -> v in hyperplane(h), halfspaces(p))
+    hcount = nhyperplanes(p) + count(h -> in(v, hyperplane(h); tol), halfspaces(p))
     strong = (isray(v) ? fulldim(p) - 1 : fulldim(p)) - nl
     bound = strongly ? min(strong, 1) : strong
     if hcount < bound
@@ -412,7 +412,7 @@ function isredundant(p::HRep{T}, v::Union{AbstractVector, Line, Ray}; strongly =
     else
         A = Matrix{T}(undef, hcount, fulldim(p))
         offset = coord_matrix!(A, hyperplanes(p), _ -> true, 0)
-        offset = coord_matrix!(A, halfspaces(p), h -> v in hyperplane(h), offset)
+        offset = coord_matrix!(A, halfspaces(p), h -> in(v, hyperplane(h); tol), offset)
         @assert offset == size(A, 1)
         return rank(A) < bound
     end
@@ -495,8 +495,8 @@ function removeduplicates(vrep::VPolytope)
     typeof(vrep)(FullDim(vrep), premovedups(vrep, emptyspace(vrep))...)
 end
 removeduplicates(vrep::VLinearSpace, solver = nothing) = detectvlinearity(vrep, solver)
-function removeduplicates(vrep::VRepresentation, solver = nothing)
-    aff, rs = _detect_linearity(vrep, solver)
+function removeduplicates(vrep::VRepresentation{T}, solver = nothing; tol = _default_tol(T)) where {T}
+    aff, rs = _detect_linearity(vrep, solver; tol)
     typeof(vrep)(FullDim(vrep), premovedups(vrep, aff)..., aff.lines, rs)
 end
 
