@@ -17,8 +17,8 @@ mutable struct Interval{T, AT, D} <: Polyhedron{T}
     length::T
 end
 
-Interval{T, AT, D}(d::FullDim, it::HIt...) where {T, AT, D} = _hinterval(Intersection{T, AT, D}(d, it...), AT, D)
-Interval{T, AT, D}(d::FullDim, it::VIt...) where {T, AT, D} = _vinterval(Hull{T, AT, D}(d, it...), AT, D)
+Interval{T, AT, D}(d::FullDim, it::HIt...; tol = _default_tol(T)) where {T, AT, D} = _hinterval(Intersection{T, AT, D}(d, it...), AT, D; tol)
+Interval{T, AT, D}(d::FullDim, it::VIt...; tol = _default_tol(T)) where {T, AT, D} = _vinterval(Hull{T, AT, D}(d, it...), AT, D; tol)
 
 # If AT is an SVector, it will be StaticArrays.Size{(1,)}
 # otherwise, it will be 1
@@ -35,8 +35,8 @@ surface(::Interval{T}) where {T} = zero(T)
 volume(p::Interval) = p.length
 Base.isempty(p::Interval) = isempty(p.vrep)
 
-function _interval(AT, haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) where {T}
-    if haslb && hasub && _gt(lb, ub)
+function _interval(AT, haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool; tol) where {T}
+    if haslb && hasub && _gt(lb, ub; tol)
         isempty = true
     end
     hps = HyperPlane{T, AT}[]
@@ -47,7 +47,7 @@ function _interval(AT, haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) wh
     if !isempty
         if hasub
             push!(ps, StaticArrays.SVector(ub))
-            if haslb && _isapprox(lb, ub)
+            if haslb && _isapprox(lb, ub; tol)
                 push!(hps, HyperPlane(StaticArrays.SVector(one(T)), ub))
             else
                 push!(hss, HalfSpace(StaticArrays.SVector(one(T)), ub))
@@ -64,7 +64,7 @@ function _interval(AT, haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) wh
             end
         end
         if haslb
-            if !_isapprox(lb, ub)
+            if !_isapprox(lb, ub; tol)
                 push!(hss, HalfSpace(StaticArrays.SVector(-one(T)), -lb))
                 push!(ps, StaticArrays.SVector(lb))
             end
@@ -84,7 +84,7 @@ function Interval{T, AT, D}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Boo
     return Interval{T, AT, D}(_interval(AT, haslb, lb, hasub, ub, isempty)...)
 end
 
-function _hinterval(rep::HRep{T}, ::Type{AT}) where {T, AT}
+function _hinterval(rep::HRep{T}, ::Type{AT}; tol) where {T, AT}
     haslb = false
     lb = zero(T)
     hasub = false
@@ -108,8 +108,8 @@ function _hinterval(rep::HRep{T}, ::Type{AT}) where {T, AT}
     end
     for hp in hyperplanes(rep)
         α = hp.a[1]
-        if isapproxzero(α)
-            if !isapproxzero(hp.β)
+        if isapproxzero(α; tol)
+            if !isapproxzero(hp.β; tol)
                 empty = true
             end
         else
@@ -119,7 +119,7 @@ function _hinterval(rep::HRep{T}, ::Type{AT}) where {T, AT}
     end
     for hs in halfspaces(rep)
         α = hs.a[1]
-        if isapproxzero(α)
+        if isapproxzero(α; tol)
             if hs.β < 0
                 empty = true
             end
@@ -129,14 +129,14 @@ function _hinterval(rep::HRep{T}, ::Type{AT}) where {T, AT}
             _setub(hs.β / α)
         end
     end
-    return _interval(AT, haslb, lb, hasub, ub, empty)
+    return _interval(AT, haslb, lb, hasub, ub, empty; tol)
 end
 
-function _hinterval(rep::HRep{T}, ::Type{AT}, D) where {T, AT}
-    return Interval{T, AT, D}(_hinterval(rep, AT)...)
+function _hinterval(rep::HRep{T}, ::Type{AT}, D; tol) where {T, AT}
+    return Interval{T, AT, D}(_hinterval(rep, AT; tol)...)
 end
 
-function _vinterval(v::VRep{T}, ::Type{AT}) where {T, AT}
+function _vinterval(v::VRep{T}, ::Type{AT}; tol) where {T, AT}
     haslb = true
     lb = zero(T)
     hasub = true
@@ -171,20 +171,20 @@ function _vinterval(v::VRep{T}, ::Type{AT}) where {T, AT}
             end
         end
     end
-    return _interval(AT, haslb, lb, hasub, ub, isempty)
+    return _interval(AT, haslb, lb, hasub, ub, isempty; tol)
 end
 
-function _vinterval(rep::VRep{T}, ::Type{AT}, D) where {T, AT}
-    return Interval{T, AT, D}(_vinterval(rep, AT)...)
+function _vinterval(rep::VRep{T}, ::Type{AT}, D; tol) where {T, AT}
+    return Interval{T, AT, D}(_vinterval(rep, AT; tol)...)
 end
 
-Interval{T, AT, D}(p::HRepresentation{T}) where {T, AT, D} = _hinterval(p, AT, D)
-Interval{T, AT, D}(p::VRepresentation{T}) where {T, AT, D} = _vinterval(p, AT, D)
-function Interval{T, AT, D}(p::Polyhedron{T}) where {T, AT, D}
+Interval{T, AT, D}(p::HRepresentation{T}; tol = _default_tol(T)) where {T, AT, D} = _hinterval(p, AT, D; tol)
+Interval{T, AT, D}(p::VRepresentation{T}; tol = _default_tol(T)) where {T, AT, D} = _vinterval(p, AT, D; tol)
+function Interval{T, AT, D}(p::Polyhedron{T}; tol = _default_tol(T)) where {T, AT, D}
     if hrepiscomputed(p)
-        _hinterval(p, AT, D)
+        _hinterval(p, AT, D; tol)
     else
-        _vinterval(p, AT, D)
+        _vinterval(p, AT, D; tol)
     end
 end
 
@@ -205,16 +205,16 @@ function removehredundancy!(::Interval, args...; kws...) end
 function removevredundancy!(::Interval, args...; kws...) end
 
 sethrep!(p::Interval, h::HRep) = resethrep!(p, h)
-function resethrep!(p::Interval{T, AT}, h::HRep) where {T, AT}
-    hnew, v, volume = _hinterval(h, AT)
+function resethrep!(p::Interval{T, AT}, h::HRep{U}; tol = _default_tol(U)) where {T, U, AT}
+    hnew, v, volume = _hinterval(h, AT; tol)
     p.hrep = hnew
     p.vrep = v
     p.length = volume
     return p
 end
 setvrep!(p::Interval, v::VRep) = resetvrep!(p, v)
-function resetvrep!(p::Interval{T, AT}, v::VRep) where {T, AT}
-    h, vnew, volume = _vinterval(v, AT)
+function resetvrep!(p::Interval{T, AT}, v::VRep{U}; tol = _default_tol(U)) where {T, U, AT}
+    h, vnew, volume = _vinterval(v, AT; tol)
     p.hrep = h
     p.vrep = vnew
     p.length = volume

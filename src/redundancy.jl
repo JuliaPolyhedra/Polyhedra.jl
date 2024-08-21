@@ -422,10 +422,10 @@ isredundant(p::HRep{T}, v::Line; strongly = false, nl::Int=nlines(p), solver=not
 
 # H-redundancy
 # If p is a V-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
-function isredundant(p::VRep{T}, h::HRepElement; strongly = false, d::Int=dim(p), solver=nothing) where {T}
+function isredundant(p::VRep{T}, h::HRepElement; strongly = false, d::Int=dim(p), solver=nothing, tol = _default_tol(T)) where {T}
     checkvconsistency(p)
     hp = hyperplane(h)
-    pcount = count(p -> p in hp, points(p))
+    pcount = count(p -> in(p, hp; tol), points(p))
     # every line is in h, otherwise it would not be valid
     rcount = nlines(p) + count(r -> r in hp, rays(p))
     if pcount < min(d, 1) || (!strongly && pcount + rcount < d)
@@ -437,7 +437,7 @@ function isredundant(p::VRep{T}, h::HRepElement; strongly = false, d::Int=dim(p)
         if pcount > 1
             orig = nothing
             for x in points(p)
-                if x in hp
+                if in(x, hp; tol)
                     if orig === nothing
                         orig = x
                     else

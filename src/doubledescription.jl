@@ -327,13 +327,13 @@ function add_element!(data, k, el, tight; tol)
     set_in!(data, (index.cutoff + 1):k, index)
     return index
 end
-function project_onto_affspace(data, offset, el, hyperplanes)
+function project_onto_affspace(data, offset, el, hyperplanes; tol)
     for i in reverse(eachindex(hyperplanes))
         line = data.cutline[offset + i]
         h = hyperplanes[i]
         if line !== nothing
             el = line_project(el, line, h)
-        elseif !(el in h)
+        elseif !in(el, h; tol)
             # e.g. 0x1 + 0x2 = 1 or -1 = x1 = 1, ...
             return nothing
         end
@@ -493,7 +493,7 @@ function doubledescription(hr::HRepresentation{T}, solver = nothing; tol = _defa
     end
     @assert isone(npoints(v))
     # Add the origin
-    orig = project_onto_affspace(data, nhalfspaces(hr), first(points(v)), hps)
+    orig = project_onto_affspace(data, nhalfspaces(hr), first(points(v)), hps; tol)
     if orig !== nothing
         add_element!(data, nhalfspaces(hr), orig, resized_bitset(data); tol)
     end
