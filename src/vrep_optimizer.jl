@@ -23,10 +23,14 @@ mutable struct VRepOptimizer{T} <: AbstractPolyhedraOptimizer{T}
     status::MOI.TerminationStatusCode
     solution::Union{AbstractVector{T}, Nothing}
 
+    tol::Union{T,MA.Zero}
+
     function VRepOptimizer{T}(library::Union{Nothing, Library} = nothing) where T
         new(library, LPHRep(_MOIModel{T}()), nothing, nothing,
             MOI.FEASIBILITY_SENSE, nothing, zero(T),
-            MOI.OPTIMIZE_NOT_CALLED, nothing)
+            MOI.OPTIMIZE_NOT_CALLED, nothing,
+            _default_tol(T),
+        )
     end
 end
 
@@ -90,7 +94,7 @@ function MOI.optimize!(lpm::VRepOptimizer{T}) where T
         lpm.solution = first(points(prob))
     else
         better(a, b) = (lpm.objective_sense == MOI.MAX_SENSE ? a > b : a < b)
-        _better(a, b) = (lpm.objective_sense == MOI.MAX_SENSE ? _gt(a, b) : _lt(a, b))
+        _better(a, b) = (lpm.objective_sense == MOI.MAX_SENSE ? _gt(a, b; tol) : _lt(a, b; tol))
         bestobjval = zero(T)
         lpm.solution = nothing
         for r in allrays(prob)
