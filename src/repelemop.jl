@@ -132,7 +132,7 @@ end
 function support_function_model(h::AbstractVector, rep::Rep, solver)
     length(h) != fulldim(rep) && throw(DimensionMismatch())
     model, T = layered_optimizer(solver)
-    x, cx = MOI.add_constrained_variables(model, PolyhedraOptSet(rep))
+    x, _ = MOI.add_constrained_variables(model, PolyhedraOptSet(rep))
     MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
     MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(), _dot(h, x, T))
     return model
