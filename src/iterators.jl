@@ -156,7 +156,7 @@ for (isVrep, elt, loop_singular) in [(true, :AbstractVector, :point),
 
         Returns the list of the indices of $plural incident to idx for the polyhedron `p`.
         """
-        $incidx(p::Polyhedron{T}, idx) where {T} = get(p, IncidentIndices{T, $elemtype(p)}(p, idx))
+        $incidx(p::Polyhedron{T}, idx; tol) where {T} = get(p, IncidentIndices{T, $elemtype(p)}(p, idx); tol)
 
         """
             $lenp($horvrep::$HorVRep)

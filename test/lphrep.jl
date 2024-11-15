@@ -21,7 +21,6 @@ function test_order_lphrep()
     @variable(model, x)
     @variable(model, y <= 1)
     h = hrep(model)
-    @show h
     @test nhalfspaces(h) == 1
     @test first(halfspaces(h)) == HalfSpace([0, 1], 1)
 end

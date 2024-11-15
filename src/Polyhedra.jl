@@ -9,8 +9,7 @@ using LinearAlgebra
 #      like RowEchelon.jl (slow) or LU (faster).
 import GenericLinearAlgebra
 
-import MutableArithmetics
-const MA = MutableArithmetics
+import MutableArithmetics as MA
 
 import MathOptInterface as MOI
 import MathOptInterface.Utilities as MOIU
