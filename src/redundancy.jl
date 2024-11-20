@@ -188,6 +188,8 @@ function Base.show(io::IO, message::_RedundantMessage)
     print(io, "` is redundant.")
 end
 
+function _is_redundant(rep::Representation, )
+
 function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
                             hull, indices, clean)
     red_indices = Int[]
@@ -205,7 +207,7 @@ function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
             MOI.set(model, MOI.ConstraintSet(), ci, MOI.EqualTo{T}(ai))
         end
         #if !isone(length(indices)) &&
-        if  is_feasible(model, _RedundantMessage(element, idx))
+        if is_feasible(model, _RedundantMessage(element, idx))
             MOI.delete(model, λ[i])
             push!(red_indices, i)
         else
@@ -244,6 +246,11 @@ end
 nonredundant_halfspaces(vr::HAffineSpace, model, T, hull, clean) = tuple()
 function nonredundant_halfspaces(vr::HRepresentation, model, T, hull, clean)
     return _nonredundant(vr, model, T, hull, halfspaces(vr), clean)
+end
+
+struct RedundancyChecker{M,T}
+    model::M
+    hull::Vector{MOI.ScalarAffineFunction{T}}
 end
 
 """
@@ -294,7 +301,7 @@ function removevredundancy(vr::VRepresentation, solver)
     # TODO It's much more efficient to remove redundant lines with `removeduplicates`.
     #      Moreover, linearity may have already been detected.
     #      The only advantage over `removeduplicates` is that it does not alter
-    #      the lines, it just remove the redundant ones.
+    #      the lines, it just removes the redundant ones.
     nr_lines = nonredundant_lines(vr, model, T, hull, true)
     nr_rays = nonredundant_rays(vr, model, T, hull, true)
     nr_points = nonredundant_points(vr, model, T, hull, false)
@@ -304,7 +311,7 @@ end
 _dim_for_hull(h::HRepresentation) = fulldim(h) + 1
 _dim_for_hull(v::VRepresentation) = fulldim(v)
 function _zero_hull(rep::Representation, T::Type)
-    return [zero(MOI.ScalarAffineFunction{T}) for i in 1:_dim_for_hull(rep)]
+    return [zero(MOI.ScalarAffineFunction{T}) for _ in 1:_dim_for_hull(rep)]
 end
 _coord_for_hull(h::HRepElement) = [h.a; h.β]
 _coord_for_hull(r::VRepElement) = coord(r)
