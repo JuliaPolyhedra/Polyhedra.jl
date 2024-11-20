@@ -1,19 +1,19 @@
-isincident(v::VRepElement, h::HRepElement) = v in hyperplane(h)
-isincident(h::HRepElement, v::VRepElement) = v in hyperplane(h)
-isincident(p::Polyhedron, v::Index, h::Index) = isincident(get(p, v), get(p, h))
+isincident(v::VRepElement, h::HRepElement; tol) = in(v, hyperplane(h); tol)
+isincident(h::HRepElement, v::VRepElement; tol) = in(v, hyperplane(h); tol)
+isincident(p::Polyhedron, v::Index, h::Index; tol) = isincident(get(p, v), get(p, h); tol)
 
 abstract type Incident{T, ElemT<:RepElement{T}, PT<:Polyhedron{T}, IdxT<:Index{T}} end
 
-function Base.get(p::Polyhedron{T}, inc::Incident{T, ElemT}) where {T, ElemT}
+function Base.get(p::Polyhedron{T}, inc::Incident{T, ElemT}; tol) where {T, ElemT}
     el = get(p, inc.idx)
     incs = _inctype(inc)[]
     for idx in Indices{T, ElemT}(p)
         eli = get(p, idx)
-        if isincident(el, eli)
+        if isincident(el, eli; tol)
             push!(incs, _incel(inc, idx, eli))
         end
     end
-    incs
+    return incs
 end
 
 struct IncidentElements{T, ElemT, PT, IdxT} <: Incident{T, ElemT, PT, IdxT}
