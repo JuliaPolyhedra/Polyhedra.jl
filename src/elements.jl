@@ -341,6 +341,20 @@ end
 lift(v::VStruct{T}) where {T} = constructor(v)(pushbefore(v.a, zero(T)))
 lift(v::AbstractVector{T}) where {T} = pushbefore(v, one(T))
 
+function MA.promote_operation(
+    ::typeof(translate),
+    ::Type{V},
+    ::Type{<:AbstractVector{T}},
+) where {S,V<:AbstractVector{S},T}
+    return similar_type(V, MA.promote_operation(+, S, T))
+end
+function MA.mutable_operate!(
+    ::typeof(translate),
+    a::AbstractVector,
+    b::AbstractVector,
+)
+    return MA.mutable_operate!(+, a, b)
+end
 translate(p::AbstractVector, v) = p + v
 translate(r::VStruct, v) = r
 
