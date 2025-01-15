@@ -6,38 +6,14 @@ model = Model()
 using Polyhedra
 square = hrep(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">H-representation LPHRep{Float64}:
 4-element iterator of HalfSpace{Float64, SparseArrays.SparseVector{Float64, Int64}}:
- HalfSpace(  [1]  =  -1.0, 1.0)
- HalfSpace(  [2]  =  -1.0, 1.0)
- HalfSpace(  [1]  =  1.0, 1.0)
- HalfSpace(  [2]  =  1.0, 1.0)</code></pre><p>Note that the names of the JuMP variables are used as the names of the corresponding dimensions for the polyhedron <code>square</code>.</p><pre><code class="language-julia hljs">dimension_names(square)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{String}:
+ HalfSpace(sparsevec([1], [-1.0], 2), 1.0)
+ HalfSpace(sparsevec([2], [-1.0], 2), 1.0)
+ HalfSpace(sparsevec([1], [1.0], 2), 1.0)
+ HalfSpace(sparsevec([2], [1.0], 2), 1.0)</code></pre><p>Note that the names of the JuMP variables are used as the names of the corresponding dimensions for the polyhedron <code>square</code>.</p><pre><code class="language-julia hljs">dimension_names(square)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{String}:
  &quot;x&quot;
  &quot;y&quot;</code></pre><p>In the following, <code>diagonal</code> and <code>antidiag</code> are projections of extended H-representations of dimension 7 hence <code>diamond</code> is a projection of an extended H-representation of dimensions 12.</p><pre><code class="language-julia hljs">diagonal = convexhull(translate(square, [-2, -2]), translate(square, [2, 2]))
 antidiag = convexhull(translate(square, [-2,  2]), translate(square, [2, -2]))
-diamond = diagonal ∩ antidiag</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Polyhedra.Projection{LPHRep{Float64}, Base.OneTo{Int64}}(HyperPlane(  [1]  =  1.0
-  [3]  =  -1.0
-  [5]  =  -1.0, 0.0) ∩ HyperPlane(  [2]  =  1.0
-  [4]  =  -1.0
-  [6]  =  -1.0, 0.0) ∩ HyperPlane(  [1 ]  =  1.0
-  [8 ]  =  -1.0
-  [10]  =  -1.0, 0.0) ∩ HyperPlane(  [2 ]  =  1.0
-  [9 ]  =  -1.0
-  [11]  =  -1.0, 0.0) ∩ HalfSpace(  [3]  =  -1.0
-  [7]  =  -3.0, 0.0) ∩ HalfSpace(  [4]  =  -1.0
-  [7]  =  -3.0, 0.0) ∩ HalfSpace(  [3]  =  1.0
-  [7]  =  1.0, 0.0) ∩ HalfSpace(  [4]  =  1.0
-  [7]  =  1.0, 0.0) ∩ HalfSpace(  [5]  =  -1.0
-  [7]  =  -1.0, -1.0) ∩ HalfSpace(  [6]  =  -1.0
-  [7]  =  -1.0, -1.0) ∩ HalfSpace(  [5]  =  1.0
-  [7]  =  3.0, 3.0) ∩ HalfSpace(  [6]  =  1.0
-  [7]  =  3.0, 3.0) ∩ HalfSpace(  [7]  =  -1.0, 0.0) ∩ HalfSpace(  [7]  =  1.0, 1.0) ∩ HalfSpace(  [8 ]  =  -1.0
-  [12]  =  -3.0, 0.0) ∩ HalfSpace(  [9 ]  =  -1.0
-  [12]  =  1.0, 0.0) ∩ HalfSpace(  [8 ]  =  1.0
-  [12]  =  1.0, 0.0) ∩ HalfSpace(  [9 ]  =  1.0
-  [12]  =  -3.0, 0.0) ∩ HalfSpace(  [10]  =  -1.0
-  [12]  =  -1.0, -1.0) ∩ HalfSpace(  [11]  =  -1.0
-  [12]  =  3.0, 3.0) ∩ HalfSpace(  [10]  =  1.0
-  [12]  =  3.0, 3.0) ∩ HalfSpace(  [11]  =  1.0
-  [12]  =  -1.0, -1.0) ∩ HalfSpace(  [12]  =  -1.0, 0.0) ∩ HalfSpace(  [12]  =  1.0, 1.0), Base.OneTo(2))</code></pre><p>Note that the names the first two dimensions are still identical to the names of the JuMP variables and the auxiliary variables have no name.</p><pre><code class="language-julia hljs">dimension_names(diamond.set)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">12-element Vector{String}:
+diamond = diagonal ∩ antidiag</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Polyhedra.Projection{LPHRep{Float64}, Base.OneTo{Int64}}(HyperPlane(sparsevec([1, 3, 5], [1.0, -1.0, -1.0], 12), 0.0) ∩ HyperPlane(sparsevec([2, 4, 6], [1.0, -1.0, -1.0], 12), 0.0) ∩ HyperPlane(sparsevec([1, 8, 10], [1.0, -1.0, -1.0], 12), 0.0) ∩ HyperPlane(sparsevec([2, 9, 11], [1.0, -1.0, -1.0], 12), 0.0) ∩ HalfSpace(sparsevec([3, 7], [-1.0, -3.0], 12), 0.0) ∩ HalfSpace(sparsevec([4, 7], [-1.0, -3.0], 12), 0.0) ∩ HalfSpace(sparsevec([3, 7], [1.0, 1.0], 12), 0.0) ∩ HalfSpace(sparsevec([4, 7], [1.0, 1.0], 12), 0.0) ∩ HalfSpace(sparsevec([5, 7], [-1.0, -1.0], 12), -1.0) ∩ HalfSpace(sparsevec([6, 7], [-1.0, -1.0], 12), -1.0) ∩ HalfSpace(sparsevec([5, 7], [1.0, 3.0], 12), 3.0) ∩ HalfSpace(sparsevec([6, 7], [1.0, 3.0], 12), 3.0) ∩ HalfSpace(sparsevec([7], [-1.0], 12), 0.0) ∩ HalfSpace(sparsevec([7], [1.0], 12), 1.0) ∩ HalfSpace(sparsevec([8, 12], [-1.0, -3.0], 12), 0.0) ∩ HalfSpace(sparsevec([9, 12], [-1.0, 1.0], 12), 0.0) ∩ HalfSpace(sparsevec([8, 12], [1.0, 1.0], 12), 0.0) ∩ HalfSpace(sparsevec([9, 12], [1.0, -3.0], 12), 0.0) ∩ HalfSpace(sparsevec([10, 12], [-1.0, -1.0], 12), -1.0) ∩ HalfSpace(sparsevec([11, 12], [-1.0, 3.0], 12), 3.0) ∩ HalfSpace(sparsevec([10, 12], [1.0, 3.0], 12), 3.0) ∩ HalfSpace(sparsevec([11, 12], [1.0, -1.0], 12), -1.0) ∩ HalfSpace(sparsevec([12], [-1.0], 12), 0.0) ∩ HalfSpace(sparsevec([12], [1.0], 12), 1.0), Base.OneTo(2))</code></pre><p>Note that the names the first two dimensions are still identical to the names of the JuMP variables and the auxiliary variables have no name.</p><pre><code class="language-julia hljs">dimension_names(diamond.set)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">12-element Vector{String}:
  &quot;x&quot;
  &quot;y&quot;
  &quot;&quot;
@@ -74,4 +50,4 @@ value.(v)</code></pre><pre class="documenter-example-output"><code class="nohigh
   2.25
   0.75
  -0.25
-  0.75</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Convex hull and intersection/">« Convex hull and intersection</a><a class="docs-footer-nextpage" href="../Minimal Robust Positively Invariant Set/">Minimal Robust Positively Invariant Set »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Friday 9 August 2024 15:05">Friday 9 August 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  0.75</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Convex hull and intersection/">« Convex hull and intersection</a><a class="docs-footer-nextpage" href="../Minimal Robust Positively Invariant Set/">Minimal Robust Positively Invariant Set »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Wednesday 15 January 2025 14:55">Wednesday 15 January 2025</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
