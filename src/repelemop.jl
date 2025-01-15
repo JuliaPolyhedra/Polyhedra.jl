@@ -57,21 +57,22 @@ end
 ######
 # IN #
 ######
-function _vinh(v::VRepElement, it::ElemIt{<:HRepElement}, infun)
+function _vinh(v::VRepElement, it::ElemIt{<:HRepElement}, infun; tol)
     for h in it
-        if !infun(v, h)
+        if !infun(v, h; tol)
             return false
         end
     end
     return true
 end
-function _vinh(v::VRepElement, hr::HRep, infun)
+
+function _vinh(v::VRepElement, hr::HRep, infun; kws...)
     # The line below fails on Julia v0.7. On the simplextest,
     # map(...) returns (false,) and then all((false,)) returns true
     # because (false,)[1] returns true...
     # all(map(it -> _vinh(v, it, infun), hreps(hr)))
     for it in hreps(hr)
-        if !_vinh(v, it, infun)
+        if !_vinh(v, it, infun; kws...)
             return false
         end
     end
@@ -89,7 +90,9 @@ If `h` is an halfspace, it returns whether ``\\langle a, x \\rangle \\le \\beta`
 
 Returns whether `p` is in `h`, e.g. in all the hyperplanes and halfspaces supporting `h`.
 """
-Base.in(v::VRepElement, hr::HRep) = _vinh(v, hr, Base.in)
+function Base.in(v::VRepElement{T}, hr::HRep{U}; tol = _default_tol(T, U)) where {T,U}
+    _vinh(v, hr, Base.in; tol)
+end
 
 """
     ininterior(p::VRepElement, h::HRepElement)
@@ -102,20 +105,24 @@ If `h` is an halfspace ``\\langle a, x \\rangle \\leq \\beta``, it returns wheth
 
 Returns whether `p` is in the interior of `h`, e.g. in the interior of all the hyperplanes and halfspaces supporting `h`.
 """
-ininterior(v::VRepElement, hr::HRep) = _vinh(v, hr, ininterior)
+function ininterior(v::VRepElement{T}, hr::HRep{U}; tol = _default_tol(T, U)) where {T,U}
+    return _vinh(v, hr, ininterior; tol)
+end
 
 """
-    inrelativeinterior(p::VRepElement, h::HRepElement)
+    inrelativeinterior(p::VRepElement, h::HRepElement; tol)
 
 Returns whether `p` is in the relative interior of `h`.
 If `h` is an hyperplane, it is equivalent to `p in h` since the relative interior of an hyperplane is itself.
 If `h` is an halfspace, it is equivalent to `ininterior(p, h)`.
 
-    inrelativeinterior(p::VRepElement, h::HRep)
+    inrelativeinterior(p::VRepElement, h::HRep; tol)
 
 Returns whether `p` is in the relative interior of `h`, e.g. in the relative interior of all the hyperplanes and halfspaces supporting `h`.
 """
-inrelativeinterior(v::VRepElement, hr::HRep) = _vinh(v, hr, inrelativeinterior)
+function inrelativeinterior(v::VRepElement{T}, hr::HRep{U}; tol = _default_tol(T, U)) where {T,U}
+    return _vinh(v, hr, inrelativeinterior; tol)
+end
 
 structural_nonzero_indices(a::SparseArrays.SparseVector) = SparseArrays.nonzeroinds(a)
 structural_nonzero_indices(a::AbstractVector) = eachindex(a)
@@ -157,13 +164,15 @@ function support_function(h::AbstractVector, rep::Rep, solver=Polyhedra.linear_o
     end
 end
 
-function _hinv(h::HRepElement, vr::ElemIt{<:VRepElement})
-    return all(v -> in(v, h), vr)
+function _hinv(h::HRepElement, vr::ElemIt{<:VRepElement}; kws...)
+    return all(v -> in(v, h; kws...), vr)
 end
-function _hinv(h::HRepElement, vr::VRep)
-    return all(v -> _hinv(h, v), vreps(vr))
+
+function _hinv(h::HRepElement, vr::VRep; kws...)
+    return all(v -> _hinv(h, v; kws...), vreps(vr))
 end
-function _hinh(h::HalfSpace, hr::HRep, solver)
+
+function _hinh(h::HalfSpace, hr::HRep, solver; tol)
     # ⟨a, x⟩ ≦ β -> if β < max ⟨a, x⟩ then h is outside
     model = support_function_model(h.a, hr, solver)
     MOI.optimize!(model)
@@ -173,30 +182,43 @@ function _hinh(h::HalfSpace, hr::HRep, solver)
     elseif term == MOI.INFEASIBLE
         return true
     elseif term == MOI.OPTIMAL
-        return _leq(MOI.get(model, MOI.ObjectiveValue()), h.β)
+        obj = MOI.get(model, MOI.ObjectiveValue())
+        # If `h` and `hr` have rational representations,
+        # the default tolerance is `MA.Zero`.
+        # However, if the solver only supports `Float64` then
+        # `obj` is `Float64` so we'll have to use some tolerance
+        if obj isa AbstractFloat && tol isa MA.Zero
+            tol = _default_tol(typeof(obj))
+        end
+        return _leq(obj, h.β; tol)
     else
         error("Cannot determine whether the polyhedron is contained in the",
               " halfspace or not because the linear program terminated with",
               " status $term.")
     end
 end
-function _hinh(h::HyperPlane, hr::HRep, solver)
-    _hinh(halfspace(h), hr, solver) && _hinh(halfspace(-h), hr, solver)
+function _hinh(h::HyperPlane, hr::HRep, solver; kws...)
+    _hinh(halfspace(h), hr, solver; kws...) && _hinh(halfspace(-h), hr, solver; kws...)
 end
 
-Base.issubset(vr::VRepresentation, h::HRepElement) = _hinv(h, vr)
-Base.issubset(hr::HRepresentation, h::HRepElement) = _hinh(h, hr)
+function Base.issubset(vr::VRepresentation{T}, h::HRepElement{U}; tol = _default_tol(T, U)) where {T,U}
+    return _hinv(h, vr; tol)
+end
+
+function Base.issubset(hr::HRepresentation{T}, h::HRepElement{U}; tol = _default_tol(T, U)) where {T,U}
+    return _hinh(h, hr; tol)
+end
 
 """
     issubset(p::Rep, h::HRepElement)
 
 Returns whether `p` is a subset of `h`, i.e. whether `h` supports the polyhedron `p`.
 """
-function Base.issubset(p::Polyhedron, h::HRepElement, solver=Polyhedra.linear_objective_solver(p))
+function Base.issubset(p::Polyhedron{T}, h::HRepElement{U}, solver=Polyhedra.linear_objective_solver(p); tol = _default_tol(T, U)) where {T,U}
     if vrepiscomputed(p)
-        _hinv(h, p)
+        _hinv(h, p; tol)
     else
-        _hinh(h, p, solver)
+        _hinh(h, p, solver; tol)
     end
 end
 
@@ -282,9 +304,9 @@ function Base.intersect(v::VRepresentation{T}, h::HRepElement) where {T}
     #   \  In CDD and ConvexHull.jl, they only consider segments that
     #    \ belongs to the boundary which is way faster than what we do here
     for p in pins
-        ap = h.a ⋅ p
+        ap = _dot(h.a, p)
         for q in pout
-            aq = h.a ⋅ q
+            aq = _dot(h.a, q)
             λ = (aq - h.β) / (aq - ap)
             @assert 0 <= λ <= 1
             push!(pinp, simplify(λ * p + (1 - λ) * q))
@@ -292,9 +314,9 @@ function Base.intersect(v::VRepresentation{T}, h::HRepElement) where {T}
     end
     # Similar but with rays
     for r in rins
-        ar = h.a ⋅ r
+        ar = _dot(h.a, r)
         for s in rout
-            as = h.a ⋅ s
+            as = _dot(h.a, s)
             # should take
             # λ = as / (as - ar)
             @assert 0 <= as / (as - ar) <= 1
@@ -313,9 +335,9 @@ function Base.intersect(v::VRepresentation{T}, h::HRepElement) where {T}
     # Similar but with one point and one ray
     for (ps, rs) in ((pins, rout), (pout, rins))
         for p in ps
-            ap = h.a ⋅ p
+            ap = _dot(h.a, p)
             for r in rs
-                ar = h.a ⋅ r
+                ar = _dot(h.a, r)
                 λ = (h.β - ap) / ar
                 push!(pinp, p + λ * r)
             end

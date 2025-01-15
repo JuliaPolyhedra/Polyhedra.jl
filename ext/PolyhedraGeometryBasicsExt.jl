@@ -90,7 +90,7 @@ function _isdup(zray, triangles)
 end
 _isdup(poly, hidx, triangles) = _isdup(get(poly, hidx).a, triangles)
 
-function decompose_plane!(triangles::Vector, d::FullDim, zray, incident_points, incident_lines, incident_rays, exit_point::Function, counterclockwise::Function, rotate::Function)
+function decompose_plane!(triangles::Vector, d::FullDim, zray, incident_points, incident_lines, incident_rays, exit_point::Function, counterclockwise::Function, rotate::Function; tol)
     # xray should be the rightmost ray
     xray = nothing
     # xray should be the leftmost ray
@@ -98,7 +98,7 @@ function decompose_plane!(triangles::Vector, d::FullDim, zray, incident_points, 
     isapproxzero(zray) && return
 
     # Checking rays
-    hull, lines, rays = _planar_hull(d, incident_points, incident_lines, incident_rays, counterclockwise, rotate)
+    hull, lines, rays = _planar_hull(d, incident_points, incident_lines, incident_rays, counterclockwise, rotate; tol)
     if isempty(lines)
         if length(hull) + length(rays) < 3
             return
@@ -190,16 +190,16 @@ function fulldecompose(triangles::Vector{_Tri{N,T}}) where {N,T}
     return pts, faces, ns
 end
 
-function fulldecompose(poly_geom::Mesh, ::Type{T}) where T
+function fulldecompose(poly_geom::Mesh, ::Type{T}; tol = Polyhedra._default_tol(T)) where T
     poly = poly_geom.polyhedron
     exit_point = scene(poly_geom, T)
     triangles = _Tri{2,T}[]
     z = StaticArrays.SVector(zero(T), zero(T), one(T))
-    decompose_plane!(triangles, FullDim(poly), z, collect(points(poly)), lines(poly), rays(poly), exit_point, counterclockwise, rotate)
+    decompose_plane!(triangles, FullDim(poly), z, collect(points(poly)), lines(poly), rays(poly), exit_point, counterclockwise, rotate; tol)
     return fulldecompose(triangles)
 end
 
-function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
+function fulldecompose(poly_geom::Mesh{3}, ::Type{T}; tol = Polyhedra._default_tol(T)) where T
     poly = poly_geom.polyhedron
     exit_point = scene(poly_geom, T)
     triangles = _Tri{3,T}[]
@@ -207,7 +207,7 @@ function fulldecompose(poly_geom::Mesh{3}, ::Type{T}) where T
         zray = get(poly, hidx).a
         counterclockwise(a, b) = dot(cross(a, b), zray)
         rotate(r) = cross(zray, r)
-        decompose_plane!(triangles, FullDim(poly), zray, incidentpoints(poly, hidx), incidentlines(poly, hidx), incidentrays(poly, hidx), exit_point, counterclockwise, rotate)
+        decompose_plane!(triangles, FullDim(poly), zray, incidentpoints(poly, hidx), incidentlines(poly, hidx), incidentrays(poly, hidx), exit_point, counterclockwise, rotate; tol)
     end
     for hidx in eachindex(hyperplanes(poly))
         decompose_plane(hidx)

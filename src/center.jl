@@ -19,7 +19,7 @@ function maximum_radius_with_center(h::HRep{T}, center) where T
                     return zero(T)
                 end
             else
-                new_radius = (hs.β - center ⋅ hs.a) / n
+                new_radius = (hs.β - _dot(center, hs.a)) / n
                 if radius === nothing
                     radius = new_radius
                 else

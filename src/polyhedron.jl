@@ -96,8 +96,8 @@ function setvrep! end
 Returns the `fulldim(p)`-dimensional hyper-volume of the polyhedron `p`.
 Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
 """
-function volume(p::Polyhedron{T}) where T
-    return reduce(+, unscaled_volume_simplex(Δ) for Δ in triangulation(p);
+function volume(p::Polyhedron{T}; tol = _default_tol(T)) where T
+    return reduce(+, unscaled_volume_simplex(Δ) for Δ in triangulation(p; tol);
                   init=zero(T)) / factorial(fulldim(p))
 end
 
@@ -119,12 +119,12 @@ end
 Returns the center of mass of `p`, represented as a `Vector{T}` of length `fulldim(p)`.
 Throws an error if `p` is degenerate.
 """
-function center_of_mass(p::Polyhedron{T}) where T
+function center_of_mass(p::Polyhedron{T}; tol = _default_tol(T)) where T
     # Implementation strategy: For a simplex, the center of mass coincides with
     # the centroid which is easy to compute.  So we triangulate `p` into
     # simplices and compute a volume-weighted average of these simplices'
     # centers of mass.
-    simplices = triangulation(p)
+    simplices = triangulation(p; tol)
     isempty(simplices) && error("Tried to compute center of mass of a degenerate polyhedron")
     unscaled_center = zeros(T, fulldim(p))
     unscaled_vol = zero(T)

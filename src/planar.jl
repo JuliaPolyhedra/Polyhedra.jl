@@ -92,7 +92,7 @@ end
 
 _colinear(counterclockwise, a, b, c) = isapproxzero(counterclockwise(b - a, c - a))
 
-function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate)
+function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate; tol)
     line = nothing
     lineleft = false
     lineright = false
@@ -123,10 +123,10 @@ function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate)
             if xray === nothing
                 xray = yray = coord(r)
             else
-                if Line(xray) ≈ linearize(r) && !(Ray(xray) ≈ r)
+                if _isapprox(Line(xray), linearize(r); tol) && !_isapprox(Ray(xray), r; tol)
                     line = Line(xray)
                     checkleftright(Ray(yray))
-                elseif Line(yray) ≈ linearize(r) && !(Ray(yray) ≈ r)
+                elseif _isapprox(Line(yray), linearize(r); tol) && !_isapprox(Ray(yray), r; tol)
                     line = Line(yray)
                     checkleftright(Ray(xray))
                 else
@@ -188,7 +188,7 @@ function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate)
         else
             append!(_points, half_points)
             push!(_rays, Ray(xray))
-            if !(Ray(xray) ≈ Ray(yray))
+            if !(_isapprox(Ray(xray), Ray(yray); tol))
                 push!(_rays, Ray(yray))
             end
         end
@@ -215,7 +215,7 @@ end
 counterclockwise(x, y) = x[1] * y[2] - x[2] * y[1]
 rotate(x) = convert(typeof(x), StaticArrays.SVector(-x[2], x[1]))
 
-function planar_hull(vr::VRepresentation)
+function planar_hull(vr::VRepresentation{T}; tol = _default_tol(T)) where {T}
     d = FullDim(vr)
-    vrep(_planar_hull(FullDim(vr), collect(points(vr)), lines(vr), rays(vr), counterclockwise, rotate)...; d = d)
+    vrep(_planar_hull(FullDim(vr), collect(points(vr)), lines(vr), rays(vr), counterclockwise, rotate; tol)...; d = d)
 end
