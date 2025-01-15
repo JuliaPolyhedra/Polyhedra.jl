@@ -111,10 +111,4 @@ Returns wrapper of a polyhedron suitable for plotting with MeshCat.jl and Makie.
 """
 Mesh(p) = p isa Polyhedron ? error("this method requires using GeometryBasics") : throw(MethodError(Mesh, p))
 
-if !isdefined(Base, :get_extension)
-    include("../ext/PolyhedraJuMPExt.jl")
-    include("../ext/PolyhedraRecipesBaseExt.jl")
-    include("../ext/PolyhedraGeometryBasicsExt.jl")
-end
-
 end # module
