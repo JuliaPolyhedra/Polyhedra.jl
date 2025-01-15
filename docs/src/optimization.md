@@ -40,11 +40,11 @@ julia> using JuMP
 
 julia> model = Model()
 A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+├ solver: none
+├ objective_sense: FEASIBILITY_SENSE
+├ num_variables: 0
+├ num_constraints: 0
+└ Names registered in the model: none
 
 julia> @variable(model, λ[1:2])
 2-element Vector{VariableRef}:
