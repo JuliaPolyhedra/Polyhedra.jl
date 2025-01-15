@@ -5,6 +5,12 @@ _default_tol(::Type{<:Union{Integer, Rational}}) = MA.Zero()
 # of created everytime
 _default_tol(::Type{T}) where {T<:AbstractFloat} = Base.rtoldefault(T)
 
+_default_tol(::Type{T}, ::Type{U}) where {T,U} = _default_tol(promote_type(T, U))
+
+# We should **not** define `isless(::Float64, ::MutableArithmetics.Zero)`.
+# When we get such `MethodError`, it a nice error that always indicate some underlying issue
+# so we should fix that underlying issue, not add this method that would just hide bugs.
+
 isapproxzero(x::T; kws...) where {T<:Real} = x == zero(T)
 isapproxzero(x::T; tol=Base.rtoldefault(T)) where {T<:AbstractFloat} = abs(x) < tol
 isapproxzero(x::AbstractVector{T}; kws...) where {T<:Real} = isapproxzero(maximum(abs, x); kws...)

@@ -35,7 +35,8 @@ function _triangulation(Δs, Δ, v_idx, h_idx, incident_idx, is_weak_adjacent, c
         end
     end
 end
-function triangulation_indices(p::Polyhedron; tol)
+
+function triangulation_indices(p::Polyhedron{T}; tol = _default_tol(T)) where {T}
     hasrays(p) && error("Triangulation only supported for polytope.")
     v_idx = eachindex(points(p))
     h_idx = eachindex(halfspaces(p))
@@ -46,6 +47,7 @@ function triangulation_indices(p::Polyhedron; tol)
     _triangulation(Δs, Δ, v_idx, h_idx, incident_idx, is_weak_adjacent, fulldim(p))
     return unique(Δs)
 end
-function triangulation(p::Polyhedron; tol)
+
+function triangulation(p::Polyhedron{T}; tol = _default_tol(T)) where {T}
     return map(Δ -> vrep(get.(p, Δ)), triangulation_indices(p; tol))
 end

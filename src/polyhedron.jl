@@ -96,8 +96,8 @@ function setvrep! end
 Returns the `fulldim(p)`-dimensional hyper-volume of the polyhedron `p`.
 Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
 """
-function volume(p::Polyhedron{T}) where T
-    return reduce(+, unscaled_volume_simplex(Δ) for Δ in triangulation(p);
+function volume(p::Polyhedron{T}; tol = _default_tol(T)) where T
+    return reduce(+, unscaled_volume_simplex(Δ) for Δ in triangulation(p; tol);
                   init=zero(T)) / factorial(fulldim(p))
 end
 

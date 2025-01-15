@@ -94,7 +94,7 @@ function MOI.optimize!(lpm::VRepOptimizer{T}) where T
         lpm.solution = first(points(prob))
     else
         better(a, b) = (lpm.objective_sense == MOI.MAX_SENSE ? a > b : a < b)
-        _better(a, b) = (lpm.objective_sense == MOI.MAX_SENSE ? _gt(a, b; tol) : _lt(a, b; tol))
+        _better(a, b) = (lpm.objective_sense == MOI.MAX_SENSE ? _gt(a, b; lpm.tol) : _lt(a, b; lpm.tol))
         bestobjval = zero(T)
         lpm.solution = nothing
         for r in allrays(prob)

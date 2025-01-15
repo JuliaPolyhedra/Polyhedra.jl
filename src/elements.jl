@@ -280,22 +280,41 @@ for ElemT in [:HalfSpace, :HyperPlane, :Ray, :Line]
     end
 end
 
-ininterior(r::Ray, h::HalfSpace) = _neg(_dot(h.a, r))
-ininterior(l::Line, h::HalfSpace) = _neg(_dot(h.a, l))
-ininterior(p::AbstractVector, h::HalfSpace) = _lt(_dot(h.a, p), h.β)
+function ininterior(r::Ray{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+    return _neg(_dot(h.a, r); tol)
+end
 
-inrelativeinterior(p::VRepElement, h::HalfSpace) = ininterior(p, h)
+function ininterior(l::Line{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+    return _neg(_dot(h.a, l); tol)
+end
 
-Base.in(r::Ray, h::HalfSpace; kws...) = _nonpos(_dot(h.a, r); kws...)
-Base.in(l::Line, h::HalfSpace; kws...) = _nonpos(_dot(h.a, l); kws...)
-Base.in(p::AbstractVector, h::HalfSpace; kws...) = _leq(_dot(h.a, p), h.β; kws...)
+function ininterior(p::AbstractVector{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+    return _lt(_dot(h.a, p), h.β; tol)
+end
 
-ininterior(p::VRepElement, h::HyperPlane) = false
-inrelativeinterior(p::VRepElement, h::HyperPlane) = p in h
+function inrelativeinterior(p::VRepElement, h::HalfSpace; tol...)
+    return ininterior(p, h; tol...)
+end
 
-Base.in(r::Ray, h::HyperPlane; kws...) = isapproxzero(_dot(h.a, r); kws...)
-Base.in(l::Line, h::HyperPlane; kws...) = isapproxzero(_dot(h.a, l); kws...)
-Base.in(p::AbstractVector, h::HyperPlane; kws...) = _isapprox(_dot(h.a, p), h.β; kws...)
+function Base.in(r::Ray{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+    return _nonpos(_dot(h.a, r); tol)
+end
+
+function Base.in(l::Line{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+    return _nonpos(_dot(h.a, l); tol)
+end
+
+function Base.in(p::AbstractVector{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+    return _leq(_dot(h.a, p), h.β; tol)
+end
+
+ininterior(p::VRepElement, h::HyperPlane; tol...) = false
+
+inrelativeinterior(p::VRepElement, h::HyperPlane; tol...) = return in(p, h; tol...)
+
+Base.in(r::Ray, h::HyperPlane; tol...) = isapproxzero(_dot(h.a, r); tol...)
+Base.in(l::Line, h::HyperPlane; tol...) = isapproxzero(_dot(h.a, l); tol...)
+Base.in(p::AbstractVector, h::HyperPlane; tol...) = _isapprox(_dot(h.a, p), h.β; tol...)
 
 #function Base.vec(x::FixedVector{T}) where {T}
 #    y = Vector{T}(N)
