@@ -1,7 +1,7 @@
 name = "Polyhedra"
 uuid = "67491407-f73d-577b-9b50-8179a7c68029"
 repo = "https://github.com/JuliaPolyhedra/Polyhedra.jl.git"
-version = "0.8.0"
+version = "0.8.1"
 
 [deps]
 GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
