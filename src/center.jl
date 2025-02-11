@@ -93,7 +93,7 @@ function hchebyshevcenter(p::HRepresentation, solver=default_solver(p; T=Float64
         if term == MOI.INFEASIBLE
             error("An empty polyhedron has no H-Chebyshev center.")
         elseif term == MOI.DUAL_INFEASIBLE
-            error("The polyhedron contains euclidean ball of arbitrary large radius.")
+            error("The polyhedron contains a Euclidean ball of arbitrarily large radius.")
         else
             _unknown_status(model, term, "computing the H-Chebyshev center.")
         end
