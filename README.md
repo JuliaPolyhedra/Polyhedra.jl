@@ -2,7 +2,7 @@
 
 | **Documentation** | **Build Status** | **Social** |
 |:-----------------:|:----------------:|:----------:|
-| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] | [[<img src="https://upload.wikimedia.org/wikipedia/commons/b/b9/Slack_Technologies_Logo.svg" width="64">][slack-url] |
+| [![][docs-stable-img]][docs-stable-url] | [![Build Status][build-img]][build-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/b/b9/Slack_Technologies_Logo.svg" width="64">][slack-url] |
 | [![][docs-latest-img]][docs-latest-url] | [![Codecov branch][codecov-img]][codecov-url] | [<img src="https://upload.wikimedia.org/wikipedia/commons/c/cf/Discourse_logo.svg" width="64">][discourse-url] |
 
 [<img src="examples/drakeperm.png" height="240">](https://github.com/JuliaPolyhedra/Polyhedra.jl/tree/master/examples/drakeperm.jl)
