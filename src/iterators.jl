@@ -145,18 +145,18 @@ for (isVrep, elt, loop_singular) in [(true, :AbstractVector, :point),
         function $plural end
 
         """
-            incident$plural(p::Polyhedron, idx)
+            incident$plural(p::Polyhedron{T}, idx; tol = Polyhedra.default_tol(T)) where {T}
 
         Returns the list of $plural incident to idx for the polyhedron `p`.
         """
-        $inc(p::Polyhedron{T}, idx; tol = _default_tol(T)) where {T} = get(p, IncidentElements{T, $elemtype(p)}(p, idx); tol)
+        $inc(p::Polyhedron{T}, idx; kws...) where {T} = get(p, IncidentElements{T, $elemtype(p)}(p, idx); kws...)
 
         """
-            incident$(singular)indices(p::Polyhedron, idx)
+            incident$(singular)indices(p::Polyhedron{T}, idx; tol = Polyhedra.default_tol(T)) where {T}
 
         Returns the list of the indices of $plural incident to `idx` for the polyhedron `p`.
         """
-        $incidx(p::Polyhedron{T}, idx; tol = _default_tol(T)) where {T} = get(p, IncidentIndices{T, $elemtype(p)}(p, idx); tol)
+        $incidx(p::Polyhedron{T}, idx; kws...) where {T} = get(p, IncidentIndices{T, $elemtype(p)}(p, idx); kws...)
 
         """
             $lenp($horvrep::$HorVRep)

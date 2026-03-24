@@ -4,7 +4,7 @@ isincident(p::Polyhedron, v::Index, h::Index; tol) = isincident(get(p, v), get(p
 
 abstract type Incident{T, ElemT<:RepElement{T}, PT<:Polyhedron{T}, IdxT<:Index{T}} end
 
-function Base.get(p::Polyhedron{T}, inc::Incident{T, ElemT}; tol) where {T, ElemT}
+function Base.get(p::Polyhedron{T}, inc::Incident{T, ElemT}; tol = _default_tol(T)) where {T, ElemT}
     el = get(p, inc.idx)
     incs = _inctype(inc)[]
     for idx in Indices{T, ElemT}(p)
