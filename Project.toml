@@ -27,7 +27,7 @@ PolyhedraRecipesBaseExt = "RecipesBase"
 
 [compat]
 DocumenterTools = "0.1.21"
-GenericLinearAlgebra = "0.2, 0.3"
+GenericLinearAlgebra = "0.2, 0.3, 0.4"
 GeometryBasics = "0.2, 0.3, 0.4, 0.5"
 JuMP = "1"
 LinearAlgebra = "1.6"
