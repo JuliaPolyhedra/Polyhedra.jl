@@ -2,6 +2,7 @@ using Polyhedra
 
 using SparseArrays
 using LinearAlgebra
+using Plots
 using Test
 
 using StaticArrays

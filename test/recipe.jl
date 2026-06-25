@@ -31,4 +31,22 @@ function recipetest(lib::Polyhedra.Library)
         p = polyhedron(h, lib)
         @test_throws err RecipesBase.apply_recipe(Dict{Symbol, Any}(), p)
     end
+
+    @testset "Plots.jl attribute forwarding" begin
+        # Creating a simple 2D polyhedron
+        v = vrep([0 0; 1 0; 0 1; 1 1])
+        p = polyhedron(v)
+
+        # Plotting it with custom attributes
+        plt = plot(p, label="Custom Label", series_annotations=["1", "2", "3", "4"])
+
+        # Extracting the first series from the first subplot
+        series = plt[1][1]
+
+        # Verifying our custom label wasn't overwritten by `legend --> false`
+        @test series[:label] == "Custom Label"
+
+        # Verifying series_annotations were successfully forwarded
+        @test haskey(series.plotattributes, :series_annotations) || haskey(series, :series_annotations)
+    end
 end
