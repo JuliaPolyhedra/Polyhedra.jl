@@ -37,16 +37,23 @@ function recipetest(lib::Polyhedra.Library)
         v = vrep([0 0; 1 0; 0 1; 1 1])
         p = polyhedron(v)
 
-        # Plotting it with custom attributes
-        plt = plot(p, label="Custom Label", series_annotations=["1", "2", "3", "4"])
+        # Simulating the user providing custom kwargs to plot()
+        # This is exactly what Plots.jl passes into the macro internally
+        attrs_with_label = Dict{Symbol, Any}(:label => "Custom Label", :series_annotations => ["1", "2", "3", "4"])
+    
+        # Calling the recipe directly without needing Plots.jl
+        # This returns an array of RecipeData objects
+        res_with_label = RecipesBase.apply_recipe(attrs_with_label, p)
+        series_attrs = res_with_label[1].plotattributes
 
-        # Extracting the first series from the first subplot
-        series = plt[1][1]
+        # Verifying custom label prevented `legend --> false` and annotations were kept
+        @test !haskey(series_attrs, :legend) || series_attrs[:legend] !== false
+        @test haskey(series_attrs, :series_annotations)
+        @test series_attrs[:series_annotations] == ["1", "2", "3", "4"]
 
-        # Verifying our custom label wasn't overwritten by `legend --> false`
-        @test series[:label] == "Custom Label"
-
-        # Verifying series_annotations were successfully forwarded
-        @test haskey(series.plotattributes, :series_annotations) || haskey(series, :series_annotations)
+        # Testing that if the user DOES NOT provide a label, legend defaults to false
+        attrs_no_label = Dict{Symbol, Any}()
+        res_no_label = RecipesBase.apply_recipe(attrs_no_label, p)
+        @test res_no_label[1].plotattributes[:legend] == false
     end
 end
