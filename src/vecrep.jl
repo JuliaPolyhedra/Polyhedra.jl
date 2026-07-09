@@ -180,6 +180,18 @@ convexhull!(v::PointsHull, p::AbstractVector) = push!(v.points, p)
 
 @vecrepelem PointsHull Point points
 
+MA.mutability(::Type{<:PointsHull}) = MA.IsMutable()
+function mutable_operate_elements!(
+    op::F,
+    v::PointsHull,
+    args::Vararg{Any,N},
+) where {F<:Function,N}
+    for i in eachindex(v.points)
+        v.points[i] = MA.operate!(op, v.points[i], args...)
+    end
+    return v
+end
+
 """
     vrep(lines::LineIt, rays::RayIt; d::FullDim)
 
@@ -233,6 +245,25 @@ convexhull!(v::RaysHull, r::Ray) = push!(v.rays, r)
 @vecrepelem RaysHull Ray rays
 @subrepelem RaysHull Line lines
 
+MA.mutability(::Type{<:RaysHull}) = MA.IsMutable()
+function mutable_operate_elements!(
+    ::typeof(translate),
+    ::RaysHull,
+    ::AbstractVector,
+)
+end
+function mutable_operate_elements!(
+    op::F,
+    v::RaysHull,
+    args::Vararg{Any,N},
+) where {F<:Function,N}
+    mutable_operate_elements!(op, v.lines, args...)
+    for i in eachindex(v.rays)
+        v.rays[i] = MA.operate!(op, v.rays[i], args...)
+    end
+    return v
+end
+
 vreptype(::Type{RaysHull{T, AT, D}}) where {T, AT, D} = Hull{T, AT, D}
 
 """
@@ -278,6 +309,17 @@ convexhull!(v::Hull, r::VStruct) = convexhull!(v.rays, r)
 @subrepelem Hull Point points
 @subrepelem Hull Line rays
 @subrepelem Hull Ray rays
+
+MA.mutability(::Type{<:Hull}) = MA.IsMutable()
+function mutable_operate_elements!(
+    op::F,
+    v::Hull,
+    args::Vararg{Any,N},
+) where {F<:Function,N}
+    mutable_operate_elements!(op, v.points, args...)
+    mutable_operate_elements!(op, v.rays, args...)
+    return v
+end
 
 fulltype(::Type{<:Union{Hull{T, AT, D}, PointsHull{T, AT, D}, LinesHull{T, AT, D}, RaysHull{T, AT, D}}}) where {T, AT, D} = Hull{T, AT, D}
 

@@ -18,14 +18,14 @@ export translate
 function htranslate(p::HRep{T}, v::Union{AbstractVector{S}}) where {S, T}
     f = (i, h) -> translate(h, v)
     d = FullDim(p)
-    Tout = Base.promote_op(+, T, S)
+    Tout = MA.promote_operation(+, T, S)
     similar(p, d, Tout, hmap(f, d, Tout, p)...)
 end
 
 function vtranslate(p::VRep{T}, v::Union{AbstractVector{S}}) where {S, T}
     f = (i, u) -> translate(u, v)
     d = FullDim(p)
-    Tout = Base.promote_op(+, T, S)
+    Tout = MA.promote_operation(+, T, S)
     similar(p, d, Tout, vmap(f, d, Tout, p)...)
 end
 
@@ -51,6 +51,32 @@ function translate(p::Polyhedron, v)
         htranslate(p, v)
     else
         vtranslate(p, v)
+    end
+end
+
+function MA.promote_operation(
+    ::typeof(translate),
+    P::Type{<:Rep{S}},
+    ::Type{<:AbstractVector{T}},
+) where {S,T}
+    U = MA.promote_operation(+, S, T)
+    return similar_type(P, U)
+end
+function MA.mutable_operate!(::typeof(translate), rep::VRepresentation, v)
+    return mutable_operate_elements!(translate, rep, v)
+end
+function MA.mutable_operate!(::typeof(translate), rep::HRepresentation, v)
+    return mutable_operate_elements!(translate, rep, v)
+end
+function MA.mutable_operate!(::typeof(translate), p::Polyhedron, v)
+    # The redundancy should not change with translation so we give
+    # the current redundancy information.
+    if hrepiscomputed(p)
+        sethrep!(MA.operate!(translate, hrep(p), v), hredundancy(p))
+    end
+    if vrepiscomputed(p)
+        # The redundancy should not change with translation
+        setvrep!(MA.operate!(translate, vrep(p), v), vredundancy(p))
     end
 end
 
