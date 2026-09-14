@@ -255,10 +255,10 @@ end
 
 function _test_chebyshev_center(::Type{T}) where T
     p = hrep(Matrix(1I, 2, 2), zeros(T, 2))
-    @test_throws ErrorException chebyshevcenter(p, lp_solver) # unbounded
+    @test_throws ErrorException("The polyhedron contains a Euclidean ball of arbitrarily large radius.") chebyshevcenter(p, lp_solver) # unbounded
 
     p = hrep(T[1 1; -1 -1], T[0, -1])
-    @test_throws ErrorException chebyshevcenter(p, lp_solver) # empty
+    @test_throws ErrorException("An empty polyhedron has no H-Chebyshev center.") chebyshevcenter(p, lp_solver) # empty
 
     # examples/chebyshevcenter.ipynb
     A = T[ 2  1
