@@ -9,7 +9,7 @@ const VAny{T} = Union{VRep{T}, VRepElement{T}}
 Takes the intersection of `P1` and `P2` ``\\{\\, x : x \\in P_1, x \\in P_2 \\,\\}``.
 It is very efficient between two H-representations or between two polyhedron for which the H-representation has already been computed.
 However, if `P1` (resp. `P2`) is a polyhedron for which the H-representation has not been computed yet, it will trigger a representation conversion which is costly.
-See the [Polyhedral Computation FAQ](http://www.cs.mcgill.ca/~fukuda/soft/polyfaq/node25.html) for a discussion on this operation.
+See the [Polyhedral Computation FAQ](https://cddlib.github.io/polyhedral_faq/#x1-250002.22) for a discussion on this operation.
 
 The type of the result will be chosen closer to the type of `P1`. For instance, if `P1` is a polyhedron (resp. H-representation) and `P2` is a H-representation (resp. polyhedron), `intersect(P1, P2)` will be a polyhedron (resp. H-representation).
 If `P1` and `P2` are both polyhedra (resp. H-representation), the resulting polyhedron type (resp. H-representation type) will be computed according to the type of `P1`.
