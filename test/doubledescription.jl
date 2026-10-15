@@ -1,4 +1,5 @@
 using Test
+using Polyhedra
 using StaticArrays
 
 function empty_test(h::HRepresentation{T}) where T
@@ -133,6 +134,27 @@ end
         end
     end
     @testset "V-representation -> H-representation" begin
+        @testset "Dehomogenization ($T)" for T in (Float64, Rational{BigInt})
+            v = vrep(zeros(T, 1, 2), T[-1 0; 0 -1])
+            h = doubledescription(v)
+            @test !hashyperplanes(h)
+            @test collect(halfspaces(h)) ==
+                  [HalfSpace(T[1, 0], zero(T)), HalfSpace(T[0, 1], zero(T))]
+            # Translating the cone preserves genuine nonzero offsets.
+            h = doubledescription(vrep(T[2 3], T[-1 0; 0 -1]))
+            @test collect(halfspaces(h)) == [HalfSpace(T[1, 0], T(2)), HalfSpace(T[0, 1], T(3))]
+            # Retain equalities for a cone in a proper subspace.
+            h = doubledescription(vrep(zeros(T, 1, 2), T[-1 0]))
+            @test nhyperplanes(h) == 1
+            @test first(hyperplanes(h)).β == 0
+            @test abs.(first(hyperplanes(h)).a) == T[0, 1]
+            @test collect(halfspaces(h)) == [HalfSpace(T[1, 0], zero(T))]
+            # Full space has no inequalities, but still has dimension two.
+            h = doubledescription(vrep([Line(T[1, 0]), Line(T[0, 1])], Ray{T,Vector{T}}[]))
+            @test fulldim(h) == 2
+            @test !hashyperplanes(h)
+            @test !hashalfspaces(h)
+        end
         @testset "Hull" begin
             @testset "Vector" begin
                 @testset "Exact" begin
@@ -141,7 +163,7 @@ end
                     h = doubledescription(v)
                     #h = @inferred doubledescription(v)
                     @test !hashyperplanes(h)
-                    @test collect(halfspaces(h)) == [HalfSpace([0, 0], 1), HalfSpace([-1, 0], 0), HalfSpace([0, -1], 0)] # FIXME get rid of (0, 0) 1
+                    @test collect(halfspaces(h)) == [HalfSpace([-1, 0], 0), HalfSpace([0, -1], 0)]
                 end
                 @testset "Numerical" begin
                     v = conichull([1., 0.],
@@ -149,7 +171,7 @@ end
                     h = doubledescription(v)
                     #h = @inferred doubledescription(v)
                     @test !hashyperplanes(h)
-                    @test collect(halfspaces(h)) == [HalfSpace([0, 0], 1), HalfSpace([-1, 0], 0), HalfSpace([0, -1], 0)] # FIXME get rid of (0, 0) 1
+                    @test collect(halfspaces(h)) == [HalfSpace([-1, 0], 0), HalfSpace([0, -1], 0)]
                 end
             end
         end
