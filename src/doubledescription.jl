@@ -547,8 +547,15 @@ end
 
 function doubledescription(v::VRepresentation{T}, solver = nothing; kws...) where {T}
     checkvconsistency(v)
-    lv = convert(LiftedVRepresentation{T, Matrix{T}}, v)
+    lv = convert(LiftedVRepresentation{T,Matrix{T}}, v)
     R = -lv.R
-    vl = doubledescription(MixedMatHRep{T}(R, zeros(T, size(R, 1)), lv.linset), solver; kws...)
-    LiftedHRepresentation{T}(vl.R, vl.Rlinset)
+    vl = doubledescription(
+        MixedMatHRep{T}(R, zeros(T, size(R, 1)), lv.linset),
+        solver;
+        kws...,
+    )
+    h = LiftedHRepresentation{T}(vl.R, vl.Rlinset)
+    # Dehomogenizing t ≥ 0 gives the tautology 0 ≤ 1.
+    hs = [hs for hs in halfspaces(h) if !(iszero(hs.a) && hs.β >= 0)]
+    return similar(h, hyperplanes(h), hs)
 end
