@@ -97,6 +97,13 @@ function check_vol_issue321_1(lib)
     p = polyhedron(vrep([-1 0 1; 0 0 1; 0 0 0; -1 -1 0; -1 -1 0]), lib)
     return volume(p) ≈ 1//6
 end
+function check_vol_issue321_cube(lib)
+    cube = [[x, y, z] for x in 0:1 for y in 0:1 for z in 0:1]
+    # Without the fix, the simplices containing the repeated vertex were
+    # silently dropped, giving a volume of zero
+    return volume(polyhedron(vrep([cube; [[1, 1, 1]]]), lib)) == 1 &&
+        volume(polyhedron(vrep([cube; cube]), lib)) == 1
+end
 function check_vol_issue321_2(lib)
     p = polyhedron(vrep([-1 1 1; -1 -1 1; 1 0 -1; 1 1 1; 0 1 -1]), lib)
     return volume(p) ≈ 8//3
@@ -171,6 +178,7 @@ end
     @test check_vol_issue321_1(lib_exact)
     @test check_vol_issue321_1(lib_float)
     @test check_vol_issue321_2(lib_exact)
+    @test check_vol_issue321_cube(lib_exact)
     @test check_vol_isocahedron(lib_float)
     @test check_vol_dodecahedron(lib_float)
 end
