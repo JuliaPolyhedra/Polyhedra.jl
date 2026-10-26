@@ -40,3 +40,22 @@ using Polyhedra
         x = MOI.add_constrained_variables(bridged, set)
     end
 end
+
+# See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/306
+@testset "ConstraintConflictStatus" begin
+    import HiGHS
+    p = polyhedron(HalfSpace([1.0, 1.0], 1.0) ∩ HalfSpace([-1.0, 0.0], 0.0) ∩ HalfSpace([0.0, -1.0], 0.0))
+    model = Model(HiGHS.Optimizer)
+    set_silent(model)
+    @variable(model, x[1:2])
+    c = @constraint(model, x in p)
+    d = @constraint(model, x[1] >= 2)
+    e = @constraint(model, x[2] <= 10)
+    optimize!(model)
+    @test termination_status(model) == MOI.INFEASIBLE
+    compute_conflict!(model)
+    @test MOI.get(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
+    @test MOI.get(model, MOI.ConstraintConflictStatus(), c) == MOI.IN_CONFLICT
+    @test MOI.get(model, MOI.ConstraintConflictStatus(), d) == MOI.IN_CONFLICT
+    @test MOI.get(model, MOI.ConstraintConflictStatus(), e) == MOI.NOT_IN_CONFLICT
+end
