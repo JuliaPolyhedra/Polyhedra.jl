@@ -380,3 +380,15 @@ import GLPK
     @test nhyperplanes(hhh) == 1
     @test nhalfspaces(hhh) == 1
 end
+
+@testset "Redundant linearity followed by other elements #350" begin
+    h = hrep([1 1; 1 1; -1 0; 0 -1; -1 -1], [1, 1, 0, 0, 1], BitSet([1, 2]))
+    hh = removehredundancy(h, lp_solver)
+    @test nhyperplanes(hh) == 1
+    @test nhalfspaces(hh) == 2
+    v = vrep([1 0; 0 1], [1 0; 1 0; 0 1; 0 1], BitSet([1, 2]))
+    vv = removevredundancy(v, lp_solver)
+    @test nlines(vv) == 1
+    @test nrays(vv) == 1
+    @test npoints(vv) == 1
+end

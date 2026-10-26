@@ -220,7 +220,9 @@ function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
         MOI.delete(model, hull_con)
         if !isempty(red_indices)
             rm = Set(λ[red_indices])
-            hull = map(h -> MOI.Utilities.filter_variables(vi -> !(vi in rm), h), hull)
+            # Modify `hull` in-place so that the caller does not use the
+            # deleted variables in subsequent calls, see #350
+            map!(h -> MOI.Utilities.filter_variables(vi -> !(vi in rm), h), hull, hull)
         end
     end
     return red_indices
