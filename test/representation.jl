@@ -416,6 +416,14 @@ function test_copy()
         inequality_fulltest(hc, hr)
     end
 end
+# See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/379
+function test_remproj_small_norm()
+    h = hrep([HyperPlane([1.0, 0.0], 0.0), HyperPlane([1.0, 1e-5], 0.0), HyperPlane([0.0, 1.0], 0.0)])
+    @test nhyperplanes(detecthlinearity(h)) == 2
+    @test dim(h) == 0
+    v = vrep([Line([1.0, 0.0]), Line([1.0, 1e-5]), Line([0.0, 1.0])])
+    @test nlines(detectvlinearity(v)) == 2
+end
 function test_perserve_sparsity()
     for h in (HalfSpace(sparsevec([1], [1], 2), 1) ∩ HyperPlane(sparsevec([2], [-1]), 3), hrep(sparse([1, 2], [1, 2], [1, -1]), [1, 3]))
         @test Polyhedra.Intersection(h) isa Polyhedra.Intersection{Int, SparseVector{Int, Int}}
