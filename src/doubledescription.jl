@@ -311,6 +311,24 @@ function add_element!(data, k, el, tight; tol)
         if data.cutline[i] !== nothing
             el = line_project(el, data.cutline[i], data.halfspaces[i])
             # The line is in all halfspaces from `i+1` up so projecting with it does not change it.
+            # With a tolerance, the line may only be within `tol` of these
+            # hyperplanes so the projection may move `el` on the other side
+            # of one of them. We recompute the tight halfspaces for `el`
+            # so that it is not later considered as strictly inside a
+            # halfspace while being outside, see #251.
+            if !(tol isa MA.Zero)
+                # If `⟨a_i, line⟩` is small, the projection can create a
+                # ray of large norm for which the absolute tolerance is too
+                # small, so we normalize it.
+                el = _normalize(el)
+                for j in (i + 1):k
+                    if in(el, hyperplane(data.halfspaces[j]); tol)
+                        push!(tight, j)
+                    else
+                        delete!(tight, j)
+                    end
+                end
+            end
             push!(tight, i)
             return add_adjacent_element!(data, i, k, el, data.lineray[i], tight; tol)
         end
@@ -439,6 +457,11 @@ function _λ_proj(x::AbstractVector, line::Line, h::HRepElement)
     # (x + λ * line) ⋅ h.a == h.β
     # λ = (h.β - x ⋅ h.a) / (line ⋅ h.a)
     return (h.β - _dot(x, h.a)) / _dot(line, h.a)
+end
+_normalize(el::AbstractVector) = el
+function _normalize(r::Polyhedra.Ray)
+    m = maximum(abs, coord(r))
+    return iszero(m) ? r : Polyhedra.Ray(coord(r) / m)
 end
 function line_project(el, line, h)
     λ = _λ_proj(el, line, h)
