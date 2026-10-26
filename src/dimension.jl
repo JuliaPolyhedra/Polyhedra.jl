@@ -31,6 +31,10 @@ function typed_fulldim(
 ) where {N}
     return StaticArrays.Size(v)
 end
+# Libraries implementing the Polyhedra interface used to extend `FullDim`
+# instead of `typed_fulldim`, e.g., CDDLib, LRSLib, QHull, ConvexHull and
+# XPORTA. This fallback keeps them working.
+typed_fulldim(p) = FullDim(p)
 
 function FullDim_convert(::Type{StaticArrays.Size{N}}, d::Int) where {N}
     @assert N[1] == d

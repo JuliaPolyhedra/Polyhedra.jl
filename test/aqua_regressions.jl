@@ -5,9 +5,15 @@ using SparseArrays
 import Aqua
 import GeometryBasics
 
+# Libraries implementing the Polyhedra interface used to extend `FullDim`
+struct LegacyFullDim end
+Polyhedra.FullDim(::LegacyFullDim) = 3
+
 @testset "Aqua regressions" begin
     @testset "Typed full dimension" begin
         @test Polyhedra.FullDim === Union{Int,StaticArrays.Size}
+        @test Polyhedra.typed_fulldim(LegacyFullDim()) == 3
+        @test fulldim(LegacyFullDim()) == 3
         @test (@inferred Polyhedra.typed_fulldim(Vector{Int})) == -1
         @test (@inferred Polyhedra.typed_fulldim(SVector{2,Int})) == Size(2)
         for x in ([1, 0], sparsevec([1], [1], 2), SVector(1, 0))
