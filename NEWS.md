@@ -15,10 +15,16 @@
 - `issubset(p, q)`, i.e., `p ⊆ q`, is now implemented when `p` is a
   representation or a polyhedron and `q` is an H-representation or a
   polyhedron (see [#303]).
+- `eliminate(p, delset, BlockElimination())` and
+  `project(p, pset, BlockElimination())` are now implemented for any library.
+  The extreme rays of the cone of multipliers are computed with the library of
+  `p`. As the result may contain many redundant halfspaces, the default
+  elimination algorithm only uses it if the library implements it natively.
 
 ## Bug fixes
 - `issubset(h::HRepresentation, el::HRepElement, solver)` no longer throws a
   `MethodError`.
+- `dualfullspace` of a `LiftedHRepresentation` now contains the origin.
 
 [#303]: https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/303
 

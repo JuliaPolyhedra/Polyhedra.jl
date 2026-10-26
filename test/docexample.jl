@@ -35,20 +35,8 @@ function doctest(lib::Polyhedra.Library)
         BitSet(),
     )
     inequality_fulltest(project(p, [2], ProjectGenerators()), Ap, bp, BitSet())
-    if supportselimination(p, BlockElimination())
-        inequality_fulltest(
-            eliminate(p, [1], BlockElimination()),
-            Ap,
-            bp,
-            BitSet(),
-        )
-        inequality_fulltest(
-            project(p, [2], BlockElimination()),
-            Ap,
-            bp,
-            BitSet(),
-        )
-    end
+    inequality_fulltest(eliminate(p, [1], BlockElimination()), Ap, bp, BitSet())
+    inequality_fulltest(project(p, [2], BlockElimination()), Ap, bp, BitSet())
     @test_throws DimensionMismatch project(p, ones(1, 1))
     @test_throws DimensionMismatch project(p, ones(2, 3))
     inequality_fulltest(project(p, reshape([0, 1], 2, 1)), Ap, bp, BitSet())

@@ -19,57 +19,66 @@ struct FourierMotzkin <: EliminationAlgorithm end
 """
     BlockElimination
 
-Computation of the projection by computing the H-representation and applying the block elimination algorithm to it.
+Computation of the projection by computing the H-representation and applying
+the block elimination algorithm to it.
 
 The idea is as follows.
 Consider a H-representation given by ``Ax + By \\le c``.
-For any ``d``, the projection on the `x` variables has
+For any ``d``, the projection on the `x` variables
 belongs to the halfspace ``d^\\top x \\le \\delta`` where ``\\delta``
 is
 ```math
 \\begin{aligned}
-\\max \\;     & d^\\top x \\
-\\text{s.t.} & A x + By \\le c  \\
+\\max \\;     & d^\\top x \\\\
+\\text{s.t.} & A x + By \\le c
 \\end{aligned}
 ```
 By duality, this is equal to
 ```math
 \\begin{aligned}
-\\min \\;     & c^\\top \\nu \\
-\\text{s.t.} & A^\\top \\nu = d \\
-& B^\\top \\nu = 0 \\
+\\min \\;     & c^\\top \\nu \\\\
+\\text{s.t.} & A^\\top \\nu = d \\\\
+& B^\\top \\nu = 0 \\\\
 & \\nu \\ge 0
 \\end{aligned}
 ```
 Let `R` be the matrix for which the columns are the extreme rays of the
-polyhedron with defined by
+polyhedral cone defined by
 ``B^\\top \\nu = 0, \\nu \\ge 0``.
 The program can be rewritten as
 ```math
 \\begin{aligned}
-\\min \\;     & c^\\top \\nu \\
-\\text{s.t.} & A^\\top \\nu = d \\
-& \\nu = R\\lambda \\
+\\min \\;     & c^\\top \\nu \\\\
+\\text{s.t.} & A^\\top \\nu = d \\\\
+& \\nu = R\\lambda \\\\
 & \\lambda \\ge 0
 \\end{aligned}
 ```
 which is equivalent to
 ```math
 \\begin{aligned}
-\\min \\;     & c^\\top R \\lambda \\
-\\text{s.t.} & A^\\top R \\lambda = d \\
+\\min \\;     & c^\\top R \\lambda \\\\
+\\text{s.t.} & A^\\top R \\lambda = d \\\\
 & \\lambda \\ge 0
 \\end{aligned}
 ```
 Dualizing, we obtain
 ```math
 \\begin{aligned}
-\\max \\;     & d^\\top x \\
-\\text{s.t.} & R^\\top A x \\le R^\\top c \\
+\\max \\;     & d^\\top x \\\\
+\\text{s.t.} & R^\\top A x \\le R^\\top c
 \\end{aligned}
 ```
 where we see that ``R^\\top A x \\le R^\\top c``
-is the H-representation of the polyhedron.
+is the H-representation of the projection.
+The hyperplanes ``A x + B y = c`` are handled similarly, their multipliers
+``\\nu`` are free so that the cone ``B^\\top \\nu = 0`` may have lines.
+Each line ``\\ell`` of the cone gives the hyperplane
+``\\ell^\\top A x = \\ell^\\top c`` of the projection.
+
+The extreme rays and lines of the cone are computed by the library of the
+polyhedron. The resulting polyhedron may contain redundancy. It can be removed
+with [`removehredundancy!`](@ref).
 """
 struct BlockElimination <: EliminationAlgorithm end
 
@@ -103,18 +112,76 @@ supportselimination(p::Polyhedron, ::FourierMotzkin) = false
 function eliminate(p::Polyhedron, delset, ::FourierMotzkin)
     return error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
 end
-supportselimination(p::Polyhedron, ::BlockElimination) = true
+# The generic implementation of `eliminate` below can be used with any library
+# but it is not used by `DefaultElimination` since the resulting H-representation
+# may contain much more redundant halfspaces than the one obtained by
+# `ProjectGenerators`. A library can opt in by returning `true`.
+supportselimination(p::Polyhedron, ::BlockElimination) = false
 
-struct ProjectionMatrix <: AbstractMatrix{Bool}
-    indices::Vector{Int}
-    n::Int
+function _combine_rows(::Type{U}, ν, elements, keep) where {U}
+    a = zeros(U, length(keep))
+    β = zero(U)
+    for (νi, el) in zip(ν, elements)
+        a .+= νi .* el.a[keep]
+        β += νi * el.β
+    end
+    return a, β
 end
-Base.size()
-Base.adjoint(P::ProjectionMatrix) = transpose(P)
+_isapproxzero(a::AbstractVector; tol) = isempty(a) || isapproxzero(a; tol)
 
-function eliminate(p::Polyhedron, delset, ::BlockElimination)
-    h_eliminate = ProjectionMatrix(sort(collect(delset)), fulldim(p)) \ hrep(p)
-    return h_eliminate
+function eliminate(p::Polyhedron{T}, delset, ::BlockElimination) where {T}
+    h = hrep(p)
+    N = fulldim(h)
+    keep = setdiff(1:N, delset)
+    del = setdiff(1:N, keep)
+    hps = collect(hyperplanes(h))
+    hss = collect(halfspaces(h))
+    elements = [hps; hss]
+    m = length(elements)
+    d = length(keep)
+    if iszero(m)
+        return similar(
+            p,
+            d,
+            T,
+            HyperPlane{T,Vector{T}}[],
+            HalfSpace{T,Vector{T}}[];
+            dimension_map = i -> (1, keep[i]),
+        )
+    end
+    # Cone of the multipliers `ν` such that `B' ν = 0` and `ν ≥ 0` for the
+    # multipliers corresponding to halfspaces
+    cone = hrep(
+        HyperPlane{T,Vector{T}}[
+            HyperPlane(T[el.a[j] for el in elements], zero(T)) for j in del
+        ],
+        HalfSpace{T,Vector{T}}[
+            HalfSpace(T[-(i == length(hps) + k) for i in 1:m], zero(T)) for
+            k in eachindex(hss)
+        ];
+        d = m,
+    )
+    v = vrep(polyhedron(cone, similar_library(p, m, T)))
+    U = coefficient_type(v)
+    AT = Vector{U}
+    tol = _default_tol(U)
+    new_hps = HyperPlane{U,AT}[]
+    for l in lines(v)
+        a, β = _combine_rows(U, coord(l), elements, keep)
+        # `0 = 0` is trivial, `0 = β` with `β ≠ 0` means that `p` is empty
+        if !(_isapproxzero(a; tol) && isapproxzero(β; tol))
+            push!(new_hps, simplify(HyperPlane(a, β)))
+        end
+    end
+    new_hss = HalfSpace{U,AT}[]
+    for r in rays(v)
+        a, β = _combine_rows(U, coord(r), elements, keep)
+        # `0 ≤ β` with `β ≥ 0` is trivial, otherwise it means that `p` is empty
+        if !(_isapproxzero(a; tol) && _nonneg(β; tol))
+            push!(new_hss, simplify(HalfSpace(a, β)))
+        end
+    end
+    return similar(p, d, U, new_hps, new_hss; dimension_map = i -> (1, keep[i]))
 end
 
 function eliminate(p::Polyhedron, algo::EliminationAlgorithm)
