@@ -4,7 +4,7 @@ using JuMP
 function jumpsimplextest(lib::Polyhedra.Library, n)
     m = Model()
     @variable(m, x[1:n] >= 0)
-    @constraint(m, sum(x[i] for i=1:n) == 1)
+    @constraint(m, sum(x[i] for i in 1:n) == 1)
 
     poly = polyhedron(m, lib)
 
@@ -12,14 +12,14 @@ function jumpsimplextest(lib::Polyhedra.Library, n)
     for k in 1:n
         V[k, k] = 1
     end
-    generator_fulltest(poly, V)
+    return generator_fulltest(poly, V)
 end
 
 # Inspired from Joey Huchette's test in ConvexHull.jl
 function simplexorigtest(lib::Polyhedra.Library, n)
     m = Model()
     @variable(m, x[1:n] >= 0)
-    @constraint(m, sum(x[i] for i=1:n) ≤ 1)
+    @constraint(m, sum(x[i] for i in 1:n) ≤ 1)
 
     poly = polyhedron(m, lib)
 
@@ -27,5 +27,5 @@ function simplexorigtest(lib::Polyhedra.Library, n)
     for k in 1:n
         V[k, k] = 1
     end
-    generator_fulltest(poly, V)
+    return generator_fulltest(poly, V)
 end

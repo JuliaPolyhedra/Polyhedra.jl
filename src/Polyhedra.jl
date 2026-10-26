@@ -19,14 +19,26 @@ export Polyhedron
 abstract type Library end
 abstract type Polyhedron{T} end
 
-coefficient_type(::Union{AbstractVector{T}, Type{<:AbstractVector{T}}}) where T = T
-similar_type(::Type{<:Vector}, ::Int, ::Type{T}) where T = Vector{T}
-similar_type(::Type{SparseVector{S, IT}}, ::Int, ::Type{T}) where {S, IT, T} = SparseVector{T, IT}
+function coefficient_type(
+    ::Union{AbstractVector{T},Type{<:AbstractVector{T}}},
+) where {T}
+    return T
+end
+similar_type(::Type{<:Vector}, ::Int, ::Type{T}) where {T} = Vector{T}
+function similar_type(
+    ::Type{SparseVector{S,IT}},
+    ::Int,
+    ::Type{T},
+) where {S,IT,T}
+    return SparseVector{T,IT}
+end
 
 emptymatrix(::Type{MT}, m, n) where {MT<:AbstractMatrix} = MT(undef, m, n)
-emptymatrix(::Type{SparseMatrixCSC{T, Int}}, m, n) where T = spzeros(T, m, n)
-similar_type(::Type{<:Matrix}, ::Type{T}) where T = Matrix{T}
-similar_type(::Type{SparseMatrixCSC{S, I}}, ::Type{T}) where {S, I, T} = SparseMatrixCSC{T, I}
+emptymatrix(::Type{SparseMatrixCSC{T,Int}}, m, n) where {T} = spzeros(T, m, n)
+similar_type(::Type{<:Matrix}, ::Type{T}) where {T} = Matrix{T}
+function similar_type(::Type{SparseMatrixCSC{S,I}}, ::Type{T}) where {S,I,T}
+    return SparseMatrixCSC{T,I}
+end
 
 # Interface/Definitions
 include("dimension.jl")
@@ -44,26 +56,40 @@ hvectortype(rep::Rep) = hvectortype(typeof(rep))
 # TODO Only define vectortype for the type for Polyhedron v0.4
 function vectortype(RepT::Type{<:Polyhedron})
     @assert hvectortype(RepT) == vvectortype(RepT)
-    hvectortype(RepT)
+    return hvectortype(RepT)
 end
 vectortype(HRepT::Type{<:HRepresentation}) = hvectortype(HRepT)
 vectortype(VRepT::Type{<:VRepresentation}) = vvectortype(VRepT)
 vectortype(p::Rep) = vectortype(typeof(p))
 
-vectortype(::Type{<:AbstractSparseArray{T}}) where T = SparseVector{T, Int}
-vectortype(::Type{<:AbstractMatrix{T}}) where T = Vector{T}
-vectortype(::Type{StaticArrays.SArray{Tuple{N, M}, T, 2, NM}}) where {N, M, T, NM} = StaticArrays.SVector{M, T}
-
-hmatrixtype(RepT::Type{<:HRep}, T::Type) = matrixtype(similar_type(hvectortype(RepT), T))
-vmatrixtype(RepT::Type{<:VRep}, T::Type) = matrixtype(similar_type(vvectortype(RepT), T))
-matrixtype(::Type{<:AbstractVector{T}}) where T = Matrix{T}
-matrixtype(::Type{<:AbstractSparseVector{T}}) where T = SparseMatrixCSC{T, Int}
-
-function similar_type(::Type{ET}, ::Type{Tout}) where {Tout, ET<:Union{HRepElement, VRepElement, Rep}}
-    similar_type(ET, FullDim(ET), Tout)
+vectortype(::Type{<:AbstractSparseArray{T}}) where {T} = SparseVector{T,Int}
+vectortype(::Type{<:AbstractMatrix{T}}) where {T} = Vector{T}
+function vectortype(
+    ::Type{StaticArrays.SArray{Tuple{N,M},T,2,NM}},
+) where {N,M,T,NM}
+    return StaticArrays.SVector{M,T}
 end
-function similar_type(::Type{ET}, d::FullDim) where {ET<:Union{HRepElement, VRepElement, Rep}}
-    similar_type(ET, d, coefficient_type(ET))
+
+function hmatrixtype(RepT::Type{<:HRep}, T::Type)
+    return matrixtype(similar_type(hvectortype(RepT), T))
+end
+function vmatrixtype(RepT::Type{<:VRep}, T::Type)
+    return matrixtype(similar_type(vvectortype(RepT), T))
+end
+matrixtype(::Type{<:AbstractVector{T}}) where {T} = Matrix{T}
+matrixtype(::Type{<:AbstractSparseVector{T}}) where {T} = SparseMatrixCSC{T,Int}
+
+function similar_type(
+    ::Type{ET},
+    ::Type{Tout},
+) where {Tout,ET<:Union{HRepElement,VRepElement,Rep}}
+    return similar_type(ET, FullDim(ET), Tout)
+end
+function similar_type(
+    ::Type{ET},
+    d::FullDim,
+) where {ET<:Union{HRepElement,VRepElement,Rep}}
+    return similar_type(ET, d, coefficient_type(ET))
 end
 
 # Operations
@@ -109,7 +135,11 @@ Returns wrapper of a polyhedron suitable for plotting with MeshCat.jl and Makie.
     in most use cases this extension dependency is loaded by the plotting package and no
     further action is required.
 """
-Mesh(p) = p isa Polyhedron ? error("this method requires using GeometryBasics") : throw(MethodError(Mesh, p))
+function Mesh(p)
+    return p isa Polyhedron ?
+           error("this method requires using GeometryBasics") :
+           throw(MethodError(Mesh, p))
+end
 
 if !isdefined(Base, :get_extension)
     include("../ext/PolyhedraJuMPExt.jl")

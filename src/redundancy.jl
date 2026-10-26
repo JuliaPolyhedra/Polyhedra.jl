@@ -3,7 +3,14 @@
 ######################
 
 # Redundancy
-export isredundant, removevredundancy!, removevredundancy, removehredundancy!, removehredundancy, Redundancy, vredundancy, hredundancy
+export isredundant,
+    removevredundancy!,
+    removevredundancy,
+    removehredundancy!,
+    removehredundancy,
+    Redundancy,
+    vredundancy,
+    hredundancy
 
 """
     @enum Redundancy UNKNOWN_REDUNDANCY LINEARITY_DETECTED NO_REDUNDANCY
@@ -63,12 +70,14 @@ function isredundant_fallback(p::Polyhedron, idx::HIndex; kws...)
     hredundancy(p) == NO_REDUNDANCY && return false
     solver = _solver_warn(p, false, false)
     if solver !== nothing
-        @warn("""
+        @warn(
+            """
 `isredundant` with a solver is not supported yet so it triggers the computation of the V-representation, which
 is computationally demanding because no solver was provided to the library.
 If this is expected, call `computevrep!` explicitely before calling this
 function to remove this warning.
-""")
+"""
+        )
     end
     # `detecthlinearity(p)` might remove redundancy but we get `h` first here.
     h = get(p, idx)
@@ -77,22 +86,29 @@ function to remove this warning.
     return isredundant(vrep(p), h; d = dim(p), kws...)
 end
 
-function isredundant_fallback(p::Polyhedron, idx::VIndex; strongly=false, kws...)
+function isredundant_fallback(
+    p::Polyhedron,
+    idx::VIndex;
+    strongly = false,
+    kws...,
+)
     vredundancy(p) == NO_REDUNDANCY && return false
     solver = _solver_warn(p, true, strongly)
     if solver !== nothing
-        @warn("""
+        @warn(
+            """
 `isredundant` with a solver is not supported yet so it triggers the computation of the H-representation, which
 is computationally demanding because no solver was provided to the library.
 If this is expected, call `computehrep!` explicitely before calling this
 function to remove this warning.
-""")
+"""
+        )
     end
     # `detectvlinearity(p)` might remove redundancy but we get `v` first here.
     v = get(p, idx)
     detecthlinearity!(p)
     detectvlinearity!(p)
-    return isredundant(hrep(p), h; strongly=strongly, kws...)
+    return isredundant(hrep(p), h; strongly = strongly, kws...)
 end
 
 function _solver_warn(p::Polyhedron, v_or_h::Bool, strongly::Bool)
@@ -104,16 +120,17 @@ function _solver_warn(p::Polyhedron, v_or_h::Bool, strongly::Bool)
     if !strongly && !computed && supportssolver(typeof(p))
         solver = default_solver(p)
         if solver === nothing
-            @warn("""
+            @warn(
+                """
 `remove$(v)redundancy!` will trigger the computation of the $V-representation, which
 is computationally demanding because no solver was provided to the library.
 If this is expected, call `compute$(h)rep!` explicitely before calling this
 function to remove this warning.
-""" * NO_SOLVER_HELP)
+""" * NO_SOLVER_HELP
+            )
         end
     end
     return solver
-
 end
 
 """
@@ -135,7 +152,7 @@ function removehredundancy!(p::Polyhedron; kws...)
         detecthlinearity!(p; kws...)
         nonred = removehredundancy(hrep(p), solver)
     end
-    sethrep!(p, nonred, NO_REDUNDANCY)
+    return sethrep!(p, nonred, NO_REDUNDANCY)
 end
 
 """
@@ -153,7 +170,12 @@ is used.
 The remaining keyword arguments `kws` are passed to [`detectvlinearity!`](@ref) and [`detecthlinearity!`](@ref).
 """
 function removevredundancy! end
-function removevredundancy!(p::Polyhedron; strongly=false, planar=true, kws...)
+function removevredundancy!(
+    p::Polyhedron;
+    strongly = false,
+    planar = true,
+    kws...,
+)
     vredundancy(p) == NO_REDUNDANCY && return
     if fulldim(p) == 2 && !strongly && planar
         setvrep!(p, planar_hull(vrep(p)), NO_REDUNDANCY)
@@ -162,7 +184,7 @@ function removevredundancy!(p::Polyhedron; strongly=false, planar=true, kws...)
         if solver === nothing
             detecthlinearity!(p; kws...)
             detectvlinearity!(p; kws...)
-            nonred = removevredundancy(vrep(p), hrep(p), strongly=strongly)
+            nonred = removevredundancy(vrep(p), hrep(p), strongly = strongly)
         else
             detectvlinearity!(p; kws...)
             nonred = removevredundancy(vrep(p), solver)
@@ -176,7 +198,7 @@ end
 # Interpolating the string can take more time than the LP solve:
 # https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/279
 # This `struct` allows to interpolate it lazily only when an error is actually thrown.
-struct _RedundantMessage{ET, IT}
+struct _RedundantMessage{ET,IT}
     element::ET
     index::IT
 end
@@ -185,11 +207,17 @@ function Base.show(io::IO, message::_RedundantMessage)
     print(io, message.element)
     print(io, "` of index `")
     print(io, message.index)
-    print(io, "` is redundant.")
+    return print(io, "` is redundant.")
 end
 
-function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
-                            hull, indices, clean)
+function _redundant_indices(
+    rep::Representation,
+    model::MOI.ModelLike,
+    T::Type,
+    hull,
+    indices,
+    clean,
+)
     red_indices = Int[]
     isempty(indices) && return red_indices
     λ, cλ, sum_one = _hull(model, T, hull, rep, indices)
@@ -205,7 +233,7 @@ function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
             MOI.set(model, MOI.ConstraintSet(), ci, MOI.EqualTo{T}(ai))
         end
         #if !isone(length(indices)) &&
-        if  is_feasible(model, _RedundantMessage(element, idx))
+        if is_feasible(model, _RedundantMessage(element, idx))
             MOI.delete(model, λ[i])
             push!(red_indices, i)
         else
@@ -222,7 +250,11 @@ function _redundant_indices(rep::Representation, model::MOI.ModelLike, T::Type,
             rm = Set(λ[red_indices])
             # Modify `hull` in-place so that the caller does not use the
             # deleted variables in subsequent calls, see #350
-            map!(h -> MOI.Utilities.filter_variables(vi -> !(vi in rm), h), hull, hull)
+            map!(
+                h -> MOI.Utilities.filter_variables(vi -> !(vi in rm), h),
+                hull,
+                hull,
+            )
         end
     end
     return red_indices
@@ -264,7 +296,7 @@ function removehredundancy(hr::HRep, solver)
     #      the hyperplanes, it just remove the redundant ones.
     nr_hyperplanes = nonredundant_hyperplanes(hr, model, T, hull, true)
     nr_halfspaces = nonredundant_halfspaces(hr, model, T, hull, false)
-    return hrep(nr_hyperplanes..., nr_halfspaces...; d=FullDim(hr))
+    return hrep(nr_hyperplanes..., nr_halfspaces...; d = FullDim(hr))
 end
 
 nonredundant_lines(vr::VPolytope, model, T, hull, clean) = tuple()
@@ -300,7 +332,7 @@ function removevredundancy(vr::VRepresentation, solver)
     nr_lines = nonredundant_lines(vr, model, T, hull, true)
     nr_rays = nonredundant_rays(vr, model, T, hull, true)
     nr_points = nonredundant_points(vr, model, T, hull, false)
-    return vrep(nr_points..., nr_lines..., nr_rays...; d=FullDim(vr))
+    return vrep(nr_points..., nr_lines..., nr_rays...; d = FullDim(vr))
 end
 
 _dim_for_hull(h::HRepresentation) = fulldim(h) + 1
@@ -310,7 +342,12 @@ function _zero_hull(rep::Representation, T::Type)
 end
 _coord_for_hull(h::HRepElement) = [h.a; h.β]
 _coord_for_hull(r::VRepElement) = coord(r)
-function _fill_hull(hull::Vector{MOI.ScalarAffineFunction{T}}, λ, rep, idxs) where T
+function _fill_hull(
+    hull::Vector{MOI.ScalarAffineFunction{T}},
+    λ,
+    rep,
+    idxs,
+) where {T}
     for (λ, idx) in zip(λ, idxs)
         a = _coord_for_hull(get(rep, idx))
         for i in eachindex(a)
@@ -318,18 +355,25 @@ function _fill_hull(hull::Vector{MOI.ScalarAffineFunction{T}}, λ, rep, idxs) wh
         end
     end
 end
-function _hull(model::MOI.ModelLike, ::Type{T}, hull::Vector{MOI.ScalarAffineFunction{T}}, rep, idxs, sum_one = idxs isa PointIndices) where T
+function _hull(
+    model::MOI.ModelLike,
+    ::Type{T},
+    hull::Vector{MOI.ScalarAffineFunction{T}},
+    rep,
+    idxs,
+    sum_one = idxs isa PointIndices,
+) where {T}
     λ = MOI.add_variables(model, length(idxs))
-    if !(idxs isa Union{HyperPlaneIndices, LineIndices})
-        cλ = [MOI.add_constraint(model, λi, MOI.GreaterThan(zero(T))) for λi in λ]
+    if !(idxs isa Union{HyperPlaneIndices,LineIndices})
+        cλ = [
+            MOI.add_constraint(model, λi, MOI.GreaterThan(zero(T))) for λi in λ
+        ]
     else
         cλ = nothing
     end
     if sum_one
-        sum_func = MOI.ScalarAffineFunction(
-            MOI.ScalarAffineTerm.(one(T), λ),
-            zero(T)
-        )
+        sum_func =
+            MOI.ScalarAffineFunction(MOI.ScalarAffineTerm.(one(T), λ), zero(T))
         sum_con = MOI.add_constraint(model, sum_func, MOI.EqualTo(one(T)))
     else
         sum_con = nothing
@@ -347,48 +391,57 @@ function _filter(f, it)
             push!(ret, el)
         end
     end
-    ret
+    return ret
 end
-function removevredundancy(vrepit::VIt, hrep::HRep; nl=nlines(hrep), kws...)
-    _filter(v -> !isredundant(hrep, v; nl=nl, kws...), vrepit)
+function removevredundancy(vrepit::VIt, hrep::HRep; nl = nlines(hrep), kws...)
+    return _filter(v -> !isredundant(hrep, v; nl = nl, kws...), vrepit)
 end
 
 # Remove redundancy in the V-representation using the H-representation
 # There shouldn't be any duplicates in hrep for this to work
 function _removevred_withhred(vrep::VRep, hrep::HRep; kws...)
     nl = nlines(vrep)
-    typeof(vrep)(
+    return typeof(vrep)(
         FullDim(vrep),
-        removevredundancy.(vreps(vrep), hrep; nl=nl, kws...)...
+        removevredundancy.(vreps(vrep), hrep; nl = nl, kws...)...,
     )::typeof(vrep)
 end
 # Split in two methods to avoid ambiguity with `(::VRepresentation, solver::Any)`
 function removevredundancy(vrep::Polyhedron, hrep::HRep; kws...)
-    _removevred_withhred(vrep, hrep; kws...)
+    return _removevred_withhred(vrep, hrep; kws...)
 end
 function removevredundancy(vrep::VRepresentation, hrep::HRep; kws...)
-    _removevred_withhred(vrep, hrep; kws...)
+    return _removevred_withhred(vrep, hrep; kws...)
 end
 
-function removehredundancy(hrepit::HIt, vrep::VRep; strongly=false, d=dim(vrep))
-    _filter(h -> !isredundant(vrep, h, strongly=strongly, d=d), hrepit)
+function removehredundancy(
+    hrepit::HIt,
+    vrep::VRep;
+    strongly = false,
+    d = dim(vrep),
+)
+    return _filter(
+        h -> !isredundant(vrep, h, strongly = strongly, d = d),
+        hrepit,
+    )
 end
 
 # Remove redundancy in the H-representation using the V-representation
 # There shouldn't be any duplicates in vrep for this to work
-function _removehred_withvred(hrep::HRep, vrep::VRep; strongly=false)
+function _removehred_withvred(hrep::HRep, vrep::VRep; strongly = false)
     R = BitSet()
     d = dim(hrep, true) # TODO dim(hrep)
-    typeof(hrep)(FullDim(hrep),
-                 removehredundancy.(hreps(hrep), vrep,
-                                    strongly=strongly, d=d)...)
+    return typeof(hrep)(
+        FullDim(hrep),
+        removehredundancy.(hreps(hrep), vrep, strongly = strongly, d = d)...,
+    )
 end
 # Split in two methods to avoid ambiguity with `(::HRepresentation, solver::Any)`
 function removehredundancy(hrep::Polyhedron, vrep::VRep; kws...)
-    _removehred_withvred(hrep, vrep; kws...)
+    return _removehred_withvred(hrep, vrep; kws...)
 end
 function removehredundancy(hrep::HRepresentation, vrep::VRep; kws...)
-    _removehred_withvred(hrep, vrep; kws...)
+    return _removehred_withvred(hrep, vrep; kws...)
 end
 
 function coord_matrix!(A, elements, condition, offset)
@@ -404,9 +457,17 @@ end
 # V-redundancy
 # If p is an H-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
 # TODO nlines should be the number of non-redundant lines so something similar to dim
-function isredundant(p::HRep{T}, v::Union{AbstractVector, Line, Ray}; strongly = false, nl::Int=nlines(p), solver=nothing, tol = _default_tol(T)) where {T}
+function isredundant(
+    p::HRep{T},
+    v::Union{AbstractVector,Line,Ray};
+    strongly = false,
+    nl::Int = nlines(p),
+    solver = nothing,
+    tol = _default_tol(T),
+) where {T}
     # v is in every hyperplane otherwise it would not be valid
-    hcount = nhyperplanes(p) + count(h -> in(v, hyperplane(h); tol), halfspaces(p))
+    hcount =
+        nhyperplanes(p) + count(h -> in(v, hyperplane(h); tol), halfspaces(p))
     strong = (isray(v) ? fulldim(p) - 1 : fulldim(p)) - nl
     bound = strongly ? min(strong, 1) : strong
     if hcount < bound
@@ -414,17 +475,37 @@ function isredundant(p::HRep{T}, v::Union{AbstractVector, Line, Ray}; strongly =
     else
         A = Matrix{T}(undef, hcount, fulldim(p))
         offset = coord_matrix!(A, hyperplanes(p), _ -> true, 0)
-        offset = coord_matrix!(A, halfspaces(p), h -> in(v, hyperplane(h); tol), offset)
+        offset = coord_matrix!(
+            A,
+            halfspaces(p),
+            h -> in(v, hyperplane(h); tol),
+            offset,
+        )
         @assert offset == size(A, 1)
         return rank(A) < bound
     end
 end
 # A line is never redundant but it can be a duplicate
-isredundant(p::HRep{T}, v::Line; strongly = false, nl::Int=nlines(p), solver=nothing) where {T} = false
+function isredundant(
+    p::HRep{T},
+    v::Line;
+    strongly = false,
+    nl::Int = nlines(p),
+    solver = nothing,
+) where {T}
+    return false
+end
 
 # H-redundancy
 # If p is a V-representation, nl needs to be given otherwise if p is a Polyhedron, it can be asked to p.
-function isredundant(p::VRep{T}, h::HRepElement; strongly = false, d::Int=dim(p), solver=nothing, tol = _default_tol(T)) where {T}
+function isredundant(
+    p::VRep{T},
+    h::HRepElement;
+    strongly = false,
+    d::Int = dim(p),
+    solver = nothing,
+    tol = _default_tol(T),
+) where {T}
     checkvconsistency(p)
     hp = hyperplane(h)
     pcount = count(p -> in(p, hp; tol), points(p))
@@ -457,7 +538,15 @@ function isredundant(p::VRep{T}, h::HRepElement; strongly = false, d::Int=dim(p)
     end
 end
 # An hyperplane is never redundant but it can be a duplicate
-isredundant(p::VRep{T}, h::HyperPlane; strongly = false, d::Int=dim(p), solver=nothing) where {T} = false
+function isredundant(
+    p::VRep{T},
+    h::HyperPlane;
+    strongly = false,
+    d::Int = dim(p),
+    solver = nothing,
+) where {T}
+    return false
+end
 
 ######################
 # Duplicates removal #
@@ -490,17 +579,25 @@ function premovedups(vrep::VRepresentation, aff::VLinearSpace)
     for p in points(vrep)
         vpupdatedup!(aff, ps, p)
     end
-    tuple(ps)
+    return tuple(ps)
 end
 
 function removeduplicates(vrep::VPolytope)
-    typeof(vrep)(FullDim(vrep), premovedups(vrep, emptyspace(vrep))...)
+    return typeof(vrep)(FullDim(vrep), premovedups(vrep, emptyspace(vrep))...)
 end
-removeduplicates(vrep::VLinearSpace, solver = nothing) = detectvlinearity(vrep, solver)
-function removeduplicates(vrep::VRepresentation{T}, solver = nothing; tol = _default_tol(T)) where {T}
+function removeduplicates(vrep::VLinearSpace, solver = nothing)
+    return detectvlinearity(vrep, solver)
+end
+function removeduplicates(
+    vrep::VRepresentation{T},
+    solver = nothing;
+    tol = _default_tol(T),
+) where {T}
     aff, rs = _detect_linearity(vrep, solver; tol)
-    typeof(vrep)(FullDim(vrep), premovedups(vrep, aff)..., aff.lines, rs)
+    return typeof(vrep)(FullDim(vrep), premovedups(vrep, aff)..., aff.lines, rs)
 end
 
 # H-duplicates
-removeduplicates(hr::HRepresentation, solver = nothing) = detecthlinearity(hr, solver)
+function removeduplicates(hr::HRepresentation, solver = nothing)
+    return detecthlinearity(hr, solver)
+end

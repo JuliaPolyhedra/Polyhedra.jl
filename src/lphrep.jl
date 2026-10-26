@@ -1,31 +1,50 @@
 export LPHRep
 
-MOI.Utilities.@model(_MOIModel,
-                     (), (MOI.EqualTo, MOI.LessThan,), (), (),
-                     (), (MOI.ScalarAffineFunction,), (), ())
+MOI.Utilities.@model(
+    _MOIModel,
+    (),
+    (MOI.EqualTo, MOI.LessThan),
+    (),
+    (),
+    (),
+    (MOI.ScalarAffineFunction,),
+    (),
+    ()
+)
 # We need the `VariableIndex` constraints to be bridged so we should say that
 # they are not supported. We notably exclude `Integer` as we just ignore
 # integrality constraints. Binary constraint are bridged to integrality
 # with `ZeroOneBridge`.
 function MOI.supports_constraint(
-    ::_MOIModel{T}, ::Type{MOI.VariableIndex},
-    ::Type{<:Union{MOI.EqualTo{T}, MOI.GreaterThan{T}, MOI.LessThan{T},
-                   MOI.Interval{T}, MOI.ZeroOne}}) where T
+    ::_MOIModel{T},
+    ::Type{MOI.VariableIndex},
+    ::Type{
+        <:Union{
+            MOI.EqualTo{T},
+            MOI.GreaterThan{T},
+            MOI.LessThan{T},
+            MOI.Interval{T},
+            MOI.ZeroOne,
+        },
+    },
+) where {T}
     return false
 end
 
-
-
 mutable struct LPHRep{T} <: HRepresentation{T}
     model::_MOIModel{T}
-    hyperplane_indices::Union{Nothing,
-                              Vector{MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},
-                                                         MOI.EqualTo{T}}}}
-    halfspace_indices::Union{Nothing,
-                             Vector{MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},
-                                                        MOI.LessThan{T}}}}
+    hyperplane_indices::Union{
+        Nothing,
+        Vector{MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},MOI.EqualTo{T}}},
+    }
+    halfspace_indices::Union{
+        Nothing,
+        Vector{
+            MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},MOI.LessThan{T}},
+        },
+    }
 end
-function LPHRep(model::_MOIModel{T}) where T
+function LPHRep(model::_MOIModel{T}) where {T}
     return LPHRep(model, nothing, nothing)
 end
 
@@ -43,17 +62,41 @@ function LPHRep(model::MOI.ModelLike, T::Type = Float64)
     # Only enable constraint bridges that don't create variables and don't add
     # any variable bridge so that there is an identity mapping between
     # variables of `model` and polyhedra dimensions.
-    MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.GreaterToLessBridge{T})
-    MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.LessToGreaterBridge{T})
-    MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.NonnegToNonposBridge{T})
-    MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.NonposToNonnegBridge{T})
+    MOI.Bridges.add_bridge(
+        bridged,
+        MOI.Bridges.Constraint.GreaterToLessBridge{T},
+    )
+    MOI.Bridges.add_bridge(
+        bridged,
+        MOI.Bridges.Constraint.LessToGreaterBridge{T},
+    )
+    MOI.Bridges.add_bridge(
+        bridged,
+        MOI.Bridges.Constraint.NonnegToNonposBridge{T},
+    )
+    MOI.Bridges.add_bridge(
+        bridged,
+        MOI.Bridges.Constraint.NonposToNonnegBridge{T},
+    )
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.ScalarizeBridge{T})
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.VectorizeBridge{T})
-    MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.ScalarFunctionizeBridge{T})
-    MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.VectorFunctionizeBridge{T})
-    MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.SplitIntervalBridge{T})
+    MOI.Bridges.add_bridge(
+        bridged,
+        MOI.Bridges.Constraint.ScalarFunctionizeBridge{T},
+    )
+    MOI.Bridges.add_bridge(
+        bridged,
+        MOI.Bridges.Constraint.VectorFunctionizeBridge{T},
+    )
+    MOI.Bridges.add_bridge(
+        bridged,
+        MOI.Bridges.Constraint.SplitIntervalBridge{T},
+    )
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.ZeroOneBridge{T})
-    MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.NormInfinityBridge{T})
+    MOI.Bridges.add_bridge(
+        bridged,
+        MOI.Bridges.Constraint.NormInfinityBridge{T},
+    )
     # This one creates variables so the user need to consider the polyhedra as the
     # feasible set of the extended formulation.
     MOI.Bridges.add_bridge(bridged, MOI.Bridges.Constraint.NormOneBridge{T})
@@ -92,8 +135,8 @@ end
 # returns `Int64` so need to convert for 32-bit system
 FullDim(rep::LPHRep) = convert(Int, MOI.get(rep.model, MOI.NumberOfVariables()))
 
-hvectortype(::Type{LPHRep{T}}) where {T} = SparseVector{T, Int}
-similar_type(::Type{LPHRep{S}}, ::FullDim, ::Type{T}) where {S, T} = LPHRep{T}
+hvectortype(::Type{LPHRep{T}}) where {T} = SparseVector{T,Int}
+similar_type(::Type{LPHRep{S}}, ::FullDim, ::Type{T}) where {S,T} = LPHRep{T}
 fulltype(::Type{LPHRep{T}}) where {T} = LPHRep{T}
 
 LPHRep(h::HRep{T}) where {T} = LPHRep{T}(h)
@@ -103,8 +146,8 @@ supports_names(::Type{<:LPHRep}) = true
 function dimension_names(h::LPHRep)
     if MOI.VariableName() in MOI.get(h.model, MOI.ListOfVariableAttributesSet())
         names = [
-            MOI.get(h.model, MOI.VariableName(), MOI.VariableIndex(i))
-            for i in 1:fulldim(h)
+            MOI.get(h.model, MOI.VariableName(), MOI.VariableIndex(i)) for
+            i in 1:fulldim(h)
         ]
     else
         return nothing
@@ -123,15 +166,21 @@ function _constrain_in(model, hs::HIt, vars, T)
     end
 end
 
-function LPHRep{T}(d::FullDim,
-                   hyperplanes::ElemIt{<:HyperPlane{T}},
-                   halfspaces::ElemIt{<:HalfSpace{T}};
-                   dimension_names = nothing) where {T}
+function LPHRep{T}(
+    d::FullDim,
+    hyperplanes::ElemIt{<:HyperPlane{T}},
+    halfspaces::ElemIt{<:HalfSpace{T}};
+    dimension_names = nothing,
+) where {T}
     model = _MOIModel{T}()
     vars = MOI.add_variables(model, fulldim(d))
     if dimension_names !== nothing
         if length(dimension_names) !== fulldim(d)
-            throw(DimensionMismatch("Length of dimension_names ($(length(dimension_names))) does not match the full dimension of the polyhedron ($(fulldim(d)))."))
+            throw(
+                DimensionMismatch(
+                    "Length of dimension_names ($(length(dimension_names))) does not match the full dimension of the polyhedron ($(fulldim(d))).",
+                ),
+            )
         end
         for (i, name) in enumerate(dimension_names)
             if !isempty(name)
@@ -150,57 +199,75 @@ function Base.copy(lp::LPHRep{T}) where {T}
     return LPHRep(model)
 end
 
-function constraint_indices(rep::LPHRep{T},
-                            ::Union{HyperPlaneIndex, HyperPlaneIndices}) where T
+function constraint_indices(
+    rep::LPHRep{T},
+    ::Union{HyperPlaneIndex,HyperPlaneIndices},
+) where {T}
     if rep.hyperplane_indices === nothing
         rep.hyperplane_indices = MOI.get(
             rep.model,
-            MOI.ListOfConstraintIndices{MOI.ScalarAffineFunction{T},
-                                        MOI.EqualTo{T}}())
+            MOI.ListOfConstraintIndices{
+                MOI.ScalarAffineFunction{T},
+                MOI.EqualTo{T},
+            }(),
+        )
     end
     return rep.hyperplane_indices
 end
-function MOI.add_constraint(rep::LPHRep{T},
-                            func::MOI.ScalarAffineFunction{T},
-                            set::MOI.EqualTo{T}) where T
+function MOI.add_constraint(
+    rep::LPHRep{T},
+    func::MOI.ScalarAffineFunction{T},
+    set::MOI.EqualTo{T},
+) where {T}
     rep.hyperplane_indices = nothing
     return MOI.add_constraint(rep.model, func, set)
 end
-function MOI.delete(rep::LPHRep{T},
-                    ci::MOI.ConstraintIndex{MOI.ScalarAffineFunction{T}, MOI.EqualTo{T}}) where T
+function MOI.delete(
+    rep::LPHRep{T},
+    ci::MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},MOI.EqualTo{T}},
+) where {T}
     rep.hyperplane_indices = nothing
     return MOI.delete(rep.model, ci)
 end
 
-function constraint_indices(rep::LPHRep{T},
-                            ::Union{HalfSpaceIndex, HalfSpaceIndices}) where T
+function constraint_indices(
+    rep::LPHRep{T},
+    ::Union{HalfSpaceIndex,HalfSpaceIndices},
+) where {T}
     if rep.halfspace_indices === nothing
         rep.halfspace_indices = MOI.get(
             rep.model,
-            MOI.ListOfConstraintIndices{MOI.ScalarAffineFunction{T},
-                                        MOI.LessThan{T}}())
+            MOI.ListOfConstraintIndices{
+                MOI.ScalarAffineFunction{T},
+                MOI.LessThan{T},
+            }(),
+        )
     end
     return rep.halfspace_indices
 end
-function MOI.add_constraint(rep::LPHRep{T},
-                            func::MOI.ScalarAffineFunction{T},
-                            set::MOI.LessThan{T}) where T
+function MOI.add_constraint(
+    rep::LPHRep{T},
+    func::MOI.ScalarAffineFunction{T},
+    set::MOI.LessThan{T},
+) where {T}
     rep.halfspace_indices = nothing
     return MOI.add_constraint(rep.model, func, set)
 end
-function MOI.delete(rep::LPHRep{T},
-                    ci::MOI.ConstraintIndex{MOI.ScalarAffineFunction{T}, MOI.LessThan{T}}) where T
+function MOI.delete(
+    rep::LPHRep{T},
+    ci::MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},MOI.LessThan{T}},
+) where {T}
     rep.halfspace_indices = nothing
     return MOI.delete(rep.model, ci)
 end
 
-function Base.length(idxs::HIndices{T, LPHRep{T}}) where {T}
+function Base.length(idxs::HIndices{T,LPHRep{T}}) where {T}
     return length(constraint_indices(idxs.rep, idxs))
 end
-function Base.isempty(idxs::HIndices{T, LPHRep{T}}) where {T}
+function Base.isempty(idxs::HIndices{T,LPHRep{T}}) where {T}
     return isempty(constraint_indices(idxs.rep, idxs))
 end
-function startindex(idxs::HIndices{T, LPHRep{T}}) where {T}
+function startindex(idxs::HIndices{T,LPHRep{T}}) where {T}
     if isempty(idxs)
         return nothing
     else
@@ -209,7 +276,11 @@ function startindex(idxs::HIndices{T, LPHRep{T}}) where {T}
 end
 function Base.get(rep::LPHRep{T}, idx::HIndex{T}) where {T}
     ci = constraint_indices(rep, idx)[idx.value]
-    func = MOI.get(rep.model, MOI.ConstraintFunction(), ci)::MOI.ScalarAffineFunction{T}
+    func = MOI.get(
+        rep.model,
+        MOI.ConstraintFunction(),
+        ci,
+    )::MOI.ScalarAffineFunction{T}
     # MOI uses `Int64` but `SparseArrays` uses `Int32` by default so `Int64` will create
     # issues with, e.g. preimages with `spzeros(d, n)`, etc...
     indices = Int[t.variable.value for t in func.terms]
@@ -235,5 +306,9 @@ function Base.isvalid(lp::LPHRep{T}, idx::HIndex{T}) where {T}
     return 1 ≤ idx.value ≤ length(constraint_indices(rep, idx))
 end
 
-dualtype(::Type{LPHRep{T}}, ::Type{AT}) where {T, AT} = dualtype(Intersection{T, AT, Int}, AT)
-dualfullspace(::LPHRep, d::FullDim, ::Type{T}, ::Type{AT}) where {T, AT} = dualfullspace(Intersection{T, AT, Int}, d, T, AT)
+function dualtype(::Type{LPHRep{T}}, ::Type{AT}) where {T,AT}
+    return dualtype(Intersection{T,AT,Int}, AT)
+end
+function dualfullspace(::LPHRep, d::FullDim, ::Type{T}, ::Type{AT}) where {T,AT}
+    return dualfullspace(Intersection{T,AT,Int}, d, T, AT)
+end

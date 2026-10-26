@@ -24,7 +24,7 @@ end
 
 function change_fulldim_test(Rep)
     T = Int
-    RepT = Rep{T, Matrix{T}}
+    RepT = Rep{T,Matrix{T}}
     @testset "Change Polyhedra.FullDim with $RepT" begin
         @test fulldim(RepT) == -1
         @test Polyhedra.coefficient_type(RepT) == T
@@ -58,7 +58,8 @@ function isempty_htest(hr::HRepresentation, ne, ni)
         @test nallhalfspaces(hr) == length(allhalfspaces(hr)) == 2ne + ni
         @test nhyperplanes(hr) == length(hyperplanes(hr)) == ne
         @test nhalfspaces(hr) == length(halfspaces(hr)) == ni
-        @test hasallhalfspaces(hr) == !isempty(allhalfspaces(hr)) == hase || hasi
+        @test hasallhalfspaces(hr) == !isempty(allhalfspaces(hr)) == hase ||
+              hasi
         @test hashyperplanes(hr) == !isempty(hyperplanes(hr)) == hase
         @test hashalfspaces(hr) == !isempty(halfspaces(hr)) == hasi
     end
@@ -66,94 +67,112 @@ end
 
 function htest(hr::Polyhedra.HRepresentation, AT::Type{<:AbstractVector})
     @test (@inferred Polyhedra.coefficient_type(hr)) == Float64
-    @test                                               (@inferred eltype(allhalfspaces(hr)))  == HalfSpace{Float64, AT}
-    @test                                               (@inferred collect(allhalfspaces(hr))) isa Vector{HalfSpace{Float64, AT}}
+    @test (@inferred eltype(allhalfspaces(hr))) == HalfSpace{Float64,AT}
+    @test (@inferred collect(allhalfspaces(hr))) isa
+          Vector{HalfSpace{Float64,AT}}
     @test isempty(allhalfspaces(hr)) == iszero(nallhalfspaces(hr))
-    @test (@inferred Polyhedra.halfspacetype(hr))    == (@inferred eltype(halfspaces(hr)))     == HalfSpace{Float64, AT}
-    @test                                               (@inferred collect(halfspaces(hr)))    isa Vector{HalfSpace{Float64, AT}}
+    @test (@inferred Polyhedra.halfspacetype(hr)) ==
+          (@inferred eltype(halfspaces(hr))) ==
+          HalfSpace{Float64,AT}
+    @test (@inferred collect(halfspaces(hr))) isa Vector{HalfSpace{Float64,AT}}
     @test isempty(halfspaces(hr)) == iszero(nhalfspaces(hr))
-    @test (@inferred Polyhedra.hyperplanetype(hr))   == (@inferred eltype(hyperplanes(hr)))    == HyperPlane{Float64, AT}
-    @test                                               (@inferred collect(hyperplanes(hr)))   isa Vector{HyperPlane{Float64, AT}}
+    @test (@inferred Polyhedra.hyperplanetype(hr)) ==
+          (@inferred eltype(hyperplanes(hr))) ==
+          HyperPlane{Float64,AT}
+    @test (@inferred collect(hyperplanes(hr))) isa
+          Vector{HyperPlane{Float64,AT}}
     @test isempty(hyperplanes(hr)) == iszero(nhyperplanes(hr))
     @test_throws DimensionMismatch ones(2, 3) \ hr
 end
 
 function vtest(vr::VRepresentation, AT::Type{<:AbstractVector})
     @test (@inferred Polyhedra.coefficient_type(vr)) == Int
-    @test (@inferred Polyhedra.pointtype(vr))    == (@inferred eltype(points(vr)))     == AT
-    @test                                           (@inferred collect(points(vr)))    isa Vector{AT}
+    @test (@inferred Polyhedra.pointtype(vr)) ==
+          (@inferred eltype(points(vr))) ==
+          AT
+    @test (@inferred collect(points(vr))) isa Vector{AT}
     @test isempty(points(vr)) == iszero(npoints(vr))
-    @test                                           (@inferred eltype(allrays(vr)))    == Ray{Int, AT}
-    @test                                           (@inferred collect(allrays(vr)))   isa Vector{Ray{Int, AT}}
+    @test (@inferred eltype(allrays(vr))) == Ray{Int,AT}
+    @test (@inferred collect(allrays(vr))) isa Vector{Ray{Int,AT}}
     @test isempty(allrays(vr)) == iszero(nallrays(vr))
-    @test (@inferred Polyhedra.linetype(vr))     == (@inferred eltype(lines(vr)))      == Line{Int, AT}
-    @test                                           (@inferred collect(lines(vr)))     isa Vector{Line{Int, AT}}
+    @test (@inferred Polyhedra.linetype(vr)) ==
+          (@inferred eltype(lines(vr))) ==
+          Line{Int,AT}
+    @test (@inferred collect(lines(vr))) isa Vector{Line{Int,AT}}
     @test isempty(lines(vr)) == iszero(nlines(vr))
-    @test (@inferred Polyhedra.raytype(vr))      == (@inferred eltype(rays(vr)))       == Ray{Int, AT}
-    @test                                           (@inferred collect(rays(vr)))      isa Vector{Ray{Int, AT}}
+    @test (@inferred Polyhedra.raytype(vr)) ==
+          (@inferred eltype(rays(vr))) ==
+          Ray{Int,AT}
+    @test (@inferred collect(rays(vr))) isa Vector{Ray{Int,AT}}
     @test isempty(rays(vr)) == iszero(nrays(vr))
     @test_throws DimensionMismatch ones(2, 1) * vr
 end
 
 # eltype for some iterators is incorrect #7
 function test_eltype_incorrect()
-    hps = [HyperPlane([1, 2, 3], 7.)]
-    shps = [@inferred HyperPlane((@SVector [1, 2, 3]), 7.)]
-    @test eltype(shps) == HyperPlane{Float64, SVector{3, Float64}}
-    hss = [HalfSpace([4, 5, 6.], 8)]
-    shss = [@inferred HalfSpace((@SVector [4., 5., 6.]), 8)]
-    @test eltype(shss) == HalfSpace{Float64, SVector{3, Float64}}
+    hps = [HyperPlane([1, 2, 3], 7.0)]
+    shps = [@inferred HyperPlane((@SVector [1, 2, 3]), 7.0)]
+    @test eltype(shps) == HyperPlane{Float64,SVector{3,Float64}}
+    hss = [HalfSpace([4, 5, 6.0], 8)]
+    shss = [@inferred HalfSpace((@SVector [4.0, 5.0, 6.0]), 8)]
+    @test eltype(shss) == HalfSpace{Float64,SVector{3,Float64}}
     #htest((@inferred hrep(hps)), Vector{Float64})
     htest(hrep(hps), Vector{Float64})
     #htest((@inferred hrep(shps)), SVector{3, Float64})
-    htest((hrep(shps)), SVector{3, Float64})
+    htest((hrep(shps)), SVector{3,Float64})
     #htest((@inferred hrep(hss)), Vector{Float64})
     htest(hrep(hss), Vector{Float64})
     #htest((@inferred hrep(shss)), SVector{3, Float64})
-    htest(hrep(shss), SVector{3, Float64})
+    htest(hrep(shss), SVector{3,Float64})
     #htest((@inferred hrep(hps, hss)), Vector{Float64})
     htest(hrep(hps, hss), Vector{Float64})
     #htest((@inferred hrep(shps, shss)), SVector{3, Float64})
-    htest(hrep(shps, shss), SVector{3, Float64})
-    htest(hrep([1 2 3; 4 5 6], [7., 8], BitSet([1])), Vector{Float64})
-    htest(hrep(@SMatrix([1 2 3; 4 5 6]), @SVector([7., 8]), BitSet([1])), SVector{3, Float64})
-    htest(hrep(spzeros(2, 3), [7., 8], BitSet([1])), SparseVector{Float64, Int})
-    htest(hrep([1 2 3; 4 5 6], [7., 8]), Vector{Float64})
-    htest(hrep(@SMatrix([1 2 3; 4 5 6]), @SVector([7., 8])), SVector{3, Float64})
+    htest(hrep(shps, shss), SVector{3,Float64})
+    htest(hrep([1 2 3; 4 5 6], [7.0, 8], BitSet([1])), Vector{Float64})
+    htest(
+        hrep(@SMatrix([1 2 3; 4 5 6]), @SVector([7.0, 8]), BitSet([1])),
+        SVector{3,Float64},
+    )
+    htest(hrep(spzeros(2, 3), [7.0, 8], BitSet([1])), SparseVector{Float64,Int})
+    htest(hrep([1 2 3; 4 5 6], [7.0, 8]), Vector{Float64})
+    htest(
+        hrep(@SMatrix([1 2 3; 4 5 6]), @SVector([7.0, 8])),
+        SVector{3,Float64},
+    )
     ps = [[1, 2], [3, 4]]
     sps = [(@SVector [1, 2]), (@SVector [3, 4])]
     rs = [Ray([0, 1])]
     srs = [Ray(@SVector [0, 1])]
     ls = [Line([0, 1])]
     sls = [Line(@SVector [0, 1])]
-    @test eltype(sps) == SVector{2, Int}
+    @test eltype(sps) == SVector{2,Int}
     vtest(vrep(ps), Vector{Int})
     #vtest((@inferred vrep(sps)), SVector{2, Int})
-    vtest(vrep(sps), SVector{2, Int})
+    vtest(vrep(sps), SVector{2,Int})
     vtest(convexhull(ps...), Vector{Int})
     #vtest((@inferred convexhull(sps...)), SVector{2, Int})
-    vtest(convexhull(sps...), SVector{2, Int})
+    vtest(convexhull(sps...), SVector{2,Int})
     #vtest((@inferred vrep(ls)), Vector{Int})
     vtest(vrep(ls), Vector{Int})
-#        vtest((@inferred vrep(sls)), SVector{2, Int})
-#        vtest((@inferred vrep(rs)), Vector{Int})
-#        vtest((@inferred vrep(srs)), SVector{2, Int})
-#        vtest((@inferred vrep(ls, rs)), Vector{Int})
-#        vtest((@inferred vrep(sls, srs)), SVector{2, Int})
-#        vtest((@inferred vrep(ps, ls, rs)), Vector{Int})
-#        vtest((@inferred vrep(sps, sls, srs)), SVector{2, Int})
-    vtest(vrep(sls), SVector{2, Int})
+    #        vtest((@inferred vrep(sls)), SVector{2, Int})
+    #        vtest((@inferred vrep(rs)), Vector{Int})
+    #        vtest((@inferred vrep(srs)), SVector{2, Int})
+    #        vtest((@inferred vrep(ls, rs)), Vector{Int})
+    #        vtest((@inferred vrep(sls, srs)), SVector{2, Int})
+    #        vtest((@inferred vrep(ps, ls, rs)), Vector{Int})
+    #        vtest((@inferred vrep(sps, sls, srs)), SVector{2, Int})
+    vtest(vrep(sls), SVector{2,Int})
     vtest(vrep(rs), Vector{Int})
-    vtest(vrep(srs), SVector{2, Int})
+    vtest(vrep(srs), SVector{2,Int})
     vtest(vrep(ls, rs), Vector{Int})
-    vtest(vrep(sls, srs), SVector{2, Int})
+    vtest(vrep(sls, srs), SVector{2,Int})
     vtest(vrep(ps, ls, rs), Vector{Int})
-    vtest(vrep(sps, sls, srs), SVector{2, Int})
+    vtest(vrep(sps, sls, srs), SVector{2,Int})
     vtest(vrep([1 2; 3 4]), Vector{Int})
-    vtest(vrep(spzeros(Int, 2, 2)), SparseVector{Int, Int})
+    vtest(vrep(spzeros(Int, 2, 2)), SparseVector{Int,Int})
     vtest(vrep([1 2; 3 4], zeros(Int, 0, 0), BitSet()), Vector{Int})
     vtest(vrep([1 2; 3 4], zeros(Int, 0, 0)), Vector{Int})
-    vtest(vrep([1 2; 3 4]), Vector{Int})
+    return vtest(vrep([1 2; 3 4]), Vector{Int})
 end
 
 function test_polar()
@@ -161,14 +180,19 @@ function test_polar()
     for p in [v, polyhedron(v)]
         h = polar(p)
         @test collect(hyperplanes(h)) == [HyperPlane([1, 0], 0)]
-        @test collect(halfspaces(h)) == [HalfSpace([-1, 2], 1), HalfSpace([1, 0], 0)]
+        @test collect(halfspaces(h)) ==
+              [HalfSpace([-1, 2], 1), HalfSpace([1, 0], 0)]
     end
     h = intersect(HalfSpace([1, 0], 1e-13), HyperPlane([1, 1], -1e-13))
     v = polar(h)
     @test collect(points(v)) == [[0.0, 0.0]]
     @test collect(lines(v)) == [Line([1.0, 1.0])]
     @test collect(rays(v)) == [Ray([1.0, 0.0])]
-    h = intersect(HalfSpace([1, 0], 2), HalfSpace([1, 1], 0), HyperPlane([0, 1], 0))
+    h = intersect(
+        HalfSpace([1, 0], 2),
+        HalfSpace([1, 1], 0),
+        HyperPlane([0, 1], 0),
+    )
     v = polar(h)
     @test collect(points(v)) == [[0.5, 0.0]]
     @test collect(lines(v)) == [Line([0.0, 1.0])]
@@ -215,10 +239,18 @@ function test_iterating()
 end
 
 function test_building_rep_with_different_type()
-    @test Polyhedra.coefficient_type(MixedMatHRep{Float64}([1 2; 3 4], [1, 2], BitSet())) == Float64
-    @test Polyhedra.coefficient_type(MixedMatVRep{Float64}([1 2; 3 4], [1 2; 3 4], BitSet())) == Float64
-    @test Polyhedra.coefficient_type(LiftedHRepresentation{Float64}([1 2; 3 4])) == Float64
-    @test Polyhedra.coefficient_type(LiftedVRepresentation{Float64}([1 2; 3 4])) == Float64
+    @test Polyhedra.coefficient_type(
+        MixedMatHRep{Float64}([1 2; 3 4], [1, 2], BitSet()),
+    ) == Float64
+    @test Polyhedra.coefficient_type(
+        MixedMatVRep{Float64}([1 2; 3 4], [1 2; 3 4], BitSet()),
+    ) == Float64
+    @test Polyhedra.coefficient_type(
+        LiftedHRepresentation{Float64}([1 2; 3 4]),
+    ) == Float64
+    @test Polyhedra.coefficient_type(
+        LiftedVRepresentation{Float64}([1 2; 3 4]),
+    ) == Float64
 end
 
 # Radius of largest inscribed ball at a given center
@@ -228,23 +260,33 @@ function test_radius()
     @test r == 0
 
     p = hrep([0 0], [0])
-    @test_throws ErrorException Polyhedra.maximum_radius_with_center(p, zeros(2))
+    @test_throws ErrorException Polyhedra.maximum_radius_with_center(
+        p,
+        zeros(2),
+    )
     p = hrep([1 0], [-1])
-    @test_throws ErrorException Polyhedra.maximum_radius_with_center(p, zeros(2))
+    @test_throws ErrorException Polyhedra.maximum_radius_with_center(
+        p,
+        zeros(2),
+    )
 
-    A = [ 2  1
-          2 -1
-         -1  2
-         -1 -2]
+    A = [
+        2 1
+        2 -1
+        -1 2
+        -1 -2
+    ]
     b = ones(4)
     p = hrep(A, b)
     r = Polyhedra.maximum_radius_with_center(p, zeros(2))
     @test r ≈ inv(√5) atol=1e-6
 
-    p = polyhedron(vrep([ 0  0
-                          1  0
-                          1  1
-                          0  1]))
+    p = polyhedron(vrep([
+        0 0
+        1 0
+        1 1
+        0 1
+    ]))
     @test Polyhedra.maximum_radius_with_center(p, [0.00, 0.00]) == 0.00
     @test Polyhedra.maximum_radius_with_center(p, [1.00, 1.00]) == 0.00
     @test Polyhedra.maximum_radius_with_center(p, [0.50, 0.50]) == 0.50
@@ -253,18 +295,24 @@ function test_radius()
     @test Polyhedra.maximum_radius_with_center(p, [0.25, 0.25]) == 0.25
 end
 
-function _test_chebyshev_center(::Type{T}) where T
+function _test_chebyshev_center(::Type{T}) where {T}
     p = hrep(Matrix(1I, 2, 2), zeros(T, 2))
-    @test_throws ErrorException("The polyhedron contains a Euclidean ball of arbitrarily large radius.") chebyshevcenter(p, lp_solver) # unbounded
+    @test_throws ErrorException(
+        "The polyhedron contains a Euclidean ball of arbitrarily large radius.",
+    ) chebyshevcenter(p, lp_solver) # unbounded
 
     p = hrep(T[1 1; -1 -1], T[0, -1])
-    @test_throws ErrorException("An empty polyhedron has no H-Chebyshev center.") chebyshevcenter(p, lp_solver) # empty
+    @test_throws ErrorException(
+        "An empty polyhedron has no H-Chebyshev center.",
+    ) chebyshevcenter(p, lp_solver) # empty
 
     # examples/chebyshevcenter.ipynb
-    A = T[ 2  1
-           2 -1
-          -1  2
-          -1 -2]
+    A = T[
+        2 1
+        2 -1
+        -1 2
+        -1 -2
+    ]
     b = ones(T, 4)
     p = hrep(A, b)
     c, r = chebyshevcenter(p, lp_solver)
@@ -274,12 +322,15 @@ function _test_chebyshev_center(::Type{T}) where T
     _interval(c, r) = HalfSpace([1], c + r) ∩ HalfSpace([-1], -c + r)
     c_exp = T[-4, 3, 8]
     for rs in [T[1, 2, 3], T[3, 1, 2], T[3, 2, 1], T[2, 1, 2]]
-        h = _interval(c_exp[1], rs[1]) * _interval(c_exp[2], rs[2]) * _interval(c_exp[3], rs[3])
-        c, r = hchebyshevcenter(h, lp_solver, verbose=1)
+        h =
+            _interval(c_exp[1], rs[1]) *
+            _interval(c_exp[2], rs[2]) *
+            _interval(c_exp[3], rs[3])
+        c, r = hchebyshevcenter(h, lp_solver, verbose = 1)
         @test c ≈ c_exp atol=1e-6
         @test r ≈ 1 atol=1e-6
 
-        c, r = hchebyshevcenter(h, lp_solver, proper=false)
+        c, r = hchebyshevcenter(h, lp_solver, proper = false)
         for i in 1:3
             @test c_exp[i] - rs[i] + 1 - 1e-6 <= c[i]
             @test c[i] <= c_exp[i] + rs[i] - 1 + 1e-6
@@ -288,7 +339,8 @@ function _test_chebyshev_center(::Type{T}) where T
     end
 
     h = _interval(0, 0) * _interval(0, 1)
-    c, r = hchebyshevcenter(h, lp_solver, linearity_detected=true, verbose=1)
+    c, r =
+        hchebyshevcenter(h, lp_solver, linearity_detected = true, verbose = 1)
     @test c[1] ≈ 0 atol=1e-6
     @test -1 - 1e-6 <= c[2] <= 1 + 1e-6
     @test r ≈ 0 atol=1e-6
@@ -300,60 +352,93 @@ end
 function test_chebyshev_center()
     _test_chebyshev_center(Int)
     _test_chebyshev_center(Float64)
-    _test_chebyshev_center(Rational{BigInt})
+    return _test_chebyshev_center(Rational{BigInt})
 end
 
 # V-consistency with iterator constructor
 function test_Vconsistency()
     T = Int
     AT = Vector{Int}
-    for VRepType in (Polyhedra.LiftedVRepresentation{T, Matrix{T}},
-                     Polyhedra.MixedMatVRep{T, Matrix{T}},
-                     Polyhedra.Hull{T, AT, Int})
+    for VRepType in (
+        Polyhedra.LiftedVRepresentation{T,Matrix{T}},
+        Polyhedra.MixedMatVRep{T,Matrix{T}},
+        Polyhedra.Hull{T,AT,Int},
+    )
         @test_throws ErrorException VRepType(2, AT[], [Line([1, 2])])
-        @test_throws ErrorException VRepType(2, AT[], Line{T, AT}[], [Ray([1, 2])])
-        @test_throws ErrorException VRepType(2, AT[], [Line([1, 2])], [Ray([1, 2])])
+        @test_throws ErrorException VRepType(
+            2,
+            AT[],
+            Line{T,AT}[],
+            [Ray([1, 2])],
+        )
+        @test_throws ErrorException VRepType(
+            2,
+            AT[],
+            [Line([1, 2])],
+            [Ray([1, 2])],
+        )
         v = VRepType(2, [Line([1, 2])])
         @test collect(points(v)) == [[0, 0]]
         @test collect(lines(v)) == [Line([1, 2])]
         @test !hasrays(v)
     end
-    for vinc in (InconsistentVRep{T, AT, Int}(2, AT[], Line{T, AT}[], [Ray([1, 2])]),
-                 InconsistentVRep{T, AT, Int}(2, AT[], [Line([1, 2])], Ray{T, AT}[]),
-                 InconsistentVRep{T, AT, Int}(2, AT[], [Line([1, 2])], [Ray([1, 2])]))
+    for vinc in (
+        InconsistentVRep{T,AT,Int}(2, AT[], Line{T,AT}[], [Ray([1, 2])]),
+        InconsistentVRep{T,AT,Int}(2, AT[], [Line([1, 2])], Ray{T,AT}[]),
+        InconsistentVRep{T,AT,Int}(2, AT[], [Line([1, 2])], [Ray([1, 2])]),
+    )
         @test_throws ErrorException Polyhedra.checkvconsistency(vinc)
         pinc = polyhedron(vinc)
         @test_throws ErrorException Polyhedra.checkvconsistency(pinc)
     end
     let
-        AT = StaticArrays.SVector{1, Int}
-        VRepType = Polyhedra.Hull{T, AT, Int}
-        @test isempty(VRepType(2, AT[], Line{T, AT}[], Ray{T, AT}[]))
-        @test isempty(VRepType(2, Line{T, AT}[], Ray{T, AT}[]))
+        AT = StaticArrays.SVector{1,Int}
+        VRepType = Polyhedra.Hull{T,AT,Int}
+        @test isempty(VRepType(2, AT[], Line{T,AT}[], Ray{T,AT}[]))
+        @test isempty(VRepType(2, Line{T,AT}[], Ray{T,AT}[]))
     end
 end
 function test_combination_different_coef_type()
     @testset "V-representation" begin
-        generator_fulltest(convexhull([1, 0], Line([0, 1.])), convexhull(Line([0, 1]), [1, 0.]))
-        @test conichull(convexhull([1, 0.]), conichull([0, 1])) isa Polyhedra.RaysHull{Float64}
-        @test convexhull(convexhull([1, 0]), Line([0, 1.])) isa Polyhedra.Hull{Float64}
-        @test convexhull(Line([0, 1.]), convexhull([1, 0])) isa Polyhedra.Hull{Float64}
-        @test convexhull(convexhull(Line([0, 1.])), [1, 0]) isa Polyhedra.Hull{Float64}
-        @test convexhull(convexhull(Line([1, 0])), Line([0, 1.])) isa Polyhedra.LinesHull{Float64}
-        @test convexhull(conichull([1, 0.]), Line([0, 1])) isa Polyhedra.RaysHull{Float64}
-        @test convexhull(conichull([1, 0.]), [0, 1]) isa Polyhedra.Hull{Float64}
+        generator_fulltest(
+            convexhull([1, 0], Line([0, 1.0])),
+            convexhull(Line([0, 1]), [1, 0.0]),
+        )
+        @test conichull(convexhull([1, 0.0]), conichull([0, 1])) isa
+              Polyhedra.RaysHull{Float64}
+        @test convexhull(convexhull([1, 0]), Line([0, 1.0])) isa
+              Polyhedra.Hull{Float64}
+        @test convexhull(Line([0, 1.0]), convexhull([1, 0])) isa
+              Polyhedra.Hull{Float64}
+        @test convexhull(convexhull(Line([0, 1.0])), [1, 0]) isa
+              Polyhedra.Hull{Float64}
+        @test convexhull(convexhull(Line([1, 0])), Line([0, 1.0])) isa
+              Polyhedra.LinesHull{Float64}
+        @test convexhull(conichull([1, 0.0]), Line([0, 1])) isa
+              Polyhedra.RaysHull{Float64}
+        @test convexhull(conichull([1, 0.0]), [0, 1]) isa
+              Polyhedra.Hull{Float64}
     end
     @testset "H-representation" begin
         #FIXME inference fails @test (@inferred (HyperPlane([1, 1], 0) ∩ HyperPlane([1, 0], 1)) ∩ (HyperPlane([1, 1], 0) ∩ HyperPlane([1., 0.], 1))) isa Polyhedra.HyperPlanesIntersection{Float64}
-        @test ((HyperPlane([1, 1], 0) ∩ HyperPlane([1, 0], 1)) ∩ (HyperPlane([1, 1], 0) ∩ HyperPlane([1., 0.], 1))) isa Polyhedra.HyperPlanesIntersection{Float64}
-        @test HyperPlane([1, 1], 0) ∩ HalfSpace([1., 0.], 1.) isa Polyhedra.Intersection{Float64}
+        @test (
+            (HyperPlane([1, 1], 0) ∩ HyperPlane([1, 0], 1)) ∩
+            (HyperPlane([1, 1], 0) ∩ HyperPlane([1.0, 0.0], 1))
+        ) isa Polyhedra.HyperPlanesIntersection{Float64}
+        @test HyperPlane([1, 1], 0) ∩ HalfSpace([1.0, 0.0], 1.0) isa
+              Polyhedra.Intersection{Float64}
         #FIXME inference fails @test (@inferred (HalfSpace([1., 0.], 1.) ∩ (HyperPlane([1, 1], 0) ∩ HyperPlane([1, 0], 1)))) isa Polyhedra.Intersection{Float64}
-        @test ((HalfSpace([1., 0.], 1.) ∩ (HyperPlane([1, 1], 0) ∩ HyperPlane([1, 0], 1)))) isa Polyhedra.Intersection{Float64}
+        @test ((
+            HalfSpace([1.0, 0.0], 1.0) ∩
+            (HyperPlane([1, 1], 0) ∩ HyperPlane([1, 0], 1))
+        )) isa Polyhedra.Intersection{Float64}
     end
 end
 function test_conversion_different_array_type()
     @testset "V-representation" begin
-        vv = convexhull(@SVector [0, 1]) + conichull((@SVector [1, 1]), Line(@SVector [1, 0]))
+        vv =
+            convexhull(@SVector [0, 1]) +
+            conichull((@SVector [1, 1]), Line(@SVector [1, 0]))
         mv = vrep([0 1], [1 1; 1 0], BitSet([2]))
         generator_fulltest(vv, mv)
         mvv = @inferred convert(typeof(mv), vv)
@@ -383,14 +468,23 @@ function test_copy()
         @test vc !== vr
         @test vc.lines !== vr.lines
         generator_fulltest(vc, vr)
-        vr = conichull(Line(@SVector [1, 1]), Line(@SVector [1, 0]), @SVector [1, 1])
+        vr = conichull(
+            Line(@SVector [1, 1]),
+            Line(@SVector [1, 0]),
+            @SVector [1, 1]
+        )
         vc = copy(vr)
         @test vc !== vr
         @test vc.rays !== vr.rays
         @test vc.lines !== vr.lines
         @test vc.lines.lines !== vr.lines.lines
         generator_fulltest(vc, vr)
-        vr = convexhull(@SVector [0, 1]) + conichull(Line(@SVector [1, 1]), (@SVector [1, 1]), Line(@SVector [1, 0]))
+        vr =
+            convexhull(@SVector [0, 1]) + conichull(
+                Line(@SVector [1, 1]),
+                (@SVector [1, 1]),
+                Line(@SVector [1, 0]),
+            )
         vc = copy(vr)
         @test vc !== vr
         @test vc.points !== vr.points
@@ -407,7 +501,9 @@ function test_copy()
         @test hc !== hr
         @test hc.hyperplanes !== hr.hyperplanes
         inequality_fulltest(hc, hr)
-        hr = HyperPlane([1, 0], 1) ∩ HyperPlane([1, 1], 0) ∩ HalfSpace([0, 1], -1)
+        hr =
+            HyperPlane([1, 0], 1) ∩ HyperPlane([1, 1], 0) ∩
+            HalfSpace([0, 1], -1)
         hc = copy(hr)
         @test hc !== hr
         @test hc.hyperplanes !== hr.hyperplanes
@@ -418,42 +514,68 @@ function test_copy()
 end
 # See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/379
 function test_remproj_small_norm()
-    h = hrep([HyperPlane([1.0, 0.0], 0.0), HyperPlane([1.0, 1e-5], 0.0), HyperPlane([0.0, 1.0], 0.0)])
+    h = hrep([
+        HyperPlane([1.0, 0.0], 0.0),
+        HyperPlane([1.0, 1e-5], 0.0),
+        HyperPlane([0.0, 1.0], 0.0),
+    ])
     @test nhyperplanes(detecthlinearity(h)) == 2
     @test dim(h) == 0
     v = vrep([Line([1.0, 0.0]), Line([1.0, 1e-5]), Line([0.0, 1.0])])
     @test nlines(detectvlinearity(v)) == 2
     # Infeasible system: `empty!` adds the hyperplane `0 = 1` whose normal
     # is zero, so it must be skipped by `remproj`.
-    h = hrep([HyperPlane([1.0, 0.0], 0.0), HyperPlane([1.0, 0.0], 1.0), HyperPlane([0.0, 1.0], 0.0)])
+    h = hrep([
+        HyperPlane([1.0, 0.0], 0.0),
+        HyperPlane([1.0, 0.0], 1.0),
+        HyperPlane([0.0, 1.0], 0.0),
+    ])
     @test dim(h) == -1
-    L = detecthlinearity!(hrep([HyperPlane([1.0, 0.0], 0.0), HyperPlane([1.0, 0.0], 1.0)]))
+    L = detecthlinearity!(
+        hrep([HyperPlane([1.0, 0.0], 0.0), HyperPlane([1.0, 0.0], 1.0)]),
+    )
     intersect!(L, HyperPlane([0.0, 1.0], 0.0))
     @test nhyperplanes(L) == 3
     @test dim(L) == -1
 end
 function test_perserve_sparsity()
-    for h in (HalfSpace(sparsevec([1], [1], 2), 1) ∩ HyperPlane(sparsevec([2], [-1]), 3), hrep(sparse([1, 2], [1, 2], [1, -1]), [1, 3]))
-        @test Polyhedra.Intersection(h) isa Polyhedra.Intersection{Int, SparseVector{Int, Int}}
+    for h in (
+        HalfSpace(sparsevec([1], [1], 2), 1) ∩
+        HyperPlane(sparsevec([2], [-1]), 3),
+        hrep(sparse([1, 2], [1, 2], [1, -1]), [1, 3]),
+    )
+        @test Polyhedra.Intersection(h) isa
+              Polyhedra.Intersection{Int,SparseVector{Int,Int}}
         @test LPHRep(h) isa LPHRep{Int}
-        @test MixedMatHRep(h) isa MixedMatHRep{Int, SparseMatrixCSC{Int, Int}}
-        @test LiftedHRepresentation(h) isa LiftedHRepresentation{Int, SparseMatrixCSC{Int, Int}}
-        @test Polyhedra.Intersection{Float64}(h) isa Polyhedra.Intersection{Float64, SparseVector{Float64, Int}}
+        @test MixedMatHRep(h) isa MixedMatHRep{Int,SparseMatrixCSC{Int,Int}}
+        @test LiftedHRepresentation(h) isa
+              LiftedHRepresentation{Int,SparseMatrixCSC{Int,Int}}
+        @test Polyhedra.Intersection{Float64}(h) isa
+              Polyhedra.Intersection{Float64,SparseVector{Float64,Int}}
         @test LPHRep{Float64}(h) isa LPHRep{Float64}
-        @test MixedMatHRep{Float64}(h) isa MixedMatHRep{Float64, SparseMatrixCSC{Float64, Int}}
-        @test LiftedHRepresentation{Float64}(h) isa LiftedHRepresentation{Float64, SparseMatrixCSC{Float64, Int}}
+        @test MixedMatHRep{Float64}(h) isa
+              MixedMatHRep{Float64,SparseMatrixCSC{Float64,Int}}
+        @test LiftedHRepresentation{Float64}(h) isa
+              LiftedHRepresentation{Float64,SparseMatrixCSC{Float64,Int}}
     end
-    for v in (convexhull(sparsevec([1], [1], 2), sparsevec([2], [-1])), vrep(sparse([1, 2], [1, 2], [1, -1])))
-        @test Polyhedra.Hull(v) isa Polyhedra.Hull{Int, SparseVector{Int, Int}}
-        @test MixedMatVRep(v) isa MixedMatVRep{Int, SparseMatrixCSC{Int, Int}}
-        @test LiftedVRepresentation(v) isa LiftedVRepresentation{Int, SparseMatrixCSC{Int, Int}}
-        @test Polyhedra.Hull{Float64}(v) isa Polyhedra.Hull{Float64, SparseVector{Float64, Int}}
-        @test MixedMatVRep{Float64}(v) isa MixedMatVRep{Float64, SparseMatrixCSC{Float64, Int}}
-        @test LiftedVRepresentation{Float64}(v) isa LiftedVRepresentation{Float64, SparseMatrixCSC{Float64, Int}}
+    for v in (
+        convexhull(sparsevec([1], [1], 2), sparsevec([2], [-1])),
+        vrep(sparse([1, 2], [1, 2], [1, -1])),
+    )
+        @test Polyhedra.Hull(v) isa Polyhedra.Hull{Int,SparseVector{Int,Int}}
+        @test MixedMatVRep(v) isa MixedMatVRep{Int,SparseMatrixCSC{Int,Int}}
+        @test LiftedVRepresentation(v) isa
+              LiftedVRepresentation{Int,SparseMatrixCSC{Int,Int}}
+        @test Polyhedra.Hull{Float64}(v) isa
+              Polyhedra.Hull{Float64,SparseVector{Float64,Int}}
+        @test MixedMatVRep{Float64}(v) isa
+              MixedMatVRep{Float64,SparseMatrixCSC{Float64,Int}}
+        @test LiftedVRepresentation{Float64}(v) isa
+              LiftedVRepresentation{Float64,SparseMatrixCSC{Float64,Int}}
     end
 end
 
-function _test_scalar_multiplication(T=Rational{BigInt})
+function _test_scalar_multiplication(T = Rational{BigInt})
     v = convexhull(T[1, 2], T[2, 1])
     v2 = 2v
     @test Polyhedra.coefficient_type(v2) == T
@@ -470,16 +592,18 @@ end
 
 function test_scalar_multiplication()
     _test_scalar_multiplication(Float64)
-    _test_scalar_multiplication(Rational{BigInt})
+    return _test_scalar_multiplication(Rational{BigInt})
 end
 
 function test_cartesian_product_mixed()
     h1 = intersect(HalfSpace(@SVector([1]), 2))
     h2 = intersect(HalfSpace([-1], 3))
     h = @inferred h1 * h2
-    @test collect(halfspaces(h)) == [HalfSpace([1, 0], 2), HalfSpace([0, -1], 3)]
+    @test collect(halfspaces(h)) ==
+          [HalfSpace([1, 0], 2), HalfSpace([0, -1], 3)]
     h = @inferred h2 * h1
-    @test collect(halfspaces(h)) == [HalfSpace([-1, 0], 3), HalfSpace([0, 1], 2)]
+    @test collect(halfspaces(h)) ==
+          [HalfSpace([-1, 0], 3), HalfSpace([0, 1], 2)]
 end
 
 end  # module

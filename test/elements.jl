@@ -37,9 +37,11 @@ using Polyhedra
     end
     @testset "Lift" begin
         @test lift(HalfSpace([1, 2], 3)) == HalfSpace([-3, 1, 2], 0)
-        @test lift(HalfSpace((@SVector [1, 2]), 3)) == HalfSpace((@SVector [-3, 1, 2]), 0)
+        @test lift(HalfSpace((@SVector [1, 2]), 3)) ==
+              HalfSpace((@SVector [-3, 1, 2]), 0)
         @test lift(HyperPlane([1, 2], 3)) == HyperPlane([-3, 1, 2], 0)
-        @test lift(HyperPlane((@SVector [1, 2]), 3)) == HyperPlane((@SVector [-3, 1, 2]), 0)
+        @test lift(HyperPlane((@SVector [1, 2]), 3)) ==
+              HyperPlane((@SVector [-3, 1, 2]), 0)
         #@test lift(SymPoint([2, 3])) == SymPoint([1, 2, 3])
         #@test lift(SymPoint(@SVector [2, 3])) == SymPoint(@SVector [1, 2, 3])
         @test lift([2, 3]) == [1, 2, 3]
@@ -50,11 +52,27 @@ using Polyhedra
         @test lift(Ray(@SVector [2, 3])) == Ray(@SVector [0, 2, 3])
     end
     @testset "Promote" begin
-        @test promote_type(HyperPlane{Int, Vector{Int}}, HyperPlane{Float64, Vector{Float64}}) == HyperPlane{Float64, Vector{Float64}}
-        @test promote_type(HyperPlane{Float64, SVector{2, Float64}}, HyperPlane{Int, SVector{2, Int}}) == HyperPlane{Float64, SVector{2, Float64}}
-        err = ErrorException("Cannot mix Polyhedra elements of vector type $(Vector{Int}) and $(SVector{2, Int})")
-        @test_throws err promote_type(HyperPlane{Int, Vector{Int}}, HyperPlane{Int, SVector{2, Int}})
-        err = ErrorException("Cannot mix Polyhedra elements of vector type $(Vector{Float64}) and $(SVector{2, Float64})")
-        @test_throws err promote_type(HyperPlane{Int, Vector{Int}}, HyperPlane{Float64, SVector{2, Float64}})
+        @test promote_type(
+            HyperPlane{Int,Vector{Int}},
+            HyperPlane{Float64,Vector{Float64}},
+        ) == HyperPlane{Float64,Vector{Float64}}
+        @test promote_type(
+            HyperPlane{Float64,SVector{2,Float64}},
+            HyperPlane{Int,SVector{2,Int}},
+        ) == HyperPlane{Float64,SVector{2,Float64}}
+        err = ErrorException(
+            "Cannot mix Polyhedra elements of vector type $(Vector{Int}) and $(SVector{2, Int})",
+        )
+        @test_throws err promote_type(
+            HyperPlane{Int,Vector{Int}},
+            HyperPlane{Int,SVector{2,Int}},
+        )
+        err = ErrorException(
+            "Cannot mix Polyhedra elements of vector type $(Vector{Float64}) and $(SVector{2, Float64})",
+        )
+        @test_throws err promote_type(
+            HyperPlane{Int,Vector{Int}},
+            HyperPlane{Float64,SVector{2,Float64}},
+        )
     end
 end

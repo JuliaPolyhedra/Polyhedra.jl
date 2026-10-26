@@ -8,10 +8,10 @@ function boardtest(lib::Polyhedra.Library, n)
     A3 = zeros(Int, N, N)
     b3 = n * ones(Int, N)
     i = 1
-    for a = 1:n
-        for b = (a + 1):n
-            for c = 1:n
-                for d = (c + 1):n
+    for a in 1:n
+        for b in (a+1):n
+            for c in 1:n
+                for d in (c+1):n
                     ac = a + (c - 1) * n
                     ad = a + (d - 1) * n
                     bc = b + (c - 1) * n
@@ -37,9 +37,9 @@ function boardtest(lib::Polyhedra.Library, n)
     end
     @test !isempty(poly)
     if n == 3
-        ext  = MixedMatVRep(vrep(poly))
+        ext = MixedMatVRep(vrep(poly))
         target = ones(Int, N) * (3 // 4)
-        @test any(i -> ext.V[i,:] == target, 1:size(ext.V, 1))
+        @test any(i -> ext.V[i, :] == target, 1:size(ext.V, 1))
     end
 
     if n == 3

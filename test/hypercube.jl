@@ -17,5 +17,5 @@ function hypercubetest(lib::Polyhedra.Library, n)
         end
     end
 
-    generator_fulltest(poly, V)
+    return generator_fulltest(poly, V)
 end

@@ -12,7 +12,7 @@ const MOIB = MOI.Bridges
     cached = MOIU.CachingOptimizer(cache, optimizer)
     bridged = MOIB.full_bridge_optimizer(cached, Float64)
     config = MOI.Test.Config(
-        exclude=Any[
+        exclude = Any[
             MOI.ConstraintBasisStatus,
             MOI.VariableBasisStatus,
             MOI.ConstraintDual,

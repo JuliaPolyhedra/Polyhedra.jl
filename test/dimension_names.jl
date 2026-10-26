@@ -2,7 +2,13 @@ using SparseArrays, Test, JuMP, Polyhedra
 
 function _hypercube(n, base_name)
     model = Model()
-    @variable(model, [1:n], lower_bound = 0, upper_bound = 1, base_name = base_name)
+    @variable(
+        model,
+        [1:n],
+        lower_bound = 0,
+        upper_bound = 1,
+        base_name = base_name
+    )
     h = hrep(model)
     @test dimension_names(h) == ["$base_name[$i]" for i in 1:n]
     return h

@@ -7,17 +7,25 @@ Returns the default polyhedron type for `d`-dimensional polyhedron of coefficien
 """
 function default_type end
 
-function default_type(d::StaticArrays.Size{N}, ::Type{T}) where {N, T}
-    return DefaultPolyhedron{T, Intersection{T, StaticArrays.SVector{N[1], T}, typeof(d)}, Hull{T, StaticArrays.SVector{N[1], T}, typeof(d)}}
+function default_type(d::StaticArrays.Size{N}, ::Type{T}) where {N,T}
+    return DefaultPolyhedron{
+        T,
+        Intersection{T,StaticArrays.SVector{N[1],T},typeof(d)},
+        Hull{T,StaticArrays.SVector{N[1],T},typeof(d)},
+    }
 end
-function default_type(d::StaticArrays.Size{(1,)}, ::Type{T}) where T
-    return Interval{T, StaticArrays.SVector{1, T}, typeof(d)}
+function default_type(d::StaticArrays.Size{(1,)}, ::Type{T}) where {T}
+    return Interval{T,StaticArrays.SVector{1,T},typeof(d)}
 end
-function default_type(d::Integer, ::Type{T}) where T
+function default_type(d::Integer, ::Type{T}) where {T}
     if isone(d)
-        return Interval{T, Vector{T}, typeof(d)}
+        return Interval{T,Vector{T},typeof(d)}
     else
-        return DefaultPolyhedron{T, Intersection{T, Vector{T}, typeof(d)}, Hull{T, Vector{T}, typeof(d)}}
+        return DefaultPolyhedron{
+            T,
+            Intersection{T,Vector{T},typeof(d)},
+            Hull{T,Vector{T},typeof(d)},
+        }
     end
 end
 
@@ -37,12 +45,16 @@ of the type of `v` in a type stable way, do
 """
 function default_library end
 
-_default_type(::Type{T}) where T = T
+_default_type(::Type{T}) where {T} = T
 # See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/35
 _default_type(::Type{AbstractFloat}) = Float64
-default_library(::StaticArrays.Size, T::Type) = DefaultLibrary{_default_type(T)}()
-default_library(::StaticArrays.Size{(1,)}, T::Type) = IntervalLibrary{_default_type(T)}()
-function default_library(d::Integer, ::Type{T}) where T
+function default_library(::StaticArrays.Size, T::Type)
+    return DefaultLibrary{_default_type(T)}()
+end
+function default_library(::StaticArrays.Size{(1,)}, T::Type)
+    return IntervalLibrary{_default_type(T)}()
+end
+function default_library(d::Integer, ::Type{T}) where {T}
     if isone(d)
         return IntervalLibrary{_default_type(T)}()
     else
@@ -58,9 +70,15 @@ Returns a library that supports polyhedra of full dimension `T` with coefficient
 function similar_library end
 
 # Shortcuts
-similar_library(p::Polyhedron, d::FullDim, ::Type{T}) where T = similar_library(library(p), d, T)
-similar_library(p::Polyhedron, ::Type{T}) where T = similar_library(library(p), T)
-similar_library(p::Polyhedron{T}, d::FullDim) where T = similar_library(p, d, T)
+function similar_library(p::Polyhedron, d::FullDim, ::Type{T}) where {T}
+    return similar_library(library(p), d, T)
+end
+function similar_library(p::Polyhedron, ::Type{T}) where {T}
+    return similar_library(library(p), T)
+end
+function similar_library(p::Polyhedron{T}, d::FullDim) where {T}
+    return similar_library(p, d, T)
+end
 
 """
     library(p::Polyhedron)
@@ -102,7 +120,10 @@ By default, if the V-representation of `p` has been computed, it returns
 If the problem has constraints different to `x in p`, use `default_solver(p)` instead
 as the fact that the V-representation of `p` has been computed does not help.
 """
-function linear_objective_solver(p::Rep{T}, solver=default_solver(p)) where T
+function linear_objective_solver(
+    p::Rep{T},
+    solver = default_solver(p),
+) where {T}
     if vrepiscomputed(p)
         return VRepOptimizer{T}
     else
@@ -110,8 +131,13 @@ function linear_objective_solver(p::Rep{T}, solver=default_solver(p)) where T
     end
 end
 
-linear_objective_solver(v::VRepresentation{T}, solver=default_solver(v)) where {T} = VRepOptimizer{T}
-linear_objective_solver(h::HRepresentation, solver=default_solver(h)) = solver
+function linear_objective_solver(
+    v::VRepresentation{T},
+    solver = default_solver(v),
+) where {T}
+    return VRepOptimizer{T}
+end
+linear_objective_solver(h::HRepresentation, solver = default_solver(h)) = solver
 
 _promote_reptype(P::Type{<:HRep}, ::Type{<:HRep}) = P
 _promote_reptype(P::Type{<:VRep}, ::Type{<:VRep}) = P
@@ -121,7 +147,9 @@ _promote_reptype(P::Type{<:Polyhedron}, ::Type{<:Polyhedron}) = P
 function promote_reptype(P1::Type{<:Rep}, P2::Type{<:Rep})
     return _promote_reptype(P1, P2)
 end
-promote_reptype(P1::Type{<:Rep}, P2::Type{<:Rep}, P::Type{<:Rep}...) = promote_reptype(promote_reptype(P1, P2), P...)
+function promote_reptype(P1::Type{<:Rep}, P2::Type{<:Rep}, P::Type{<:Rep}...)
+    return promote_reptype(promote_reptype(P1, P2), P...)
+end
 promote_reptype(P::Type{<:Rep}) = P
 
 # whether Rep has the constructor Rep(::It...; solver=...)
@@ -129,7 +157,13 @@ supportssolver(::Type{<:Rep}) = false
 supports_names(::Type{<:Rep}) = false
 dimension_names(::Rep) = nothing
 
-function constructpolyhedron(RepT::Type{<:Rep{T}}, d::FullDim, p::Tuple{Vararg{Rep}}, it::It{T}...; dimension_map::Function = i -> (1, i)) where T
+function constructpolyhedron(
+    RepT::Type{<:Rep{T}},
+    d::FullDim,
+    p::Tuple{Vararg{Rep}},
+    it::It{T}...;
+    dimension_map::Function = i -> (1, i),
+) where {T}
     solver = names = nothing
     if supportssolver(RepT)
         solver = default_solver(p...)
@@ -151,13 +185,18 @@ function constructpolyhedron(RepT::Type{<:Rep{T}}, d::FullDim, p::Tuple{Vararg{R
     end
     if names !== nothing
         if solver !== nothing
-            return RepT(d, it...; solver=solver, dimension_names=names)::RepT
+            return RepT(
+                d,
+                it...;
+                solver = solver,
+                dimension_names = names,
+            )::RepT
         else
-            return RepT(d, it...; dimension_names=names)::RepT
+            return RepT(d, it...; dimension_names = names)::RepT
         end
     else
         if solver !== nothing
-            return RepT(d, it...; solver=solver)::RepT
+            return RepT(d, it...; solver = solver)::RepT
         else
             # FIXME without this type annotation even convexhull(::PointsHull{2,Int64,Array{Int64,1}}, ::PointsHull{2,Int64,Array{Int64,1}}) is not type stable, why ?
             return RepT(d, it...)::RepT
@@ -165,7 +204,13 @@ function constructpolyhedron(RepT::Type{<:Rep{T}}, d::FullDim, p::Tuple{Vararg{R
     end
 end
 
-function default_similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...; kws...) where T
+function default_similar(
+    p::Tuple{Vararg{Rep}},
+    d::FullDim,
+    ::Type{T},
+    it::It{T}...;
+    kws...,
+) where {T}
     # Some types in p may not support `d` or `T` so we call `similar_type` after `promote_reptype`
     RepT = similar_type(promote_reptype(typeof.(p)...), d, T)
     return constructpolyhedron(RepT, d, p, it...; kws...)
@@ -177,7 +222,15 @@ end
 Creates a representation with a type similar to `p` of a polyhedron of full dimension `d`, element type `T` and initialize it with the iterators `it`.
 The type of the result will be chosen closer to the type of `p[1]`.
 """
-Base.similar(p::Tuple{Vararg{Rep}}, d::FullDim, ::Type{T}, it::It{T}...; kws...) where {T} = default_similar(p, d, T, it...; kws...)
+function Base.similar(
+    p::Tuple{Vararg{Rep}},
+    d::FullDim,
+    ::Type{T},
+    it::It{T}...;
+    kws...,
+) where {T}
+    return default_similar(p, d, T, it...; kws...)
+end
 function promote_coefficient_type(p::Tuple{Vararg{Rep}})
     return promote_type(coefficient_type.(p)...)
 end

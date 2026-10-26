@@ -2,20 +2,27 @@ export doubledescription
 # Naive implementation of the double description Algorithm
 # See JuliaPolyhedra/ConvexHull.jl for an efficient implementation
 
-polytypefor(::Type{T}) where {T <: Integer} = Rational{BigInt}
+polytypefor(::Type{T}) where {T<:Integer} = Rational{BigInt}
 polytypefor(::Type{Float32}) = Float64
 polytypefor(::Type{T}) where {T} = T
 
 polyvectortype(a) = a
 # TODO sparse halfspaces does not mean sparse points
-polyvectortype(::Type{<:SparseVector{T}}) where T = Vector{T}
+polyvectortype(::Type{<:SparseVector{T}}) where {T} = Vector{T}
 
-dualtype(RepT::Type{<:Representation}) = dualtype(RepT, polyvectortype(vectortype(RepT)))
-function dualfullspace(rep::Representation, d::FullDim, ::Type{T}) where T
-    dualfullspace(rep, d, T, polyvectortype(similar_type(vectortype(rep), d, T)))
+function dualtype(RepT::Type{<:Representation})
+    return dualtype(RepT, polyvectortype(vectortype(RepT)))
 end
-function dualfullspace(rep::Representation{T}) where T
-    dualfullspace(rep, FullDim(rep), polytypefor(T))
+function dualfullspace(rep::Representation, d::FullDim, ::Type{T}) where {T}
+    return dualfullspace(
+        rep,
+        d,
+        T,
+        polyvectortype(similar_type(vectortype(rep), d, T)),
+    )
+end
+function dualfullspace(rep::Representation{T}) where {T}
+    return dualfullspace(rep, FullDim(rep), polytypefor(T))
 end
 
 """
@@ -46,10 +53,12 @@ Double description method revisited
 function doubledescription end
 
 function print_v_summary(v::VRep)
-    print("$(npoints(v)) points, $(nrays(v)) rays and $(nlines(v)) lines")
+    return print(
+        "$(npoints(v)) points, $(nrays(v)) rays and $(nlines(v)) lines",
+    )
 end
 
-function intersect_and_remove_redundancy(v, hs, h; verbose=0)
+function intersect_and_remove_redundancy(v, hs, h; verbose = 0)
     if eltype(hs) <: HalfSpace
         str = "halfspace"
     else
@@ -115,7 +124,7 @@ struct CutoffRayIndex
     index::Int
 end
 Base.show(io::IO, r::CutoffRayIndex) = print(io, "r[$(r.cutoff), $(r.index)]")
-struct DoubleDescriptionData{PointT, RayT, LineT, HST}
+struct DoubleDescriptionData{PointT,RayT,LineT,HST}
     fulldim::Int
     halfspaces::Vector{HST}
     # Elements ordered by first halfspace cutting it off
@@ -130,8 +139,8 @@ struct DoubleDescriptionData{PointT, RayT, LineT, HST}
     cutrz::Vector{Vector{BitSet}}
     rin::Vector{Vector{CutoffRayIndex}}
     lines::Vector{LineT}
-    cutline::Vector{Union{Nothing, LineT}}
-    lineray::Vector{Union{Nothing, CutoffRayIndex}}
+    cutline::Vector{Union{Nothing,LineT}}
+    lineray::Vector{Union{Nothing,CutoffRayIndex}}
     nlines::Vector{Int}
 end
 function _debug(io, name, elements, z)
@@ -172,10 +181,14 @@ function Base.show(io::IO, data::DoubleDescriptionData)
     end
 end
 
-function DoubleDescriptionData{PointT, RayT, LineT}(fulldim::Integer, hyperplanes, halfspaces) where {PointT, RayT, LineT}
+function DoubleDescriptionData{PointT,RayT,LineT}(
+    fulldim::Integer,
+    hyperplanes,
+    halfspaces,
+) where {PointT,RayT,LineT}
     n = length(halfspaces)
     m = length(hyperplanes)
-    return DoubleDescriptionData{PointT, RayT, LineT, eltype(halfspaces)}(
+    return DoubleDescriptionData{PointT,RayT,LineT,eltype(halfspaces)}(
         fulldim,
         halfspaces,
         PointT[],
@@ -189,12 +202,15 @@ function DoubleDescriptionData{PointT, RayT, LineT}(fulldim::Integer, hyperplane
         [BitSet[] for i in 1:n],
         [CutoffRayIndex[] for i in 1:n],
         LineT[],
-        Union{Nothing, LineT}[nothing for i in 1:(m + n)],
-        Union{Nothing, CutoffRayIndex}[nothing for i in 1:n],
-        zeros(Int, m + n)
+        Union{Nothing,LineT}[nothing for i in 1:(m+n)],
+        Union{Nothing,CutoffRayIndex}[nothing for i in 1:n],
+        zeros(Int, m + n),
     )
 end
-function tight_halfspace_indices(data::DoubleDescriptionData, p::CutoffPointIndex)
+function tight_halfspace_indices(
+    data::DoubleDescriptionData,
+    p::CutoffPointIndex,
+)
     if iszero(p.cutoff)
         return data.pz[p.index]
     else
@@ -242,11 +258,16 @@ _ray_pair(::CutoffRayIndex, ::CutoffRayIndex) = true
 # Necessary condition for adjacency.
 # See Proposition 9 (NC1) of [FP96].
 function is_adjacent_nc1(data, i, p1, p2)
-    rhs = 1 + _ray_pair(p1, p2) + data.nlines[i] + _bitdot_range(
-        tight_halfspace_indices(data, p1),
-        tight_halfspace_indices(data, p2),
-        i, length(data.halfspaces)
-    )
+    rhs =
+        1 +
+        _ray_pair(p1, p2) +
+        data.nlines[i] +
+        _bitdot_range(
+            tight_halfspace_indices(data, p1),
+            tight_halfspace_indices(data, p2),
+            i,
+            length(data.halfspaces),
+        )
     # `length(data.cutline) - length(data.halfspaces)` is the number of
     # hyperplanes (some may be redundant) in which case this condition is less effective.
     # TODO detect linearity and store the dimension instead of `fulldim`.
@@ -254,19 +275,25 @@ function is_adjacent_nc1(data, i, p1, p2)
     return dim <= rhs
 end
 function is_adjacency_breaker(data, i, p, p1, p2)
-    return p != p1 && p != p2 && all((i + 1):length(data.halfspaces)) do j
-        isin(data, j, p) || !(isin(data, j, p1) && isin(data, j, p2))
-    end
+    return p != p1 &&
+           p != p2 &&
+           all((i+1):length(data.halfspaces)) do j
+               return isin(data, j, p) ||
+                      !(isin(data, j, p1) && isin(data, j, p2))
+           end
 end
 function isadjacent(data, i::Integer, p1, p2)
     return is_adjacent_nc1(data, i, p1, p2) &&
-        # According to Proposition 7 (c) of [FP96], we need to check
-        # that there is not other point or ray that is in the same hyperplanes as `p1` and `p2`.
-        # If it's the case, it is in hyperplane `i` in particular,
-        # we can use it to restrict our attention to points and
-        # rays in `pin[i]` and `rin[i]`.
-        (_ray_pair(p1, p2) || !any(p -> is_adjacency_breaker(data, i, p, p1, p2), data.pin[i])) &&
-        !any(r -> is_adjacency_breaker(data, i, r, p1, p2), data.rin[i])
+           # According to Proposition 7 (c) of [FP96], we need to check
+           # that there is not other point or ray that is in the same hyperplanes as `p1` and `p2`.
+           # If it's the case, it is in hyperplane `i` in particular,
+           # we can use it to restrict our attention to points and
+           # rays in `pin[i]` and `rin[i]`.
+           (
+               _ray_pair(p1, p2) ||
+               !any(p -> is_adjacency_breaker(data, i, p, p1, p2), data.pin[i])
+           ) &&
+           !any(r -> is_adjacency_breaker(data, i, r, p1, p2), data.rin[i])
 end
 isin(data, i, p) = i in tight_halfspace_indices(data, p)
 
@@ -293,10 +320,10 @@ function add_index!(data, cutoff::Integer, r::Polyhedra.Ray, tight::BitSet)
 end
 
 function add_in!(data, i, index::CutoffPointIndex)
-    push!(data.pin[i], index)
+    return push!(data.pin[i], index)
 end
 function add_in!(data, i, index::CutoffRayIndex)
-    push!(data.rin[i], index)
+    return push!(data.rin[i], index)
 end
 function set_in!(data, I, index)
     for i in I
@@ -312,7 +339,15 @@ function add_element!(data, k, el, tight; tol)
             el = line_project(el, data.cutline[i], data.halfspaces[i])
             # The line is in all halfspaces from `i+1` up so projecting with it does not change it.
             push!(tight, i)
-            return add_adjacent_element!(data, i, k, el, data.lineray[i], tight; tol)
+            return add_adjacent_element!(
+                data,
+                i,
+                k,
+                el,
+                data.lineray[i],
+                tight;
+                tol,
+            )
         end
         # Could avoid computing `dot` twice between `el` and the halfspace here.
         if !in(el, data.halfspaces[i]; tol)
@@ -324,12 +359,12 @@ function add_element!(data, k, el, tight; tol)
         end
     end
     index = add_index!(data, cutoff, el, tight)
-    set_in!(data, (index.cutoff + 1):k, index)
+    set_in!(data, (index.cutoff+1):k, index)
     return index
 end
 function project_onto_affspace(data, offset, el, hyperplanes; tol)
     for i in reverse(eachindex(hyperplanes))
-        line = data.cutline[offset + i]
+        line = data.cutline[offset+i]
         h = hyperplanes[i]
         if line !== nothing
             el = line_project(el, line, h)
@@ -355,7 +390,9 @@ function combine(β, p::AbstractVector, pvalue, r::Polyhedra.Ray, rvalue)
     λ = (β - pvalue) / rvalue
     return p + λ * r
 end
-combine(β, r::Polyhedra.Ray, rvalue, p::AbstractVector, pvalue) = combine(β, p, pvalue, r, rvalue)
+function combine(β, r::Polyhedra.Ray, rvalue, p::AbstractVector, pvalue)
+    return combine(β, p, pvalue, r, rvalue)
+end
 function combine(β, r1::Polyhedra.Ray, value1, r2::Polyhedra.Ray, value2)
     # should take
     # λ = value2 / (value2 - value1)
@@ -377,7 +414,7 @@ Combine `el1` and `el2` which are on two different sides of the halfspace `h` so
 that the combination is in the corresponding hyperplane.
 """
 function combine(h::HalfSpace, el1::VRepElement, el2::VRepElement)
-    combine(h.β, el1, _dot(h.a, el1), el2, _dot(h.a, el2))
+    return combine(h.β, el1, _dot(h.a, el1), el2, _dot(h.a, el2))
 end
 
 """
@@ -403,11 +440,11 @@ function add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1; tol)
     i = idx2.cutoff
     # Condition (c_k) in [FP96]
     if idx1.cutoff == i ||
-        isin(data, i, idx1) ||
-        # If it's in both at some lower `j` then we'll
-        # add it then otherwise, it will be added twice.
-        any(j -> isin(data, j, idx1) && isin(data, j, idx2), (i + 1):hs_idx) ||
-        (hp_idx !== nothing && !isadjacent(data, hp_idx, idx1, idx2))
+       isin(data, i, idx1) ||
+       # If it's in both at some lower `j` then we'll
+       # add it then otherwise, it will be added twice.
+       any(j -> isin(data, j, idx1) && isin(data, j, idx2), (i+1):hs_idx) ||
+       (hp_idx !== nothing && !isadjacent(data, hp_idx, idx1, idx2))
         return
     end
     newel = combine(data.halfspaces[i], data[idx1], data[idx2])
@@ -416,7 +453,9 @@ function add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1; tol)
     #      or should we check rank or combinatorial check ?
     #      In `DDMethodVariation2` of [FP96], `Adj` is not called
     #      in case `rj, rj'` have inherited adjacency
-    tight = tight_halfspace_indices(data, idx1) ∩ tight_halfspace_indices(data, idx2)
+    tight =
+        tight_halfspace_indices(data, idx1) ∩
+        tight_halfspace_indices(data, idx2)
     push!(tight, i)
     return add_adjacent_element!(data, i, i, newel, idx1, tight; tol)
 end
@@ -460,11 +499,19 @@ function hline(data, line::Line, i, h; tol)
 end
 
 # TODO remove solver arg `_`, it is kept to avoid breaking code
-function doubledescription(hr::HRepresentation{T}, solver = nothing; tol = _default_tol(T)) where {T}
+function doubledescription(
+    hr::HRepresentation{T},
+    solver = nothing;
+    tol = _default_tol(T),
+) where {T}
     v = Polyhedra.dualfullspace(hr)
     hps = Polyhedra.lazy_collect(hyperplanes(hr))
     hss = Polyhedra.lazy_collect(halfspaces(hr))
-    data = DoubleDescriptionData{pointtype(v), raytype(v), linetype(v)}(fulldim(hr), hps, hss)
+    data = DoubleDescriptionData{pointtype(v),raytype(v),linetype(v)}(
+        fulldim(hr),
+        hps,
+        hss,
+    )
     for line in lines(v)
         cut = false
         for i in reverse(eachindex(hps))
@@ -488,17 +535,21 @@ function doubledescription(hr::HRepresentation{T}, solver = nothing; tol = _defa
         line = data.cutline[i]
         if line !== nothing
             ray = Polyhedra.Ray(Polyhedra.coord(line))
-            data.lineray[i] = add_element!(data, i - 1, ray, BitSet((i + 1):length(hss)); tol)
+            data.lineray[i] =
+                add_element!(data, i - 1, ray, BitSet((i+1):length(hss)); tol)
         end
     end
     @assert isone(npoints(v))
     # Add the origin
-    orig = project_onto_affspace(data, nhalfspaces(hr), first(points(v)), hps; tol)
+    orig =
+        project_onto_affspace(data, nhalfspaces(hr), first(points(v)), hps; tol)
     if orig !== nothing
         add_element!(data, nhalfspaces(hr), orig, resized_bitset(data); tol)
     end
     for i in reverse(eachindex(hss))
-        if data.cutline[i] === nothing && isempty(data.cutpoints[i]) && isempty(data.cutrays[i])
+        if data.cutline[i] === nothing &&
+           isempty(data.cutpoints[i]) &&
+           isempty(data.cutrays[i])
             # Redundant, remove its contribution to allow more pruning with `is_adjacent_nc1`
             for p in data.pin[i]
                 delete!(tight_halfspace_indices(data, p), i)
@@ -545,7 +596,11 @@ function doubledescription(hr::HRepresentation{T}, solver = nothing; tol = _defa
     return similar(v, data.points, data.lines, data.rays)
 end
 
-function doubledescription(v::VRepresentation{T}, solver = nothing; kws...) where {T}
+function doubledescription(
+    v::VRepresentation{T},
+    solver = nothing;
+    kws...,
+) where {T}
     checkvconsistency(v)
     lv = convert(LiftedVRepresentation{T,Matrix{T}}, v)
     R = -lv.R

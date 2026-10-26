@@ -4,7 +4,11 @@ Base.show(io::IO, h::HalfSpace) = print(io, "HalfSpace($(h.a), $(h.β))")
 Base.show(io::IO, l::Line) = print(io, "Line($(l.a))")
 Base.show(io::IO, r::Ray) = print(io, "Ray($(r.a))")
 
-Base.summary(it::Polyhedra.AbstractRepIterator{T, ElemT}) where {T, ElemT} = "$(length(it))-element iterator of $ElemT"
+function Base.summary(
+    it::Polyhedra.AbstractRepIterator{T,ElemT},
+) where {T,ElemT}
+    return "$(length(it))-element iterator of $ElemT"
+end
 
 function _print_typeinfo_prefix(io, v)
     x = Base.typeinfo_prefix(io, v)
@@ -14,26 +18,50 @@ function _print_typeinfo_prefix(io, v)
     else
         prefix = x
     end
-    print(io, prefix)
+    return print(io, prefix)
 end
 
 # Inspired from Base.show_vector
-function show_repit(io::IO, v::Polyhedra.AbstractRepIterator, print_prefix::Bool, start_str::String, end_str::String, join_str::String=",")
+function show_repit(
+    io::IO,
+    v::Polyhedra.AbstractRepIterator,
+    print_prefix::Bool,
+    start_str::String,
+    end_str::String,
+    join_str::String = ",",
+)
     if print_prefix
         _print_typeinfo_prefix(io, v)
     end
-    io = IOContext(io, :typeinfo => eltype(v), :compact => get(io, :compact, true))
+    io = IOContext(
+        io,
+        :typeinfo => eltype(v),
+        :compact => get(io, :compact, true),
+    )
     limited = get(io, :limit, false)
     limited = true
     if limited && length(v) > 20
-        Base.show_delim_array(io, v, start_str, join_str, " \u2026 " * end_str, false, 1, 20)
+        Base.show_delim_array(
+            io,
+            v,
+            start_str,
+            join_str,
+            " \u2026 " * end_str,
+            false,
+            1,
+            20,
+        )
     else
         Base.show_delim_array(io, v, start_str, join_str, end_str, false)
     end
 end
 
 # Inspired from Base.showarray with repr=false and Base.print_matrix
-function show_repit(io::IO, it::Polyhedra.AbstractRepIterator, ::MIME"text/plain")
+function show_repit(
+    io::IO,
+    it::Polyhedra.AbstractRepIterator,
+    ::MIME"text/plain",
+)
     print(io, summary(it))
     if !isempty(it)
         if !get(io, :limit, false)
@@ -45,23 +73,55 @@ function show_repit(io::IO, it::Polyhedra.AbstractRepIterator, ::MIME"text/plain
             screenheight, screenwidth = sz[1] - 4, sz[2]
         end
         if screenheight < length(it)
-            Base.show_delim_array(io, it, ":\n ", "\n", "\n  \u22ee", false, 1, screenheight)
+            Base.show_delim_array(
+                io,
+                it,
+                ":\n ",
+                "\n",
+                "\n  \u22ee",
+                false,
+                1,
+                screenheight,
+            )
         else
             Base.show_delim_array(io, it, ":\n ", "\n", "", false)
         end
     end
 end
 
-
-Base.show(io::IO, v::Polyhedra.AbstractRepIterator) = show_repit(io, v, true, "[", "]")
-Base.show(io::IO, mime::MIME"text/plain", it::Polyhedra.AbstractRepIterator) = show_repit(io, it, mime)
+function Base.show(io::IO, v::Polyhedra.AbstractRepIterator)
+    return show_repit(io, v, true, "[", "]")
+end
+function Base.show(
+    io::IO,
+    mime::MIME"text/plain",
+    it::Polyhedra.AbstractRepIterator,
+)
+    return show_repit(io, it, mime)
+end
 
 Base.summary(v::VRepresentation) = "V-representation $(typeof(v))"
 Base.summary(h::HRepresentation) = "H-representation $(typeof(h))"
 Base.summary(p::Polyhedron) = "Polyhedron $(typeof(p))"
 
-show_reps(io::IO, args::Tuple, start_str::String, join_str::String, first::Bool) = first
-function show_reps(io::IO, args::Tuple, start_str::String, join_str::String, first::Bool, rep, reps...)
+function show_reps(
+    io::IO,
+    args::Tuple,
+    start_str::String,
+    join_str::String,
+    first::Bool,
+)
+    return first
+end
+function show_reps(
+    io::IO,
+    args::Tuple,
+    start_str::String,
+    join_str::String,
+    first::Bool,
+    rep,
+    reps...,
+)
     if !isempty(rep)
         if first
             print(io, start_str)
@@ -71,21 +131,65 @@ function show_reps(io::IO, args::Tuple, start_str::String, join_str::String, fir
         end
         show_repit(io, rep, args...)
     end
-    show_reps(io::IO, args, start_str, join_str, first, reps...)
+    return show_reps(io::IO, args, start_str, join_str, first, reps...)
 end
 
-show_vreps(io::IO, rep::HRepresentation, start_str::String, join_str::String, args...) = true
-show_vreps(io::IO, rep::VRepresentation, start_str::String, join_str::String, args...) = show_reps(io, args, start_str, join_str, true, vreps(rep)...)
-function show_vreps(io::IO, rep::Polyhedron, start_str::String, join_str::String, args...)
+function show_vreps(
+    io::IO,
+    rep::HRepresentation,
+    start_str::String,
+    join_str::String,
+    args...,
+)
+    return true
+end
+function show_vreps(
+    io::IO,
+    rep::VRepresentation,
+    start_str::String,
+    join_str::String,
+    args...,
+)
+    return show_reps(io, args, start_str, join_str, true, vreps(rep)...)
+end
+function show_vreps(
+    io::IO,
+    rep::Polyhedron,
+    start_str::String,
+    join_str::String,
+    args...,
+)
     if vrepiscomputed(rep)
         show_reps(io, args, start_str, join_str, true, vreps(rep)...)
     else
         true
     end
 end
-show_hreps(io::IO, rep::VRepresentation, start_str::String, join_str::String, args...) = true
-show_hreps(io::IO, rep::HRepresentation, start_str::String, join_str::String, args...) = show_reps(io, args, start_str, join_str, true, hreps(rep)...)
-function show_hreps(io::IO, rep::Polyhedron, start_str::String, join_str::String, args...)
+function show_hreps(
+    io::IO,
+    rep::VRepresentation,
+    start_str::String,
+    join_str::String,
+    args...,
+)
+    return true
+end
+function show_hreps(
+    io::IO,
+    rep::HRepresentation,
+    start_str::String,
+    join_str::String,
+    args...,
+)
+    return show_reps(io, args, start_str, join_str, true, hreps(rep)...)
+end
+function show_hreps(
+    io::IO,
+    rep::Polyhedron,
+    start_str::String,
+    join_str::String,
+    args...,
+)
     if hrepiscomputed(rep)
         show_reps(io, args, start_str, join_str, true, hreps(rep)...)
     else
@@ -102,12 +206,12 @@ function Base.show(io::IO, rep::Rep)
     if _has_vrep(rep) && !first
         print(io, " : ")
     end
-    show_vreps(io, rep, "", " + ", false, "convexhull(", ")")
+    return show_vreps(io, rep, "", " + ", false, "convexhull(", ")")
 end
 function Base.show(io::IO, mime::MIME"text/plain", rep::Rep)
     print(io, summary(rep))
     show_hreps(io, rep, ":\n", ",\n", mime)
-    show_vreps(io, rep, ":\n", ",\n", mime)
+    return show_vreps(io, rep, ":\n", ",\n", mime)
 end
 
 #_length(hrep::HRepresentation) = nhyperplanes(hrep) + nhalfspaces(hrep)

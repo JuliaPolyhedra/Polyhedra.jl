@@ -33,13 +33,13 @@ const misctests = Dict(
     "recipe" => recipetest,
     "support_function" => support_function_test,
     "vhypercubetest1c" => lib -> vhypercubetest(lib, 1, -1, 1),
-    "vhypercubetest1u" => lib -> vhypercubetest(lib, 1,  1, 2),
+    "vhypercubetest1u" => lib -> vhypercubetest(lib, 1, 1, 2),
     "vhypercubetest2c" => lib -> vhypercubetest(lib, 2, -1, 1),
-    "vhypercubetest2u" => lib -> vhypercubetest(lib, 2,  1, 2),
+    "vhypercubetest2u" => lib -> vhypercubetest(lib, 2, 1, 2),
     "vhypercubetest3c" => lib -> vhypercubetest(lib, 3, -1, 1),
-    "vhypercubetest3u" => lib -> vhypercubetest(lib, 3,  1, 2),
+    "vhypercubetest3u" => lib -> vhypercubetest(lib, 3, 1, 2),
     "center_of_mass" => comsquarepyramidtest,
-    "cartesian_interval" => cartesian_interval_test
+    "cartesian_interval" => cartesian_interval_test,
 )
 
 @polytestset misc

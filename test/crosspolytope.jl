@@ -21,5 +21,5 @@ function crosspolytopetest(lib::Polyhedra.Library, n)
         V[2i-1, i] = 1
         V[2i, i] = -1
     end
-    generator_fulltest(poly, V)
+    return generator_fulltest(poly, V)
 end

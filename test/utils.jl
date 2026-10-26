@@ -3,10 +3,22 @@ using Polyhedra
 
 _isapprox(x::Real, y::Real) = _isapprox(promote(x, y)...)
 _isapprox(x::T, y::T) where {T<:Real} = x == y
-_isapprox(x::T, y::T) where {T<:AbstractFloat} = y < x+1024*eps(T) && x < y+1024*eps(T)
-_isapprox(x::AbstractVector{S}, y::AbstractVector{T}) where {S<:Real,T<:Real} = _isapprox(promote(x, y)...)
+function _isapprox(x::T, y::T) where {T<:AbstractFloat}
+    return y < x+1024*eps(T) && x < y+1024*eps(T)
+end
+function _isapprox(
+    x::AbstractVector{S},
+    y::AbstractVector{T},
+) where {S<:Real,T<:Real}
+    return _isapprox(promote(x, y)...)
+end
 _isapprox(x::AbstractVector{T}, y::AbstractVector{T}) where {T<:Real} = x == y
-_isapprox(x::AbstractVector{T}, y::AbstractVector{T}) where {T<:AbstractFloat} = _isapproxzero(norm(x - y))
+function _isapprox(
+    x::AbstractVector{T},
+    y::AbstractVector{T},
+) where {T<:AbstractFloat}
+    return _isapproxzero(norm(x - y))
+end
 _isapproxzero(x::T) where {T<:Real} = _isapprox(x, zero(T))
 
 function _parallel(x, y)
@@ -30,7 +42,7 @@ function _parallel(x, y)
     return true
 end
 
-function inaffspace(r, s, L, par::Bool=true)
+function inaffspace(r, s, L, par::Bool = true)
     x = Polyhedra.coord(r)
     y = Polyhedra.coord(s)
     for l in L
@@ -39,7 +51,7 @@ function inaffspace(r, s, L, par::Bool=true)
         x = x * dot(z, z) - z * dot(z, x)
         y = y * dot(z, z) - z * dot(z, y)
     end
-    par ? _parallel(x, y) : _isapprox(r, s)
+    return par ? _parallel(x, y) : _isapprox(r, s)
 end
 
 function inequality_fulltest(hr::HRepresentation, exp::HRepresentation)
@@ -60,12 +72,12 @@ function inequality_fulltest(hr::HRepresentation, exp::HRepresentation)
     end
 end
 function inequality_fulltest(h::HRepresentation, hrepargs...)
-    inequality_fulltest(h, hrep(hrepargs...))
+    return inequality_fulltest(h, hrep(hrepargs...))
 end
 function inequality_fulltest(p::Polyhedron, hrepargs...)
     detecthlinearity!(p)
     removehredundancy!(p)
-    inequality_fulltest(hrep(p), hrepargs...)
+    return inequality_fulltest(hrep(p), hrepargs...)
 end
 
 function generator_fulltest(vr::VRepresentation, exp::VRepresentation)
@@ -85,12 +97,12 @@ function generator_fulltest(vr::VRepresentation, exp::VRepresentation)
     end
 end
 function generator_fulltest(v::VRepresentation, vrepargs...)
-    generator_fulltest(v, vrep(vrepargs...))
+    return generator_fulltest(v, vrep(vrepargs...))
 end
 function generator_fulltest(p::Polyhedron, vrepargs...)
     detectvlinearity!(p)
     removevredundancy!(p)
-    generator_fulltest(vrep(p), vrepargs...)
+    return generator_fulltest(vrep(p), vrepargs...)
 end
 
 function alloc_test(f, n)

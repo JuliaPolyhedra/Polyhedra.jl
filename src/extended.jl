@@ -1,13 +1,21 @@
 struct HSumSpace{T} <: HRepresentation{T}
     d::Int
 end
-hvectortype(::Type{HSumSpace{T}}) where T = SparseVector{T, Int}
-Base.length(idxs::HyperPlaneIndices{T, HSumSpace{T}}) where T = idxs.rep.d
-Base.isempty(idxs::HyperPlaneIndices{T, HSumSpace{T}}) where T = idxs.rep.d <= 0
-startindex(idxs::HyperPlaneIndices{T, HSumSpace{T}}) where T = isempty(idxs) ? nothing : eltype(idxs)(1)
-function Base.get(h::HSumSpace{T}, idx::HyperPlaneIndex) where T
+hvectortype(::Type{HSumSpace{T}}) where {T} = SparseVector{T,Int}
+Base.length(idxs::HyperPlaneIndices{T,HSumSpace{T}}) where {T} = idxs.rep.d
+function Base.isempty(idxs::HyperPlaneIndices{T,HSumSpace{T}}) where {T}
+    return idxs.rep.d <= 0
+end
+function startindex(idxs::HyperPlaneIndices{T,HSumSpace{T}}) where {T}
+    return isempty(idxs) ? nothing : eltype(idxs)(1)
+end
+function Base.get(h::HSumSpace{T}, idx::HyperPlaneIndex) where {T}
     i = idx.value
-    a = sparsevec(i:h.d:i+2h.d, StaticArrays.SVector(one(T), -one(T), -one(T)), 3h.d)
+    a = sparsevec(
+        i:h.d:(i+2h.d),
+        StaticArrays.SVector(one(T), -one(T), -one(T)),
+        3h.d,
+    )
     return HyperPlane(a, zero(T))
 end
 function nextindex(h::HSumSpace, idx::HyperPlaneIndex)
@@ -19,7 +27,7 @@ function nextindex(h::HSumSpace, idx::HyperPlaneIndex)
 end
 @norepelem HSumSpace HalfSpace
 
-struct Projection{S, I}
+struct Projection{S,I}
     set::S
     dimensions::I
 end
@@ -56,18 +64,28 @@ function _pad_map(i, d, padding...)
 end
 
 # TODO should be cartesian product with FullSpace
-function zeropad(p::HRep{T}, padding...) where T
+function zeropad(p::HRep{T}, padding...) where {T}
     d = map_fulldim(N -> N + abs(padding[1]), FullDim(p))
     f = (i, el) -> zeropad(el, padding...)
-    return similar(p, d, T, hmap(f, d, T, p)...;
-                   dimension_map = i -> _pad_map(i, fulldim(p), padding...))
+    return similar(
+        p,
+        d,
+        T,
+        hmap(f, d, T, p)...;
+        dimension_map = i -> _pad_map(i, fulldim(p), padding...),
+    )
 end
 
-function Base.intersect(p1::Projection{S1, <:Base.OneTo}, p2::Projection{S2, <:Base.OneTo}) where {S1, S2}
+function Base.intersect(
+    p1::Projection{S1,<:Base.OneTo},
+    p2::Projection{S2,<:Base.OneTo},
+) where {S1,S2}
     d = length(p1.dimensions)
     d == length(p2.dimensions) || throw(DimensionMismatch())
-    p = intersect(zeropad(p1.set, fulldim(p2.set) - d),
-                  zeropad(p2.set, fulldim(p1.set) - d, d))
+    p = intersect(
+        zeropad(p1.set, fulldim(p2.set) - d),
+        zeropad(p2.set, fulldim(p1.set) - d, d),
+    )
     return Projection(p, Base.OneTo(d))
 end
 
@@ -104,8 +122,12 @@ function convexhull(p1::HRepresentation, p2::HRepresentation)
     end
     ei = basis(hvectortype(p1), map_fulldim(N -> 1, d), 1)
     λ = HalfSpace(-ei, zero(T)) ∩ HalfSpace(ei, one(T))
-    lifted = similar((p1, p2), map_fulldim(N -> 3N + 1, d), T,
+    lifted = similar(
+        (p1, p2),
+        map_fulldim(N -> 3N + 1, d),
+        T,
         hmap(f, d, T, p1, p2, HSumSpace{T}(fulldim(p1)), λ)...;
-        dimension_map = i -> (1 <= i <= fulldim(d)) ? (1, i) : nothing)
+        dimension_map = i -> (1 <= i <= fulldim(d)) ? (1, i) : nothing,
+    )
     return Projection(lifted, Base.OneTo(fulldim(p1)))
 end

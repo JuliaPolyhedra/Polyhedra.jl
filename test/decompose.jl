@@ -8,11 +8,16 @@ struct Face
 end
 Face(args...) = Face([args...])
 
-function Base.isapprox(a::Face, b::Face; atol=1e-8, rtol=1e-8)
+function Base.isapprox(a::Face, b::Face; atol = 1e-8, rtol = 1e-8)
     for i in 1:3
         ok = false
         for j in 1:3
-            if !isapprox(a.points[j], b.points[((j+i-1)%3)+1]; atol=atol, rtol=rtol)
+            if !isapprox(
+                a.points[j],
+                b.points[((j+i-1)%3)+1];
+                atol = atol,
+                rtol = rtol,
+            )
                 ok = true
             end
         end
@@ -21,12 +26,12 @@ function Base.isapprox(a::Face, b::Face; atol=1e-8, rtol=1e-8)
     return false
 end
 
-nfaces(d::Dict{<:Any, Face}) = length(d)
-nfaces(d::Dict{<:Any, <:Vector}) = sum(map(length, values(d)))
+nfaces(d::Dict{<:Any,Face}) = length(d)
+nfaces(d::Dict{<:Any,<:Vector}) = sum(map(length, values(d)))
 function test_decompose(p, d::Dict)
     N = ndims(p)
-    P = GeometryBasics.Point{N, Float64}
-    NR = GeometryBasics.Point{3, Float64}
+    P = GeometryBasics.Point{N,Float64}
+    NR = GeometryBasics.Point{3,Float64}
     points = GeometryBasics.decompose(P, p)
     faces = GeometryBasics.decompose(GeometryBasics.GLTriangleFace, p)
     normals = GeometryBasics.decompose(GeometryBasics.Normal{NR}(), p)
@@ -37,10 +42,8 @@ function test_decompose(p, d::Dict)
     for i in eachindex(faces)
         a, b, c = faces[i]
         @test normals[3i] == normals[3i-1] == normals[3i-2]
-        normal = map(x -> x === -0.0 ? 0.0 : x, round.(normals[3i], digits=6))
-        face = Face(points[3i-2],
-                    points[3i-1],
-                    points[3i])
+        normal = map(x -> x === -0.0 ? 0.0 : x, round.(normals[3i], digits = 6))
+        face = Face(points[3i-2], points[3i-1], points[3i])
         @test normal in keys(d)
         f = d[normal]
         if f isa Face
@@ -60,126 +63,172 @@ end
 test_decompose(p::Polyhedron, d::Dict) = test_decompose(Polyhedra.Mesh(p), d)
 
 function _quadrantdecomposetest(lib::Polyhedra.Library, V)
-    v = vrep([Ray(convert(V, [1., 0])),
-              Ray(convert(V, [0, 1.]))])
+    v = vrep([Ray(convert(V, [1.0, 0])), Ray(convert(V, [0, 1.0]))])
     p = polyhedron(v, lib)
-    d = Dict([0.0,  0.0, 1.0] => Face([0.0, 0.0],
-                                      [2.0, 0.0],
-                                      [0.0, 2.0]))
-    test_decompose(p, d)
+    d = Dict([0.0, 0.0, 1.0] => Face([0.0, 0.0], [2.0, 0.0], [0.0, 2.0]))
+    return test_decompose(p, d)
 end
 function quadrantdecomposetest(lib::Polyhedra.Library)
     _quadrantdecomposetest(lib, Vector{Float64})
-    _quadrantdecomposetest(lib, SVector{2,Float64})
+    return _quadrantdecomposetest(lib, SVector{2,Float64})
 end
 function _orthantdecomposetest(lib::Polyhedra.Library, V)
-    v = vrep([Ray(convert(V, [1., 0, 0])),
-              Ray(convert(V, [0, 1., 0])),
-              Ray(convert(V, [0, 0, 1.]))])
+    v = vrep([
+        Ray(convert(V, [1.0, 0, 0])),
+        Ray(convert(V, [0, 1.0, 0])),
+        Ray(convert(V, [0, 0, 1.0])),
+    ])
     p = polyhedron(v, lib)
-    d = Dict([-1.0,  0.0,  0.0] => Face([0.0, 0.0, 0.0],
-                                        [0.0, 2.0, 0.0],
-                                        [0.0, 0.0, 2.0]),
-             [ 0.0, -1.0,  0.0] => Face([0.0, 0.0, 0.0],
-                                        [0.0, 0.0, 2.0],
-                                        [2.0, 0.0, 0.0]),
-             [ 0.0,  0.0, -1.0] => Face([0.0, 0.0, 0.0],
-                                        [2.0, 0.0, 0.0],
-                                        [0.0, 2.0, 0.0]))
-    test_decompose(p, d)
+    d = Dict(
+        [-1.0, 0.0, 0.0] =>
+            Face([0.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 2.0]),
+        [0.0, -1.0, 0.0] =>
+            Face([0.0, 0.0, 0.0], [0.0, 0.0, 2.0], [2.0, 0.0, 0.0]),
+        [0.0, 0.0, -1.0] =>
+            Face([0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.0, 2.0, 0.0]),
+    )
+    return test_decompose(p, d)
 end
 function orthantdecomposetest(lib::Polyhedra.Library)
     _orthantdecomposetest(lib, Vector{Float64})
-    _orthantdecomposetest(lib, SVector{3,Float64})
+    return _orthantdecomposetest(lib, SVector{3,Float64})
 end
 
 function _squaredecomposetest(lib::Polyhedra.Library, V)
-    p = polyhedron(convexhull(convert(V, [ 1,  1]),
-                              convert(V, [-1,  1]),
-                              convert(V, [ 1, -1]),
-                              convert(V, [-1, -1])), lib)
-    d = Dict([0.0,  0.0,  1.0] => [Face([-1.0,  1.0], [ 1.0,  1.0], [ 1.0, -1.0]),
-                                   Face([ 1.0, -1.0], [-1.0, -1.0], [-1.0,  1.0])])
-    test_decompose(p, d)
+    p = polyhedron(
+        convexhull(
+            convert(V, [1, 1]),
+            convert(V, [-1, 1]),
+            convert(V, [1, -1]),
+            convert(V, [-1, -1]),
+        ),
+        lib,
+    )
+    d = Dict(
+        [0.0, 0.0, 1.0] => [
+            Face([-1.0, 1.0], [1.0, 1.0], [1.0, -1.0]),
+            Face([1.0, -1.0], [-1.0, -1.0], [-1.0, 1.0]),
+        ],
+    )
+    return test_decompose(p, d)
 end
 function squaredecomposetest(lib::Polyhedra.Library)
     _squaredecomposetest(lib, Vector{Float64})
-    _squaredecomposetest(lib, SVector{2,Float64})
+    return _squaredecomposetest(lib, SVector{2,Float64})
 end
 
 function _cubedecomposetest(lib::Polyhedra.Library, V)
-    p = polyhedron(convexhull(convert(V, [ 1.,  1,  1]),
-                              convert(V, [ 1., -1,  1]),
-                              convert(V, [ 1.,  1, -1]),
-                              convert(V, [ 1., -1, -1]),
-                              convert(V, [-1.,  1,  1]),
-                              convert(V, [-1., -1,  1]),
-                              convert(V, [-1.,  1, -1]),
-                              convert(V, [-1., -1, -1])), lib)
+    p = polyhedron(
+        convexhull(
+            convert(V, [1.0, 1, 1]),
+            convert(V, [1.0, -1, 1]),
+            convert(V, [1.0, 1, -1]),
+            convert(V, [1.0, -1, -1]),
+            convert(V, [-1.0, 1, 1]),
+            convert(V, [-1.0, -1, 1]),
+            convert(V, [-1.0, 1, -1]),
+            convert(V, [-1.0, -1, -1]),
+        ),
+        lib,
+    )
     # FIXME failing
     #p = polyhedron(convexhull(SymPoint([1., 1, 1]),
     #                          SymPoint([1., -1, 1]),
     #                          SymPoint([1., 1, -1]),
     #                          SymPoint([1., -1, -1])))
-    d = Dict([ 0.0,  0.0, -1.0] => [Face([-1.0, -1.0, -1.0], [ 1.0, -1.0, -1.0], [ 1.0,  1.0, -1.0]),
-                                    Face([ 1.0,  1.0, -1.0], [-1.0,  1.0, -1.0], [-1.0, -1.0, -1.0])],
-             [-1.0,  0.0,  0.0] => [Face([-1.0, -1.0, -1.0], [-1.0,  1.0, -1.0], [-1.0,  1.0,  1.0]),
-                                    Face([-1.0,  1.0,  1.0], [-1.0, -1.0,  1.0], [-1.0, -1.0, -1.0])],
-             [ 0.0, -1.0,  0.0] => [Face([-1.0, -1.0,  1.0], [ 1.0, -1.0,  1.0], [ 1.0, -1.0, -1.0]),
-                                    Face([ 1.0, -1.0, -1.0], [-1.0, -1.0, -1.0], [-1.0, -1.0,  1.0])],
-             [ 0.0,  1.0,  0.0] => [Face([-1.0,  1.0, -1.0], [ 1.0,  1.0, -1.0], [ 1.0,  1.0,  1.0]),
-                                    Face([ 1.0,  1.0,  1.0], [-1.0,  1.0,  1.0], [-1.0,  1.0, -1.0])],
-             [ 0.0,  0.0,  1.0] => [Face([-1.0,  1.0,  1.0], [ 1.0,  1.0,  1.0], [ 1.0, -1.0,  1.0]),
-                                    Face([ 1.0, -1.0,  1.0], [-1.0, -1.0,  1.0], [-1.0,  1.0,  1.0])],
-             [ 1.0,  0.0,  0.0] => [Face([ 1.0, -1.0,  1.0], [ 1.0,  1.0,  1.0], [ 1.0,  1.0, -1.0]),
-                                    Face([ 1.0,  1.0, -1.0], [ 1.0, -1.0, -1.0], [ 1.0, -1.0,  1.0])])
-    test_decompose(p, d)
+    d = Dict(
+        [0.0, 0.0, -1.0] => [
+            Face([-1.0, -1.0, -1.0], [1.0, -1.0, -1.0], [1.0, 1.0, -1.0]),
+            Face([1.0, 1.0, -1.0], [-1.0, 1.0, -1.0], [-1.0, -1.0, -1.0]),
+        ],
+        [-1.0, 0.0, 0.0] => [
+            Face([-1.0, -1.0, -1.0], [-1.0, 1.0, -1.0], [-1.0, 1.0, 1.0]),
+            Face([-1.0, 1.0, 1.0], [-1.0, -1.0, 1.0], [-1.0, -1.0, -1.0]),
+        ],
+        [0.0, -1.0, 0.0] => [
+            Face([-1.0, -1.0, 1.0], [1.0, -1.0, 1.0], [1.0, -1.0, -1.0]),
+            Face([1.0, -1.0, -1.0], [-1.0, -1.0, -1.0], [-1.0, -1.0, 1.0]),
+        ],
+        [0.0, 1.0, 0.0] => [
+            Face([-1.0, 1.0, -1.0], [1.0, 1.0, -1.0], [1.0, 1.0, 1.0]),
+            Face([1.0, 1.0, 1.0], [-1.0, 1.0, 1.0], [-1.0, 1.0, -1.0]),
+        ],
+        [0.0, 0.0, 1.0] => [
+            Face([-1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, -1.0, 1.0]),
+            Face([1.0, -1.0, 1.0], [-1.0, -1.0, 1.0], [-1.0, 1.0, 1.0]),
+        ],
+        [1.0, 0.0, 0.0] => [
+            Face([1.0, -1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, -1.0]),
+            Face([1.0, 1.0, -1.0], [1.0, -1.0, -1.0], [1.0, -1.0, 1.0]),
+        ],
+    )
+    return test_decompose(p, d)
 end
 function cubedecomposetest(lib::Polyhedra.Library)
     _cubedecomposetest(lib, Vector{Float64})
-    _cubedecomposetest(lib, SVector{3,Float64})
+    return _cubedecomposetest(lib, SVector{3,Float64})
 end
 
 function largedecomposetest(lib::Polyhedra.Library)
-    V = [-1 -1  1;
-         -1  1  1;
-          1 -1  1;
-          1  1  1;
-          0  1 -1;
-          1  0 -1;
-         -1  0 -1;
-          0 -1 -1]
+    V = [
+        -1 -1 1;
+        -1 1 1;
+        1 -1 1;
+        1 1 1;
+        0 1 -1;
+        1 0 -1;
+        -1 0 -1;
+        0 -1 -1
+    ]
     R = [0 0 1]
     v = vrep(V, R)
     p = polyhedron(v, lib)
-    d13 = round(1/3, digits=6)
-    d23 = round(2/3, digits=6)
-    md13 = round(-1/3, digits=6)
-    md23 = round(-2/3, digits=6)
-    d = Dict([ 1.0, 0.0, 0.0] => [Face([1.0,1.0,1.0], [1.0,-1.0,1.0], [1.0,1.0,2.0]),
-                                  Face([1.0,-1.0,1.0], [1.0,-1.0,2.0], [1.0,1.0,2.0]),
-                                  Face([1.0,1.0,1.0], [1.0,0.0,-1.0], [1.0,-1.0,1.0])],
-             [ 0.0, 1.0, 0.0] => [Face([-1.0,1.0,1.0], [1.0,1.0,1.0], [-1.0,1.0,2.0]),
-                                  Face([1.0,1.0,1.0], [1.0,1.0,2.0], [-1.0,1.0,2.0]),
-                                  Face([-1.0,1.0,1.0], [0.0,1.0,-1.0], [1.0,1.0,1.0])],
-             [ d23, d23,md13] => [Face([1.0,1.0,1.0], [0.0,1.0,-1.0], [1.0,0.0,-1.0])],
-             [ 0.0,-1.0, 0.0] => [Face([1.0,-1.0,1.0], [-1.0,-1.0,1.0], [1.0,-1.0,2.0]),
-                                  Face([-1.0,-1.0,1.0], [-1.0,-1.0,2.0], [1.0,-1.0,2.0]),
-                                  Face([1.0,-1.0,1.0], [0.0,-1.0,-1.0], [-1.0,-1.0,1.0])],
-             [-1.0, 0.0, 0.0] => [Face([-1.0,-1.0,1.0], [-1.0,1.0,1.0], [-1.0,-1.0,2.0]),
-                                  Face([-1.0,1.0,1.0], [-1.0,1.0,2.0], [-1.0,-1.0,2.0]),
-                                  Face([-1.0,-1.0,1.0], [-1.0,0.0,-1.0], [-1.0,1.0,1.0])],
-             [md23,md23,md13] => [Face([-1.0,-1.0,1.0], [0.0,-1.0,-1.0], [-1.0,0.0,-1.0])],
-             [md23, d23,md13] => [Face([-1.0,0.0,-1.0], [0.0,1.0,-1.0], [-1.0,1.0,1.0])],
-             [ d23,md23,md13] => [Face([1.0,0.0,-1.0], [0.0,-1.0,-1.0], [1.0,-1.0,1.0])],
-             [ 0.0, 0.0,-1.0] => [Face([0.0,-1.0,-1.0], [1.0,0.0,-1.0], [0.0,1.0,-1.0]),
-                                  Face([0.0,1.0,-1.0], [-1.0,0.0,-1.0], [0.0,-1.0,-1.0])])
-    test_decompose(p, d)
+    d13 = round(1/3, digits = 6)
+    d23 = round(2/3, digits = 6)
+    md13 = round(-1/3, digits = 6)
+    md23 = round(-2/3, digits = 6)
+    d = Dict(
+        [1.0, 0.0, 0.0] => [
+            Face([1.0, 1.0, 1.0], [1.0, -1.0, 1.0], [1.0, 1.0, 2.0]),
+            Face([1.0, -1.0, 1.0], [1.0, -1.0, 2.0], [1.0, 1.0, 2.0]),
+            Face([1.0, 1.0, 1.0], [1.0, 0.0, -1.0], [1.0, -1.0, 1.0]),
+        ],
+        [0.0, 1.0, 0.0] => [
+            Face([-1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [-1.0, 1.0, 2.0]),
+            Face([1.0, 1.0, 1.0], [1.0, 1.0, 2.0], [-1.0, 1.0, 2.0]),
+            Face([-1.0, 1.0, 1.0], [0.0, 1.0, -1.0], [1.0, 1.0, 1.0]),
+        ],
+        [d23, d23, md13] =>
+            [Face([1.0, 1.0, 1.0], [0.0, 1.0, -1.0], [1.0, 0.0, -1.0])],
+        [0.0, -1.0, 0.0] => [
+            Face([1.0, -1.0, 1.0], [-1.0, -1.0, 1.0], [1.0, -1.0, 2.0]),
+            Face([-1.0, -1.0, 1.0], [-1.0, -1.0, 2.0], [1.0, -1.0, 2.0]),
+            Face([1.0, -1.0, 1.0], [0.0, -1.0, -1.0], [-1.0, -1.0, 1.0]),
+        ],
+        [-1.0, 0.0, 0.0] => [
+            Face([-1.0, -1.0, 1.0], [-1.0, 1.0, 1.0], [-1.0, -1.0, 2.0]),
+            Face([-1.0, 1.0, 1.0], [-1.0, 1.0, 2.0], [-1.0, -1.0, 2.0]),
+            Face([-1.0, -1.0, 1.0], [-1.0, 0.0, -1.0], [-1.0, 1.0, 1.0]),
+        ],
+        [md23, md23, md13] =>
+            [Face([-1.0, -1.0, 1.0], [0.0, -1.0, -1.0], [-1.0, 0.0, -1.0])],
+        [md23, d23, md13] =>
+            [Face([-1.0, 0.0, -1.0], [0.0, 1.0, -1.0], [-1.0, 1.0, 1.0])],
+        [d23, md23, md13] =>
+            [Face([1.0, 0.0, -1.0], [0.0, -1.0, -1.0], [1.0, -1.0, 1.0])],
+        [0.0, 0.0, -1.0] => [
+            Face([0.0, -1.0, -1.0], [1.0, 0.0, -1.0], [0.0, 1.0, -1.0]),
+            Face([0.0, 1.0, -1.0], [-1.0, 0.0, -1.0], [0.0, -1.0, -1.0]),
+        ],
+    )
+    return test_decompose(p, d)
 end
 
-decomposetests = Dict("orthantdecompose" => orthantdecomposetest,
-                      "squaredecompose"  => squaredecomposetest,
-                      "cubedecompose"    => cubedecomposetest,
-                      "largedecompose"   => largedecomposetest)
+decomposetests = Dict(
+    "orthantdecompose" => orthantdecomposetest,
+    "squaredecompose" => squaredecomposetest,
+    "cubedecompose" => cubedecomposetest,
+    "largedecompose" => largedecomposetest,
+)
 
 @polytestset decompose
