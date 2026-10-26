@@ -7,12 +7,14 @@ function remproj(x::RepElement{<:Integer}, l::RepElement{<:Integer})
     x * dot(coord(l), coord(l)) - l * dot(coord(x), coord(l))
 end
 function remproj(x, l)
-    ll = dot(coord(l), coord(l))
-    if isapproxzero(ll)
-        x
-    else
-        simplify(x - l * ((dot(coord(x), coord(l)) / ll)))
+    # Use the same test as the one deciding whether `l` is kept in
+    # `intersect!` and `convexhull!`. Testing `isapproxzero(ll)` instead
+    # would ignore `l` whenever `‖l‖₂² < tol` while `‖l‖∞ ≥ tol`, see #379.
+    if isapproxzero(coord(l))
+        return x
     end
+    ll = dot(coord(l), coord(l))
+    return simplify(x - l * ((dot(coord(x), coord(l)) / ll)))
 end
 
 # H-representation
