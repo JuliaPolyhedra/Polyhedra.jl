@@ -10,7 +10,7 @@ struct IntervalLibrary{T} <: Library end
 
 function similar_library(lib::IntervalLibrary, d::FullDim, ::Type{T}) where {T}
     return default_library(d, T)
-end # default_library allows to fallback to DefaultLibrary if d is not FullDim(1)
+end # Fall back to DefaultLibrary outside dimension one.
 
 mutable struct Interval{T,AT,D} <: Polyhedron{T}
     hrep::Intersection{T,AT,D}
@@ -35,7 +35,7 @@ end
 
 # If AT is an SVector, it will be StaticArrays.Size{(1,)}
 # otherwise, it will be 1
-FullDim(p::Interval) = FullDim(p.hrep)
+typed_fulldim(p::Interval) = typed_fulldim(p.hrep)
 
 function library(::Union{Interval{T},Type{<:Interval{T}}}) where {T}
     return IntervalLibrary{T}()

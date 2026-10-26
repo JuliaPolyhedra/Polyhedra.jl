@@ -9,7 +9,7 @@ export volume, volume_simplex, unscaled_volume_simplex, surface, center_of_mass
 Creates a polyhedron from the representation `rep` using the default library included in the Polyhedra package.
 """
 function polyhedron(rep::Representation{T}) where {T}
-    return polyhedron(rep, default_library(FullDim(rep), T))
+    return polyhedron(rep, default_library(typed_fulldim(rep), T))
 end
 
 """

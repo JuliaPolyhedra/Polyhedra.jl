@@ -1,3 +1,12 @@
+# Polyhedra.jl upcoming release notes
+
+## Breaking changes
+- The dimension query `Polyhedra.FullDim(p)` is now
+  `Polyhedra.typed_fulldim(p)`. Implementations of the Polyhedra interface
+  should extend `typed_fulldim`; `FullDim` remains the dimension type alias.
+- The undefined `start*`, `done*`, and `next*` iterator names are no longer
+  exported. Use Julia's `iterate` interface instead.
+
 # Polyhedra.jl v0.8 Release Notes
 
 ## Load time improvements

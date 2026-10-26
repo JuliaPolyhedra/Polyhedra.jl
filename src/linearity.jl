@@ -331,7 +331,7 @@ function detecthlinearity(
     tol = _default_tol(float(T)),
 ) where {T}
     aff, hs = _detect_linearity(hr, solver; verbose = 0, tol)
-    return typeof(hr)(FullDim(hr), aff.hyperplanes, hs)
+    return typeof(hr)(typed_fulldim(hr), aff.hyperplanes, hs)
 end
 
 """
@@ -348,5 +348,5 @@ function detectvlinearity(
     kws...,
 ) where {T}
     aff, rays = _detect_linearity(vr, solver; tol, kws...)
-    return typeof(vr)(FullDim(vr), preps(vr)..., aff.lines, rays)
+    return typeof(vr)(typed_fulldim(vr), preps(vr)..., aff.lines, rays)
 end

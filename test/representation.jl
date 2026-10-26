@@ -25,13 +25,13 @@ end
 function change_fulldim_test(Rep)
     T = Int
     RepT = Rep{T,Matrix{T}}
-    @testset "Change Polyhedra.FullDim with $RepT" begin
+    @testset "Change Polyhedra.typed_fulldim with $RepT" begin
         @test fulldim(RepT) == -1
         @test Polyhedra.coefficient_type(RepT) == T
         changedrep = Polyhedra.similar_type(RepT, 10)
         @test fulldim(changedrep) == -1
-        @test Polyhedra.FullDim(changedrep) == -1
-        #@test (@inferred Polyhedra.FullDim(changedrep)) == 10
+        @test Polyhedra.typed_fulldim(changedrep) == -1
+        #@test (@inferred Polyhedra.typed_fulldim(changedrep)) == 10
         @test Polyhedra.coefficient_type(changedrep) == T
     end
 end

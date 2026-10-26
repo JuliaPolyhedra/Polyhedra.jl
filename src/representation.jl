@@ -36,9 +36,9 @@ Returns the type of the coefficients used in the representation of `rep`.
 """
 coefficient_type(rep::Union{Rep{T},Type{<:Rep{T}}}) where {T} = T
 
-FullDim(rep::Type{<:VRep}) = FullDim(vvectortype(rep))
-FullDim(rep::Type{<:HRep}) = FullDim(hvectortype(rep))
-FullDim(rep::Type{<:Polyhedron}) = FullDim(hvectortype(rep))
+typed_fulldim(rep::Type{<:VRep}) = typed_fulldim(vvectortype(rep))
+typed_fulldim(rep::Type{<:HRep}) = typed_fulldim(hvectortype(rep))
+typed_fulldim(rep::Type{<:Polyhedron}) = typed_fulldim(hvectortype(rep))
 
 # Check that it is either empty or it has a point
 function vconsistencyerror()
@@ -95,10 +95,10 @@ function change_coefficient_type(p::Rep, T::Type)
 end
 
 function VRepresentation{T}(v::VRepresentation) where {T}
-    return convert(similar_type(typeof(v), FullDim(v), T), v)
+    return convert(similar_type(typeof(v), typed_fulldim(v), T), v)
 end
 function HRepresentation{T}(h::HRepresentation) where {T}
-    return convert(similar_type(typeof(h), FullDim(h), T), h)
+    return convert(similar_type(typeof(h), typed_fulldim(h), T), h)
 end
 
 VRep{T}(v::VRepresentation) where {T} = VRepresentation{T}(v)

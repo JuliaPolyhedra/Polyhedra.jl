@@ -133,7 +133,9 @@ function LPHRep(model::MOI.ModelLike, T::Type = Float64)
     return LPHRep(_model)
 end
 # returns `Int64` so need to convert for 32-bit system
-FullDim(rep::LPHRep) = convert(Int, MOI.get(rep.model, MOI.NumberOfVariables()))
+function typed_fulldim(rep::LPHRep)
+    return convert(Int, MOI.get(rep.model, MOI.NumberOfVariables()))
+end
 
 hvectortype(::Type{LPHRep{T}}) where {T} = SparseVector{T,Int}
 similar_type(::Type{LPHRep{S}}, ::FullDim, ::Type{T}) where {S,T} = LPHRep{T}
@@ -285,7 +287,7 @@ function Base.get(rep::LPHRep{T}, idx::HIndex{T}) where {T}
     # issues with, e.g. preimages with `spzeros(d, n)`, etc...
     indices = Int[t.variable.value for t in func.terms]
     values = [t.coefficient for t in func.terms]
-    a = sparsevec(indices, values, FullDim(rep))
+    a = sparsevec(indices, values, typed_fulldim(rep))
     set = MOI.get(rep.model, MOI.ConstraintSet(), ci)
     β = MOI.constant(set) - func.constant
     if idx isa HyperPlaneIndex

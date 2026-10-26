@@ -1,3 +1,5 @@
+using Polyhedra
+
 struct InconsistentVRep{T,AT,D<:Polyhedra.FullDim} <: VRepresentation{T}
     points::Polyhedra.PointsHull{T,AT,D}
     rays::Polyhedra.RaysHull{T,AT,D}
@@ -13,7 +15,9 @@ struct InconsistentVRep{T,AT,D<:Polyhedra.FullDim} <: VRepresentation{T}
         )
     end
 end
-Polyhedra.FullDim(rep::InconsistentVRep) = Polyhedra.FullDim(rep.points)
+function Polyhedra.typed_fulldim(rep::InconsistentVRep)
+    return Polyhedra.typed_fulldim(rep.points)
+end
 function Polyhedra.dualtype(
     ::Type{InconsistentVRep{T,AT,D}},
     ::Type{AT},

@@ -21,7 +21,7 @@ function test_MixMatRep()
         @test_throws ErrorException hrep(A, b, BitSet([4]))
         ine = hrep(A, b, linset)
         @test fulldim(ine) == 2
-        @test (@inferred Polyhedra.FullDim(ine)) == 2
+        @test (@inferred Polyhedra.typed_fulldim(ine)) == 2
         @test Polyhedra.coefficient_type(ine) == Int
         @test translate(ine, [1, 0]).b == [2, -1, 0]
 
@@ -31,7 +31,7 @@ function test_MixMatRep()
         @test_throws ErrorException vrep(V, [1 1], BitSet([2]))
         ext = vrep(V)
         @test fulldim(ext) == 2
-        @test (@inferred Polyhedra.FullDim(ine)) == 2
+        @test (@inferred Polyhedra.typed_fulldim(ine)) == 2
         @test Polyhedra.coefficient_type(ext) == Int
         @test translate(ext, [1, 0]).V == [1 1; 2 0]
     end

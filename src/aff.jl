@@ -67,7 +67,7 @@ function HyperPlanesIntersection{T,AT}(d::FullDim) where {T,AT}
     return HyperPlanesIntersection(d, HyperPlane{T,AT}[])
 end
 
-FullDim(h::HyperPlanesIntersection) = h.d
+typed_fulldim(h::HyperPlanesIntersection) = h.d
 hvectortype(L::Type{<:HyperPlanesIntersection{T,AT}}) where {T,AT} = AT
 function similar_type(
     PT::Type{<:HyperPlanesIntersection},
@@ -121,7 +121,7 @@ function affinehull(h::HRep, current = false)
     if !current
         detecthlinearity!(h)
     end
-    return HyperPlanesIntersection(FullDim(h), hyperplanes(h))
+    return HyperPlanesIntersection(typed_fulldim(h), hyperplanes(h))
 end
 
 function detecthlinearity!(L::HyperPlanesIntersection, solver = nothing)
@@ -136,7 +136,7 @@ function detecthlinearity(
     L::HyperPlanesIntersection{T,AT},
     solver = nothing,
 ) where {T,AT}
-    H = HyperPlanesIntersection{T,AT}(FullDim(L))
+    H = HyperPlanesIntersection{T,AT}(typed_fulldim(L))
     for h in hyperplanes(L)
         hp = remproj(h, H)
         if !(h in H)
@@ -150,9 +150,9 @@ end
 struct VEmptySpace{T,AT,D<:FullDim} <: VLinearSpace{T}
     d::D
 end
-FullDim(v::VEmptySpace) = v.d
+typed_fulldim(v::VEmptySpace) = v.d
 function emptyspace(v::VRep{T}) where {T}
-    d = FullDim(v)
+    d = typed_fulldim(v)
     return VEmptySpace{T,vvectortype(typeof(v)),typeof(d)}(d)
 end
 
@@ -185,7 +185,7 @@ function LinesHull(d::FullDim, it::ElemIt{Line{T,AT}}) where {T,AT}
 end
 LinesHull{T,AT}(d::FullDim) where {T,AT} = LinesHull(d, Line{T,AT}[])
 
-FullDim(v::LinesHull) = v.d
+typed_fulldim(v::LinesHull) = v.d
 vvectortype(::Type{<:LinesHull{T,AT}}) where {T,AT} = AT
 function similar_type(PT::Type{<:LinesHull}, d::FullDim, ::Type{T}) where {T}
     return LinesHull{T,similar_type(vvectortype(PT), d, T),typeof(d)}
@@ -214,7 +214,7 @@ function linespace(v::VRep, current = false)
     if !current
         detectvlinearity!(v)
     end
-    return LinesHull(FullDim(v), lines(v))
+    return LinesHull(typed_fulldim(v), lines(v))
 end
 
 function detectvlinearity!(L::LinesHull, solver = nothing)
@@ -226,7 +226,7 @@ function detectvlinearity!(L::LinesHull, solver = nothing)
     return L
 end
 function detectvlinearity(L::LinesHull{T,AT}, solver = nothing) where {T,AT}
-    V = LinesHull{T,AT}(FullDim(L))
+    V = LinesHull{T,AT}(typed_fulldim(L))
     V.orthogonalized = true
     for l in lines(L)
         convexhull!(V, l)

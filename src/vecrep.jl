@@ -85,7 +85,7 @@ function Intersection(
     return Intersection{T,AT,typeof(d)}(d, hyperplanes, halfspaces)
 end
 
-FullDim(h::Intersection) = FullDim(h.hyperplanes)
+typed_fulldim(h::Intersection) = typed_fulldim(h.hyperplanes)
 hvectortype(::Type{<:Intersection{T,AT}}) where {T,AT} = AT
 function similar_type(PT::Type{<:Intersection}, d::FullDim, ::Type{T}) where {T}
     return Intersection{T,similar_type(hvectortype(PT), d, T),typeof(d)}
@@ -97,7 +97,7 @@ function Intersection{T}(h::HRepresentation) where {T}
         Intersection{
             T,
             similar_type(hvectortype(typeof(h)), T),
-            typeof(FullDim(h)),
+            typeof(typed_fulldim(h)),
         },
         h,
     )
@@ -198,7 +198,7 @@ function PointsHull(d::FullDim, points::PointIt)
         points,
     )
 end
-FullDim(v::PointsHull) = v.d
+typed_fulldim(v::PointsHull) = v.d
 vvectortype(::Type{<:PointsHull{T,AT}}) where {T,AT} = AT
 function similar_type(PT::Type{<:PointsHull}, d::FullDim, ::Type{T}) where {T}
     return PointsHull{T,similar_type(vvectortype(PT), d, T),typeof(d)}
@@ -260,7 +260,7 @@ function RaysHull(
 ) where {T,AT}
     return RaysHull{T,AT,typeof(d)}(d, ls, rs)
 end
-FullDim(v::RaysHull) = FullDim(v.lines)
+typed_fulldim(v::RaysHull) = typed_fulldim(v.lines)
 vvectortype(::Type{<:RaysHull{T,AT}}) where {T,AT} = AT
 function similar_type(PT::Type{<:RaysHull}, d::FullDim, ::Type{T}) where {T}
     return RaysHull{T,similar_type(vvectortype(PT), d, T),typeof(d)}
@@ -315,7 +315,7 @@ function Hull(
 ) where {T,AT}
     return Hull{T,AT,typeof(d)}(d, points, lines, rays)
 end
-FullDim(v::Hull) = FullDim(v.points)
+typed_fulldim(v::Hull) = typed_fulldim(v.points)
 vvectortype(::Type{<:Hull{T,AT}}) where {T,AT} = AT
 function similar_type(PT::Type{<:Hull}, d::FullDim, ::Type{T}) where {T}
     return Hull{T,similar_type(vvectortype(PT), d, T),typeof(d)}
@@ -324,7 +324,11 @@ end
 Hull(v::VRepresentation{T}) where {T} = Hull{T}(v)
 function Hull{T}(v::VRepresentation) where {T}
     return convert(
-        Hull{T,similar_type(vvectortype(typeof(v)), T),typeof(FullDim(v))},
+        Hull{
+            T,
+            similar_type(vvectortype(typeof(v)), T),
+            typeof(typed_fulldim(v)),
+        },
         v,
     )
 end
