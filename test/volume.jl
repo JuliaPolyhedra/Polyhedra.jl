@@ -91,6 +91,16 @@ function check_vol_issue249_3(lib)
     # reportedly solution taken from https://doi.org/10.1016/j.dam.2018.10.038
     return volume(L3) == 1//180
 end
+# issue 321
+function check_vol_issue321_1(lib)
+    # The last point is repeated
+    p = polyhedron(vrep([-1 0 1; 0 0 1; 0 0 0; -1 -1 0; -1 -1 0]), lib)
+    return volume(p) ≈ 1//6
+end
+function check_vol_issue321_2(lib)
+    p = polyhedron(vrep([-1 1 1; -1 -1 1; 1 0 -1; 1 1 1; 0 1 -1]), lib)
+    return volume(p) ≈ 8//3
+end
 # examples similar to Cohen-Hickey paper, table 1
 # https://doi.org/10.1145/322139.322141
 function check_vol_simplex(n, lib)
@@ -158,6 +168,9 @@ end
     @test check_vol_issue249_1(lib_float)
     @test check_vol_issue249_2(lib_float)
     @test check_vol_issue249_3(lib_exact)
+    @test check_vol_issue321_1(lib_exact)
+    @test check_vol_issue321_1(lib_float)
+    @test check_vol_issue321_2(lib_exact)
     @test check_vol_isocahedron(lib_float)
     @test check_vol_dodecahedron(lib_float)
 end

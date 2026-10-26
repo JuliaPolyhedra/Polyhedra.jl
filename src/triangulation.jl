@@ -11,6 +11,13 @@ function _triangulation(Δs, Δ, v_idx, h_idx, incident_idx, is_weak_adjacent, c
     isempty(v_idx) && return
     v = first(v_idx)
     Δ = push!(copy(Δ), v)
+    if iszero(codim)
+        # The current face is a vertex. `v_idx` may still contain several
+        # indices if the vertex appears several times in the V-representation,
+        # see #321. Any of them can be used.
+        push!(Δs, Δ)
+        return
+    end
     if isone(length(v_idx))
         # We should have `codim == 0` whenever we reach this point.  Due to
         # numerical issues, in cases where there is very near but not exact
