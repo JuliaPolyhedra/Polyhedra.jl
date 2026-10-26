@@ -98,6 +98,23 @@ function check_vol_issue249_3(lib)
     # reportedly solution taken from https://doi.org/10.1016/j.dam.2018.10.038
     return volume(L3) == 1//180
 end
+# issue 321
+function check_vol_issue321_1(lib)
+    # The last point is repeated
+    p = polyhedron(vrep([-1 0 1; 0 0 1; 0 0 0; -1 -1 0; -1 -1 0]), lib)
+    return volume(p) ≈ 1//6
+end
+function check_vol_issue321_cube(lib)
+    cube = [[x, y, z] for x in 0:1 for y in 0:1 for z in 0:1]
+    # Without the fix, the simplices containing the repeated vertex were
+    # silently dropped, giving a volume of zero
+    return volume(polyhedron(vrep([cube; [[1, 1, 1]]]), lib)) == 1 &&
+        volume(polyhedron(vrep([cube; cube]), lib)) == 1
+end
+function check_vol_issue321_2(lib)
+    p = polyhedron(vrep([-1 1 1; -1 -1 1; 1 0 -1; 1 1 1; 0 1 -1]), lib)
+    return volume(p) ≈ 8//3
+end
 # examples similar to Cohen-Hickey paper, table 1
 # https://doi.org/10.1145/322139.322141
 function check_vol_simplex(n, lib)
@@ -174,6 +191,10 @@ end
     @test check_vol_issue249_1(lib_float)
     @test check_vol_issue249_2(lib_float)
     @test check_vol_issue249_3(lib_exact)
+    @test check_vol_issue321_1(lib_exact)
+    @test check_vol_issue321_1(lib_float)
+    @test check_vol_issue321_2(lib_exact)
+    @test check_vol_issue321_cube(lib_exact)
     @test check_vol_isocahedron(lib_float)
     @test check_vol_dodecahedron(lib_float)
 end

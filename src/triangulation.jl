@@ -19,16 +19,20 @@ function _triangulation(
     isempty(v_idx) && return
     v = first(v_idx)
     Δ = push!(copy(Δ), v)
+    if iszero(codim)
+        # The current face is a vertex. `v_idx` may still contain several
+        # indices if the vertex appears several times in the V-representation,
+        # see #321. Any of them can be used.
+        push!(Δs, Δ)
+        return
+    end
     if isone(length(v_idx))
-        # We should have `codim == 0` whenever we reach this point.  Due to
+        # As `codim > 0`, we should have more than one vertex.  Due to
         # numerical issues, in cases where there is very near but not exact
-        # vertex redundancy, we sometimes have `codim > 0`.  In these cases,
+        # vertex redundancy, we sometimes reach this point.  In these cases,
         # mathematically, `Δ` is a near-degenerate simplex (I think?), and our
         # numerically-imperfect version of `Δ` has too few vertices.  Rather
         # than cause dimension errors downstream, we simply omit such a `Δ`.
-        if codim == 0
-            push!(Δs, Δ)
-        end
         return
     end
     tail = true
