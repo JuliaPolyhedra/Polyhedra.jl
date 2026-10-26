@@ -19,15 +19,12 @@ function _triangulation(Δs, Δ, v_idx, h_idx, incident_idx, is_weak_adjacent, c
         return
     end
     if isone(length(v_idx))
-        # We should have `codim == 0` whenever we reach this point.  Due to
+        # As `codim > 0`, we should have more than one vertex.  Due to
         # numerical issues, in cases where there is very near but not exact
-        # vertex redundancy, we sometimes have `codim > 0`.  In these cases,
+        # vertex redundancy, we sometimes reach this point.  In these cases,
         # mathematically, `Δ` is a near-degenerate simplex (I think?), and our
         # numerically-imperfect version of `Δ` has too few vertices.  Rather
         # than cause dimension errors downstream, we simply omit such a `Δ`.
-        if codim == 0
-            push!(Δs, Δ)
-        end
         return
     end
     tail = true
