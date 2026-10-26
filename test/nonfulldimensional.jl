@@ -12,8 +12,10 @@ function nonfulldimensionaltest(lib::Polyhedra.Library)
 
     poly = polyhedron(m, lib)
 
-    V = [2 1 1;
-         2 2 1]
+    V = [
+        2 1 1;
+        2 2 1
+    ]
     R = [0 0 1]
-    generator_fulltest(poly, V, R)
+    return generator_fulltest(poly, V, R)
 end

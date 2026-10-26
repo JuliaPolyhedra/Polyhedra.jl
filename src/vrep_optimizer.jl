@@ -7,28 +7,37 @@ Linear Programming solver using the V-representation of the feasible set to find
 the optimal solution.
 """
 mutable struct VRepOptimizer{T} <: AbstractPolyhedraOptimizer{T}
-    library::Union{Nothing, Library}
+    library::Union{Nothing,Library}
     lphrep::LPHRep{T}
     # Feasible set defined by user
-    rep::Union{Rep{T}, Nothing}
+    rep::Union{Rep{T},Nothing}
     # Either `rep` or `polyhedron(lphrep, library)`.
     # It is kept between consecutive solve if not modified,
     # e.g. if only the objective is changed.
-    feasible_set::Union{Rep{T}, Nothing}
+    feasible_set::Union{Rep{T},Nothing}
 
     objective_sense::MOI.OptimizationSense
-    objective_func::Union{SparseVector{T, Int64}, Nothing}
+    objective_func::Union{SparseVector{T,Int64},Nothing}
     objective_constant::T
 
     status::MOI.TerminationStatusCode
-    solution::Union{AbstractVector{T}, Nothing}
+    solution::Union{AbstractVector{T},Nothing}
 
     tol::Union{T,MA.Zero}
 
-    function VRepOptimizer{T}(library::Union{Nothing, Library} = nothing) where T
-        new(library, LPHRep(_MOIModel{T}()), nothing, nothing,
-            MOI.FEASIBILITY_SENSE, nothing, zero(T),
-            MOI.OPTIMIZE_NOT_CALLED, nothing,
+    function VRepOptimizer{T}(
+        library::Union{Nothing,Library} = nothing,
+    ) where {T}
+        return new(
+            library,
+            LPHRep(_MOIModel{T}()),
+            nothing,
+            nothing,
+            MOI.FEASIBILITY_SENSE,
+            nothing,
+            zero(T),
+            MOI.OPTIMIZE_NOT_CALLED,
+            nothing,
             _default_tol(T),
         )
     end
@@ -37,7 +46,7 @@ end
 coefficient_type(::VRepOptimizer{T}) where {T} = T
 MOI.get(::VRepOptimizer, ::MOI.SolverName) = "VRep"
 
-function MOI.empty!(lpm::VRepOptimizer{T}) where T
+function MOI.empty!(lpm::VRepOptimizer{T}) where {T}
     lpm.lphrep = LPHRep(_MOIModel{T}())
     lpm.rep = nothing
     lpm.feasible_set = nothing
@@ -45,25 +54,27 @@ function MOI.empty!(lpm::VRepOptimizer{T}) where T
     lpm.objective_func = nothing
     lpm.objective_constant = zero(T)
     lpm.status = MOI.OPTIMIZE_NOT_CALLED
-    lpm.solution = nothing
+    return lpm.solution = nothing
 end
-function MOI.is_empty(lpm::VRepOptimizer{T}) where T
-    MOI.is_empty(lpm.lphrep.model) &&
-    lpm.rep === nothing &&
-    lpm.feasible_set === nothing &&
-    lpm.objective_sense == MOI.FEASIBILITY_SENSE &&
-    lpm.objective_func === nothing &&
-    iszero(lpm.objective_constant) &&
-    lpm.status == MOI.OPTIMIZE_NOT_CALLED &&
-    lpm.solution === nothing
+function MOI.is_empty(lpm::VRepOptimizer{T}) where {T}
+    return MOI.is_empty(lpm.lphrep.model) &&
+           lpm.rep === nothing &&
+           lpm.feasible_set === nothing &&
+           lpm.objective_sense == MOI.FEASIBILITY_SENSE &&
+           lpm.objective_func === nothing &&
+           iszero(lpm.objective_constant) &&
+           lpm.status == MOI.OPTIMIZE_NOT_CALLED &&
+           lpm.solution === nothing
 end
 
-function MOI.optimize!(lpm::VRepOptimizer{T}) where T
+function MOI.optimize!(lpm::VRepOptimizer{T}) where {T}
     if lpm.rep === nothing
         lpm.feasible_set = lpm.lphrep
     else
         if hasallhalfspaces(lpm.lphrep)
-            error("Cannot provide both a polyhedral feasible set and additional constraints.")
+            error(
+                "Cannot provide both a polyhedral feasible set and additional constraints.",
+            )
         end
         lpm.feasible_set = lpm.rep
     end
@@ -94,7 +105,10 @@ function MOI.optimize!(lpm::VRepOptimizer{T}) where T
         lpm.solution = first(points(prob))
     else
         better(a, b) = (lpm.objective_sense == MOI.MAX_SENSE ? a > b : a < b)
-        _better(a, b) = (lpm.objective_sense == MOI.MAX_SENSE ? _gt(a, b; lpm.tol) : _lt(a, b; lpm.tol))
+        _better(a, b) = (
+            lpm.objective_sense == MOI.MAX_SENSE ? _gt(a, b; lpm.tol) :
+            _lt(a, b; lpm.tol)
+        )
         bestobjval = zero(T)
         lpm.solution = nothing
         for r in allrays(prob)
@@ -128,14 +142,18 @@ function MOI.get(lpm::VRepOptimizer, ::MOI.ResultCount)
         return 0
     end
 end
-function MOI.get(lpm::VRepOptimizer{T}, attr::MOI.ConstraintPrimal,
-                 ci::MOI.ConstraintIndex{MOI.ScalarAffineFunction{T},
-                                         <:Union{MOI.EqualTo{T},
-                                                 MOI.LessThan{T}}}) where T
+function MOI.get(
+    lpm::VRepOptimizer{T},
+    attr::MOI.ConstraintPrimal,
+    ci::MOI.ConstraintIndex{
+        MOI.ScalarAffineFunction{T},
+        <:Union{MOI.EqualTo{T},MOI.LessThan{T}},
+    },
+) where {T}
     MOI.check_result_index_bounds(lpm, attr)
     return MOIU.get_fallback(lpm, attr, ci)
 end
-function MOI.get(lpm::VRepOptimizer{T}, attr::MOI.ObjectiveValue) where T
+function MOI.get(lpm::VRepOptimizer{T}, attr::MOI.ObjectiveValue) where {T}
     MOI.check_result_index_bounds(lpm, attr)
     if lpm.objective_sense == MOI.FEASIBILITY_SENSE
         return zero(T)
@@ -145,7 +163,9 @@ function MOI.get(lpm::VRepOptimizer{T}, attr::MOI.ObjectiveValue) where T
     elseif lpm.status == MOI.DUAL_INFEASIBLE
         return _dot(lpm.objective_func, lpm.solution)
     else
-        error("No objective value available when termination status is $(lpm.status).")
+        error(
+            "No objective value available when termination status is $(lpm.status).",
+        )
     end
 end
 function MOI.get(lpm::VRepOptimizer, ::MOI.DualStatus)
@@ -162,10 +182,16 @@ function MOI.get(lpm::VRepOptimizer, attr::MOI.PrimalStatus)
         return MOI.NO_SOLUTION
     end
 end
-function MOI.get(lpm::VRepOptimizer, attr::MOI.VariablePrimal, vi::MOI.VariableIndex)
+function MOI.get(
+    lpm::VRepOptimizer,
+    attr::MOI.VariablePrimal,
+    vi::MOI.VariableIndex,
+)
     MOI.check_result_index_bounds(lpm, attr)
     if lpm.status != MOI.OPTIMAL && lpm.status != MOI.DUAL_INFEASIBLE
-        error("No primal value available when termination status is $(lpm.status).")
+        error(
+            "No primal value available when termination status is $(lpm.status).",
+        )
     end
     return lpm.solution[vi.value]
 end

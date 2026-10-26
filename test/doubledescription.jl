@@ -3,7 +3,7 @@ using Polyhedra
 using StaticArrays
 using LinearAlgebra
 
-function empty_test(h::HRepresentation{T}) where T
+function empty_test(h::HRepresentation{T}) where {T}
     #v = @inferred doubledescription(h)
     v = doubledescription(h)
     U = T == Float64 ? Float64 : Rational{BigInt}
@@ -18,19 +18,23 @@ empty_space_test(z) = empty_test(HyperPlane([z, 1], 1) ∩ HyperPlane([z, 1], -1
 empty_range_test(z) = empty_test(HalfSpace([1, z], -1) ∩ HalfSpace([-1, z], -1))
 
 function simplex_test(z)
-    h = hrep([HalfSpace([ 1,  1], 1),
-              HalfSpace([ 1, -1], z),
-              HalfSpace([-1,  z], z)])
+    h = hrep([
+        HalfSpace([1, 1], 1),
+        HalfSpace([1, -1], z),
+        HalfSpace([-1, z], z),
+    ])
     v = doubledescription(h)
     T = z isa AbstractFloat ? Float64 : Rational{BigInt}
     @test v isa Polyhedra.Hull{T,Vector{T}}
     @test collect(points(v)) == [[z, z], [z, 1], [1//2, 1//2]]
     @test !hasallrays(v)
     h = hrep([HalfSpace(zeros(typeof(z), 2), z); h.halfspaces])
-    h = hrep([HalfSpace([ 1,  1], 1),
-              HalfSpace([ z,  z], z),
-              HalfSpace([ 1, -1], z),
-              HalfSpace([-1,  z], z)])
+    h = hrep([
+        HalfSpace([1, 1], 1),
+        HalfSpace([z, z], z),
+        HalfSpace([1, -1], z),
+        HalfSpace([-1, z], z),
+    ])
     #intersect!(h, )
     v = doubledescription(h)
     @test v isa Polyhedra.Hull{T,Vector{T}}
@@ -52,33 +56,52 @@ end
             end
             @testset "SVector" begin
                 @testset "Exact" begin
-                    h = hrep([HalfSpace((@SVector [ 1,  1]), 1),
-                              HalfSpace((@SVector [ 1, -1]), 0),
-                              HalfSpace((@SVector [-1,  0]), 0)])
+                    h = hrep([
+                        HalfSpace((@SVector [1, 1]), 1),
+                        HalfSpace((@SVector [1, -1]), 0),
+                        HalfSpace((@SVector [-1, 0]), 0),
+                    ])
                     #v = @inferred doubledescription(h)
                     v = doubledescription(h)
-                    @test v isa Polyhedra.Hull{Rational{BigInt},SVector{2,Rational{BigInt}}}
-                    @test collect(points(v)) == [(@SVector [0, 0]), (@SVector [0, 1]), (@SVector [1//2, 1//2])]
+                    @test v isa Polyhedra.Hull{
+                        Rational{BigInt},
+                        SVector{2,Rational{BigInt}},
+                    }
+                    @test collect(points(v)) == [
+                        (@SVector [0, 0]),
+                        (@SVector [0, 1]),
+                        (@SVector [1//2, 1//2]),
+                    ]
                     @test !hasallrays(v)
                 end
                 @testset "Numerical" begin
-                    h = hrep([HalfSpace((@SVector [ 1.,  1]), 1),
-                              HalfSpace((@SVector [ 1., -1]), 0),
-                              HalfSpace((@SVector [-1.,  0]), 0)])
+                    h = hrep([
+                        HalfSpace((@SVector [1.0, 1]), 1),
+                        HalfSpace((@SVector [1.0, -1]), 0),
+                        HalfSpace((@SVector [-1.0, 0]), 0),
+                    ])
                     #v = @inferred doubledescription(h)
                     v = doubledescription(h)
                     @test v isa Polyhedra.Hull{Float64,SVector{2,Float64}}
-                    @test collect(points(v)) == [(@SVector [0.0, 0.0]), (@SVector [0.0, 1.0]), (@SVector [1/2, 1/2])]
+                    @test collect(points(v)) == [
+                        (@SVector [0.0, 0.0]),
+                        (@SVector [0.0, 1.0]),
+                        (@SVector [1/2, 1/2]),
+                    ]
                     @test !hasallrays(v)
                 end
             end
         end
         @testset "MixedMatHRep" begin
             @testset "Exact" begin
-                h = hrep([ 1  1
-                           1 -1
-                          -1  0],
-                         [1, 0, 0])
+                h = hrep(
+                    [
+                        1 1
+                        1 -1
+                        -1 0
+                    ],
+                    [1, 0, 0],
+                )
                 #v = @inferred doubledescription(h)
                 v = doubledescription(h)
                 @test v isa Polyhedra.MixedMatVRep{Rational{BigInt}}
@@ -87,10 +110,14 @@ end
                 @test isempty(v.Rlinset)
             end
             @testset "Numerical" begin
-                h = hrep([ 1  1
-                           1 -1
-                          -1  0],
-                         [1., 0, 0])
+                h = hrep(
+                    [
+                        1 1
+                        1 -1
+                        -1 0
+                    ],
+                    [1.0, 0, 0],
+                )
                 #v = @inferred doubledescription(h)
                 v = doubledescription(h)
                 @test v isa Polyhedra.MixedMatVRep{Float64}
@@ -125,7 +152,8 @@ end
             @test first(points(v)) == [1, 0]
         end
         @testset "Quadrilateral $(_str(z))" for z in [0, 0.0]
-            h = HalfSpace([2, 1], 4) ∩ HalfSpace([1, 2], 4) ∩
+            h =
+                HalfSpace([2, 1], 4) ∩ HalfSpace([1, 2], 4) ∩
                 HalfSpace([-1, z], z) ∩ HalfSpace([z, -1], z)
             v = doubledescription(h)
             @test !haslines(v)
@@ -143,7 +171,8 @@ end
                   [HalfSpace(T[1, 0], zero(T)), HalfSpace(T[0, 1], zero(T))]
             # Translating the cone preserves genuine nonzero offsets.
             h = doubledescription(vrep(T[2 3], T[-1 0; 0 -1]))
-            @test collect(halfspaces(h)) == [HalfSpace(T[1, 0], T(2)), HalfSpace(T[0, 1], T(3))]
+            @test collect(halfspaces(h)) ==
+                  [HalfSpace(T[1, 0], T(2)), HalfSpace(T[0, 1], T(3))]
             # Retain equalities for a cone in a proper subspace.
             h = doubledescription(vrep(zeros(T, 1, 2), T[-1 0]))
             @test nhyperplanes(h) == 1
@@ -151,7 +180,9 @@ end
             @test abs.(first(hyperplanes(h)).a) == T[0, 1]
             @test collect(halfspaces(h)) == [HalfSpace(T[1, 0], zero(T))]
             # Full space has no inequalities, but still has dimension two.
-            h = doubledescription(vrep([Line(T[1, 0]), Line(T[0, 1])], Ray{T,Vector{T}}[]))
+            h = doubledescription(
+                vrep([Line(T[1, 0]), Line(T[0, 1])], Ray{T,Vector{T}}[]),
+            )
             @test fulldim(h) == 2
             @test !hashyperplanes(h)
             @test !hashalfspaces(h)
@@ -159,20 +190,20 @@ end
         @testset "Hull" begin
             @testset "Vector" begin
                 @testset "Exact" begin
-                    v = conichull([1, 0],
-                                  [0, 1])
+                    v = conichull([1, 0], [0, 1])
                     h = doubledescription(v)
                     #h = @inferred doubledescription(v)
                     @test !hashyperplanes(h)
-                    @test collect(halfspaces(h)) == [HalfSpace([-1, 0], 0), HalfSpace([0, -1], 0)]
+                    @test collect(halfspaces(h)) ==
+                          [HalfSpace([-1, 0], 0), HalfSpace([0, -1], 0)]
                 end
                 @testset "Numerical" begin
-                    v = conichull([1., 0.],
-                                  [0., 1.])
+                    v = conichull([1.0, 0.0], [0.0, 1.0])
                     h = doubledescription(v)
                     #h = @inferred doubledescription(v)
                     @test !hashyperplanes(h)
-                    @test collect(halfspaces(h)) == [HalfSpace([-1, 0], 0), HalfSpace([0, -1], 0)]
+                    @test collect(halfspaces(h)) ==
+                          [HalfSpace([-1, 0], 0), HalfSpace([0, -1], 0)]
                 end
             end
         end

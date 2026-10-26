@@ -7,7 +7,7 @@ export Rep
 
 Supertype for H-(or V-)representations with coefficient type `T`.
 """
-abstract type Representation{T <: Real} end
+abstract type Representation{T<:Real} end
 """
     HRepresentation{T<:Real}
 
@@ -23,46 +23,54 @@ abstract type VRepresentation{T} <: Representation{T} end
 
 export Rep, HRep, VRep
 
-const  Rep{T} = Union{ Representation{T}, Polyhedron{T}}
-const HRep{T} = Union{HRepresentation{T}, Polyhedron{T}}
-const VRep{T} = Union{VRepresentation{T}, Polyhedron{T}}
+const Rep{T} = Union{Representation{T},Polyhedron{T}}
+const HRep{T} = Union{HRepresentation{T},Polyhedron{T}}
+const VRep{T} = Union{VRepresentation{T},Polyhedron{T}}
 
-Base.broadcastable(x::Union{Rep, Library}) = Ref(x)
+Base.broadcastable(x::Union{Rep,Library}) = Ref(x)
 
 """
     coefficient_type(rep::Rep)
 
 Returns the type of the coefficients used in the representation of `rep`.
 """
-coefficient_type(rep::Union{Rep{T}, Type{<:Rep{T}}}) where {T} = T
+coefficient_type(rep::Union{Rep{T},Type{<:Rep{T}}}) where {T} = T
 
 FullDim(rep::Type{<:VRep}) = FullDim(vvectortype(rep))
 FullDim(rep::Type{<:HRep}) = FullDim(hvectortype(rep))
 FullDim(rep::Type{<:Polyhedron}) = FullDim(hvectortype(rep))
 
 # Check that it is either empty or it has a point
-vconsistencyerror() = error("Non-empty V-representation must contain at least one point. If it is a polyhedral cone, the origin should be added.")
+function vconsistencyerror()
+    return error(
+        "Non-empty V-representation must contain at least one point. If it is a polyhedral cone, the origin should be added.",
+    )
+end
 function checkvconsistency(vrep::VRep)
     if !haspoints(vrep) && hasallrays(vrep)
         vconsistencyerror()
     end
 end
-checkvconsistency(p::Polyhedron) = vrepiscomputed(p) && checkvconsistency(vrep(p))
+function checkvconsistency(p::Polyhedron)
+    return vrepiscomputed(p) && checkvconsistency(vrep(p))
+end
 
 # This method solves the ambiguity with the following methods and the general method
 # Base.convert{T}(::Type{T}, p::T) = p
 Base.convert(::Type{T}, p::T) where {T<:HRepresentation} = p
 Base.convert(::Type{T}, p::T) where {T<:VRepresentation} = p
 
-Base.convert(RepT::Type{<:HRep}, p::HRepresentation)            = hconvert(RepT, p)
-Base.convert(RepT::Type{<:HRepresentation}, p::HRep)            = hconvert(RepT, p)
+Base.convert(RepT::Type{<:HRep}, p::HRepresentation) = hconvert(RepT, p)
+Base.convert(RepT::Type{<:HRepresentation}, p::HRep) = hconvert(RepT, p)
 # avoid ambiguity
-Base.convert(RepT::Type{<:HRepresentation}, p::HRepresentation) = hconvert(RepT, p)
+function Base.convert(RepT::Type{<:HRepresentation}, p::HRepresentation)
+    return hconvert(RepT, p)
+end
 
 Base.copy(rep::HRepresentation) = typeof(rep)(FullDim_hreps(rep)...)
 Base.copy(rep::VRepresentation) = typeof(rep)(FullDim_vreps(rep)...)
 
-function Polyhedron{S}(p::Polyhedron{T}) where {S, T}
+function Polyhedron{S}(p::Polyhedron{T}) where {S,T}
     RepT = similar_type(typeof(p), S)
     if !hrepiscomputed(p) && vrepiscomputed(p)
         vconvert(RepT, p)
@@ -71,19 +79,27 @@ function Polyhedron{S}(p::Polyhedron{T}) where {S, T}
     end
 end
 
-Base.convert(RepT::Type{<:VRep}, p::VRepresentation)            = vconvert(RepT, p)
-Base.convert(RepT::Type{<:VRepresentation}, p::VRep)            = vconvert(RepT, p)
+Base.convert(RepT::Type{<:VRep}, p::VRepresentation) = vconvert(RepT, p)
+Base.convert(RepT::Type{<:VRepresentation}, p::VRep) = vconvert(RepT, p)
 # avoid ambiguity
-Base.convert(RepT::Type{<:VRepresentation}, p::VRepresentation) = vconvert(RepT, p)
+function Base.convert(RepT::Type{<:VRepresentation}, p::VRepresentation)
+    return vconvert(RepT, p)
+end
 
 # Used by VRepPolyhedraModel
 Base.convert(::Type{VRep}, p::VRepresentation) = p
 
 change_coefficient_type(p::Rep{T}, ::Type{T}) where {T} = p
-change_coefficient_type(p::Rep, T::Type) = convert(similar_type(typeof(p), T), p)
+function change_coefficient_type(p::Rep, T::Type)
+    return convert(similar_type(typeof(p), T), p)
+end
 
-VRepresentation{T}(v::VRepresentation) where {T} = convert(similar_type(typeof(v), FullDim(v), T), v)
-HRepresentation{T}(h::HRepresentation) where {T} = convert(similar_type(typeof(h), FullDim(h), T), h)
+function VRepresentation{T}(v::VRepresentation) where {T}
+    return convert(similar_type(typeof(v), FullDim(v), T), v)
+end
+function HRepresentation{T}(h::HRepresentation) where {T}
+    return convert(similar_type(typeof(h), FullDim(h), T), h)
+end
 
 VRep{T}(v::VRepresentation) where {T} = VRepresentation{T}(v)
 VRep{T}(p::Polyhedron) where {T} = Polyhedron{T}(p)

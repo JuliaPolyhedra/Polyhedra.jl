@@ -22,8 +22,15 @@ function test_lifted_representation()
         @test ine.A !== A
         #@test linset(ine) == ls
         @test ine.linset !== ls
-        @test Polyhedra.similar_type(LiftedHRepresentation{Int, Matrix{Int}}, Float64) == LiftedHRepresentation{Float64, Matrix{Float64}}
-        @test Polyhedra.similar_type(LiftedHRepresentation{Int, SparseMatrixCSC{Int, Int}}, 3, Float64) == LiftedHRepresentation{Float64, SparseMatrixCSC{Float64, Int}}
+        @test Polyhedra.similar_type(
+            LiftedHRepresentation{Int,Matrix{Int}},
+            Float64,
+        ) == LiftedHRepresentation{Float64,Matrix{Float64}}
+        @test Polyhedra.similar_type(
+            LiftedHRepresentation{Int,SparseMatrixCSC{Int,Int}},
+            3,
+            Float64,
+        ) == LiftedHRepresentation{Float64,SparseMatrixCSC{Float64,Int}}
 
         A2 = [1 1; -1 0; 0 -1]
         b2 = [1, 0, 0]
@@ -43,7 +50,14 @@ function test_lifted_representation()
         #@test linset(ext) == Vlinset
         @test ext.linset !== Vlinset
 
-        @test Polyhedra.similar_type(LiftedVRepresentation{Int, SparseMatrixCSC{Int, Int}}, Float64) == LiftedVRepresentation{Float64, SparseMatrixCSC{Float64, Int}}
-        @test Polyhedra.similar_type(LiftedVRepresentation{Int, Matrix{Int}}, 3, Float64) == LiftedVRepresentation{Float64, Matrix{Float64}}
+        @test Polyhedra.similar_type(
+            LiftedVRepresentation{Int,SparseMatrixCSC{Int,Int}},
+            Float64,
+        ) == LiftedVRepresentation{Float64,SparseMatrixCSC{Float64,Int}}
+        @test Polyhedra.similar_type(
+            LiftedVRepresentation{Int,Matrix{Int}},
+            3,
+            Float64,
+        ) == LiftedVRepresentation{Float64,Matrix{Float64}}
     end
 end

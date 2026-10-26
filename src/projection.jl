@@ -45,17 +45,27 @@ Eliminate the dimensions in `delset` by projecting the polyhedron onto the remai
 function eliminate end
 
 project(p::Polyhedron, pset) = eliminate(p, setdiff(1:fulldim(p), pset))
-project(p::Polyhedron, pset, algo) = eliminate(p, setdiff(1:fulldim(p), pset), algo)
+function project(p::Polyhedron, pset, algo)
+    return eliminate(p, setdiff(1:fulldim(p), pset), algo)
+end
 
-supportselimination(p::Polyhedron, ::FourierMotzkin)   = false
-eliminate(p::Polyhedron, delset, ::FourierMotzkin)     = error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
+supportselimination(p::Polyhedron, ::FourierMotzkin) = false
+function eliminate(p::Polyhedron, delset, ::FourierMotzkin)
+    return error("Fourier-Motzkin elimination not implemented for $(typeof(p))")
+end
 supportselimination(p::Polyhedron, ::BlockElimination) = false
-eliminate(p::Polyhedron, delset, ::BlockElimination)   = error("Block elimination not implemented for $(typeof(p))")
+function eliminate(p::Polyhedron, delset, ::BlockElimination)
+    return error("Block elimination not implemented for $(typeof(p))")
+end
 
-eliminate(p::Polyhedron, algo::EliminationAlgorithm) = eliminate(p, BitSet(fulldim(p)), algo)
+function eliminate(p::Polyhedron, algo::EliminationAlgorithm)
+    return eliminate(p, BitSet(fulldim(p)), algo)
+end
 
 # eliminate the last dimension by default
-eliminate(p::Polyhedron, delset=BitSet(fulldim(p))) = eliminate(p, delset, DefaultElimination())
+function eliminate(p::Polyhedron, delset = BitSet(fulldim(p)))
+    return eliminate(p, delset, DefaultElimination())
+end
 
 function eliminate(p::Polyhedron, delset, ::DefaultElimination)
     fm = supportselimination(p, FourierMotzkin())
@@ -67,14 +77,14 @@ function eliminate(p::Polyhedron, delset, ::DefaultElimination)
     else
         algo = BlockElimination()
     end
-    eliminate(p, delset, algo)
+    return eliminate(p, delset, algo)
 end
 
 function eliminate(p::Polyhedron, delset, ::ProjectGenerators)
     N = fulldim(p)
     Id = Matrix(1I, N, N)
-    Iproj = Id[collect(setdiff(BitSet(1:N), delset)),:]
-    Iproj * p
+    Iproj = Id[collect(setdiff(BitSet(1:N), delset)), :]
+    return Iproj * p
 end
 
 """
@@ -88,7 +98,11 @@ function project(p::Polyhedron, P::AbstractMatrix)
     # We first make the columns of P orthonormal
     N = fulldim(p)
     if size(P, 1) != N
-        throw(DimensionMismatch("The columns of P should have the same dimension than the polyhedron"))
+        throw(
+            DimensionMismatch(
+                "The columns of P should have the same dimension than the polyhedron",
+            ),
+        )
     end
     m = size(P, 2)
     if m > N
@@ -96,9 +110,9 @@ function project(p::Polyhedron, P::AbstractMatrix)
     end
     Q = Array{Float64}(P) # normalize will make it nonrational
     Proj = zeros(eltype(P), N, N)
-    for i = 1:m
-        Q[:,i] = normalize(Q[:,i] - Proj * Q[:,i])
-        Proj += Q[:,i] * Q[:,i]'
+    for i in 1:m
+        Q[:, i] = normalize(Q[:, i] - Proj * Q[:, i])
+        Proj += Q[:, i] * Q[:, i]'
     end
     if m == N
         basis = Q
@@ -108,18 +122,20 @@ function project(p::Polyhedron, P::AbstractMatrix)
         Id = Matrix(1.0I, N, N)
         R = Id - Proj
         # We take the n-m that have highest norm
-        order = sortperm([dot(R[:,i], R[:,i]) for i in 1:N])
-        R = Id[:,order[m+1:N]]
-        for i in 1:N-m
-            R[:,i] = normalize(R[:,i] - Proj * R[:,i])
-            Proj += R[:,i] * R[:,i]'
+        order = sortperm([dot(R[:, i], R[:, i]) for i in 1:N])
+        R = Id[:, order[(m+1):N]]
+        for i in 1:(N-m)
+            R[:, i] = normalize(R[:, i] - Proj * R[:, i])
+            Proj += R[:, i] * R[:, i]'
         end
         basis = [Q R]
     end
-    eliminate(basis \ p, BitSet(m+1:N))
+    return eliminate(basis \ p, BitSet((m+1):N))
 end
 
-_fixelim(h::ElemT, I, J, v, dout::FullDim) where ElemT<:HRepElement = similar_type(ElemT, dout)(h.a[J], h.β - dot(h.a[I], v))
+function _fixelim(h::ElemT, I, J, v, dout::FullDim) where {ElemT<:HRepElement}
+    return similar_type(ElemT, dout)(h.a[J], h.β - dot(h.a[I], v))
+end
 
 """
     fixandeliminate(p::HRep{T}, I, v)
@@ -142,7 +158,7 @@ function fixandeliminate(p::HRep{S}, I, v) where {S}
     d = length(J)
     f = (i, h) -> _fixelim(h, I, J, v, d)
     T = promote_type(S, eltype(v))
-    similar(p, d, T, hmap(f, d, T, p)...)
+    return similar(p, d, T, hmap(f, d, T, p)...)
 end
 
 # TODO rewrite, it is just cutting a cone with a half-space, nothing more

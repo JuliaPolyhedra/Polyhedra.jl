@@ -8,7 +8,9 @@ export volume, volume_simplex, unscaled_volume_simplex, surface, center_of_mass
 
 Creates a polyhedron from the representation `rep` using the default library included in the Polyhedra package.
 """
-polyhedron(rep::Representation{T}) where {T} = polyhedron(rep, default_library(FullDim(rep), T))
+function polyhedron(rep::Representation{T}) where {T}
+    return polyhedron(rep, default_library(FullDim(rep), T))
+end
 
 """
     hrepiscomputed(p::Polyhedron)
@@ -96,9 +98,12 @@ function setvrep! end
 Returns the `fulldim(p)`-dimensional hyper-volume of the polyhedron `p`.
 Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
 """
-function volume(p::Polyhedron{T}; tol = _default_tol(T)) where T
-    return reduce(+, unscaled_volume_simplex(Δ) for Δ in triangulation(p; tol);
-                  init=zero(T)) / factorial(fulldim(p))
+function volume(p::Polyhedron{T}; tol = _default_tol(T)) where {T}
+    return reduce(
+        +,
+        unscaled_volume_simplex(Δ) for Δ in triangulation(p; tol);
+        init = zero(T),
+    ) / factorial(fulldim(p))
 end
 
 function unscaled_volume_simplex(s)
@@ -119,13 +124,14 @@ end
 Returns the center of mass of `p`, represented as a `Vector{T}` of length `fulldim(p)`.
 Throws an error if `p` is degenerate.
 """
-function center_of_mass(p::Polyhedron{T}; tol = _default_tol(T)) where T
+function center_of_mass(p::Polyhedron{T}; tol = _default_tol(T)) where {T}
     # Implementation strategy: For a simplex, the center of mass coincides with
     # the centroid which is easy to compute.  So we triangulate `p` into
     # simplices and compute a volume-weighted average of these simplices'
     # centers of mass.
     simplices = triangulation(p; tol)
-    isempty(simplices) && error("Tried to compute center of mass of a degenerate polyhedron")
+    isempty(simplices) &&
+        error("Tried to compute center of mass of a degenerate polyhedron")
     unscaled_center = zeros(T, fulldim(p))
     unscaled_vol = zero(T)
     for Δ in simplices
@@ -144,15 +150,39 @@ Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` h
 """
 function surface end
 
-loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ine}}) = error("loadpolyhedron! not implemented for .ine")
-loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Type{Val{:ext}}) = error("loadpolyhedron! not implemented for .ext") # FIXME ExtFileVRepresentation or just ExtFile
+function loadpolyhedron!(
+    p::Polyhedron,
+    filename::AbstractString,
+    extension::Type{Val{:ine}},
+)
+    return error("loadpolyhedron! not implemented for .ine")
+end
+function loadpolyhedron!(
+    p::Polyhedron,
+    filename::AbstractString,
+    extension::Type{Val{:ext}},
+)
+    return error("loadpolyhedron! not implemented for .ext")
+end # FIXME ExtFileVRepresentation or just ExtFile
 
-loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::Symbol) = loadpolyhedron!(p, filename, Val{extension})
+function loadpolyhedron!(
+    p::Polyhedron,
+    filename::AbstractString,
+    extension::Symbol,
+)
+    return loadpolyhedron!(p, filename, Val{extension})
+end
 
-function loadpolyhedron!(p::Polyhedron, filename::AbstractString, extension::AbstractString)
+function loadpolyhedron!(
+    p::Polyhedron,
+    filename::AbstractString,
+    extension::AbstractString,
+)
     s = something(findfirst(isequal(extension), ["ext", "ine"]), 0)
     if s == 0
-        error("Invalid extension $extension, please give 'ext' for V-representation or 'ine' for H-representation")
+        error(
+            "Invalid extension $extension, please give 'ext' for V-representation or 'ine' for H-representation",
+        )
     end
-    loadpolyhedron!(p, filename, [:ext, :ine][s])
+    return loadpolyhedron!(p, filename, [:ext, :ine][s])
 end

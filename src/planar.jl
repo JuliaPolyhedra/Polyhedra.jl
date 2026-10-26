@@ -1,4 +1,10 @@
-function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yray::Nothing = nothing) where PT
+function _semi_hull(
+    ps::Vector{PT},
+    sign_sense,
+    counterclockwise,
+    sweep_norm,
+    yray::Nothing = nothing,
+) where {PT}
     hull = PT[]
     if isempty(ps)
         return hull
@@ -82,21 +88,38 @@ function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yr
     return hull
 end
 
-function _semi_hull(ps::Vector{PT}, sign_sense, counterclockwise, sweep_norm, yray) where PT
+function _semi_hull(
+    ps::Vector{PT},
+    sign_sense,
+    counterclockwise,
+    sweep_norm,
+    yray,
+) where {PT}
     hull = _semi_hull(ps, sign_sense, counterclockwise, sweep_norm)
-    while length(hull) >= 2 && counterclockwise(hull[end] - hull[end - 1], yray) >= 0
+    while length(hull) >= 2 &&
+          counterclockwise(hull[end] - hull[end-1], yray) >= 0
         pop!(hull)
     end
     return hull
 end
 
-_colinear(counterclockwise, a, b, c) = isapproxzero(counterclockwise(b - a, c - a))
+function _colinear(counterclockwise, a, b, c)
+    return isapproxzero(counterclockwise(b - a, c - a))
+end
 
-function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate; tol)
+function _planar_hull(
+    d::FullDim,
+    points,
+    lines,
+    rays,
+    counterclockwise,
+    rotate;
+    tol,
+)
     line = nothing
     lineleft = false
     lineright = false
-    function checkleftright(r::Union{Ray, Line})
+    function checkleftright(r::Union{Ray,Line})
         cc = counterclockwise(r, line)
         if !isapproxzero(cc)
             if cc < 0 || islin(r)
@@ -123,10 +146,12 @@ function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate;
             if xray === nothing
                 xray = yray = coord(r)
             else
-                if _isapprox(Line(xray), linearize(r); tol) && !_isapprox(Ray(xray), r; tol)
+                if _isapprox(Line(xray), linearize(r); tol) &&
+                   !_isapprox(Ray(xray), r; tol)
                     line = Line(xray)
                     checkleftright(Ray(yray))
-                elseif _isapprox(Line(yray), linearize(r); tol) && !_isapprox(Ray(yray), r; tol)
+                elseif _isapprox(Line(yray), linearize(r); tol) &&
+                       !_isapprox(Ray(yray), r; tol)
                     line = Line(yray)
                     checkleftright(Ray(xray))
                 else
@@ -170,15 +195,28 @@ function _planar_hull(d::FullDim, points, lines, rays, counterclockwise, rotate;
     if line === nothing
         half_points = _semi_hull(points, 1, counterclockwise, sweep_norm, yray)
         if yray === nothing
-            other_half = _semi_hull(points, -1, counterclockwise, sweep_norm, yray)[2:end-1]
-            if !isempty(other_half) && length(half_points) > 1 &&
-                _colinear(counterclockwise, half_points[1], half_points[2], other_half[end])
+            other_half =
+                _semi_hull(points, -1, counterclockwise, sweep_norm, yray)[2:(end-1)]
+            if !isempty(other_half) &&
+               length(half_points) > 1 &&
+               _colinear(
+                   counterclockwise,
+                   half_points[1],
+                   half_points[2],
+                   other_half[end],
+               )
                 start = 2
             else
                 start = 1
             end
-            if !isempty(other_half) && length(half_points) > 1 &&
-                _colinear(counterclockwise, half_points[end], half_points[end - 1], other_half[1])
+            if !isempty(other_half) &&
+               length(half_points) > 1 &&
+               _colinear(
+                   counterclockwise,
+                   half_points[end],
+                   half_points[end-1],
+                   other_half[1],
+               )
                 stop = length(half_points) - 1
             else
                 stop = length(half_points)
@@ -217,15 +255,30 @@ rotate(x) = convert(typeof(x), StaticArrays.SVector(-x[2], x[1]))
 
 function planar_hull(vr::VRepresentation{T}; tol = _default_tol(T)) where {T}
     d = FullDim(vr)
-    vrep(_planar_hull(FullDim(vr), collect(points(vr)), lines(vr), rays(vr), counterclockwise, rotate; tol)...; d = d)
+    return vrep(
+        _planar_hull(
+            FullDim(vr),
+            collect(points(vr)),
+            lines(vr),
+            rays(vr),
+            counterclockwise,
+            rotate;
+            tol,
+        )...;
+        d = d,
+    )
 end
 
 function planar_contour(p::Polyhedron)
     if fulldim(p) != 2
         if fulldim(p) == 3
-            error("Plotting 3-dimensional polyhedron with Plots is not supported, use Makie or MeshCat.")
+            error(
+                "Plotting 3-dimensional polyhedron with Plots is not supported, use Makie or MeshCat.",
+            )
         else
-            error("Plotting $(fulldim(p))-dimensional polyhedron with Plots is not supported.")
+            error(
+                "Plotting $(fulldim(p))-dimensional polyhedron with Plots is not supported.",
+            )
         end
     end
     removevredundancy!(p)
@@ -239,7 +292,7 @@ function planar_contour(p::Polyhedron)
     sort!(ps, by = x -> x[1])
     counterclockwise = (p1, p2) -> dot(cross([p1; 0], [p2; 0]), [0, 0, 1])
     sweep_norm = basis(eltype(ps), fulldim(p), 1)
-    top = _semi_hull(ps,  1, counterclockwise, sweep_norm)
+    top = _semi_hull(ps, 1, counterclockwise, sweep_norm)
     bot = _semi_hull(ps, -1, counterclockwise, sweep_norm)
     if !isempty(top) && !isempty(bot)
         @assert top[end] == bot[1]

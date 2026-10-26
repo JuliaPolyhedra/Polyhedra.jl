@@ -4,15 +4,10 @@ function sparserecttest(lib::Polyhedra.Library)
     # Sparse H-representation, cartesian product
     # -1 ≤ x_1 ≤ 1
     # 2 ≤ x_2 ≤ 3
-    h1 = HalfSpace(sparsevec([1], [ 1]),  1) ∩
-         HalfSpace(sparsevec([1], [-1]),  1)
-    h2 = HalfSpace(sparsevec([1], [ 1]),  3) ∩
-         HalfSpace(sparsevec([1], [-1]), -2)
+    h1 = HalfSpace(sparsevec([1], [1]), 1) ∩ HalfSpace(sparsevec([1], [-1]), 1)
+    h2 = HalfSpace(sparsevec([1], [1]), 3) ∩ HalfSpace(sparsevec([1], [-1]), -2)
     h = h1 * h2
-    v = convexhull([-1, 2],
-                   [ 1, 2],
-                   [-1, 3],
-                   [ 1, 3])
+    v = convexhull([-1, 2], [1, 2], [-1, 3], [1, 3])
     p = polyhedron(h, lib)
     @test !vrepiscomputed(p)
     inequality_fulltest(p, h)
@@ -24,5 +19,5 @@ function sparserecttest(lib::Polyhedra.Library)
     q = p1 * p2
     @test !vrepiscomputed(q)
     inequality_fulltest(q, h)
-    generator_fulltest(q, v)
+    return generator_fulltest(q, v)
 end

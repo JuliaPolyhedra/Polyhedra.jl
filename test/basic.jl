@@ -26,7 +26,10 @@ function basictest(lib::Polyhedra.Library)
         v1 = vrep([1 2; 3 4], [5 6])
         v2 = vrep([5 6; 7 8], [9 1; 2 3])
         v = v1 * v2
-        expv = vrep([1 2 5 6; 1 2 7 8; 3 4 5 6; 3 4 7 8], [5 6 0 0; 0 0 9 1; 0 0 2 3])
+        expv = vrep(
+            [1 2 5 6; 1 2 7 8; 3 4 5 6; 3 4 7 8],
+            [5 6 0 0; 0 0 9 1; 0 0 2 3],
+        )
         generator_fulltest(v, expv)
         pv1 = polyhedron(v1, lib)
         pv2 = polyhedron(v2, lib)

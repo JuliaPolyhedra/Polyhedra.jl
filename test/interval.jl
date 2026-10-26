@@ -6,11 +6,25 @@ function test_cartesian_product()
     p1 = polyhedron(hrep([HalfSpace([1.0], 1.0), HalfSpace([-1.0], 0.0)]))
     p2 = polyhedron(hrep([HalfSpace([1.0], 1.0), HalfSpace([-1.0], 0.0)]))
     p = Polyhedra.hcartesianproduct(p1, p2)
-    @test p isa DefaultPolyhedron{Float64,
-                                  Polyhedra.Intersection{Float64,StaticArrays.SArray{Tuple{2},Float64,1,2},StaticArrays.Size{(2,)}},
-                                  Polyhedra.Hull{Float64,StaticArrays.SArray{Tuple{2},Float64,1,2},StaticArrays.Size{(2,)}}}
-    expected = HalfSpace((@SVector [1.0, 0.0]), 1.0) ∩ HalfSpace((@SVector [-1.0, 0.0]), 0.0) ∩ HalfSpace((@SVector [0.0, 1.0]), 1.0) ∩ HalfSpace((@SVector [0.0, -1.0]), 0.0)
-    inequality_fulltest(p, expected)
+    @test p isa DefaultPolyhedron{
+        Float64,
+        Polyhedra.Intersection{
+            Float64,
+            StaticArrays.SArray{Tuple{2},Float64,1,2},
+            StaticArrays.Size{(2,)},
+        },
+        Polyhedra.Hull{
+            Float64,
+            StaticArrays.SArray{Tuple{2},Float64,1,2},
+            StaticArrays.Size{(2,)},
+        },
+    }
+    expected =
+        HalfSpace((@SVector [1.0, 0.0]), 1.0) ∩
+        HalfSpace((@SVector [-1.0, 0.0]), 0.0) ∩
+        HalfSpace((@SVector [0.0, 1.0]), 1.0) ∩
+        HalfSpace((@SVector [0.0, -1.0]), 0.0)
+    return inequality_fulltest(p, expected)
 end
 
 function _test_sethrep(fh, fv, args...)
@@ -40,13 +54,21 @@ function _test_sethrep(fh, fv, args...)
     fv(pv, v2, args...)
     @test volume(pv) == 2
     inequality_fulltest(pv, h2)
-    generator_fulltest(pv, v2)
+    return generator_fulltest(pv, v2)
 end
 function test_sethrep()
     _test_sethrep(Polyhedra.sethrep!, Polyhedra.setvrep!)
-    _test_sethrep(Polyhedra.sethrep!, Polyhedra.setvrep!, Polyhedra.UNKNOWN_REDUNDANCY)
+    _test_sethrep(
+        Polyhedra.sethrep!,
+        Polyhedra.setvrep!,
+        Polyhedra.UNKNOWN_REDUNDANCY,
+    )
     _test_sethrep(Polyhedra.resethrep!, Polyhedra.resetvrep!)
-    _test_sethrep(Polyhedra.resethrep!, Polyhedra.resetvrep!, Polyhedra.UNKNOWN_REDUNDANCY)
+    return _test_sethrep(
+        Polyhedra.resethrep!,
+        Polyhedra.resetvrep!,
+        Polyhedra.UNKNOWN_REDUNDANCY,
+    )
 end
 
 function test_redundancy()
@@ -56,32 +78,39 @@ function test_redundancy()
         removevredundancy!(p)
         removevredundancy!(p, nothing; strongly = false, planar = false)
         detectvlinearity!(p)
-        detectvlinearity!(p, nothing; verbose=1)
+        detectvlinearity!(p, nothing; verbose = 1)
         removehredundancy!(p)
         removehredundancy!(p, nothing; strongly = false, planar = false)
         detecthlinearity!(p)
-        detecthlinearity!(p, nothing; verbose=1)
+        return detecthlinearity!(p, nothing; verbose = 1)
     end
-    alloc_test(f, 0)
+    return alloc_test(f, 0)
 end
 
 @testset "Interval tests" begin
     # Closed interval
-    h = HalfSpace([-1], 3.) ∩ HalfSpace([1.], 8)
-    v = convexhull([-3.], [8.])
+    h = HalfSpace([-1], 3.0) ∩ HalfSpace([1.0], 8)
+    v = convexhull([-3.0], [8.0])
 
-    v0 = [[1.], [8], [-2], [4], [-1], [-3], [5]]
+    v0 = [[1.0], [8], [-2], [4], [-1], [-3], [5]]
     pp = polyhedron(vrep(v0), Polyhedra.DefaultLibrary{Float64}())
     @test !hrepiscomputed(pp)
     @test vrepiscomputed(pp)
     d = StaticArrays.Size{(1,)}()
-    for p in (Interval{Float64, SVector{1, Float64}, typeof(d)}(pp),
-              Interval{Float64, SVector{1, Float64}, typeof(d)}(d, Polyhedra.vreps(pp)...))
+    for p in (
+        Interval{Float64,SVector{1,Float64},typeof(d)}(pp),
+        Interval{Float64,SVector{1,Float64},typeof(d)}(
+            d,
+            Polyhedra.vreps(pp)...,
+        ),
+    )
         @test similar_library(pp, 1) == IntervalLibrary{Float64}()
-        @test similar_library(pp, StaticArrays.Size((1,))) == IntervalLibrary{Float64}()
+        @test similar_library(pp, StaticArrays.Size((1,))) ==
+              IntervalLibrary{Float64}()
         @test library(p) == IntervalLibrary{Float64}()
         @test similar_library(p, 2) == Polyhedra.DefaultLibrary{Float64}()
-        @test similar_library(p, StaticArrays.Size((2,))) == Polyhedra.DefaultLibrary{Float64}()
+        @test similar_library(p, StaticArrays.Size((2,))) ==
+              Polyhedra.DefaultLibrary{Float64}()
         @test hrepiscomputed(p)
         @test vrepiscomputed(p)
         @test p isa Interval{Float64}
@@ -96,8 +125,13 @@ end
     pp = polyhedron(h, Polyhedra.DefaultLibrary{Float64}())
     @test hrepiscomputed(pp)
     @test !vrepiscomputed(pp)
-    for p in (Interval{Float64, SVector{1, Float64}, typeof(d)}(pp),
-              Interval{Float64, SVector{1, Float64}, typeof(d)}(d, Polyhedra.hreps(pp)...))
+    for p in (
+        Interval{Float64,SVector{1,Float64},typeof(d)}(pp),
+        Interval{Float64,SVector{1,Float64},typeof(d)}(
+            d,
+            Polyhedra.hreps(pp)...,
+        ),
+    )
         @test hrepiscomputed(p)
         @test vrepiscomputed(p)
         @test p isa Interval{Float64}
@@ -111,10 +145,10 @@ end
     end
 
     # Singleton
-    h = intersect(HyperPlane([1.], 2))
-    v = convexhull([2.])
+    h = intersect(HyperPlane([1.0], 2))
+    v = convexhull([2.0])
 
-    v0 = reshape([2., 2., 2.], 3, 1)
+    v0 = reshape([2.0, 2.0, 2.0], 3, 1)
     p = polyhedron(vrep(v0))
     @test p isa Interval{Float64}
     @test !isempty(p)
@@ -134,10 +168,10 @@ end
     inequality_fulltest(p, h)
 
     # Left-open interval
-    h = intersect(HalfSpace([1.], 2))
-    v = v + conichull([-1.])
+    h = intersect(HalfSpace([1.0], 2))
+    v = v + conichull([-1.0])
 
-    r0 = reshape([-1., -1], 2, 1)
+    r0 = reshape([-1.0, -1], 2, 1)
     p = polyhedron(vrep(v0, r0))
     @test p isa Interval{Float64}
     @test !isempty(p)
@@ -146,7 +180,9 @@ end
     inequality_fulltest(p, h)
     generator_fulltest(p, v)
 
-    p = polyhedron(HalfSpace([1.], 3) ∩ HalfSpace([5.], 10) ∩ HalfSpace([2.], 6))
+    p = polyhedron(
+        HalfSpace([1.0], 3) ∩ HalfSpace([5.0], 10) ∩ HalfSpace([2.0], 6),
+    )
     @test p isa Interval{Float64}
     @test !isempty(p)
     @test iszero(surface(p))
@@ -155,10 +191,10 @@ end
     inequality_fulltest(p, h)
 
     # Right-open interval
-    h = intersect(HalfSpace([-1.], -2))
-    v = convexhull([2.]) + conichull([1.])
+    h = intersect(HalfSpace([-1.0], -2))
+    v = convexhull([2.0]) + conichull([1.0])
 
-    p = polyhedron(convexhull([2.], [3.]) + conichull([1.], [3.]))
+    p = polyhedron(convexhull([2.0], [3.0]) + conichull([1.0], [3.0]))
     @test p isa Interval{Float64}
     @test !isempty(p)
     @test iszero(surface(p))
@@ -166,7 +202,7 @@ end
     inequality_fulltest(p, h)
     generator_fulltest(p, v)
 
-    p = polyhedron(HalfSpace([-3.], -6) ∩ HalfSpace([-2.], -2))
+    p = polyhedron(HalfSpace([-3.0], -6) ∩ HalfSpace([-2.0], -2))
     # TODO test value of p
     p = polyhedron(h)
     @test p isa Interval{Float64}
@@ -178,7 +214,7 @@ end
 
     # Empty
     h = HyperPlane([0], 1) ∩ HyperPlane([1], 0)
-    v = vrep(Line{Int, StaticArrays.SVector{1, Int}}[])
+    v = vrep(Line{Int,StaticArrays.SVector{1,Int}}[])
 
     p = polyhedron(v)
     @test p isa Interval{Int}
@@ -217,7 +253,7 @@ end
     inequality_fulltest(p, h)
 
     # Line
-    h = hrep(HyperPlane{Int, SVector{1, Int}}[])
+    h = hrep(HyperPlane{Int,SVector{1,Int}}[])
     v = conichull(Line([1]))
 
     p = polyhedron(v)

@@ -31,8 +31,11 @@ H-representation Polyhedra.Intersection{Int64, Vector{Int64}, Int64}:
  HalfSpace([-1, 0], 0)
 ```
 """
-function hrep(hyperplanes::HyperPlaneIt, halfspaces::HalfSpaceIt;
-              d::FullDim=FullDim_rec(hyperplanes, halfspaces))
+function hrep(
+    hyperplanes::HyperPlaneIt,
+    halfspaces::HalfSpaceIt;
+    d::FullDim = FullDim_rec(hyperplanes, halfspaces),
+)
     return Intersection(d, hyperplanes, halfspaces)
 end
 
@@ -56,30 +59,49 @@ can be created as follows:
 hrep([HalfSpace([1, 1], 1), HalfSpace([1, -1], 0), HalfSpace([-1, 0], 0)])
 ```
 """
-function hrep(halfspaces::ElemIt{HalfSpace{T, AT}}; kws...) where {T, AT}
-    return hrep(HyperPlane{T, AT}[], halfspaces; kws...)
+function hrep(halfspaces::ElemIt{HalfSpace{T,AT}}; kws...) where {T,AT}
+    return hrep(HyperPlane{T,AT}[], halfspaces; kws...)
 end
 
-mutable struct Intersection{T, AT, D<:FullDim} <: HRepresentation{T}
-    hyperplanes::HyperPlanesIntersection{T, AT, D}
-    halfspaces::Vector{HalfSpace{T, AT}}
-    function Intersection{T, AT, D}(d::FullDim, hyperplanes::HyperPlaneIt{T},
-                                    halfspaces::HalfSpaceIt{T}) where {T, AT, D}
-        new{T, AT, D}(HyperPlanesIntersection{T, AT, D}(d, hyperplanes),
-                      lazy_collect(halfspaces))
+mutable struct Intersection{T,AT,D<:FullDim} <: HRepresentation{T}
+    hyperplanes::HyperPlanesIntersection{T,AT,D}
+    halfspaces::Vector{HalfSpace{T,AT}}
+    function Intersection{T,AT,D}(
+        d::FullDim,
+        hyperplanes::HyperPlaneIt{T},
+        halfspaces::HalfSpaceIt{T},
+    ) where {T,AT,D}
+        return new{T,AT,D}(
+            HyperPlanesIntersection{T,AT,D}(d, hyperplanes),
+            lazy_collect(halfspaces),
+        )
     end
 end
-function Intersection(d::FullDim, hyperplanes::ElemIt{HyperPlane{T, AT}},
-                      halfspaces::ElemIt{HalfSpace{T, AT}}) where {T, AT}
-    return Intersection{T, AT, typeof(d)}(d, hyperplanes, halfspaces)
+function Intersection(
+    d::FullDim,
+    hyperplanes::ElemIt{HyperPlane{T,AT}},
+    halfspaces::ElemIt{HalfSpace{T,AT}},
+) where {T,AT}
+    return Intersection{T,AT,typeof(d)}(d, hyperplanes, halfspaces)
 end
 
 FullDim(h::Intersection) = FullDim(h.hyperplanes)
-hvectortype(::Type{<:Intersection{T, AT}}) where {T, AT} = AT
-similar_type(PT::Type{<:Intersection}, d::FullDim, ::Type{T}) where {T} = Intersection{T, similar_type(hvectortype(PT), d, T), typeof(d)}
+hvectortype(::Type{<:Intersection{T,AT}}) where {T,AT} = AT
+function similar_type(PT::Type{<:Intersection}, d::FullDim, ::Type{T}) where {T}
+    return Intersection{T,similar_type(hvectortype(PT), d, T),typeof(d)}
+end
 
 Intersection(h::HRepresentation{T}) where {T} = Intersection{T}(h)
-Intersection{T}(h::HRepresentation) where {T} = convert(Intersection{T, similar_type(hvectortype(typeof(h)), T), typeof(FullDim(h))}, h)
+function Intersection{T}(h::HRepresentation) where {T}
+    return convert(
+        Intersection{
+            T,
+            similar_type(hvectortype(typeof(h)), T),
+            typeof(FullDim(h)),
+        },
+        h,
+    )
+end
 
 function Base.intersect!(h::Intersection, hp::HyperPlane)
     intersect!(h.hyperplanes, hp)
@@ -93,7 +115,11 @@ end
 @subrepelem Intersection HyperPlane hyperplanes
 @vecrepelem Intersection HalfSpace halfspaces
 
-fulltype(::Type{<:Union{Intersection{T, AT, D}, HyperPlanesIntersection{T, AT, D}}}) where {T, AT, D} = Intersection{T, AT, D}
+function fulltype(
+    ::Type{<:Union{Intersection{T,AT,D},HyperPlanesIntersection{T,AT,D}}},
+) where {T,AT,D}
+    return Intersection{T,AT,D}
+end
 
 # V-representation
 
@@ -159,22 +185,26 @@ vrep([[0, 0], [0, 1], [1/2, 1/2]])
 """
 vrep(points::PointIt; d::FullDim = FullDim_rec(points)) = PointsHull(d, points)
 
-mutable struct PointsHull{T, AT, D<:FullDim} <: VPolytope{T}
+mutable struct PointsHull{T,AT,D<:FullDim} <: VPolytope{T}
     d::D
     points::Vector{AT}
-    function PointsHull{T, AT, D}(d::FullDim, points::PointIt) where {T, AT, D}
-        new{T, AT, D}(FullDim_convert(D, d), lazy_collect(points))
+    function PointsHull{T,AT,D}(d::FullDim, points::PointIt) where {T,AT,D}
+        return new{T,AT,D}(FullDim_convert(D, d), lazy_collect(points))
     end
 end
 function PointsHull(d::FullDim, points::PointIt)
-    return PointsHull{coefficient_type(eltype(points)), eltype(points),
-                      typeof(d)}(d, points)
+    return PointsHull{coefficient_type(eltype(points)),eltype(points),typeof(d)}(
+        d,
+        points,
+    )
 end
 FullDim(v::PointsHull) = v.d
-vvectortype(::Type{<:PointsHull{T, AT}}) where {T, AT} = AT
-similar_type(PT::Type{<:PointsHull}, d::FullDim, ::Type{T}) where {T} = PointsHull{T, similar_type(vvectortype(PT), d, T), typeof(d)}
+vvectortype(::Type{<:PointsHull{T,AT}}) where {T,AT} = AT
+function similar_type(PT::Type{<:PointsHull}, d::FullDim, ::Type{T}) where {T}
+    return PointsHull{T,similar_type(vvectortype(PT), d, T),typeof(d)}
+end
 
-vreptype(::Type{PointsHull{T, AT, D}}) where {T, AT, D} = Hull{T, AT, D}
+vreptype(::Type{PointsHull{T,AT,D}}) where {T,AT,D} = Hull{T,AT,D}
 
 convexhull!(v::PointsHull, p::AbstractVector) = push!(v.points, p)
 
@@ -208,24 +238,33 @@ vrep([Ray([1, 0]), Ray([0, 1])])
 ```
 creates a V-representation for positive orthant.
 """
-function vrep(rays::ElemIt{Ray{T, AT}}; kws...) where {T, AT}
-    return vrep(Line{T, AT}[], rays; kws...)
+function vrep(rays::ElemIt{Ray{T,AT}}; kws...) where {T,AT}
+    return vrep(Line{T,AT}[], rays; kws...)
 end
 
-mutable struct RaysHull{T, AT, D<:FullDim} <: VCone{T}
-    lines::LinesHull{T, AT, D}
-    rays::Vector{Ray{T, AT}}
-    function RaysHull{T, AT, D}(d::FullDim, ls::LineIt{T},
-                                rs::RayIt{T}) where {T, AT, D}
-        new{T, AT, D}(LinesHull{T, AT, D}(d, ls), lazy_collect(rs))
+mutable struct RaysHull{T,AT,D<:FullDim} <: VCone{T}
+    lines::LinesHull{T,AT,D}
+    rays::Vector{Ray{T,AT}}
+    function RaysHull{T,AT,D}(
+        d::FullDim,
+        ls::LineIt{T},
+        rs::RayIt{T},
+    ) where {T,AT,D}
+        return new{T,AT,D}(LinesHull{T,AT,D}(d, ls), lazy_collect(rs))
     end
 end
-function RaysHull(d::FullDim, ls::ElemIt{Line{T, AT}}, rs::ElemIt{Ray{T, AT}}) where {T, AT}
-    RaysHull{T, AT, typeof(d)}(d, ls, rs)
+function RaysHull(
+    d::FullDim,
+    ls::ElemIt{Line{T,AT}},
+    rs::ElemIt{Ray{T,AT}},
+) where {T,AT}
+    return RaysHull{T,AT,typeof(d)}(d, ls, rs)
 end
 FullDim(v::RaysHull) = FullDim(v.lines)
-vvectortype(::Type{<:RaysHull{T, AT}}) where {T, AT} = AT
-similar_type(PT::Type{<:RaysHull}, d::FullDim, ::Type{T}) where {T} = RaysHull{T, similar_type(vvectortype(PT), d, T), typeof(d)}
+vvectortype(::Type{<:RaysHull{T,AT}}) where {T,AT} = AT
+function similar_type(PT::Type{<:RaysHull}, d::FullDim, ::Type{T}) where {T}
+    return RaysHull{T,similar_type(vvectortype(PT), d, T),typeof(d)}
+end
 
 convexhull!(v::RaysHull, l::Line) = convexhull!(v.lines, l)
 convexhull!(v::RaysHull, r::Ray) = push!(v.rays, r)
@@ -233,7 +272,7 @@ convexhull!(v::RaysHull, r::Ray) = push!(v.rays, r)
 @vecrepelem RaysHull Ray rays
 @subrepelem RaysHull Line lines
 
-vreptype(::Type{RaysHull{T, AT, D}}) where {T, AT, D} = Hull{T, AT, D}
+vreptype(::Type{RaysHull{T,AT,D}}) where {T,AT,D} = Hull{T,AT,D}
 
 """
     vrep(points::PointIt, lines::LineIt, rays::RayIt;
@@ -243,34 +282,52 @@ Creates a V-representation for the polyhedron of full dimension `d` equal to the
 minkowski sum of the convex hull of `points` with the conic hull of `lines` and
 `rays`.
 """
-function vrep(points::PointIt, lines::LineIt, rays::RayIt;
-              d::FullDim = FullDim_rec(points, lines, rays))
+function vrep(
+    points::PointIt,
+    lines::LineIt,
+    rays::RayIt;
+    d::FullDim = FullDim_rec(points, lines, rays),
+)
     return Hull(d, points, lines, rays)
 end
 
-function vrep(points::ElemIt{AT}, lines::ElemIt{Line{T, AT}};
-              kws...) where {T, AT}
-    return vrep(points, lines, Ray{T, AT}[]; kws...)
+function vrep(
+    points::ElemIt{AT},
+    lines::ElemIt{Line{T,AT}};
+    kws...,
+) where {T,AT}
+    return vrep(points, lines, Ray{T,AT}[]; kws...)
 end
 
-mutable struct Hull{T, AT, D<:FullDim} <: VRepresentation{T}
-    points::PointsHull{T, AT, D}
-    rays::RaysHull{T, AT, D}
-    function Hull{T, AT, D}(d::FullDim, vits::VIt{T}...) where {T, AT, D}
+mutable struct Hull{T,AT,D<:FullDim} <: VRepresentation{T}
+    points::PointsHull{T,AT,D}
+    rays::RaysHull{T,AT,D}
+    function Hull{T,AT,D}(d::FullDim, vits::VIt{T}...) where {T,AT,D}
         points, lines, rays = fillvits(d, vits...)
-        new{T, AT, D}(PointsHull(d, points), RaysHull(d, lines, rays))
+        return new{T,AT,D}(PointsHull(d, points), RaysHull(d, lines, rays))
     end
 end
-function Hull(d::FullDim, points::ElemIt{AT}, lines::ElemIt{Line{T, AT}},
-              rays::ElemIt{Ray{T, AT}}) where {T, AT}
-    Hull{T, AT, typeof(d)}(d, points, lines, rays)
+function Hull(
+    d::FullDim,
+    points::ElemIt{AT},
+    lines::ElemIt{Line{T,AT}},
+    rays::ElemIt{Ray{T,AT}},
+) where {T,AT}
+    return Hull{T,AT,typeof(d)}(d, points, lines, rays)
 end
 FullDim(v::Hull) = FullDim(v.points)
-vvectortype(::Type{<:Hull{T, AT}}) where {T, AT} = AT
-similar_type(PT::Type{<:Hull}, d::FullDim, ::Type{T}) where {T} = Hull{T, similar_type(vvectortype(PT), d, T), typeof(d)}
+vvectortype(::Type{<:Hull{T,AT}}) where {T,AT} = AT
+function similar_type(PT::Type{<:Hull}, d::FullDim, ::Type{T}) where {T}
+    return Hull{T,similar_type(vvectortype(PT), d, T),typeof(d)}
+end
 
 Hull(v::VRepresentation{T}) where {T} = Hull{T}(v)
-Hull{T}(v::VRepresentation) where {T} = convert(Hull{T, similar_type(vvectortype(typeof(v)), T), typeof(FullDim(v))}, v)
+function Hull{T}(v::VRepresentation) where {T}
+    return convert(
+        Hull{T,similar_type(vvectortype(typeof(v)), T),typeof(FullDim(v))},
+        v,
+    )
+end
 
 convexhull!(v::Hull, p::AbstractVector) = convexhull!(v.points, p)
 convexhull!(v::Hull, r::VStruct) = convexhull!(v.rays, r)
@@ -279,14 +336,37 @@ convexhull!(v::Hull, r::VStruct) = convexhull!(v.rays, r)
 @subrepelem Hull Line rays
 @subrepelem Hull Ray rays
 
-fulltype(::Type{<:Union{Hull{T, AT, D}, PointsHull{T, AT, D}, LinesHull{T, AT, D}, RaysHull{T, AT, D}}}) where {T, AT, D} = Hull{T, AT, D}
+function fulltype(
+    ::Type{
+        <:Union{
+            Hull{T,AT,D},
+            PointsHull{T,AT,D},
+            LinesHull{T,AT,D},
+            RaysHull{T,AT,D},
+        },
+    },
+) where {T,AT,D}
+    return Hull{T,AT,D}
+end
 
-dualtype(::Type{<:Intersection{T, BT, D}}, ::Type{AT}) where {T, AT, BT, D} = Hull{T, AT, D}
-dualtype(::Type{<:Hull{T, BT, D}}, ::Type{AT}) where {T, AT, BT, D} = Intersection{T, AT, D}
-const AnyIntersection{T, AT, D} = Union{Intersection{T, AT, D}, HyperPlanesIntersection{T, AT, D}}
-function dualfullspace(h::Union{AnyIntersection, Type{<:AnyIntersection}},
-                       d::FullDim, ::Type{T}, ::Type{AT}) where {T, AT}
-    Hull{T, AT, typeof(d)}(d, [origin(AT, fulldim(d))],
-                           Line{T, AT}.(basis.(AT, Ref(d), 1:fulldim(d))),
-                           Ray{T, AT}[])
+function dualtype(::Type{<:Intersection{T,BT,D}}, ::Type{AT}) where {T,AT,BT,D}
+    return Hull{T,AT,D}
+end
+function dualtype(::Type{<:Hull{T,BT,D}}, ::Type{AT}) where {T,AT,BT,D}
+    return Intersection{T,AT,D}
+end
+const AnyIntersection{T,AT,D} =
+    Union{Intersection{T,AT,D},HyperPlanesIntersection{T,AT,D}}
+function dualfullspace(
+    h::Union{AnyIntersection,Type{<:AnyIntersection}},
+    d::FullDim,
+    ::Type{T},
+    ::Type{AT},
+) where {T,AT}
+    return Hull{T,AT,typeof(d)}(
+        d,
+        [origin(AT, fulldim(d))],
+        Line{T,AT}.(basis.(AT, Ref(d), 1:fulldim(d))),
+        Ray{T,AT}[],
+    )
 end

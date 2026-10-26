@@ -6,44 +6,69 @@ export IntervalLibrary, Interval
 Default library for polyhedra of dimension 1. Many aspect of polyhedral computation become trivial in one dimension. This library exploits this fact.
 The library is also used as a fallback for libraries that do not support 1-dimensional polyhedra (e.g. qhull). That is projecting a polyhedron using such library produces a polyhedron using `IntervalLibrary`.
 """
-struct IntervalLibrary{T} <: Library
-end
+struct IntervalLibrary{T} <: Library end
 
-similar_library(lib::IntervalLibrary, d::FullDim, ::Type{T}) where T = default_library(d, T) # default_library allows to fallback to DefaultLibrary if d is not FullDim(1)
+function similar_library(lib::IntervalLibrary, d::FullDim, ::Type{T}) where {T}
+    return default_library(d, T)
+end # default_library allows to fallback to DefaultLibrary if d is not FullDim(1)
 
-mutable struct Interval{T, AT, D} <: Polyhedron{T}
-    hrep::Intersection{T, AT, D}
-    vrep::Hull{T, AT, D}
+mutable struct Interval{T,AT,D} <: Polyhedron{T}
+    hrep::Intersection{T,AT,D}
+    vrep::Hull{T,AT,D}
     length::T
 end
 
-Interval{T, AT, D}(d::FullDim, it::HIt...; tol = _default_tol(T)) where {T, AT, D} = _hinterval(Intersection{T, AT, D}(d, it...), AT, D; tol)
-Interval{T, AT, D}(d::FullDim, it::VIt...; tol = _default_tol(T)) where {T, AT, D} = _vinterval(Hull{T, AT, D}(d, it...), AT, D; tol)
+function Interval{T,AT,D}(
+    d::FullDim,
+    it::HIt...;
+    tol = _default_tol(T),
+) where {T,AT,D}
+    return _hinterval(Intersection{T,AT,D}(d, it...), AT, D; tol)
+end
+function Interval{T,AT,D}(
+    d::FullDim,
+    it::VIt...;
+    tol = _default_tol(T),
+) where {T,AT,D}
+    return _vinterval(Hull{T,AT,D}(d, it...), AT, D; tol)
+end
 
 # If AT is an SVector, it will be StaticArrays.Size{(1,)}
 # otherwise, it will be 1
 FullDim(p::Interval) = FullDim(p.hrep)
 
-library(::Union{Interval{T}, Type{<:Interval{T}}}) where T = IntervalLibrary{T}()
+function library(::Union{Interval{T},Type{<:Interval{T}}}) where {T}
+    return IntervalLibrary{T}()
+end
 
-hvectortype(::Type{<:Interval{T, AT}}) where {T, AT} = AT
-vvectortype(::Type{<:Interval{T, AT}}) where {T, AT} = AT
+hvectortype(::Type{<:Interval{T,AT}}) where {T,AT} = AT
+vvectortype(::Type{<:Interval{T,AT}}) where {T,AT} = AT
 
-similar_type(::Type{<:Interval}, d::FullDim, ::Type{T}) where T = default_type(d, T)
+function similar_type(::Type{<:Interval}, d::FullDim, ::Type{T}) where {T}
+    return default_type(d, T)
+end
 
 surface(::Interval{T}) where {T} = zero(T)
 volume(p::Interval) = p.length
 Base.isempty(p::Interval) = isempty(p.vrep)
 
-function _interval(AT, haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool; tol) where {T}
+function _interval(
+    AT,
+    haslb::Bool,
+    lb::T,
+    hasub::Bool,
+    ub::T,
+    isempty::Bool;
+    tol,
+) where {T}
     if haslb && hasub && _gt(lb, ub; tol)
         isempty = true
     end
-    hps = HyperPlane{T, AT}[]
-    hss = HalfSpace{T, AT}[]
+    hps = HyperPlane{T,AT}[]
+    hss = HalfSpace{T,AT}[]
     ps = AT[]
-    ls = Line{T, AT}[]
-    rs = Ray{T, AT}[]
+    ls = Line{T,AT}[]
+    rs = Ray{T,AT}[]
     if !isempty
         if hasub
             push!(ps, StaticArrays.SVector(ub))
@@ -76,15 +101,22 @@ function _interval(AT, haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool; to
     end
     h = hrep(hps, hss)
     v = vrep(ps, ls, rs)
-    volume = isempty ? zero(T) : (haslb && hasub ? max(zero(T), ub - lb) : -one(T))
+    volume =
+        isempty ? zero(T) : (haslb && hasub ? max(zero(T), ub - lb) : -one(T))
     return h, v, volume
 end
 
-function Interval{T, AT, D}(haslb::Bool, lb::T, hasub::Bool, ub::T, isempty::Bool) where {T, AT, D}
-    return Interval{T, AT, D}(_interval(AT, haslb, lb, hasub, ub, isempty)...)
+function Interval{T,AT,D}(
+    haslb::Bool,
+    lb::T,
+    hasub::Bool,
+    ub::T,
+    isempty::Bool,
+) where {T,AT,D}
+    return Interval{T,AT,D}(_interval(AT, haslb, lb, hasub, ub, isempty)...)
 end
 
-function _hinterval(rep::HRep{T}, ::Type{AT}; tol) where {T, AT}
+function _hinterval(rep::HRep{T}, ::Type{AT}; tol) where {T,AT}
     haslb = false
     lb = zero(T)
     hasub = false
@@ -132,11 +164,11 @@ function _hinterval(rep::HRep{T}, ::Type{AT}; tol) where {T, AT}
     return _interval(AT, haslb, lb, hasub, ub, empty; tol)
 end
 
-function _hinterval(rep::HRep{T}, ::Type{AT}, D; tol) where {T, AT}
-    return Interval{T, AT, D}(_hinterval(rep, AT; tol)...)
+function _hinterval(rep::HRep{T}, ::Type{AT}, D; tol) where {T,AT}
+    return Interval{T,AT,D}(_hinterval(rep, AT; tol)...)
 end
 
-function _vinterval(v::VRep{T}, ::Type{AT}; tol) where {T, AT}
+function _vinterval(v::VRep{T}, ::Type{AT}; tol) where {T,AT}
     haslb = true
     lb = zero(T)
     hasub = true
@@ -174,13 +206,26 @@ function _vinterval(v::VRep{T}, ::Type{AT}; tol) where {T, AT}
     return _interval(AT, haslb, lb, hasub, ub, isempty; tol)
 end
 
-function _vinterval(rep::VRep{T}, ::Type{AT}, D; tol) where {T, AT}
-    return Interval{T, AT, D}(_vinterval(rep, AT; tol)...)
+function _vinterval(rep::VRep{T}, ::Type{AT}, D; tol) where {T,AT}
+    return Interval{T,AT,D}(_vinterval(rep, AT; tol)...)
 end
 
-Interval{T, AT, D}(p::HRepresentation{T}; tol = _default_tol(T)) where {T, AT, D} = _hinterval(p, AT, D; tol)
-Interval{T, AT, D}(p::VRepresentation{T}; tol = _default_tol(T)) where {T, AT, D} = _vinterval(p, AT, D; tol)
-function Interval{T, AT, D}(p::Polyhedron{T}; tol = _default_tol(T)) where {T, AT, D}
+function Interval{T,AT,D}(
+    p::HRepresentation{T};
+    tol = _default_tol(T),
+) where {T,AT,D}
+    return _hinterval(p, AT, D; tol)
+end
+function Interval{T,AT,D}(
+    p::VRepresentation{T};
+    tol = _default_tol(T),
+) where {T,AT,D}
+    return _vinterval(p, AT, D; tol)
+end
+function Interval{T,AT,D}(
+    p::Polyhedron{T};
+    tol = _default_tol(T),
+) where {T,AT,D}
     if hrepiscomputed(p)
         _hinterval(p, AT, D; tol)
     else
@@ -188,8 +233,8 @@ function Interval{T, AT, D}(p::Polyhedron{T}; tol = _default_tol(T)) where {T, A
     end
 end
 
-function polyhedron(rep::Rep{T}, ::IntervalLibrary{T}) where T
-    Interval{T, StaticArrays.SVector{1, T}, StaticArrays.Size{(1,)}}(rep)
+function polyhedron(rep::Rep{T}, ::IntervalLibrary{T}) where {T}
+    return Interval{T,StaticArrays.SVector{1,T},StaticArrays.Size{(1,)}}(rep)
 end
 
 hrep(p::Interval) = p.hrep
@@ -205,7 +250,11 @@ function removehredundancy!(::Interval, args...; kws...) end
 function removevredundancy!(::Interval, args...; kws...) end
 
 sethrep!(p::Interval, h::HRep) = resethrep!(p, h)
-function resethrep!(p::Interval{T, AT}, h::HRep{U}; tol = _default_tol(U)) where {T, U, AT}
+function resethrep!(
+    p::Interval{T,AT},
+    h::HRep{U};
+    tol = _default_tol(U),
+) where {T,U,AT}
     hnew, v, volume = _hinterval(h, AT; tol)
     p.hrep = hnew
     p.vrep = v
@@ -213,7 +262,11 @@ function resethrep!(p::Interval{T, AT}, h::HRep{U}; tol = _default_tol(U)) where
     return p
 end
 setvrep!(p::Interval, v::VRep) = resetvrep!(p, v)
-function resetvrep!(p::Interval{T, AT}, v::VRep{U}; tol = _default_tol(U)) where {T, U, AT}
+function resetvrep!(
+    p::Interval{T,AT},
+    v::VRep{U};
+    tol = _default_tol(U),
+) where {T,U,AT}
     h, vnew, volume = _vinterval(v, AT; tol)
     p.hrep = h
     p.vrep = vnew

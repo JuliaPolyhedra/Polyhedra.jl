@@ -14,12 +14,16 @@ function ex1test(lib::Polyhedra.Library)
 
     poly = polyhedron(m, lib)
 
-    V = [ 0  3;
-         -1  4;
-         -1 10]
+    V = [
+        0 3;
+        -1 4;
+        -1 10
+    ]
 
-    R = [1 2;
-         2 1]
+    R = [
+        1 2;
+        2 1
+    ]
 
-    generator_fulltest(poly, V, R)
+    return generator_fulltest(poly, V, R)
 end

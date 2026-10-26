@@ -44,11 +44,13 @@ function test_MixMatRep()
         p1 = hrep(A, a, BitSet([2]))
         p2 = hrep(B, b, BitSet([1]))
         p = p1 * p2
-        @test p.A == [A[2,:]' zeros(1, 3)
-                      zeros(1, 2) B[1, :]'
-                      A[[1,3],:] zeros(2, 3)
-                      zeros(1, 2) B[2, :]']
-        @test p.b == [a[2]; b[1]; a[[1,3]]; b[2]]
+        @test p.A == [
+            A[2, :]' zeros(1, 3)
+            zeros(1, 2) B[1, :]'
+            A[[1, 3], :] zeros(2, 3)
+            zeros(1, 2) B[2, :]'
+        ]
+        @test p.b == [a[2]; b[1]; a[[1, 3]]; b[2]]
         @test p.linset == BitSet([1, 2])
     end
 end

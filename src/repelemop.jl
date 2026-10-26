@@ -7,7 +7,7 @@ halfspace(h::HyperPlane) = HalfSpace(h.a, h.β)
 halfspace(h::HalfSpace) = h
 
 line(r::Ray) = Line(coord(r))
-linetype(::Type{Ray{T, AT}}) where {T, AT} = Line{T, AT}
+linetype(::Type{Ray{T,AT}}) where {T,AT} = Line{T,AT}
 
 ###############
 # TRANSLATION #
@@ -15,18 +15,18 @@ linetype(::Type{Ray{T, AT}}) where {T, AT} = Line{T, AT}
 
 export translate
 
-function htranslate(p::HRep{T}, v::Union{AbstractVector{S}}) where {S, T}
+function htranslate(p::HRep{T}, v::Union{AbstractVector{S}}) where {S,T}
     f = (i, h) -> translate(h, v)
     d = FullDim(p)
     Tout = Base.promote_op(+, T, S)
-    similar(p, d, Tout, hmap(f, d, Tout, p)...)
+    return similar(p, d, Tout, hmap(f, d, Tout, p)...)
 end
 
-function vtranslate(p::VRep{T}, v::Union{AbstractVector{S}}) where {S, T}
+function vtranslate(p::VRep{T}, v::Union{AbstractVector{S}}) where {S,T}
     f = (i, u) -> translate(u, v)
     d = FullDim(p)
     Tout = Base.promote_op(+, T, S)
-    similar(p, d, Tout, vmap(f, d, Tout, p)...)
+    return similar(p, d, Tout, vmap(f, d, Tout, p)...)
 end
 
 """
@@ -90,8 +90,12 @@ If `h` is an halfspace, it returns whether ``\\langle a, x \\rangle \\le \\beta`
 
 Returns whether `p` is in `h`, e.g. in all the hyperplanes and halfspaces supporting `h`.
 """
-function Base.in(v::VRepElement{T}, hr::HRep{U}; tol = _default_tol(T, U)) where {T,U}
-    _vinh(v, hr, Base.in; tol)
+function Base.in(
+    v::VRepElement{T},
+    hr::HRep{U};
+    tol = _default_tol(T, U),
+) where {T,U}
+    return _vinh(v, hr, Base.in; tol)
 end
 
 """
@@ -105,7 +109,11 @@ If `h` is an halfspace ``\\langle a, x \\rangle \\leq \\beta``, it returns wheth
 
 Returns whether `p` is in the interior of `h`, e.g. in the interior of all the hyperplanes and halfspaces supporting `h`.
 """
-function ininterior(v::VRepElement{T}, hr::HRep{U}; tol = _default_tol(T, U)) where {T,U}
+function ininterior(
+    v::VRepElement{T},
+    hr::HRep{U};
+    tol = _default_tol(T, U),
+) where {T,U}
     return _vinh(v, hr, ininterior; tol)
 end
 
@@ -120,16 +128,22 @@ If `h` is an halfspace, it is equivalent to `ininterior(p, h)`.
 
 Returns whether `p` is in the relative interior of `h`, e.g. in the relative interior of all the hyperplanes and halfspaces supporting `h`.
 """
-function inrelativeinterior(v::VRepElement{T}, hr::HRep{U}; tol = _default_tol(T, U)) where {T,U}
+function inrelativeinterior(
+    v::VRepElement{T},
+    hr::HRep{U};
+    tol = _default_tol(T, U),
+) where {T,U}
     return _vinh(v, hr, inrelativeinterior; tol)
 end
 
-structural_nonzero_indices(a::SparseArrays.SparseVector) = SparseArrays.nonzeroinds(a)
+function structural_nonzero_indices(a::SparseArrays.SparseVector)
+    return SparseArrays.nonzeroinds(a)
+end
 structural_nonzero_indices(a::AbstractVector) = eachindex(a)
 function _dot_terms(a, x::Vector{MOI.VariableIndex}, T::Type)
     return MOI.ScalarAffineTerm{T}[
-        MOI.ScalarAffineTerm{T}(a[i], x[i])
-        for i in structural_nonzero_indices(a) if !iszero(a[i])
+        MOI.ScalarAffineTerm{T}(a[i], x[i]) for
+        i in structural_nonzero_indices(a) if !iszero(a[i])
     ]
 end
 function _dot(a, x::Vector{MOI.VariableIndex}, T::Type)
@@ -141,7 +155,11 @@ function support_function_model(h::AbstractVector, rep::Rep, solver)
     model, T = layered_optimizer(solver)
     x, cx = MOI.add_constrained_variables(model, PolyhedraOptSet(rep))
     MOI.set(model, MOI.ObjectiveSense(), MOI.MAX_SENSE)
-    MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(), _dot(h, x, T))
+    MOI.set(
+        model,
+        MOI.ObjectiveFunction{MOI.ScalarAffineFunction{T}}(),
+        _dot(h, x, T),
+    )
     return model
 end
 
@@ -152,15 +170,21 @@ Return the value of the support function of `rep` at `h`. See [Section 13, R15] 
 
 [R15] Rockafellar, R.T. *Convex analysis*. Princeton university press, **2015**.
 """
-function support_function(h::AbstractVector, rep::Rep, solver=Polyhedra.linear_objective_solver(rep))
+function support_function(
+    h::AbstractVector,
+    rep::Rep,
+    solver = Polyhedra.linear_objective_solver(rep),
+)
     model = support_function_model(h, rep, solver)
     MOI.optimize!(model)
     term = MOI.get(model, MOI.TerminationStatus())
     if term == MOI.OPTIMAL
         return MOI.get(model, MOI.ObjectiveValue())
     else
-        error("Cannot determine the value of the support function at $h",
-              " because the linear program terminated with status $term.")
+        error(
+            "Cannot determine the value of the support function at $h",
+            " because the linear program terminated with status $term.",
+        )
     end
 end
 
@@ -192,20 +216,31 @@ function _hinh(h::HalfSpace, hr::HRep, solver; tol)
         end
         return _leq(obj, h.β; tol)
     else
-        error("Cannot determine whether the polyhedron is contained in the",
-              " halfspace or not because the linear program terminated with",
-              " status $term.")
+        error(
+            "Cannot determine whether the polyhedron is contained in the",
+            " halfspace or not because the linear program terminated with",
+            " status $term.",
+        )
     end
 end
 function _hinh(h::HyperPlane, hr::HRep, solver; kws...)
-    _hinh(halfspace(h), hr, solver; kws...) && _hinh(halfspace(-h), hr, solver; kws...)
+    return _hinh(halfspace(h), hr, solver; kws...) &&
+           _hinh(halfspace(-h), hr, solver; kws...)
 end
 
-function Base.issubset(vr::VRepresentation{T}, h::HRepElement{U}; tol = _default_tol(T, U)) where {T,U}
+function Base.issubset(
+    vr::VRepresentation{T},
+    h::HRepElement{U};
+    tol = _default_tol(T, U),
+) where {T,U}
     return _hinv(h, vr; tol)
 end
 
-function Base.issubset(hr::HRepresentation{T}, h::HRepElement{U}; tol = _default_tol(T, U)) where {T,U}
+function Base.issubset(
+    hr::HRepresentation{T},
+    h::HRepElement{U};
+    tol = _default_tol(T, U),
+) where {T,U}
     return _hinh(h, hr; tol)
 end
 
@@ -214,7 +249,12 @@ end
 
 Returns whether `p` is a subset of `h`, i.e. whether `h` supports the polyhedron `p`.
 """
-function Base.issubset(p::Polyhedron{T}, h::HRepElement{U}, solver=Polyhedra.linear_objective_solver(p); tol = _default_tol(T, U)) where {T,U}
+function Base.issubset(
+    p::Polyhedron{T},
+    h::HRepElement{U},
+    solver = Polyhedra.linear_objective_solver(p);
+    tol = _default_tol(T, U),
+) where {T,U}
     if vrepiscomputed(p)
         _hinv(h, p; tol)
     else
@@ -252,7 +292,7 @@ _intres(h::HalfSpace, ins, inp) = [ins; inp]
 #    end
 #end
 
-function _pushinout!(ins, out, pr::Union{AbstractVector, Ray}, h::HalfSpace)
+function _pushinout!(ins, out, pr::Union{AbstractVector,Ray}, h::HalfSpace)
     if pr in h
         push!(ins, pr)
     else
@@ -352,5 +392,5 @@ function Base.intersect(v::VRepresentation{T}, h::HRepElement) where {T}
         # but since there is no point, the polyhedron is empty and we should drop all rays/lines
         empty!(rsout)
     end
-    similar(v, psout, linetype(eltype(rsout))[], rsout)
+    return similar(v, psout, linetype(eltype(rsout))[], rsout)
 end

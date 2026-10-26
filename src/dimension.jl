@@ -1,7 +1,10 @@
 import StaticArrays
-function similar_type(SAT::Type{<:StaticArrays.SVector},
-                      size::StaticArrays.Size, T::Type)
-    StaticArrays.similar_type(SAT, T, size)
+function similar_type(
+    SAT::Type{<:StaticArrays.SVector},
+    size::StaticArrays.Size,
+    T::Type,
+)
+    return StaticArrays.similar_type(SAT, T, size)
 end
 # Called when mixing polyhedra with one using StaticArrays and the other not.
 similar_type(::Type{<:StaticArrays.SVector}, ::Int, T::Type) = Vector{T}
@@ -18,22 +21,28 @@ Similar to [`fulldim`](@ref) but used for type stability with the vector type.
 If the vector type is `StaticArrays.SVector` then it returns a
 `StaticArrays.Size`.
 """
-const FullDim = Union{Int, StaticArrays.Size}
+const FullDim = Union{Int,StaticArrays.Size}
 
 FullDim(::Type{<:AbstractVector}) = -1 # Shouldn't hurt as it will not be used
 FullDim(v::AbstractVector) = length(v)
-FullDim(v::Union{StaticArrays.SVector{N}, Type{<:StaticArrays.SVector{N}}}) where N = StaticArrays.Size(v)
+function FullDim(
+    v::Union{StaticArrays.SVector{N},Type{<:StaticArrays.SVector{N}}},
+) where {N}
+    return StaticArrays.Size(v)
+end
 
-function FullDim_convert(::Type{StaticArrays.Size{N}}, d::Int) where N
+function FullDim_convert(::Type{StaticArrays.Size{N}}, d::Int) where {N}
     @assert N[1] == d
     return StaticArrays.Size{N}()
 end
-function FullDim_convert(::Type{StaticArrays.Size{N}},
-                         d::StaticArrays.Size{N}) where N
+function FullDim_convert(
+    ::Type{StaticArrays.Size{N}},
+    d::StaticArrays.Size{N},
+) where {N}
     return d
 end
 FullDim_convert(::Type{Int}, d::Int) = d
-function FullDim_convert(::Type{Int}, d::StaticArrays.Size{N}) where N
+function FullDim_convert(::Type{Int}, d::StaticArrays.Size{N}) where {N}
     return N[1]
 end
 
@@ -49,18 +58,25 @@ fulldim(p) = fulldim(FullDim(p))
 function fulldim end
 
 fulldim(N::Integer) = convert(Int, N)
-fulldim(::StaticArrays.Size{N}) where N = N[1]
+fulldim(::StaticArrays.Size{N}) where {N} = N[1]
 
 neg_fulldim(N::Int) = -N
 # FIXME May need generated function to make it type stable
-neg_fulldim(::StaticArrays.Size{N}) where N = StaticArrays.Size{(-N[1],)}()
+neg_fulldim(::StaticArrays.Size{N}) where {N} = StaticArrays.Size{(-N[1],)}()
 
 map_fulldim(f::Function, N::Integer) = f(N)
-map_fulldim(f::Function, ::StaticArrays.Size{N}) where N = StaticArrays.Size{(f(N[1]),)}()
+function map_fulldim(f::Function, ::StaticArrays.Size{N}) where {N}
+    return StaticArrays.Size{(f(N[1]),)}()
+end
 
 sum_fulldim(N1::Int, N2::Int) = N1 + N2
 # FIXME May need generated function to make it type stable
-sum_fulldim(::StaticArrays.Size{N1}, ::StaticArrays.Size{N2}) where {N1, N2} = StaticArrays.Size{(N1[1] + N2[1],)}()
+function sum_fulldim(
+    ::StaticArrays.Size{N1},
+    ::StaticArrays.Size{N2},
+) where {N1,N2}
+    return StaticArrays.Size{(N1[1] + N2[1],)}()
+end
 # Called in cartesian product of two polyhedra, only the second using static arrays.
-sum_fulldim(N1::Int, ::StaticArrays.Size{N2}) where N2 = N1 + N2[1]
-sum_fulldim(::StaticArrays.Size{N1}, N2::Int) where N1 = N1[1] + N2
+sum_fulldim(N1::Int, ::StaticArrays.Size{N2}) where {N2} = N1 + N2[1]
+sum_fulldim(::StaticArrays.Size{N1}, N2::Int) where {N1} = N1[1] + N2

@@ -17,18 +17,20 @@ function permutahedrontest(lib::Polyhedra.Library)
     #           |
     #           V
     # x3_________________3
-    Alift = [-1  0  0  1  0  0;
-              0 -1  0  1  0  0;
-             -1 -1  0  1  1  0;
-              1  1  0 -1 -1  0;
-              0  0 -1  0  0  1;
-              0  0  0  0 -1  1;
-              0  0 -1  0 -1  1;
-              0  0  1  0  1 -1;
-              0  0  0 -1  0  0;
-              0  0  0  0  0 -1;
-              0  0  0 -1  0 -1;
-              0  0  0  1  0  1]
+    Alift = [
+        -1 0 0 1 0 0;
+        0 -1 0 1 0 0;
+        -1 -1 0 1 1 0;
+        1 1 0 -1 -1 0;
+        0 0 -1 0 0 1;
+        0 0 0 0 -1 1;
+        0 0 -1 0 -1 1;
+        0 0 1 0 1 -1;
+        0 0 0 -1 0 0;
+        0 0 0 0 0 -1;
+        0 0 0 -1 0 -1;
+        0 0 0 1 0 1
+    ]
     blift = [0; 0; 0; 0; 0; 0; -3; 3; -1; -1; -(1+2); (1+2)]
     linsetlift = BitSet()
     inelift = hrep(Alift, blift, linsetlift)
@@ -37,7 +39,7 @@ function permutahedrontest(lib::Polyhedra.Library)
     polylift1 = eliminate(polylift2, BitSet([5, 6]))
     polylift0 = eliminate(polylift1)
     inequality_fulltest(polylift0, A, b, linset)
-    generator_fulltest(polylift0, V)
+    return generator_fulltest(polylift0, V)
 
     # removeredundantinequalities!(polylift0)
     # inelift0d = Polyhedra.HRepresentation{Int}(Polyhedra.Representation(inelift0))

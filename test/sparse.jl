@@ -7,17 +7,20 @@ function sparsetest(lib::Polyhedra.Library)
     #  x_1               ≥  0
     #         x_2        ≥ -1
     #                x_3 ≤  1
-    h = HalfSpace(sparsevec([1, 2], [3, 2], 3), 2) ∩
+    h =
+        HalfSpace(sparsevec([1, 2], [3, 2], 3), 2) ∩
         HalfSpace(sparsevec([1, 3], [-2, -3]), -1) ∩
-        HalfSpace(sparsevec([1], [-1], 3),      0) ∩
-        HalfSpace(sparsevec([2], [-1], 3),      1) ∩
-        HalfSpace(sparsevec([3], [1]),          1)
-    v = convexhull([0,     1,  1//3],
-                   [4//3, -1, -5//9],
-                   [0,    -1,  1//3],
-                   [0,     1,  1],
-                   [4//3, -1,  1],
-                   [0,    -1,  1])
+        HalfSpace(sparsevec([1], [-1], 3), 0) ∩
+        HalfSpace(sparsevec([2], [-1], 3), 1) ∩
+        HalfSpace(sparsevec([3], [1]), 1)
+    v = convexhull(
+        [0, 1, 1//3],
+        [4//3, -1, -5//9],
+        [0, -1, 1//3],
+        [0, 1, 1],
+        [4//3, -1, 1],
+        [0, -1, 1],
+    )
     p = polyhedron(h, lib)
     @test !vrepiscomputed(p)
     @test p ⊆ HalfSpace([3, 2, 0], 2)
@@ -38,14 +41,10 @@ function sparsetest(lib::Polyhedra.Library)
     @test !vrepiscomputed(q)
     @test !(q ⊆ HalfSpace([2, -3], -1))
     @test !vrepiscomputed(q)
-    hfix = HalfSpace([ 2,  0], -1) ∩
-           HalfSpace([ 0, -3],  1) ∩
-           HalfSpace([-1,  0],  1) ∩
-           HalfSpace([ 0,  1],  1)
-    vfix = convexhull([-1//2, -1//3],
-                      [-1,    -1//3],
-                      [-1//2,  1],
-                      [-1,     1])
+    hfix =
+        HalfSpace([2, 0], -1) ∩ HalfSpace([0, -3], 1) ∩ HalfSpace([-1, 0], 1) ∩
+        HalfSpace([0, 1], 1)
+    vfix = convexhull([-1//2, -1//3], [-1, -1//3], [-1//2, 1], [-1, 1])
     inequality_fulltest(q, hfix)
-    generator_fulltest(q, vfix)
+    return generator_fulltest(q, vfix)
 end

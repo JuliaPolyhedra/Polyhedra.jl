@@ -4,12 +4,12 @@ export islin, isray, ispoint, coord, lift, simplify
 
 _vec(::Type{T}, a::AbstractVector) where {T} = AbstractArray{T}(a)
 _vec(::Type{T}, a::AbstractVector{T}) where {T} = a
-function _vec(::Type{T}, a::StaticArrays.SVector{N}) where {N, T}
-    StaticArrays.SVector{N, T}(a)
+function _vec(::Type{T}, a::StaticArrays.SVector{N}) where {N,T}
+    return StaticArrays.SVector{N,T}(a)
 end
-_vec(::Type{T}, a::StaticArrays.SVector{N, T}) where {N, T} = a
+_vec(::Type{T}, a::StaticArrays.SVector{N,T}) where {N,T} = a
 
-abstract type HRepElement{T, AT} end
+abstract type HRepElement{T,AT} end
 
 """
     struct HalfSpace{T, AT} <: HRepElement{T, AT}
@@ -19,15 +19,17 @@ abstract type HRepElement{T, AT} end
 
 An halfspace defined by the set of points ``x`` such that ``\\langle a, x \\rangle \\le \\beta``.
 """
-struct HalfSpace{T, AT <: AbstractVector{T}} <: HRepElement{T, AT}
+struct HalfSpace{T,AT<:AbstractVector{T}} <: HRepElement{T,AT}
     a::AT
     β::T
-    function HalfSpace{T, AT}(a::AT, β::T) where {T, AT<:AbstractVector{T}}
-        new{T, AT}(a, β)
+    function HalfSpace{T,AT}(a::AT, β::T) where {T,AT<:AbstractVector{T}}
+        return new{T,AT}(a, β)
     end
 end
 
-HalfSpace{T}(a::AT, β::T) where {T, AT <: AbstractVector{T}} = HalfSpace{T, AT}(a, β)
+function HalfSpace{T}(a::AT, β::T) where {T,AT<:AbstractVector{T}}
+    return HalfSpace{T,AT}(a, β)
+end
 HalfSpace{T}(a::AbstractVector, β) where {T} = HalfSpace{T}(_vec(T, a), T(β))
 
 """
@@ -38,33 +40,39 @@ HalfSpace{T}(a::AbstractVector, β) where {T} = HalfSpace{T}(_vec(T, a), T(β))
 
 An hyperplane defined by the set of points ``x`` such that ``\\langle a, x \\rangle = \\beta``.
 """
-struct HyperPlane{T, AT<:AbstractVector{T}} <: HRepElement{T, AT}
+struct HyperPlane{T,AT<:AbstractVector{T}} <: HRepElement{T,AT}
     a::AT
     β::T
-    function HyperPlane{T, AT}(a::AT, β::T) where {T, AT<:AbstractVector{T}}
-        new{T, AT}(a, β)
+    function HyperPlane{T,AT}(a::AT, β::T) where {T,AT<:AbstractVector{T}}
+        return new{T,AT}(a, β)
     end
 end
 
-HyperPlane{T}(a::AT, β::T) where {T, AT <: AbstractVector{T}} = HyperPlane{T, AT}(a, β)
+function HyperPlane{T}(a::AT, β::T) where {T,AT<:AbstractVector{T}}
+    return HyperPlane{T,AT}(a, β)
+end
 HyperPlane{T}(a::AbstractVector, β) where {T} = HyperPlane{T}(_vec(T, a), T(β))
 
 HalfSpace(a::AbstractVector{T}, β::T) where {T} = HalfSpace{T}(a, β)
-HalfSpace(a::AbstractVector{S}, β::T) where {S, T} = HalfSpace{promote_type(S, T)}(a, β)
+function HalfSpace(a::AbstractVector{S}, β::T) where {S,T}
+    return HalfSpace{promote_type(S, T)}(a, β)
+end
 HyperPlane(a::AbstractVector{T}, β::T) where {T} = HyperPlane{T}(a, β)
-HyperPlane(a::AbstractVector{S}, β::T) where {S, T} = HyperPlane{promote_type(S, T)}(a, β)
-
-function Base.convert(::Type{HalfSpace{T, AT}}, h::HalfSpace) where {T, AT}
-    return HalfSpace{T, AT}(convert(AT, h.a), convert(T, h.β))
+function HyperPlane(a::AbstractVector{S}, β::T) where {S,T}
+    return HyperPlane{promote_type(S, T)}(a, β)
 end
-function Base.convert(::Type{HyperPlane{T, AT}}, h::HyperPlane) where {T, AT}
-    return HyperPlane{T, AT}(convert(AT, h.a), convert(T, h.β))
-end
-Base.convert(::Type{HalfSpace{T, AT}}, h::HalfSpace{T, AT}) where {T, AT} = h
-Base.convert(::Type{HyperPlane{T, AT}}, h::HyperPlane{T, AT}) where {T, AT} = h
 
-islin(::Union{HalfSpace, Type{<:HalfSpace}}) = false
-islin(::Union{HyperPlane, Type{<:HyperPlane}}) = true
+function Base.convert(::Type{HalfSpace{T,AT}}, h::HalfSpace) where {T,AT}
+    return HalfSpace{T,AT}(convert(AT, h.a), convert(T, h.β))
+end
+function Base.convert(::Type{HyperPlane{T,AT}}, h::HyperPlane) where {T,AT}
+    return HyperPlane{T,AT}(convert(AT, h.a), convert(T, h.β))
+end
+Base.convert(::Type{HalfSpace{T,AT}}, h::HalfSpace{T,AT}) where {T,AT} = h
+Base.convert(::Type{HyperPlane{T,AT}}, h::HyperPlane{T,AT}) where {T,AT} = h
+
+islin(::Union{HalfSpace,Type{<:HalfSpace}}) = false
+islin(::Union{HyperPlane,Type{<:HyperPlane}}) = true
 
 Base.:-(h1::HRepElement, h2::HRepElement) = HalfSpace(h1.a - h2.a, h1.β - h2.β)
 Base.:-(h1::HyperPlane, h2::HyperPlane) = HyperPlane(h1.a - h2.a, h1.β - h2.β)
@@ -74,15 +82,15 @@ Base.:(*)(α::Real, h::HyperPlane) = HyperPlane(α * h.a, α * h.β)
 Base.:(*)(h::HalfSpace, α::Real) = HalfSpace(h.a * α, h.β * α)
 Base.:(*)(α::Real, h::HalfSpace) = HalfSpace(α * h.a, α * h.β)
 
-function Base.:(/)(h::ElemT, P::UniformScaling) where {T, ElemT<:HRepElement{T}}
+function Base.:(/)(h::ElemT, P::UniformScaling) where {T,ElemT<:HRepElement{T}}
     Tout = MA.promote_operation(*, eltype(P), T)
     ElemTout = similar_type(ElemT, FullDim(h), Tout)
-    ElemTout(P * _vec(Tout, h.a), Tout(h.β))
+    return ElemTout(P * _vec(Tout, h.a), Tout(h.β))
 end
-function Base.:(/)(h::ElemT, P::AbstractMatrix) where {T, ElemT<:HRepElement{T}}
+function Base.:(/)(h::ElemT, P::AbstractMatrix) where {T,ElemT<:HRepElement{T}}
     Tout = MA.promote_sum_mul(T, eltype(P))
     ElemTout = similar_type(ElemT, size(P, 2), Tout)
-    ElemTout(AbstractMatrix{Tout}(P) * _vec(Tout, h.a), Tout(h.β))
+    return ElemTout(AbstractMatrix{Tout}(P) * _vec(Tout, h.a), Tout(h.β))
 end
 
 # Point: -> A same Rep should always return the same of the two types so that when points and sympoints will have different accessors it will be type stable
@@ -96,14 +104,22 @@ origin(::Type{<:SparseVector{T}}, N::Int) where {T} = spzeros(T, N)
 origin(::Type{Vector{T}}, N::Int) where {T} = zeros(T, N)
 origin(VT::Type{<:AbstractVector}, ::Int) = zeros(VT)
 # Canonical basis vector
-basis(::Type{<:SparseVector{T}}, N::Int, i::Int) where {T} = sparsevec([i], [one(T)], N)
+function basis(::Type{<:SparseVector{T}}, N::Int, i::Int) where {T}
+    return sparsevec([i], [one(T)], N)
+end
 function basis(::Type{Vector{T}}, N::Int, i::Int) where {T}
     v = zeros(T, N)
     v[i] = one(T)
-    v
+    return v
 end
-function basis(::Type{StaticArrays.SVector{N, T}}, ::StaticArrays.Size, i::Int) where {N, T}
-    StaticArrays.SVector{N, T}(ntuple(j -> j == i ? one(T) : zero(T), Val(N)))
+function basis(
+    ::Type{StaticArrays.SVector{N,T}},
+    ::StaticArrays.Size,
+    i::Int,
+) where {N,T}
+    return StaticArrays.SVector{N,T}(
+        ntuple(j -> j == i ? one(T) : zero(T), Val(N)),
+    )
 end
 
 """
@@ -113,15 +129,15 @@ end
 
 The conic hull of `a`, i.e. the set of points `λa` where `λ` is any nonnegative real number.
 """
-struct Ray{T, AT <: AbstractVector{T}}
+struct Ray{T,AT<:AbstractVector{T}}
     a::AT
-    function Ray{T, AT}(a::AT) where {T, AT<:AbstractVector{T}}
-        new{T, AT}(a)
+    function Ray{T,AT}(a::AT) where {T,AT<:AbstractVector{T}}
+        return new{T,AT}(a)
     end
 end
-Ray{T, AT}(ray::Ray) where {T, AT} = Ray{T, AT}(AT(ray.a))
-Base.convert(::Type{Ray{T, AT}}, ray::Ray) where {T, AT} = Ray{T, AT}(ray)
-Ray{T}(a::AT) where {T, AT<:AbstractVector{T}} = Ray{T, AT}(a)
+Ray{T,AT}(ray::Ray) where {T,AT} = Ray{T,AT}(AT(ray.a))
+Base.convert(::Type{Ray{T,AT}}, ray::Ray) where {T,AT} = Ray{T,AT}(ray)
+Ray{T}(a::AT) where {T,AT<:AbstractVector{T}} = Ray{T,AT}(a)
 Ray(a::AbstractVector) = Ray{eltype(a)}(a)
 
 """
@@ -131,30 +147,30 @@ Ray(a::AbstractVector) = Ray{eltype(a)}(a)
 
 The conic hull of `a` and `-a`, i.e. the set of points `λa` where `λ` is any real number.
 """
-struct Line{T, AT<:AbstractVector{T}}
+struct Line{T,AT<:AbstractVector{T}}
     a::AT
-    function Line{T, AT}(a::AT) where {T, AT<:AbstractVector{T}}
-        new{T, AT}(a)
+    function Line{T,AT}(a::AT) where {T,AT<:AbstractVector{T}}
+        return new{T,AT}(a)
     end
 end
-Line{T, AT}(line::Line) where {T, AT} = Line{T, AT}(AT(line.a))
-Base.convert(::Type{Line{T, AT}}, line::Line) where {T, AT} = Line{T, AT}(line)
-Line{T}(a::AT) where {T, AT<:AbstractVector{T}} = Line{T, AT}(a)
+Line{T,AT}(line::Line) where {T,AT} = Line{T,AT}(AT(line.a))
+Base.convert(::Type{Line{T,AT}}, line::Line) where {T,AT} = Line{T,AT}(line)
+Line{T}(a::AT) where {T,AT<:AbstractVector{T}} = Line{T,AT}(a)
 Line(a::AbstractVector) = Line{eltype(a)}(a)
 
 Base.:(==)(a::Ray, b::Ray) = coord(a) == coord(b)
 Base.:(==)(a::Line, b::Line) = coord(a) == coord(b)
 
-const VStruct{T, AT} = Union{Line{T, AT}, Ray{T, AT}}
+const VStruct{T,AT} = Union{Line{T,AT},Ray{T,AT}}
 Base.getindex(x::VStruct, i) = x.a[i]
 Base.vec(x::VStruct) = vec(x.a)
 
-Base.:-(h::ElemT) where {ElemT<:Union{HyperPlane, HalfSpace}} = ElemT(-h.a, -h.β)
-Base.:-(elem::ElemT) where ElemT<:VStruct = ElemT(-coord(elem))
+Base.:-(h::ElemT) where {ElemT<:Union{HyperPlane,HalfSpace}} = ElemT(-h.a, -h.β)
+Base.:-(elem::ElemT) where {ElemT<:VStruct} = ElemT(-coord(elem))
 # Used in remproj
 Base.:-(p::AbstractVector, l::Line) = p - coord(l)
 # `Ray - Line` and `Line - Line` are done in `remproj`
-Base.:-(r::Ray, s::Union{Ray, Line}) = Ray(r.a - s.a)
+Base.:-(r::Ray, s::Union{Ray,Line}) = Ray(r.a - s.a)
 Base.:-(r::Line, s::Line) = Line(r.a - s.a)
 # Used in `_shift` in `doubledescription`
 Base.:+(r::Line, s::Line) = Line(r.a + s.a)
@@ -175,53 +191,65 @@ _dot(x::VStruct, y::VStruct) = _dot(x.a, y.a)
 
 for ElT in (:HyperPlane, :HalfSpace, :Line, :Ray)
     @eval begin
-        Base.promote_rule(::Type{$ElT{T, AT}}, ::Type{$ElT{T, AT}}) where {T, AT} = $ElT{T, AT}
+        Base.promote_rule(::Type{$ElT{T,AT}}, ::Type{$ElT{T,AT}}) where {T,AT} =
+            $ElT{T,AT}
         # Allowing mixing e.g. sparse vector with vector would not be helpful as code meant
         # to use sparse polyhedra would lose sparsity silently. Same thing for StaticArrays.SVector
-        Base.promote_rule(::Type{$ElT{T, VT}}, ::Type{$ElT{T, WT}}) where {T, VT, WT} = error("Cannot mix Polyhedra elements of vector type $VT and $WT")
-        function Base.promote_rule(::Type{$ElT{S, AS}}, ::Type{$ElT{T, AT}}) where {S, T, AS, AT}
+        Base.promote_rule(
+            ::Type{$ElT{T,VT}},
+            ::Type{$ElT{T,WT}},
+        ) where {T,VT,WT} =
+            error("Cannot mix Polyhedra elements of vector type $VT and $WT")
+        function Base.promote_rule(
+            ::Type{$ElT{S,AS}},
+            ::Type{$ElT{T,AT}},
+        ) where {S,T,AS,AT}
             U = promote_type(S, T)
             VU = similar_type(AS, U)
             WU = similar_type(AT, U)
             # Using promote_type instead of promote_rule here will promote to `Vector`
             # when `VU` is `Vector` and `WU` is `SVector` in Julia v1.2 instead of throwing
             # the error above.
-            return promote_rule($ElT{U, VU}, $ElT{U, WU})
+            return promote_rule($ElT{U,VU}, $ElT{U,WU})
         end
     end
 end
 
-Base.:(*)(α, r::T) where T<:VStruct = T(α * r.a)
-Base.:(*)(r::T, α) where T<:VStruct = T(r.a * α)
-Base.:(/)(r::T, α) where T<:VStruct = T(r.a / α)
+Base.:(*)(α, r::T) where {T<:VStruct} = T(α * r.a)
+Base.:(*)(r::T, α) where {T<:VStruct} = T(r.a * α)
+Base.:(/)(r::T, α) where {T<:VStruct} = T(r.a / α)
 
-const VRepElement{T} = Union{VStruct{T}, AbstractVector{T}}
-const RepElement{T} = Union{HRepElement{T}, VRepElement{T}}
-const StructElement{T, AT} = Union{VStruct{T, AT}, HRepElement{T, AT}}
+const VRepElement{T} = Union{VStruct{T},AbstractVector{T}}
+const RepElement{T} = Union{HRepElement{T},VRepElement{T}}
+const StructElement{T,AT} = Union{VStruct{T,AT},HRepElement{T,AT}}
 
-vectortype(::Type{<:StructElement{T, AT}}) where {T, AT} = AT
+vectortype(::Type{<:StructElement{T,AT}}) where {T,AT} = AT
 vectortype(AT::Type{<:AbstractVector}) = AT
 
-FullDim(::Type{<:StructElement{T, AT}}) where {T, AT} = FullDim(AT)
+FullDim(::Type{<:StructElement{T,AT}}) where {T,AT} = FullDim(AT)
 FullDim(el::StructElement) = FullDim(coord(el))
-coefficient_type(::Union{RepElement{T}, Type{<:RepElement{T}}}) where {T} = T
+coefficient_type(::Union{RepElement{T},Type{<:RepElement{T}}}) where {T} = T
 
-islin(::Union{Line, Type{<:Line}}) = true
-islin(::Union{AbstractVector, Ray, Type{<:Union{AbstractVector, Ray}}}) = false
-ispoint(::Union{AbstractVector, Type{<:AbstractVector}}) = true
-ispoint(::Union{Line, Ray, Type{<:Union{Line, Ray}}}) = false
+islin(::Union{Line,Type{<:Line}}) = true
+islin(::Union{AbstractVector,Ray,Type{<:Union{AbstractVector,Ray}}}) = false
+ispoint(::Union{AbstractVector,Type{<:AbstractVector}}) = true
+ispoint(::Union{Line,Ray,Type{<:Union{Line,Ray}}}) = false
 isray(v) = !ispoint(v)
 
 coord(v::AbstractVector) = v
-coord(v::Union{HRepElement, VStruct}) = v.a
+coord(v::Union{HRepElement,VStruct}) = v.a
 
-function Base.:*(P::AbstractMatrix, v::ElemT) where {T, ElemT<:VStruct{T}}
-      Tout = MA.promote_sum_mul(T, eltype(P))
-      ElemTout = similar_type(ElemT, size(P, 1), Tout)
-      return ElemTout(P * v.a)
+function Base.:*(P::AbstractMatrix, v::ElemT) where {T,ElemT<:VStruct{T}}
+    Tout = MA.promote_sum_mul(T, eltype(P))
+    ElemTout = similar_type(ElemT, size(P, 1), Tout)
+    return ElemTout(P * v.a)
 end
 
-function zeropad(a::AbstractSparseVector{T}, n::Integer, start::Integer) where T
+function zeropad(
+    a::AbstractSparseVector{T},
+    n::Integer,
+    start::Integer,
+) where {T}
     if iszero(n)
         return a
     elseif iszero(start)
@@ -229,11 +257,15 @@ function zeropad(a::AbstractSparseVector{T}, n::Integer, start::Integer) where T
     elseif start == length(a)
         return zeropad(a, n)
     else
-        return [a[1:start]; spzeros(T, n); a[start+1:end]]::AbstractSparseVector{T}
+        return [
+            a[1:start];
+            spzeros(T, n);
+            a[(start+1):end]
+        ]::AbstractSparseVector{T}
     end
 end
 
-function zeropad(a::AbstractSparseVector{T}, n::Integer) where T
+function zeropad(a::AbstractSparseVector{T}, n::Integer) where {T}
     if iszero(n)
         return a
     elseif n < 0
@@ -243,20 +275,25 @@ function zeropad(a::AbstractSparseVector{T}, n::Integer) where T
         return [a; spzeros(T, n)]::AbstractSparseVector{T}
     end
 end
-function (zeropad(a::StaticArrays.SVector{N1, T}, ::StaticArrays.Size{N2})::StaticArrays.SVector{N1+abs(N2[1]), T}) where {T, N1, N2}
+function (
+    zeropad(
+        a::StaticArrays.SVector{N1,T},
+        ::StaticArrays.Size{N2},
+    )::StaticArrays.SVector{N1+abs(N2[1]),T}
+) where {T,N1,N2}
     # TODO, should probably de a generated function to make it type stable
     if iszero(N2[1])
         return a
     else
         z = StaticArrays.@SVector zeros(T, abs(N2[1]))
         if N2[1] < 0
-            return vcat(z, a)::StaticArrays.SVector{N1-N2[1], T}
+            return vcat(z, a)::StaticArrays.SVector{N1-N2[1],T}
         else
-            return vcat(a, z)::StaticArrays.SVector{N1+N2[1], T}
+            return vcat(a, z)::StaticArrays.SVector{N1+N2[1],T}
         end
     end
 end
-function zeropad(a::Vector{T}, n::Integer) where T
+function zeropad(a::Vector{T}, n::Integer) where {T}
     if iszero(n)
         return a
     elseif n < 0
@@ -267,28 +304,44 @@ function zeropad(a::Vector{T}, n::Integer) where T
 end
 zeropad(h::HRepElement, d, start) = constructor(h)(zeropad(h.a, d, start), h.β)
 zeropad(h::HRepElement, d::FullDim) = constructor(h)(zeropad(h.a, d), h.β)
-zeropad(v::VStruct, d::FullDim)     = constructor(v)(zeropad(v.a, d))
+zeropad(v::VStruct, d::FullDim) = constructor(v)(zeropad(v.a, d))
 # Called in cartesian product of two polyhedra, only the second using static arrays.
-zeropad(a::Vector, ::StaticArrays.Size{N}) where N = zeropad(a, N[1])
+zeropad(a::Vector, ::StaticArrays.Size{N}) where {N} = zeropad(a, N[1])
 zeropad(a::StaticArrays.SVector, n::Int) = zeropad(collect(a), n)
 
 for ElemT in [:HalfSpace, :HyperPlane, :Ray, :Line]
     @eval begin
-        function similar_type(::Type{$ElemT{T, AT}}, dout::FullDim, ::Type{Tout}) where {T, AT, Tout}
-            return $ElemT{Tout, similar_type(AT, dout, Tout)}
+        function similar_type(
+            ::Type{$ElemT{T,AT}},
+            dout::FullDim,
+            ::Type{Tout},
+        ) where {T,AT,Tout}
+            return $ElemT{Tout,similar_type(AT, dout, Tout)}
         end
     end
 end
 
-function ininterior(r::Ray{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+function ininterior(
+    r::Ray{T},
+    h::HalfSpace{U};
+    tol = _default_tol(T, U),
+) where {T,U}
     return _neg(_dot(h.a, r); tol)
 end
 
-function ininterior(l::Line{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+function ininterior(
+    l::Line{T},
+    h::HalfSpace{U};
+    tol = _default_tol(T, U),
+) where {T,U}
     return _neg(_dot(h.a, l); tol)
 end
 
-function ininterior(p::AbstractVector{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+function ininterior(
+    p::AbstractVector{T},
+    h::HalfSpace{U};
+    tol = _default_tol(T, U),
+) where {T,U}
     return _lt(_dot(h.a, p), h.β; tol)
 end
 
@@ -296,25 +349,41 @@ function inrelativeinterior(p::VRepElement, h::HalfSpace; tol...)
     return ininterior(p, h; tol...)
 end
 
-function Base.in(r::Ray{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+function Base.in(
+    r::Ray{T},
+    h::HalfSpace{U};
+    tol = _default_tol(T, U),
+) where {T,U}
     return _nonpos(_dot(h.a, r); tol)
 end
 
-function Base.in(l::Line{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+function Base.in(
+    l::Line{T},
+    h::HalfSpace{U};
+    tol = _default_tol(T, U),
+) where {T,U}
     return _nonpos(_dot(h.a, l); tol)
 end
 
-function Base.in(p::AbstractVector{T}, h::HalfSpace{U}; tol = _default_tol(T, U)) where {T,U}
+function Base.in(
+    p::AbstractVector{T},
+    h::HalfSpace{U};
+    tol = _default_tol(T, U),
+) where {T,U}
     return _leq(_dot(h.a, p), h.β; tol)
 end
 
 ininterior(p::VRepElement, h::HyperPlane; tol...) = false
 
-inrelativeinterior(p::VRepElement, h::HyperPlane; tol...) = return in(p, h; tol...)
+function inrelativeinterior(p::VRepElement, h::HyperPlane; tol...)
+    return in(p, h; tol...)
+end
 
 Base.in(r::Ray, h::HyperPlane; tol...) = isapproxzero(_dot(h.a, r); tol...)
 Base.in(l::Line, h::HyperPlane; tol...) = isapproxzero(_dot(h.a, l); tol...)
-Base.in(p::AbstractVector, h::HyperPlane; tol...) = _isapprox(_dot(h.a, p), h.β; tol...)
+function Base.in(p::AbstractVector, h::HyperPlane; tol...)
+    return _isapprox(_dot(h.a, p), h.β; tol...)
+end
 
 #function Base.vec(x::FixedVector{T}) where {T}
 #    y = Vector{T}(N)
@@ -325,26 +394,26 @@ Base.in(p::AbstractVector, h::HyperPlane; tol...) = _isapprox(_dot(h.a, p), h.β
 #end
 #Base.vec{ElemT::VStruct}(x::ElemT) = ElemT(vec(x.a))
 
-function pushbefore(a::AbstractSparseVector{T}, β::T) where T
+function pushbefore(a::AbstractSparseVector{T}, β::T) where {T}
     b = spzeros(T, length(a)+1)
     b[1] = β
     b[2:end] = a
-    b
+    return b
 end
 pushbefore(a::AbstractVector, β) = [β; a]
 function pushbefore(a::StaticArrays.SVector, β)
-    StaticArrays.SVector(β, a...)
+    return StaticArrays.SVector(β, a...)
 end
 
-function push_after(a::AbstractSparseVector{T}, β::T) where T
+function push_after(a::AbstractSparseVector{T}, β::T) where {T}
     b = spzeros(T, length(a)+1)
     b[end] = β
-    b[1:end-1] = a
+    b[1:(end-1)] = a
     return b
 end
 push_after(a::AbstractVector, β) = [a; β]
 function push_after(a::StaticArrays.SVector, β)
-    StaticArrays.SVector(a..., β)
+    return StaticArrays.SVector(a..., β)
 end
 
 constructor(::HyperPlane) = HyperPlane
@@ -352,13 +421,13 @@ constructor(::HalfSpace) = HalfSpace
 constructor(::Ray) = Ray
 constructor(::Line) = Line
 
-function lift(h::HRepElement{T}, pre::Bool=true) where T
+function lift(h::HRepElement{T}, pre::Bool = true) where {T}
     a = pre ? pushbefore(h.a, -h.β) : push_after(h.a, -h.β)
-    constructor(h)(a, zero(T))
+    return constructor(h)(a, zero(T))
 end
-function complement_lift(h::HRepElement{T}, pre::Bool=true) where T
+function complement_lift(h::HRepElement{T}, pre::Bool = true) where {T}
     a = pre ? pushbefore(h.a, h.β) : push_after(h.a, h.β)
-    constructor(h)(a, h.β)
+    return constructor(h)(a, h.β)
 end
 
 lift(v::VStruct{T}) where {T} = constructor(v)(pushbefore(v.a, zero(T)))
@@ -367,7 +436,9 @@ lift(v::AbstractVector{T}) where {T} = pushbefore(v, one(T))
 translate(p::AbstractVector, v) = p + v
 translate(r::VStruct, v) = r
 
-translate(h::ElemT, p) where {ElemT<:HRepElement} = ElemT(h.a, h.β + _dot(h.a, p))
+function translate(h::ElemT, p) where {ElemT<:HRepElement}
+    return ElemT(h.a, h.β + _dot(h.a, p))
+end
 
 _simplify(a::AbstractVector) = a
 _simplify(a::AbstractVector, β) = a, β

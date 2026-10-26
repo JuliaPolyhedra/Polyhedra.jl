@@ -17,10 +17,13 @@ function vhypercubetest(lib::Polyhedra.Library, n, α, β)
 
     poly = polyhedron(v, lib)
 
-    h = hrep([Matrix(1I, n, n); Matrix(-1I, n, n)], [β * ones(Int, n); -α * ones(Int, n)])
+    h = hrep(
+        [Matrix(1I, n, n); Matrix(-1I, n, n)],
+        [β * ones(Int, n); -α * ones(Int, n)],
+    )
 
     @test volume(poly) ≈ (β - α)^n
     @test center_of_mass(poly) ≈ fill((α + β) / 2, n)
     inequality_fulltest(poly, h)
-    generator_fulltest(poly, v)
+    return generator_fulltest(poly, v)
 end
