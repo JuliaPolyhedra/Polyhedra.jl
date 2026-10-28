@@ -83,7 +83,7 @@ function similar_type(
     ::Type{ET},
     ::Type{Tout},
 ) where {Tout,ET<:Union{HRepElement,VRepElement,Rep}}
-    return similar_type(ET, FullDim(ET), Tout)
+    return similar_type(ET, typed_fulldim(ET), Tout)
 end
 function similar_type(
     ::Type{ET},

@@ -34,7 +34,7 @@ mutable struct MixedMatHRep{T,MT<:AbstractMatrix{T}} <: MixedHRep{T}
         return new{T,typeof(A)}(A, b, linset)
     end
 end
-FullDim(rep::MixedMatHRep) = size(rep.A, 2)
+typed_fulldim(rep::MixedMatHRep) = size(rep.A, 2)
 
 function similar_type(
     ::Type{<:MixedMatHRep{S,MT}},
@@ -157,7 +157,7 @@ mutable struct MixedMatVRep{T,MT<:AbstractMatrix{T}} <: MixedVRep{T}
         return new{T,MT}(V, R, Rlinset)
     end
 end
-FullDim(rep::MixedMatVRep) = size(rep.V, 2)
+typed_fulldim(rep::MixedMatVRep) = size(rep.V, 2)
 
 function similar_type(
     ::Type{<:MixedMatVRep{S,MT}},

@@ -66,7 +66,7 @@ function DefaultPolyhedron{T,HRepT,VRepT}(
     return DefaultPolyhedron{T,HRepT,VRepT}(convert(VRepT, vrep), solver)
 end
 
-FullDim(p::DefaultPolyhedron) = FullDim_rep(p.hrep, p.vrep)
+typed_fulldim(p::DefaultPolyhedron) = FullDim_rep(p.hrep, p.vrep)
 library(::Type{<:DefaultPolyhedron{T}}) where {T} = DefaultLibrary{T}()
 library(p::DefaultPolyhedron{T}) where {T} = DefaultLibrary{T}(p.solver)
 default_solver(p::DefaultPolyhedron; T = nothing) = p.solver

@@ -6,6 +6,8 @@ using Test
 
 using StaticArrays
 
+include("aqua.jl")
+include("aqua_regressions.jl")
 include("utils.jl")
 
 include("solvers.jl")

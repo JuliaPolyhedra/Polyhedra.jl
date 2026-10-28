@@ -20,7 +20,7 @@ mutable struct LiftedHRepresentation{T,MT<:AbstractMatrix{T}} <: MixedHRep{T}
         return new{T,MT}(A, linset)
     end
 end
-FullDim(rep::LiftedHRepresentation) = size(rep.A, 2) - 1
+typed_fulldim(rep::LiftedHRepresentation) = size(rep.A, 2) - 1
 
 function similar_type(
     ::Type{LiftedHRepresentation{S,MT}},
@@ -113,7 +113,7 @@ mutable struct LiftedVRepresentation{T,MT<:AbstractMatrix{T}} <: MixedVRep{T}
         return new{T,MT}(R, linset)
     end
 end
-FullDim(rep::LiftedVRepresentation) = size(rep.R, 2) - 1
+typed_fulldim(rep::LiftedVRepresentation) = size(rep.R, 2) - 1
 
 function similar_type(
     ::Type{LiftedVRepresentation{S,MT}},

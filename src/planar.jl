@@ -254,10 +254,10 @@ counterclockwise(x, y) = x[1] * y[2] - x[2] * y[1]
 rotate(x) = convert(typeof(x), StaticArrays.SVector(-x[2], x[1]))
 
 function planar_hull(vr::VRepresentation{T}; tol = _default_tol(T)) where {T}
-    d = FullDim(vr)
+    d = typed_fulldim(vr)
     return vrep(
         _planar_hull(
-            FullDim(vr),
+            typed_fulldim(vr),
             collect(points(vr)),
             lines(vr),
             rays(vr),

@@ -21,7 +21,7 @@ include("dummy_optimizer.jl")
         ]
             T = eltype(x)
             AT = typeof(x)
-            d = Polyhedra.FullDim(x)
+            d = Polyhedra.typed_fulldim(x)
             @testset "HAffineSpace" begin
                 for hr in [
                     hrep(typeof(HyperPlane(x, one(T)))[]; d = d),
@@ -107,7 +107,7 @@ include("dummy_optimizer.jl")
         ]
             T = eltype(x)
             AT = typeof(x)
-            d = Polyhedra.FullDim(x)
+            d = Polyhedra.typed_fulldim(x)
             @testset "VLinearSpace" begin
                 for vr in [vrep(typeof(Line(x))[]; d = d), convexhull(Line(w))]
                     for v in [

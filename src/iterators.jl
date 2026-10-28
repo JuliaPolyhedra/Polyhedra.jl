@@ -37,7 +37,7 @@ end
 function Base.eachindex(
     it::AbstractSingleRepIterator{<:Any,ElemT,RepT},
 ) where {T,ElemT,RepT<:Rep{T}}
-    return Indices{T,similar_type(ElemT, FullDim(RepT), T)}(it.p)
+    return Indices{T,similar_type(ElemT, typed_fulldim(RepT), T)}(it.p)
 end
 element_and_index(::AbstractSingleRepIterator, ::Nothing) = nothing
 function element_and_index(it::AbstractSingleRepIterator, idx::AbstractIndex)
@@ -162,9 +162,6 @@ for (isVrep, elt, loop_singular) in [
     end
     singularstr = string(singular)
     elemtype = Symbol(singularstr * "type")
-    donep = Symbol("done" * singularstr)
-    startp = Symbol("start" * singularstr)
-    nextp = Symbol("next" * singularstr)
     pluralstr = singularstr * "s"
     global plural = Symbol(pluralstr)
     global lenp = Symbol("n" * pluralstr)
@@ -174,7 +171,7 @@ for (isVrep, elt, loop_singular) in [
     incidx = Symbol("incident" * singularstr * "indices")
 
     @eval begin
-        export $plural, $lenp, $isnotemptyp, $startp, $donep, $nextp, $elemtype
+        export $plural, $lenp, $isnotemptyp, $elemtype
         export $inc, $incidx
 
         """
@@ -224,9 +221,9 @@ for (isVrep, elt, loop_singular) in [
                 $elt{T,$vectortype_fun(typeof(p))}
         end
 
-        function $plural(p::$HorVRep{T}...) where {T}
-            ElemT = promote_type($elemtype.(p)...)
-            iterator(T, ElemT, p...)
+        function $plural(p::$HorVRep{T}, ps::$HorVRep{T}...) where {T}
+            ElemT = promote_type(map($elemtype, (p, ps...))...)
+            return iterator(T, ElemT, p, ps...)
         end
 
         function $mapit(
@@ -432,11 +429,15 @@ function fillvits(
     return points, lines, rays
 end
 
-FullDim_hreps(p...) = FullDim(p[1]), hreps(p...)...
-FullDim_vreps(p...) = FullDim(p[1]), vreps(p...)...
+FullDim_hreps(p...) = typed_fulldim(p[1]), hreps(p...)...
+FullDim_vreps(p...) = typed_fulldim(p[1]), vreps(p...)...
 
-hreps(p::HRep{T}...) where {T} = hyperplanes(p...), halfspaces(p...)
-hreps(p::HAffineSpace{T}...) where {T} = tuple(hyperplanes(p...))
+function hreps(p::HRep{T}, ps::HRep{T}...) where {T}
+    return hyperplanes(p, ps...), halfspaces(p, ps...)
+end
+function hreps(p::HAffineSpace{T}, ps::HAffineSpace{T}...) where {T}
+    return tuple(hyperplanes(p, ps...))
+end
 
 function hmap(f, d::FullDim, ::Type{T}, p::HRep...) where {T}
     return maphyperplanes(f, d, T, p...), maphalfspaces(f, d, T, p...)
@@ -446,12 +447,12 @@ function hmap(f, d::FullDim, ::Type{T}, p::HAffineSpace...) where {T}
 end
 
 function hconvert(RepT::Type{<:HRep{T}}, p::HRep{T}) where {T}
-    return constructpolyhedron(RepT, FullDim(p), (p,), hreps(p)...)
+    return constructpolyhedron(RepT, typed_fulldim(p), (p,), hreps(p)...)
 end
 function hconvert(RepT::Type{<:HRep{T}}, p::HRep) where {T}
     return constructpolyhedron(
         RepT,
-        FullDim(p),
+        typed_fulldim(p),
         (p,),
         change_coefficient_type.(hreps(p), T)...,
     )
@@ -463,6 +464,7 @@ preps(p::VCone...) = tuple()
 rreps(p::VRep...) = lines(p...), rays(p...)
 rreps(p::VLinearSpace...) = tuple(lines(p...))
 rreps(p::VPolytope...) = tuple()
+rreps() = tuple() # resolves ambiguity
 
 function vmap(f, d::FullDim, ::Type{T}, p::VRep...) where {T}
     return pmap(f, d, T, p...)..., rmap(f, d, T, p...)...
@@ -478,14 +480,15 @@ function rmap(f, d::FullDim, ::Type{T}, p::VLinearSpace...) where {T}
     return tuple(maplines(f, d, T, p...))
 end
 rmap(f, d::FullDim, ::Type, p::VPolytope...) = tuple()
+rmap(f, d::FullDim, ::Type) = tuple() # resolves ambiguity
 
 function vconvert(RepT::Type{<:VRep{T}}, p::VRep{T}) where {T}
-    return constructpolyhedron(RepT, FullDim(p), (p,), vreps(p)...)
+    return constructpolyhedron(RepT, typed_fulldim(p), (p,), vreps(p)...)
 end
 function vconvert(RepT::Type{<:VRep{T}}, p::VRep) where {T}
     return constructpolyhedron(
         RepT,
-        FullDim(p),
+        typed_fulldim(p),
         (p,),
         change_coefficient_type.(vreps(p), T)...,
     )

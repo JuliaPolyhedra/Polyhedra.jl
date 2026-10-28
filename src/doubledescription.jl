@@ -22,7 +22,7 @@ function dualfullspace(rep::Representation, d::FullDim, ::Type{T}) where {T}
     )
 end
 function dualfullspace(rep::Representation{T}) where {T}
-    return dualfullspace(rep, FullDim(rep), polytypefor(T))
+    return dualfullspace(rep, typed_fulldim(rep), polytypefor(T))
 end
 
 """
@@ -348,7 +348,7 @@ function add_element!(data, k, el, tight; tol)
                 # ray of large norm for which the absolute tolerance is too
                 # small, so we normalize it.
                 el = _normalize(el)
-                for j in (i + 1):k
+                for j in (i+1):k
                     if in(el, hyperplane(data.halfspaces[j]); tol)
                         push!(tight, j)
                     else
