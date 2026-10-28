@@ -124,7 +124,7 @@ struct CutoffRayIndex
     index::Int
 end
 Base.show(io::IO, r::CutoffRayIndex) = print(io, "r[$(r.cutoff), $(r.index)]")
-struct DoubleDescriptionData{PointT,RayT,LineT,HST}
+struct DoubleDescriptionData{PointT,RayT,LineT,HST,BT}
     fulldim::Int
     halfspaces::Vector{HST}
     # Elements ordered by first halfspace cutting it off
@@ -142,6 +142,9 @@ struct DoubleDescriptionData{PointT,RayT,LineT,HST}
     cutline::Vector{Union{Nothing,LineT}}
     lineray::Vector{Union{Nothing,CutoffRayIndex}}
     nlines::Vector{Int}
+    # Buffer reused by `_buffered_dot` to avoid allocating at each scalar
+    # product
+    dot_buffer::BT
 end
 function _debug(io, name, elements, z)
     if isempty(elements)
@@ -188,7 +191,9 @@ function DoubleDescriptionData{PointT,RayT,LineT}(
 ) where {PointT,RayT,LineT}
     n = length(halfspaces)
     m = length(hyperplanes)
-    return DoubleDescriptionData{PointT,RayT,LineT,eltype(halfspaces)}(
+    HST = eltype(halfspaces)
+    dot_buffer = _dot_buffer(HST, PointT)
+    return DoubleDescriptionData{PointT,RayT,LineT,HST,typeof(dot_buffer)}(
         fulldim,
         halfspaces,
         PointT[],
@@ -205,6 +210,7 @@ function DoubleDescriptionData{PointT,RayT,LineT}(
         Union{Nothing,LineT}[nothing for i in 1:(m+n)],
         Union{Nothing,CutoffRayIndex}[nothing for i in 1:n],
         zeros(Int, m + n),
+        dot_buffer,
     )
 end
 function tight_halfspace_indices(
@@ -367,12 +373,13 @@ function add_element!(data, k, el, tight; tol)
                 tol,
             )
         end
-        # Could avoid computing `dot` twice between `el` and the halfspace here.
-        if !in(el, data.halfspaces[i]; tol)
+        h = data.halfspaces[i]
+        value = _buffered_dot(data.dot_buffer, h.a, el)
+        if !_in_halfspace(value, el, h; tol)
             cutoff = i
             break
         end
-        if in(el, hyperplane(data.halfspaces[i]); tol)
+        if _in_hyperplane(value, el, h; tol)
             push!(tight, i)
         end
     end
@@ -400,9 +407,29 @@ function add_adjacent_element!(data, i, k, el, parent, tight; tol)
     return index
 end
 
+# Computes `a * x + b * y` (resp. `a * x - b * y`) if `op` is `MA.add_mul`
+# (resp. `MA.sub_mul`). For mutable types such as `Rational{BigInt}`, each
+# entry `a * x[i]` is created by `MA.operate` so that it can then be modified
+# in-place by `op` with a buffer shared by all entries.
+function _linear_combination(op, a, x::AbstractVector, b, y::AbstractVector)
+    return _linear_combination(MA.mutability(eltype(x)), op, a, x, b, y)
+end
+function _linear_combination(::MA.IsMutable, op, a, x::Vector, b, y::Vector)
+    A = MA.promote_operation(*, typeof(a), eltype(x))
+    buffer = MA.buffer_for(op, A, typeof(b), eltype(y))
+    return map(x, y) do xi, yi
+        return MA.buffered_operate!!(buffer, op, MA.operate(*, a, xi), b, yi)
+    end
+end
+# For other types, we keep the same operations, e.g., not using `muladd` for
+# `Float64` as `MA.add_mul` would.
+function _linear_combination(_, op, a, x, b, y)
+    return op === MA.add_mul ? a * x + b * y : a * x - b * y
+end
+
 function combine(β, p1::AbstractVector, value1, p2::AbstractVector, value2)
     λ = (value2 - β) / (value2 - value1)
-    return λ * p1 + (1 - λ) * p2
+    return _linear_combination(MA.add_mul, λ, p1, 1 - λ, p2)
 end
 function combine(β, p::AbstractVector, pvalue, r::Polyhedra.Ray, rvalue)
     λ = (β - pvalue) / rvalue
@@ -419,11 +446,17 @@ function combine(β, r1::Polyhedra.Ray, value1, r2::Polyhedra.Ray, value2)
     #newr = value2 * r1 - value1 * r2
     # but this can generate very large numbers (see JuliaPolyhedra/Polyhedra.jl#48)
     # so we still divide
-    newr = (value2 * r1 - value1 * r2) / (value2 - value1)
+    newr = _linear_combination(MA.sub_mul, value2, coord(r1), value1, coord(r2))
+    newr = _div!(newr, value2 - value1)
     # In CDD, it does value2 * r1 - value1 * r2 but then it normalize the ray
     # by dividing it by its smallest nonzero entry (see dd_CreateNewRay)
-    return Polyhedra.simplify(newr)
+    return Polyhedra.simplify(Polyhedra.Ray(newr))
 end
+
+# `MutableArithmetics` does not implement the in-place division of `Rational`s
+# yet so we only reuse the vector.
+_div!(x::Vector, d) = x .= x ./ d
+_div!(x::AbstractVector, d) = x / d
 
 """
     combine(h::HalfSpace, el1::VRepElement, el2::VRepElement)
@@ -431,8 +464,15 @@ end
 Combine `el1` and `el2` which are on two different sides of the halfspace `h` so
 that the combination is in the corresponding hyperplane.
 """
-function combine(h::HalfSpace, el1::VRepElement, el2::VRepElement)
-    return combine(h.β, el1, _dot(h.a, el1), el2, _dot(h.a, el2))
+function combine(
+    h::HalfSpace,
+    el1::VRepElement,
+    el2::VRepElement,
+    buffer = _dot_buffer(typeof(h), typeof(coord(el1))),
+)
+    value1 = _buffered_dot(buffer, h.a, el1)
+    value2 = _buffered_dot(buffer, h.a, el2)
+    return combine(h.β, el1, value1, el2, value2)
 end
 
 """
@@ -465,7 +505,7 @@ function add_intersection!(data, idx1, idx2, hp_idx, hs_idx = hp_idx - 1; tol)
        (hp_idx !== nothing && !isadjacent(data, hp_idx, idx1, idx2))
         return
     end
-    newel = combine(data.halfspaces[i], data[idx1], data[idx2])
+    newel = combine(data.halfspaces[i], data[idx1], data[idx2], data.dot_buffer)
     # `newel` and `idx1` have inherited adjacency, see 3.2 (i) of [FP96].
     # TODO are we sure that they are adjacent ?
     #      or should we check rank or combinatorial check ?
@@ -481,6 +521,44 @@ end
 # `MA.operate` is going to redirect to an implementation that
 # exploits the mutable API of `BigFloat` of `BigInt`
 _dot(a, b) = MA.operate(LinearAlgebra.dot, a, b)
+
+# `MA.operate(LinearAlgebra.dot, a, b)` allocates a new buffer at each call.
+# In the double description, we compute many scalar products so we allocate the
+# buffer once with `_dot_buffer` and reuse it with `_buffered_dot`.
+function _dot_type(::Type{S}, ::Type{T}) where {S,T}
+    return MA.promote_operation(MA.add_dot, MA.promote_operation(*, S, T), S, T)
+end
+function _dot_buffer(
+    ::Type{<:HRepElement{S}},
+    ::Type{<:AbstractVector{T}},
+) where {S,T}
+    return MA.buffer_for(MA.add_dot, _dot_type(S, T), S, T)
+end
+_buffered_dot(buffer, a, b::VStruct) = _buffered_dot(buffer, a, coord(b))
+function _buffered_dot(buffer, a::Vector{S}, b::Vector{T}) where {S,T}
+    acc = zero(_dot_type(S, T))
+    # `eachindex` throws a `DimensionMismatch` if the lengths are different
+    for i in eachindex(a, b)
+        acc = MA.buffered_operate!!(buffer, MA.add_dot, acc, a[i], b[i])
+    end
+    return acc
+end
+# Fallback for other vector types, e.g., sparse vectors, and for types that do
+# not need any buffer, e.g., `Float64`
+_buffered_dot(_, a, b) = _dot(a, b)
+_buffered_dot(::Nothing, a, b::VStruct) = _dot(a, b)
+_buffered_dot(::Nothing, a::Vector, b::Vector) = _dot(a, b)
+_dot_buffer(::Type, ::Type) = nothing
+
+# Equivalent to `in(el, h)` and `in(el, hyperplane(h))` given `value = ⟨h.a, el⟩`
+function _in_halfspace(value, ::AbstractVector, h::HalfSpace; tol)
+    return _leq(value, h.β; tol)
+end
+_in_halfspace(value, ::VStruct, ::HalfSpace; tol) = _nonpos(value; tol)
+function _in_hyperplane(value, ::AbstractVector, h::HalfSpace; tol)
+    return _isapprox(value, h.β; tol)
+end
+_in_hyperplane(value, ::VStruct, ::HalfSpace; tol) = isapproxzero(value; tol)
 
 _shift(el::AbstractVector, line::Line) = el + Polyhedra.coord(line)
 _shift(el::Line, line::Line) = el + line
