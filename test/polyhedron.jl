@@ -1,4 +1,10 @@
+using Test
+using SparseArrays
 using JuMP
+using Polyhedra
+
+include("solvers.jl")
+
 @testset "Dual Type" begin
     model = JuMP.Model()
     x = @variable(model, [1:2])
