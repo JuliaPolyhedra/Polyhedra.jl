@@ -381,3 +381,25 @@ end
         end
     end
 end
+
+@testset "Combine $T" for T in (Float64, Rational{BigInt})
+    h = HalfSpace(T[1, 1], one(T))
+    # `MutableArithmetics` is only used for mutable types and `Vector` so we
+    # check that we get the same result with `SVector`.
+    for (el1, el2) in [
+        (Ray(T[1, 0]), Ray(T[-1, -1])),
+        (T[2, 0], T[0, -1]),
+        (T[2, 0], Ray(T[-1, -1])),
+        (Ray(T[1, 0]), T[0, -1]),
+    ]
+        el = Polyhedra.combine(h, el1, el2)
+        @test el isa (el1 isa Ray && el2 isa Ray ? Ray : Vector{T})
+        @test dot(h.a, el) ≈ (el isa Ray ? zero(T) : h.β) atol = 1e-12
+        sel1, sel2 = map((el1, el2)) do x
+            return x isa Ray ? Ray(SVector{2}(coord(x))) : SVector{2}(x)
+        end
+        sel = Polyhedra.combine(h, sel1, sel2)
+        @test coord(sel) isa SVector{2,T}
+        @test coord(sel) == coord(el)
+    end
+end
