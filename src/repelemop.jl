@@ -228,38 +228,59 @@ function _hinh(h::HyperPlane, hr::HRep, solver; kws...)
            _hinh(halfspace(-h), hr, solver; kws...)
 end
 
-function Base.issubset(
-    vr::VRepresentation{T},
-    h::HRepElement{U};
-    tol = _default_tol(T, U),
-) where {T,U}
-    return _hinv(h, vr; tol)
+_issubset(vr::VRepresentation, h::HRepElement, solver; tol) = _hinv(h, vr; tol)
+function _issubset(hr::HRepresentation, h::HRepElement, solver; tol)
+    return _hinh(h, hr, solver; tol)
 end
-
-function Base.issubset(
-    hr::HRepresentation{T},
-    h::HRepElement{U};
-    tol = _default_tol(T, U),
-) where {T,U}
-    return _hinh(h, hr; tol)
+function _issubset(p::Polyhedron, h::HRepElement, solver; tol)
+    if vrepiscomputed(p)
+        return _hinv(h, p; tol)
+    else
+        return _hinh(h, p, solver; tol)
+    end
 end
 
 """
-    issubset(p::Rep, h::HRepElement)
+    issubset(p::Rep, h::HRepElement, solver = Polyhedra.linear_objective_solver(p); tol)
 
 Returns whether `p` is a subset of `h`, i.e. whether `h` supports the polyhedron `p`.
+If the V-representation of `p` is available, it checks whether each point, ray
+and line of `p` belongs to `h`. Otherwise, it solves a linear program over `p`
+with `solver`.
 """
 function Base.issubset(
-    p::Polyhedron{T},
+    p::Rep{T},
     h::HRepElement{U},
-    solver = Polyhedra.linear_objective_solver(p);
+    solver = linear_objective_solver(p);
     tol = _default_tol(T, U),
 ) where {T,U}
-    if vrepiscomputed(p)
-        _hinv(h, p; tol)
-    else
-        _hinh(h, p, solver; tol)
-    end
+    return _issubset(p, h, solver; tol)
+end
+
+"""
+    issubset(p::Rep, q::HRep, solver = Polyhedra.linear_objective_solver(p); tol)
+
+Returns whether `p` is a subset of `q` by checking whether `p` is a subset of
+each hyperplane and halfspace of the H-representation of `q`, see
+`issubset(::Rep, ::HRepElement)`. If `q` is a polyhedron, its H-representation
+is computed if it is not available.
+"""
+function Base.issubset(
+    p::Rep{T},
+    q::HRep{U},
+    solver = linear_objective_solver(p);
+    tol = _default_tol(T, U),
+) where {T,U}
+    f(h) = _issubset(p, h, solver; tol)
+    return all(f, hyperplanes(q)) && all(f, halfspaces(q))
+end
+
+function Base.issubset(::Rep, ::VRepresentation, args...; kws...)
+    return error(
+        "`issubset(p, v::VRepresentation)` is not supported as it requires " *
+        "the H-representation of `v`. Use a polyhedron for the second " *
+        "argument instead, e.g., `issubset(p, polyhedron(v))`.",
+    )
 end
 
 ################

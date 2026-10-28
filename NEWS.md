@@ -11,6 +11,17 @@
 - The undefined `start*`, `done*`, and `next*` iterator names are no longer
   exported. Use Julia's `iterate` interface instead.
 
+## New features
+- `issubset(p, q)`, i.e., `p ⊆ q`, is now implemented when `p` is a
+  representation or a polyhedron and `q` is an H-representation or a
+  polyhedron (see [#303]).
+
+## Bug fixes
+- `issubset(h::HRepresentation, el::HRepElement, solver)` no longer throws a
+  `MethodError`.
+
+[#303]: https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/303
+
 # Polyhedra.jl v0.8 Release Notes
 
 ## Load time improvements
