@@ -18,6 +18,7 @@ include("representation.jl")
 include("dimension_names.jl")
 include("polyhedron.jl")
 
+include("issubset.jl")
 include("redundancy.jl")
 include("planar.jl")
 include("doubledescription.jl")
