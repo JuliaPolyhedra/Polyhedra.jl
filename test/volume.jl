@@ -109,7 +109,7 @@ function check_vol_issue321_cube(lib)
     # Without the fix, the simplices containing the repeated vertex were
     # silently dropped, giving a volume of zero
     return volume(polyhedron(vrep([cube; [[1, 1, 1]]]), lib)) == 1 &&
-        volume(polyhedron(vrep([cube; cube]), lib)) == 1
+           volume(polyhedron(vrep([cube; cube]), lib)) == 1
 end
 function check_vol_issue321_2(lib)
     p = polyhedron(vrep([-1 1 1; -1 -1 1; 1 0 -1; 1 1 1; 0 1 -1]), lib)

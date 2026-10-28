@@ -44,7 +44,10 @@ end
 # See https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/306
 @testset "ConstraintConflictStatus" begin
     import HiGHS
-    p = polyhedron(HalfSpace([1.0, 1.0], 1.0) ∩ HalfSpace([-1.0, 0.0], 0.0) ∩ HalfSpace([0.0, -1.0], 0.0))
+    p = polyhedron(
+        HalfSpace([1.0, 1.0], 1.0) ∩ HalfSpace([-1.0, 0.0], 0.0) ∩
+        HalfSpace([0.0, -1.0], 0.0),
+    )
     model = Model(HiGHS.Optimizer)
     set_silent(model)
     @variable(model, x[1:2])
@@ -57,5 +60,6 @@ end
     @test MOI.get(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
     @test MOI.get(model, MOI.ConstraintConflictStatus(), c) == MOI.IN_CONFLICT
     @test MOI.get(model, MOI.ConstraintConflictStatus(), d) == MOI.IN_CONFLICT
-    @test MOI.get(model, MOI.ConstraintConflictStatus(), e) == MOI.NOT_IN_CONFLICT
+    @test MOI.get(model, MOI.ConstraintConflictStatus(), e) ==
+          MOI.NOT_IN_CONFLICT
 end
