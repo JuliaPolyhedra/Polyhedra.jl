@@ -93,15 +93,16 @@ The redundancy of `p` is assumed to be `redundancy`; see [`Polyhedra.Redundancy`
 function setvrep! end
 
 """
-    volume(p::Polyhedron{T}) where {T}
+    volume(p::Polyhedron{T}; kws...) where {T}
 
 Returns the `fulldim(p)`-dimensional hyper-volume of the polyhedron `p`.
 Returns `Inf` or `-one(T)` if it is infinite depending on whether the type `T` has an infinite value.
+The keyword arguments, e.g., `tol`, are passed to `incidentpointindices`.
 """
-function volume(p::Polyhedron{T}; tol = _default_tol(T)) where {T}
+function volume(p::Polyhedron{T}; kws...) where {T}
     return reduce(
         +,
-        unscaled_volume_simplex(Δ) for Δ in triangulation(p; tol);
+        unscaled_volume_simplex(Δ) for Δ in triangulation(p; kws...);
         init = zero(T),
     ) / factorial(fulldim(p))
 end
@@ -119,17 +120,18 @@ function volume_simplex(s)
 end
 
 """
-    center_of_mass(p::Polyhedron{T}) where {T}
+    center_of_mass(p::Polyhedron{T}; kws...) where {T}
 
 Returns the center of mass of `p`, represented as a `Vector{T}` of length `fulldim(p)`.
 Throws an error if `p` is degenerate.
+The keyword arguments, e.g., `tol`, are passed to `incidentpointindices`.
 """
-function center_of_mass(p::Polyhedron{T}; tol = _default_tol(T)) where {T}
+function center_of_mass(p::Polyhedron{T}; kws...) where {T}
     # Implementation strategy: For a simplex, the center of mass coincides with
     # the centroid which is easy to compute.  So we triangulate `p` into
     # simplices and compute a volume-weighted average of these simplices'
     # centers of mass.
-    simplices = triangulation(p; tol)
+    simplices = triangulation(p; kws...)
     isempty(simplices) &&
         error("Tried to compute center of mass of a degenerate polyhedron")
     unscaled_center = zeros(T, fulldim(p))
