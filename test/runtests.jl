@@ -22,6 +22,7 @@ include("issubset.jl")
 include("redundancy.jl")
 include("planar.jl")
 include("doubledescription.jl")
+include("projection.jl")
 
 include("interval.jl")
 

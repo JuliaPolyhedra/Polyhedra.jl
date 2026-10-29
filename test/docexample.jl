@@ -35,6 +35,9 @@ function doctest(lib::Polyhedra.Library)
         BitSet(),
     )
     inequality_fulltest(project(p, [2], ProjectGenerators()), Ap, bp, BitSet())
+    # The generic implementation computes the extreme rays of a cone with `lib`
+    # which may not support cones, e.g., if it only supports polytopes. It is
+    # tested in `test/projection.jl` so we only test native implementations.
     if supportselimination(p, BlockElimination())
         inequality_fulltest(
             eliminate(p, [1], BlockElimination()),

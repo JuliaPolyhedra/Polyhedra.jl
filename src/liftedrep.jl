@@ -29,7 +29,22 @@ function similar_type(
 ) where {S,T,MT}
     return LiftedHRepresentation{T,similar_type(MT, T)}
 end
-hvectortype(p::Type{LiftedHRepresentation{T,MT}}) where {T,MT} = vectortype(MT)
+hvectortype(::Type{LiftedHRepresentation{T,MT}}) where {T,MT} = vectortype(MT)
+function fulltype(::Type{LiftedHRepresentation{T,MT}}) where {T,MT}
+    return LiftedHRepresentation{T,MT}
+end
+function dualtype(::Type{LiftedHRepresentation{T,MT}}) where {T,MT}
+    return LiftedVRepresentation{T,MT}
+end
+function dualfullspace(::LiftedHRepresentation, d::FullDim, ::Type{T}) where {T}
+    N = fulldim(d)
+    # The origin and the lines of the canonical basis
+    R = zeros(T, N + 1, N + 1)
+    for i in 1:(N+1)
+        R[i, i] = one(T)
+    end
+    return LiftedVRepresentation{T}(R, BitSet(2:(N+1)))
+end
 
 function LiftedHRepresentation{T}(
     A::AbstractMatrix{T},
