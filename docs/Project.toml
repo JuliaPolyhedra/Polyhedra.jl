@@ -9,3 +9,6 @@ Polyhedra = "67491407-f73d-577b-9b50-8179a7c68029"
 
 [compat]
 Documenter = "1"
+
+[sources]
+CDDLib = {url = "https://github.com/JuliaPolyhedra/CDDLib.jl", rev = "main"}
