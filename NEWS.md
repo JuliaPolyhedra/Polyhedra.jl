@@ -7,10 +7,6 @@
   Methods of `Polyhedra.FullDim` defined by existing implementations are
   still used by `typed_fulldim` as a fallback.
 
-## Breaking changes
-- The undefined `start*`, `done*`, and `next*` iterator names are no longer
-  exported. Use Julia's `iterate` interface instead.
-
 ## New features
 - `issubset(p, q)`, i.e., `p ⊆ q`, is now implemented when `p` is a
   representation or a polyhedron and `q` is an H-representation or a
