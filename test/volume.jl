@@ -198,3 +198,13 @@ end
     @test check_vol_isocahedron(lib_float)
     @test check_vol_dodecahedron(lib_float)
 end
+
+@testset "Keyword arguments are passed to incidentpointindices" begin
+    p = polyhedron(convexhull([0, 0], [1, 0], [0, 1], [1, 1]))
+    @test volume(p) == 1
+    @test volume(p; tol = 1e-8) ≈ 1
+    @test center_of_mass(p; tol = 1e-8) ≈ [1 / 2, 1 / 2]
+    @test length(triangulation(p; tol = 1e-8)) == 2
+    @test triangulation_indices(p; tol = 1e-8) == triangulation_indices(p)
+    @test_throws MethodError volume(p; not_a_keyword = 1)
+end

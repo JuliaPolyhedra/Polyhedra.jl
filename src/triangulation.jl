@@ -57,17 +57,14 @@ function _triangulation(
     end
 end
 
-function triangulation_indices(
-    p::Polyhedron{T};
-    tol = _default_tol(T),
-) where {T}
+function triangulation_indices(p::Polyhedron; kws...)
     hasrays(p) && error("Triangulation only supported for polytope.")
     v_idx = eachindex(points(p))
     h_idx = eachindex(halfspaces(p))
     Δ = eltype(v_idx)[]
     Δs = typeof(Δ)[]
     incident_idx =
-        Dict(h => Set(incidentpointindices(p, h; tol)) for h in h_idx)
+        Dict(h => Set(incidentpointindices(p, h; kws...)) for h in h_idx)
     is_weak_adjacent = Dict(
         (hi, hj) => !isempty(incident_idx[hi] ∩ incident_idx[hj]) for
         hi in h_idx for hj in h_idx
@@ -84,6 +81,6 @@ function triangulation_indices(
     return unique(Δs)
 end
 
-function triangulation(p::Polyhedron{T}; tol = _default_tol(T)) where {T}
-    return map(Δ -> vrep(get.(p, Δ)), triangulation_indices(p; tol))
+function triangulation(p::Polyhedron; kws...)
+    return map(Δ -> vrep(get.(p, Δ)), triangulation_indices(p; kws...))
 end
