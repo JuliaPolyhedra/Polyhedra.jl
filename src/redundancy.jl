@@ -582,6 +582,8 @@ function premovedups(vrep::VRepresentation, aff::VLinearSpace)
     end
     return tuple(ps)
 end
+# The origin is implicit in a cone so there are no points to deduplicate.
+premovedups(::VCone, ::VLinearSpace) = tuple()
 
 function removeduplicates(vrep::VPolytope)
     return typeof(vrep)(
@@ -602,11 +604,44 @@ function removeduplicates(
         typed_fulldim(vrep),
         premovedups(vrep, aff)...,
         aff.lines,
-        rs,
+        _remove_duplicate_elements(aff, rs; tol),
     )
 end
 
+# The halfspace `⟨0, x⟩ ≤ β` with `β ≥ 0` is satisfied by every point.
+function _is_trivial(h::HalfSpace; tol)
+    return isapproxzero(h.a; tol) && !_lt(h.β, zero(h.β); tol)
+end
+_is_trivial(r::Ray; tol) = isapproxzero(r; tol)
+
+# Project each halfspace (resp. ray) orthogonally to the affine hull (resp.
+# line hull) `aff` and remove it if it is then trivial or if it is a positive
+# multiple of another one.
+function _remove_duplicate_elements(aff, elements; tol)
+    nondup = eltype(elements)[]
+    for element in elements
+        element = remproj(element, aff)
+        if !_is_trivial(element; tol) &&
+           !any(el -> _isapprox(el, element; tol), nondup)
+            push!(nondup, element)
+        end
+    end
+    return nondup
+end
+
 # H-duplicates
-function removeduplicates(hr::HRepresentation, solver = nothing)
-    return detecthlinearity(hr, solver)
+function removeduplicates(hrep::HAffineSpace, solver = nothing)
+    return detecthlinearity(hrep, solver)
+end
+function removeduplicates(
+    hr::HRepresentation{T},
+    solver = nothing;
+    tol = _default_tol(float(T)),
+) where {T}
+    aff, hs = _detect_linearity(hr, solver; tol)
+    return typeof(hr)(
+        typed_fulldim(hr),
+        aff.hyperplanes,
+        _remove_duplicate_elements(aff, hs; tol),
+    )
 end
