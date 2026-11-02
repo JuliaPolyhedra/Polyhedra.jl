@@ -416,6 +416,46 @@ end
         @test !hasrays(v)
         @test collect(lines(v)) == [Line([0, 1])]
     end
+    @testset "Halfspaces with $solver" for solver in (nothing, lp_solver)
+        # Example of the docstring
+        h = removeduplicates(
+            HyperPlane([0, 1], 1) ∩ HalfSpace([1, 1], 1) ∩ HalfSpace([1, 0], 0),
+            solver,
+        )
+        @test nhyperplanes(h) == 1
+        @test collect(halfspaces(h)) == [HalfSpace([1, 0], 0)]
+        # Positive multiples and trivial halfspaces
+        h = removeduplicates(
+            HalfSpace([0.5], 0.0) ∩ HalfSpace([1.5], 0.0) ∩
+            HalfSpace([0.0], 1.0) ∩ HalfSpace([5.551115123125783e-17], 0.0),
+            solver,
+        )
+        @test !hashyperplanes(h)
+        @test collect(halfspaces(h)) == [HalfSpace([0.5], 0.0)]
+        # Halfspace implied by a hyperplane
+        h = removeduplicates(
+            HyperPlane([1.5], 0.0) ∩ HalfSpace([-0.5], 0.0),
+            solver,
+        )
+        @test nhyperplanes(h) == 1
+        @test !hashalfspaces(h)
+        # Opposite halfspaces with numerical noise
+        h = removeduplicates(
+            HalfSpace([-0.5], 0.0) ∩ HalfSpace([5.551115123125783e-17], 0.0) ∩
+            HalfSpace([0.5000000000000002], 0.0),
+            solver,
+        )
+        @test nhyperplanes(h) == 1
+        @test !hashalfspaces(h)
+    end
+    @testset "Rays with $solver" for solver in (nothing, lp_solver)
+        v = removeduplicates(
+            conichull(Line([0, 1]), Ray([1, 0]), Ray([2, 0]), Ray([1, 1])),
+            solver,
+        )
+        @test collect(lines(v)) == [Line([0, 1])]
+        @test collect(rays(v)) == [Ray([1, 0])]
+    end
 end
 
 @testset "Numerically delicate #270" begin
