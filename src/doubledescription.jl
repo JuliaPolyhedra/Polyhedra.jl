@@ -124,7 +124,7 @@ struct CutoffRayIndex
     index::Int
 end
 Base.show(io::IO, r::CutoffRayIndex) = print(io, "r[$(r.cutoff), $(r.index)]")
-struct DoubleDescriptionData{PointT,RayT,LineT,HST,BT}
+struct DoubleDescriptionData{PointT,RayT,LineT,HST,BT,VT}
     fulldim::Int
     halfspaces::Vector{HST}
     # Elements ordered by first halfspace cutting it off
@@ -142,9 +142,10 @@ struct DoubleDescriptionData{PointT,RayT,LineT,HST,BT}
     cutline::Vector{Union{Nothing,LineT}}
     lineray::Vector{Union{Nothing,CutoffRayIndex}}
     nlines::Vector{Int}
-    # Buffer reused by `_buffered_dot` to avoid allocating at each scalar
+    # Buffer and output reused by `_dot!!` to avoid allocating at each scalar
     # product
     dot_buffer::BT
+    dot_value::VT
 end
 function _debug(io, name, elements, z)
     if isempty(elements)
@@ -193,7 +194,15 @@ function DoubleDescriptionData{PointT,RayT,LineT}(
     m = length(hyperplanes)
     HST = eltype(halfspaces)
     dot_buffer = _dot_buffer(HST, PointT)
-    return DoubleDescriptionData{PointT,RayT,LineT,HST,typeof(dot_buffer)}(
+    dot_value = _dot_zero(HST, PointT)
+    return DoubleDescriptionData{
+        PointT,
+        RayT,
+        LineT,
+        HST,
+        typeof(dot_buffer),
+        typeof(dot_value),
+    }(
         fulldim,
         halfspaces,
         PointT[],
@@ -211,6 +220,7 @@ function DoubleDescriptionData{PointT,RayT,LineT}(
         Union{Nothing,CutoffRayIndex}[nothing for i in 1:n],
         zeros(Int, m + n),
         dot_buffer,
+        dot_value,
     )
 end
 function tight_halfspace_indices(
@@ -374,7 +384,9 @@ function add_element!(data, k, el, tight; tol)
             )
         end
         h = data.halfspaces[i]
-        value = _buffered_dot(data.dot_buffer, h.a, el)
+        # `value` is not used after this iteration so we can reuse
+        # `data.dot_value`
+        value = _dot!!(data.dot_buffer, data.dot_value, h.a, el)
         if !_in_halfspace(value, el, h; tol)
             cutoff = i
             break
@@ -470,8 +482,8 @@ function combine(
     el2::VRepElement,
     buffer = _dot_buffer(typeof(h), typeof(coord(el1))),
 )
-    value1 = _buffered_dot(buffer, h.a, el1)
-    value2 = _buffered_dot(buffer, h.a, el2)
+    value1 = _dot!!(buffer, _dot_zero(typeof(h), typeof(coord(el1))), h.a, el1)
+    value2 = _dot!!(buffer, _dot_zero(typeof(h), typeof(coord(el2))), h.a, el2)
     return combine(h.β, el1, value1, el2, value2)
 end
 
@@ -524,31 +536,19 @@ _dot(a, b) = MA.operate(LinearAlgebra.dot, a, b)
 
 # `MA.operate(LinearAlgebra.dot, a, b)` allocates a new buffer at each call.
 # In the double description, we compute many scalar products so we allocate the
-# buffer once with `_dot_buffer` and reuse it with `_buffered_dot`.
-function _dot_type(::Type{S}, ::Type{T}) where {S,T}
-    return MA.promote_operation(MA.add_dot, MA.promote_operation(*, S, T), S, T)
+# buffer once with `_dot_buffer` and reuse it with `_dot!!`.
+function _dot_buffer(::Type{<:HRepElement{T,AT}}, ::Type{V}) where {T,AT,V}
+    return MA.buffer_for(LinearAlgebra.dot, AT, V)
 end
-function _dot_buffer(
-    ::Type{<:HRepElement{S}},
-    ::Type{<:AbstractVector{T}},
-) where {S,T}
-    return MA.buffer_for(MA.add_dot, _dot_type(S, T), S, T)
+function _dot_zero(::Type{<:HRepElement{T,AT}}, ::Type{V}) where {T,AT,V}
+    return zero(MA.promote_operation(LinearAlgebra.dot, AT, V))
 end
-_buffered_dot(buffer, a, b::VStruct) = _buffered_dot(buffer, a, coord(b))
-function _buffered_dot(buffer, a::Vector{S}, b::Vector{T}) where {S,T}
-    acc = zero(_dot_type(S, T))
-    # `eachindex` throws a `DimensionMismatch` if the lengths are different
-    for i in eachindex(a, b)
-        acc = MA.buffered_operate!!(buffer, MA.add_dot, acc, a[i], b[i])
-    end
-    return acc
+# Returns `⟨a, b⟩`. If its type is mutable, e.g., `Rational{BigInt}`, `value` is
+# modified to store the result.
+_dot!!(buffer, value, a, b::VStruct) = _dot!!(buffer, value, a, coord(b))
+function _dot!!(buffer, value, a, b)
+    return MA.buffered_operate_to!!(buffer, value, LinearAlgebra.dot, a, b)
 end
-# Fallback for other vector types, e.g., sparse vectors, and for types that do
-# not need any buffer, e.g., `Float64`
-_buffered_dot(_, a, b) = _dot(a, b)
-_buffered_dot(::Nothing, a, b::VStruct) = _dot(a, b)
-_buffered_dot(::Nothing, a::Vector, b::Vector) = _dot(a, b)
-_dot_buffer(::Type, ::Type) = nothing
 
 # Equivalent to `in(el, h)` and `in(el, hyperplane(h))` given `value = ⟨h.a, el⟩`
 function _in_halfspace(value, ::AbstractVector, h::HalfSpace; tol)
