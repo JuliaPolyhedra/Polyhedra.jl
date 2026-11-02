@@ -163,6 +163,8 @@ CDDLib ignores the primal results provided in `λ` which directly gives linearit
 to solve an LP for each ray.
 The method implemented in Polyhedra is therefore significantly more efficient as its complexity is `O(dimension of linespace)` which is upper
 bounded by `O(fulldim)` while the method of CDDLib is `O(number of rays)`.
+In degenerate cases, e.g., with a zero ray, an LP may only find linearity
+that does not increase the dimension of the linespace so more LPs may be needed.
 """
 function detect_new_linearities(
     rep::Representation,
@@ -193,7 +195,11 @@ function detect_new_linearities(
     else
         MOI.add_constraint.(model, hull, MOI.EqualTo(zero(T)))
     end
-    for i in 1:fulldim(rep) # safer than `while ...`
+    # Each iteration that does not `break` decides at least one element so
+    # `length(is_lin)` iterations are enough. We cannot stop after `fulldim`
+    # iterations as an iteration may only find linearity that does not
+    # increase the dimension of the linearity space, e.g., `0 ≤ 0`.
+    for _ in eachindex(is_lin) # safer than `while ...`
         (count(is_lin) == length(is_lin) || iszero(count(active))) && break
         verbose >= 2 && println(model)
         # FIXME stopping when we have enough hyperplanes to prove that it's empty
@@ -260,6 +266,8 @@ function detect_new_linearities(
         for i in ray_to_drop
             MOI.delete(model, λ[i])
         end
+        # Solving the same model again would not decide more elements.
+        isempty(ray_to_line) && isempty(ray_to_drop) && break
     end
     return findall(is_lin)
 end
@@ -330,7 +338,7 @@ function detecthlinearity(
     verbose = 0,
     tol = _default_tol(float(T)),
 ) where {T}
-    aff, hs = _detect_linearity(hr, solver; verbose = 0, tol)
+    aff, hs = _detect_linearity(hr, solver; verbose, tol)
     return typeof(hr)(typed_fulldim(hr), aff.hyperplanes, hs)
 end
 

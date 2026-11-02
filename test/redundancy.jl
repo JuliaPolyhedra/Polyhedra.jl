@@ -3,6 +3,7 @@ using Test
 using StaticArrays
 
 using Polyhedra
+import GLPK
 
 include("solvers.jl")
 include("dummy_optimizer.jl")
@@ -416,7 +417,11 @@ end
         @test !hasrays(v)
         @test collect(lines(v)) == [Line([0, 1])]
     end
-    @testset "Halfspaces with $solver" for solver in (nothing, lp_solver)
+    @testset "Halfspaces with $solver" for solver in (
+        nothing,
+        lp_solver,
+        optimizer_with_attributes(GLPK.Optimizer, "presolve" => GLPK.GLP_ON),
+    )
         # Example of the docstring
         h = removeduplicates(
             HyperPlane([0, 1], 1) ∩ HalfSpace([1, 1], 1) ∩ HalfSpace([1, 0], 0),
@@ -443,6 +448,15 @@ end
         h = removeduplicates(
             HalfSpace([-0.5], 0.0) ∩ HalfSpace([5.551115123125783e-17], 0.0) ∩
             HalfSpace([0.5000000000000002], 0.0),
+            solver,
+        )
+        @test nhyperplanes(h) == 1
+        @test !hashalfspaces(h)
+        # Opposite halfspaces with zero halfspaces and numerical noise
+        h = removeduplicates(
+            HalfSpace([0.5], 0.0) ∩ HalfSpace([0.0], 0.0) ∩
+            HalfSpace([5.551115123125783e-17], 0.0) ∩
+            HalfSpace([-0.5000000000000002], 0.0),
             solver,
         )
         @test nhyperplanes(h) == 1
@@ -502,7 +516,6 @@ end
     @test npoints(P) > 0
 end
 
-import GLPK
 @testset "Noise linearity #259" begin
     h =
         HalfSpace([-1.3333333333333333, -2.220446049250313e-16], 0.0) ∩
@@ -515,6 +528,23 @@ import GLPK
     hhh = removehredundancy(hh, GLPK.Optimizer)
     @test nhyperplanes(hhh) == 1
     @test nhalfspaces(hhh) == 1
+end
+
+@testset "Linearity not increasing the dimension" begin
+    # The LP may find that `0 ≤ 0` is linear before finding `x = 0`.
+    h =
+        HalfSpace([2.0], 0.0) ∩ HalfSpace([0.0], 0.0) ∩ HalfSpace([-2.0], 0.0) ∩
+        HalfSpace([1.0], 0.0)
+    for solver in (
+        lp_solver,
+        optimizer_with_attributes(GLPK.Optimizer, "presolve" => GLPK.GLP_ON),
+    )
+        @test Polyhedra.detect_new_linearities(h, solver; tol = 1e-8) ==
+              [1, 2, 3, 4]
+        hh = removeduplicates(h, solver)
+        @test nhyperplanes(hh) == 1
+        @test !hashalfspaces(hh)
+    end
 end
 
 @testset "Redundant linearity followed by other elements #350" begin
