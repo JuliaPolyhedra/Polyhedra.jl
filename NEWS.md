@@ -7,6 +7,9 @@
   `removeduplicates` of a V-representation now removes the rays that are zero
   or equal to another ray in the line hull. `removeduplicates` of a cone no
   longer throws a `MethodError`.
+- `detecthlinearity` no longer misses linearity when the LP first finds
+  linearity that does not increase the dimension of the affine hull, e.g.,
+  `0 ≤ 0`. It also no longer ignores its `verbose` keyword argument.
 
 # Polyhedra.jl v0.9 Release Notes
 

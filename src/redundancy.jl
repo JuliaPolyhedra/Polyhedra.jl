@@ -638,6 +638,15 @@ function removeduplicates(
     solver = nothing;
     tol = _default_tol(float(T)),
 ) where {T}
+    # Remove the trivial halfspaces before detecting linearity as, e.g.,
+    # `1e-17 x ≤ 0` would be detected as linear and then allow the LP to
+    # cancel any other halfspace with a large multiplier, see
+    # `detect_new_linearities`.
+    hr = typeof(hr)(
+        typed_fulldim(hr),
+        hyperplanes(hr),
+        [h for h in halfspaces(hr) if !_is_trivial(h; tol)],
+    )
     aff, hs = _detect_linearity(hr, solver; tol)
     return typeof(hr)(
         typed_fulldim(hr),
