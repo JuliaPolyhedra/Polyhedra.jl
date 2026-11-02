@@ -31,12 +31,6 @@
 - `issubset(h::HRepresentation, el::HRepElement, solver)` no longer throws a
   `MethodError`.
 - `dualfullspace` of a `LiftedHRepresentation` now contains the origin.
-- `removeduplicates` of an H-representation now removes the halfspaces that
-  are trivial or equal to another halfspace in the affine hull, as documented.
-  It previously only detected linearity. Similarly, when a solver is given,
-  `removeduplicates` of a V-representation now removes the rays that are zero
-  or equal to another ray in the line hull. `removeduplicates` of a cone no
-  longer throws a `MethodError`.
 
 [#303]: https://github.com/JuliaPolyhedra/Polyhedra.jl/issues/303
 
