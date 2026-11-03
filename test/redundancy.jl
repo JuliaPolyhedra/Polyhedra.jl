@@ -547,6 +547,25 @@ end
     end
 end
 
+@testset "Linearity spanning the whole space" begin
+    # The basis of the previous solve is singular for the next LP so GLPK
+    # without presolve fails if another LP is solved.
+    solver = optimizer_with_attributes(GLPK.Optimizer, MOI.Silent() => true)
+    h = HalfSpace([-2.0], 0.0) ∩ HalfSpace([1.0], 0.0) ∩ HalfSpace([-2.0], 0.0)
+    @test Polyhedra.detect_new_linearities(h, solver; tol = 1e-8) == [1, 2, 3]
+    h = HalfSpace([0.0], 0.0) ∩ h
+    @test Polyhedra.detect_new_linearities(h, solver; tol = 1e-8) ==
+          [1, 2, 3, 4]
+    h = HalfSpace([1.0], 0.0) ∩ HalfSpace([-1.0], 0.0) ∩ HalfSpace([1.0], 1.0)
+    @test Polyhedra.detect_new_linearities(h, solver; tol = 1e-8) == [1, 2]
+    v = conichull(Ray([-2.0]), Ray([1.0]), Ray([-2.0]))
+    @test Polyhedra.detect_new_linearities(v, solver; tol = 1e-8) == [1, 2, 3]
+    h = HyperPlane([2.0], 0.0) ∩ HalfSpace([-1.0], 0.0) ∩ HalfSpace([1.0], 1.0)
+    @test Polyhedra.detect_new_linearities(h, solver; tol = 1e-8) == [1]
+    h = HyperPlane([2.0], 0.0) ∩ HalfSpace([1.0], -1.0)
+    @test Polyhedra.detect_new_linearities(h, solver; tol = 1e-8) === nothing
+end
+
 @testset "Redundant linearity followed by other elements #350" begin
     h = hrep([1 1; 1 1; -1 0; 0 -1; -1 -1], [1, 1, 0, 0, 1], BitSet([1, 2]))
     hh = removehredundancy(h, lp_solver)

@@ -176,6 +176,7 @@ function detect_new_linearities(
     nonlins = _nonlinearity(rep)
     isempty(nonlins) && return Int[]
     model, T = layered_optimizer(solver)
+    idxs = collect(eachindex(nonlins))
     is_lin = falses(length(nonlins))
     active = trues(length(nonlins))
     # We pass `true` as we break homogeneity of the problem with `sum(λ) == 1`.
@@ -189,6 +190,11 @@ function detect_new_linearities(
     if !isempty(lins)
         η, _, _ = _hull(model, T, hull, rep, eachindex(lins))
     end
+    # Orthogonal basis of the linearity space
+    linspan = eltype(lins)[]
+    for lin in lins
+        _push_independent!(linspan, lin; kws...)
+    end
     if rep isa HRepresentation
         MOI.add_constraint.(model, hull[1:(end-1)], MOI.EqualTo(zero(T)))
         β_con = MOI.add_constraint(model, hull[end], MOI.LessThan(zero(T)))
@@ -201,9 +207,28 @@ function detect_new_linearities(
     # increase the dimension of the linearity space, e.g., `0 ≤ 0`.
     for _ in eachindex(is_lin) # safer than `while ...`
         (count(is_lin) == length(is_lin) || iszero(count(active))) && break
+        if count(l -> !isapproxzero(coord(l); kws...), linspan) == fulldim(rep)
+            # The polyhedron is at most a point (resp. the cone is a linear
+            # space) so we can decide the remaining elements without solving
+            # another LP. This avoids solving an LP for which the basis of the
+            # previous solve is singular which is an issue for some solvers,
+            # e.g., GLPK without presolve.
+            for i in eachindex(is_lin)
+                if active[i] && !is_lin[i]
+                    res = _remproj(get(rep, idxs[i]), linspan)
+                    if isapproxzero(res; kws...)
+                        is_lin[i] = true
+                    elseif res isa HalfSpace && _lt(res.β, zero(res.β); kws...)
+                        verbose >= 1 && @info(
+                            "The polyhedron is empty as $(i)th element is violated."
+                        )
+                        return nothing
+                    end
+                end
+            end
+            break
+        end
         verbose >= 2 && println(model)
-        # FIXME stopping when we have enough hyperplanes to prove that it's empty
-        #       should also resolve the issue with presolve.
         is_feasible(
             model,
             "detecting new linearity (you may need to activate presolve for some solvers, e.g. by replacing `GLPK.Optimizer` with `optimizer_with_attributes(GLPK.Optimizer, \"presolve\" => GLPK.GLP_ON)`).",
@@ -256,6 +281,7 @@ function detect_new_linearities(
         # Query `primal` and `dual` before doing any `MOI.delete` and `MOI.modify` as they
         # won't be available afterwards.
         for i in ray_to_line
+            _push_independent!(linspan, linearize(get(rep, idxs[i])); kws...)
             MOI.delete(model, cλ[i])
             MOI.modify(
                 model,
@@ -270,6 +296,17 @@ function detect_new_linearities(
         isempty(ray_to_line) && isempty(ray_to_drop) && break
     end
     return findall(is_lin)
+end
+
+# Modified Gram-Schmidt process, see `remproj(::RepElement, ::HyperPlanesIntersection)`
+_remproj(el, linspan) = foldl(remproj, linspan; init = el)
+
+function _push_independent!(linspan, lin; kws...)
+    lin = _remproj(lin, linspan)
+    if !isapproxzero(lin; kws...)
+        push!(linspan, lin)
+    end
+    return
 end
 
 _no_nonlin_word(::HRepresentation) = "affine"
