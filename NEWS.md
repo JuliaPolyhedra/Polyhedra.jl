@@ -10,6 +10,10 @@
 - `detecthlinearity` no longer misses linearity when the LP first finds
   linearity that does not increase the dimension of the affine hull, e.g.,
   `0 ≤ 0`. It also no longer ignores its `verbose` keyword argument.
+- Linearity detection no longer solves an LP once the linearity found spans
+  the whole space, e.g., `x ≤ 0` and `-x ≤ 0` in dimension 1. The remaining
+  elements are decided by projection instead. Solving that LP failed with
+  `NUMERICAL_ERROR` for GLPK without presolve.
 
 # Polyhedra.jl v0.9 Release Notes
 
